@@ -1,5 +1,6 @@
 import numpy as np
-from primitive import *
+
+from .primitive import *
 
 # x(i) = b(i)*c()
 def vec_scalar_mul_u(v1_vals_arr, s2_vals_arr, out_vals_arr):
