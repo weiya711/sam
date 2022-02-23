@@ -1,7 +1,7 @@
 import numpy as np 
 import pytest
 import random 
-from .src.integration import vec_scalar_mul_u
+from sim.src.integration import vec_scalar_mul_u
 
 
 

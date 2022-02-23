@@ -1,66 +1,29 @@
-import numpy as np
 from abc import ABC, abstractmethod
-
-#################
-# Helper Functions
-#################
-
-def nestLst(slist, tkn):
-    result = []
-    tmp = []
-    tkn_found = False
-    for elem in slist: 
-        if tkn == elem or (isinstance(elem, list) and tkn in elem):
-            tkn_found = True
-        elif tkn_found and isinstance(elem, int):
-            result.append(tmp)
-            tmp = []
-            tkn_found = False
-            tmp.append(elem)
-        else:
-            tmp.append(elem)
-
-    result.append(tmp)
-
-    return result
- 
-"""
-:param slist: hierarchical stream 
-:return: stream as a multi-dim list 
-""" 
-def convertStream(slist, order=1):
-    ltkn = ["s"+str(x) for x in range(order)]
-    for tkn in ltkn:
-        result = nestLst(slist, tkn)
-        slist = result
-
-    return result 
-    
-    
+from .base import Primitive
     
 
 #################
-# Primitives
+# Read Scanners
 #################
 
-class Primitive(ABC):
-    @abstractmethod
-    def update(self):
-        pass
+
+class RdScan(Primitive):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.curr_ref = 'S'
+        self.curr_crd = 'S'
+
+    def set_in_ref(self, in_ref):
+        if in_ref != '':
+            self.in_ref.append(in_ref)
 
 
-class RdScan(Primitive): 
-    @abstractmethod 
-    def out_crd(self):
-        pass
-    
-    @abstractmethod
     def out_ref(self):
-        pass
+        return self.curr_ref
 
-    @abstractmethod 
-    def out_done(self):
-        pass
+    def out_crd(self):
+        return self.curr_crd
 
 """
 
@@ -69,15 +32,14 @@ class RdScan(Primitive):
 :return:    (out_val, out_addr) 
 """ 
 class UncompressRdScan(RdScan):
-    def __init__(self, dim=0, *args):
+    def __init__(self, dim=0, **kwargs):
+        super().__init__(**kwargs)
+
         self.start_addr = 0
         self.stop_addr = dim
 
         self.in_ref = []
         self.curr_in_ref = 0
-        self.curr_ref = 'S'
-        self.curr_crd = 'S'
-        self.done = False
 
         self.meta_dim = dim
 
@@ -105,22 +67,12 @@ class UncompressRdScan(RdScan):
             self.curr_crd += 1
             self.curr_ref = self.curr_crd + self.curr_in_ref * self.meta_dim
 
-    def set_in_ref(self, in_ref):
-        if in_ref != '':
-            self.in_ref.append(in_ref)
-
-    def out_ref(self):
-        return self.curr_ref
-
-    def out_crd(self):
-        return self.curr_crd
-
-    def out_done(self):
-        return self.done
 
 
 class CompressedRdScan(RdScan):
-    def __init__(self, crd_arr=[], seg_arr=[], *args):
+    def __init__(self, crd_arr=[], seg_arr=[], **kwargs):
+        super().__init__(**kwargs)
+
         self.crd_arr = crd_arr
         self.seg_arr = seg_arr
 
@@ -129,61 +81,68 @@ class CompressedRdScan(RdScan):
 
         self.in_ref = []
         self.curr_addr = 0
-        self.curr_ref = 0
-        self.curr_crd = 0
-        self.done = False
+
+        self.end_fiber = False
+        self.curr_ref = None
+        self.curr_crd = None
 
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
-        
-        super().__init__(self, *args)
+
     
     def update(self):
-        # End of segment, get next input reference
-        if self.curr_addr == self.stop_addr:
-            # There exists another input reference at the segment
-            if len(self.in_ref) > 0:
+        if self.curr_crd == 'D' or self.curr_ref == 'D':
+            self.curr_addr = 0
+            self.stop_addr = 0
+            self.start_addr = 0
+            self.curr_crd = ''
+            self.curr_ref = ''
+
+        # There exists another input reference at the segment and
+        # either at the start of computation or end of fiber
+        elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_crd is None or self.curr_ref is None)):
+
+                if self.curr_crd is None or self.curr_ref is None:
+                    assert(self.curr_crd == self.curr_ref)
+                self.end_fiber = False
+
                 curr_in_ref = self.in_ref.pop(0)
-                if (curr_in_ref + 1) > self.meta_slen:
+                if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_slen:
                     raise Exception('Not enough elements in seg array')
-                if curr_in_ref == 'S':
+                if curr_in_ref == 'S' or curr_in_ref == 'D':
                     self.curr_addr = 0
                     self.stop_addr = 0
                     self.start_addr = 0
-                    self.curr_crd = 'S'
-                    self.curr_ref = 'S'
+                    self.curr_crd = curr_in_ref
+                    self.curr_ref = curr_in_ref
+                    self.end_fiber = True
+                    if curr_in_ref == 'D':
+                        self.done = True
                 else:
                     self.start_addr = self.seg_arr[curr_in_ref]
-                    self.stop_addr = self.seg_arr[curr_in_ref+1]
+                    self.stop_addr = self.seg_arr[curr_in_ref + 1]
                     self.curr_addr = self.start_addr
-            # There does not exist another input reference at the segment
-            else:
-                self.done = True
-                self.curr_crd = ''
-                self.curr_ref = ''
-        # There are no more coordinates
-        elif self.curr_addr == self.meta_clen:
+                    self.curr_crd = self.crd_arr[self.curr_addr]
+                    self.curr_ref = self.curr_addr
+        # End of fiber, get next input reference
+        elif self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1:
+            self.end_fiber = True
             self.curr_crd = 'S'
             self.curr_ref = 'S'
-        # Base case: increment address and reference by 1 and get next coordinate
+            self.curr_addr = 0
+            self.stop_addr = 0
+            self.start_addr = 0
         else:
-            self.curr_crd = self.crd_arr[self.curr_addr]
-            self.curr_ref += 1
+            # Base case: increment address and reference by 1 and get next coordinate
             self.curr_addr += 1
+            self.curr_ref = self.curr_addr
+            self.curr_crd = self.crd_arr[self.curr_addr]
 
-    def set_in_ref(self, in_ref):
-        if in_ref != '':
-            self.in_ref.append(in_ref)
+        # TODO: Need to add in repeat functionality for ref_count
 
-    def out_crd(self):
-        return self.curr_crd
-    
-    def out_ref(self):
-        return self.curr_ref
-
-    def out_done(self):
-        return self.done
-
+        if self.debug:
+            print("Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
+                  "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr)
 ''' 
 """
 
@@ -298,3 +257,39 @@ def valArr(addrs, vals):
     return vals[addrs]
     
 '''
+
+#################
+# Helper Functions
+#################
+
+# def nestLst(slist, tkn):
+#     result = []
+#     tmp = []
+#     tkn_found = False
+#     for elem in slist:
+#         if tkn == elem or (isinstance(elem, list) and tkn in elem):
+#             tkn_found = True
+#         elif tkn_found and isinstance(elem, int):
+#             result.append(tmp)
+#             tmp = []
+#             tkn_found = False
+#             tmp.append(elem)
+#         else:
+#             tmp.append(elem)
+#
+#     result.append(tmp)
+#
+#     return result
+#
+# """
+# :param slist: hierarchical stream
+# :return: stream as a multi-dim list
+# """
+# def convertStream(slist, order=1):
+#     ltkn = ["s"+str(x) for x in range(order)]
+#     for tkn in ltkn:
+#         result = nestLst(slist, tkn)
+#         slist = result
+#
+#     return result
+#
