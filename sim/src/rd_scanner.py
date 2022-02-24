@@ -141,7 +141,8 @@ class CompressedRdScan(RdScan):
         # TODO: Need to add in repeat functionality for ref_count
 
         if self.debug:
-            print("Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
+            print("DEBUG: RD SCAN: \t "
+                  "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
                   "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr)
 ''' 
 """

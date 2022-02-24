@@ -46,7 +46,6 @@ class Intersect2(Joiner2):
                 self.oref1 = 'D'
                 self.oref2 = 'D'
             elif self.curr_crd2 == self.curr_crd1:
-                print("DEBUG EQUAL CRDS:", self.curr_crd1, self.curr_ref1, self.curr_crd2, self.curr_ref2)
                 self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
                 self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
                 self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
@@ -97,7 +96,8 @@ class Intersect2(Joiner2):
             self.curr_ref2 = None
 
         if self.debug:
-            print("DEBUG:", self.curr_crd1, self.curr_ref1, self.curr_crd2, self.curr_ref2)
+            print("DEBUG: INTERSECT: \t Crd1:", self.curr_crd1, "Ref1:", self.curr_ref1,
+                  "Crd2:", self.curr_crd2, "Ref2", self.curr_ref2)
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '':

@@ -76,6 +76,7 @@ class Multiply2(Compute2):
                 self.curr_out = curr_in1 * curr_in2
 
             if self.debug:
-                print("DEBUG: Curr Out:", self.curr_out, "\t Curr In1:", curr_in1, "\t Curr In2:", curr_in2)
+                print("DEBUG: MULT: \t "
+                      "Curr Out:", self.curr_out, "\t Curr In1:", curr_in1, "\t Curr In2:", curr_in2)
         else:
             self.curr_out = ''

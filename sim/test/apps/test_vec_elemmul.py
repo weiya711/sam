@@ -1,15 +1,16 @@
 import pytest
 import random
-from sim.src.rd_scanner import UncompressRdScan
+from sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 from sim.src.wr_scanner import UncompressWrScan
 from sim.src.joiner import Intersect2
 from sim.src.compute import Multiply2
 from sim.src.array import Array
-from sim.test.primitives.test_intersect import TIMEOUT
+
+TIMEOUT = 5000
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_vec_elemmul_unc(dim1, max_val=1000, size=100, fill=0):
-    debug = True
+def test_vec_elemmul_u_u_u(dim1, max_val=1000, size=100, fill=0):
+    debug = False
 
     in_vec1 = [random.randint(0, max_val) for _ in range(dim1)]
     in_vec2 = [random.randint(0, max_val) for _ in range(dim1)]
@@ -57,3 +58,80 @@ def test_vec_elemmul_unc(dim1, max_val=1000, size=100, fill=0):
     # Assert the array stores only the values
     wrscan.resize_arr(len(gold_vec))
     assert (wrscan.get_arr() == gold_vec)
+
+@pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
+def test_vec_elemmul_u_c_c(nnz, max_val=1000, size=1001, fill=0):
+    assert(size > max_val)
+    debug = True
+
+    crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
+    crd_arr1 = sorted(set(crd_arr1))
+    seg_arr1 = [0, len(crd_arr1)]
+    vals_arr1 = [random.randint(0, max_val) for _ in range(len(crd_arr1))]
+
+    crd_arr2 = [random.randint(0, max_val) for _ in range(nnz)]
+    crd_arr2 = sorted(set(crd_arr2))
+    seg_arr2 = [0, len(crd_arr2)]
+    vals_arr2 = [random.randint(0, max_val) for _ in range(len(crd_arr2))]
+
+    if debug:
+        print("Compressed VECTOR 1:\n", seg_arr1, "\n", crd_arr1, "\n", vals_arr1)
+        print("Compressed VECTOR 2:\n", seg_arr2, "\n", crd_arr2, "\n", vals_arr2)
+
+    out_crd = sorted(set(crd_arr1) & set(crd_arr2))
+    if out_crd:
+        out_val = [vals_arr1[crd_arr1.index(i)]*vals_arr2[crd_arr2.index(i)] for i in out_crd]
+        gold_vec = [out_val[out_crd.index(i)] if i in out_crd else 0 for i in range(max(out_crd)+1)]
+    else:
+        out_val = ''
+        gold_vec = [fill] * size
+
+    if debug:
+        print("Compressed RESULT  :\n", out_crd, "\n", out_val, "\n", gold_vec)
+
+    crdscan1 = CompressedRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug)
+    crdscan2 = CompressedRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug)
+    inter = Intersect2(debug=debug)
+    val1 = Array(init_arr=vals_arr1, debug=debug)
+    val2 = Array(init_arr=vals_arr2, debug=debug)
+    mul = Multiply2(debug=debug)
+    oval = Array(size=size, fill=fill)
+
+    in_ref1 = [0, 'D']
+    in_ref2 = [0, 'D']
+    done = False
+    time = 0
+    while not done and time < TIMEOUT:
+        if len(in_ref1) > 0:
+            crdscan1.set_in_ref(in_ref1.pop(0))
+        crdscan1.update()
+        if len(in_ref2) > 0:
+            crdscan2.set_in_ref(in_ref2.pop(0))
+        crdscan2.update()
+        inter.set_in1(crdscan1.out_ref(), crdscan1.out_crd())
+        inter.set_in2(crdscan2.out_ref(), crdscan2.out_crd())
+        inter.update()
+        val1.set_load(inter.out_ref1())
+        val2.set_load(inter.out_ref2())
+        val1.update()
+        val2.update()
+        mul.set_in1(val1.out_load())
+        mul.set_in2(val2.out_load())
+        mul.update()
+        oval.set_store(inter.out_crd(), mul.out_val())
+        oval.update()
+
+        print("Timestep", time, "\t Done --",
+              "\tRdScan1:", crdscan1.out_done(), "\tRdScan2:", crdscan2.out_done(),
+              "\tInter:", inter.out_done(),
+              "\tArr:", val1.out_done(), val2.out_done(),
+              "\tMul:", mul.out_done(), "\tOutVal:", oval.out_done())
+        done = oval.out_done()
+        time += 1
+
+    # Assert the array stores values with the rest of the memory initialized to initial value
+    assert (oval.get_arr() == gold_vec + [fill]*(size-len(gold_vec)))
+
+    # Assert the array stores only the values
+    oval.resize(len(gold_vec))
+    assert (oval.get_arr() == gold_vec)
