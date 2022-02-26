@@ -138,8 +138,6 @@ class CompressedRdScan(RdScan):
             self.curr_ref = self.curr_addr
             self.curr_crd = self.crd_arr[self.curr_addr]
 
-        # TODO: Need to add in repeat functionality for ref_count
-
         if self.debug:
             print("DEBUG: RD SCAN: \t "
                   "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,

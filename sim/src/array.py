@@ -24,6 +24,8 @@ class Array(Primitive):
         if self.load_en and len(self.load_addrs) > 0:
             self.curr_load = self.load(self.load_addrs.pop(0))
             self.load_en = False
+        else:
+            self.curr_load = ''
 
         if self.store_en and len(self.store_vals) > 0:
             store_tup = self.store_vals.pop(0)
@@ -34,11 +36,15 @@ class Array(Primitive):
         if addr != '':
             self.load_en = True
             self.load_addrs.append(addr)
+        else:
+            self.load_en = False
 
     def set_store(self, addr, vals):
         if addr != '' and vals != '':
             self.store_en = True
             self.store_vals.append((addr, vals))
+        else:
+            self.store_en = False
 
     def get_arr(self):
         return self.arr
@@ -47,29 +53,37 @@ class Array(Primitive):
         return self.curr_load
 
     def load(self, addr):
+        val = ''
         # Special handling of loads of stop tokens
         if addr == 'S':
-            return 'S'
+            val = 'S'
         elif addr == 'D':
             self.done = True
-            return 'D'
+            val = 'D'
         elif addr > self.size:
             Exception("Address is out of array size bounds, please resize")
         else:
+            val = self.arr[addr]
 
-            return self.arr[addr]
+        if self.debug:
+            print("DEBUG: ARRAY LD:", "\t Addr:", addr, "\t Val:", val)
+
+        return val
 
     def store(self, addr, val):
         # Special handling of stores of stop tokens
         if addr == 'S' or val == 'S':
             return
-        elif addr == 'D' or val == 'S':
+        elif addr == 'D' or val == 'D':
             self.done = True
             return
         elif addr > self.size:
             Exception("Address is out of array size bounds, please resize")
         else:
             self.arr[addr] = val
+
+        if self.debug:
+            print("DEBUG: ARRAY ST:", "\t Addr:", addr, "\t Val:", val)
 
     def reinit(self, init_arr):
         self.arr = init_arr
@@ -81,5 +95,7 @@ class Array(Primitive):
             self.arr = self.arr + [self.fill] * (size - self.size)
         self.size = size
 
-    def clear(self, fill=0):
+    def clear(self, fill=None):
+        if fill is None:
+            fill = self.fill
         self.arr = [fill for _ in range(self.size)]

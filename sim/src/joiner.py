@@ -96,7 +96,7 @@ class Intersect2(Joiner2):
             self.curr_ref2 = None
 
         if self.debug:
-            print("DEBUG: INTERSECT: \t Crd1:", self.curr_crd1, "Ref1:", self.curr_ref1,
+            print("DEBUG: INTERSECT: \t OutCrd:", self.ocrd, "\t Crd1:", self.curr_crd1, "Ref1:", self.curr_ref1,
                   "Crd2:", self.curr_crd2, "Ref2", self.curr_ref2)
 
     def set_in1(self, in_ref1, in_crd1):
