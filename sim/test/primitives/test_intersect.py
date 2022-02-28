@@ -4,9 +4,10 @@ import random
 from sim.src.base import remove_emptystr
 from sim.src.joiner import Intersect2
 
-TIMEOUT = 100
+from sim.test.test import TIMEOUT
 
-def test_intersect_direct_2d():
+
+def test_intersect_direct_2d(debug_sim):
     gold_crd = [0, 'S', 0, 1, 2, 'S', 'S', 'D']
     gold_ref1 = [0, 'S', 1, 2, 3, 'S', 'S', 'D']
     gold_ref2 = [0, 'S', 0, 1, 2, 'S', 'S', 'D']
@@ -19,7 +20,7 @@ def test_intersect_direct_2d():
     assert(len(in_crd1) == len(in_ref1))
     assert(len(in_crd2) == len(in_ref2))
 
-    inter = Intersect2()
+    inter = Intersect2(debug=debug_sim)
 
     done = False
     time = 0
@@ -48,7 +49,7 @@ def test_intersect_direct_2d():
     assert (out_ref2 == gold_ref2)
 
 @pytest.mark.parametrize("in1", [4, 16, 32, 64])
-def test_intersect_1d(in1):
+def test_intersect_1d(in1, debug_sim):
 
     in_crd1 = [x for x in range(in1)]+['S', 'D']
     in_ref1 = [x for x in range(in1)]+['S', 'D']
@@ -62,7 +63,7 @@ def test_intersect_1d(in1):
     gold_ref2 = [x for x in range(len(gold_crd[:-2]))] + ['S', 'D']
     assert(len(gold_crd) == len(gold_ref1) and len(gold_crd) == len(gold_ref2))
 
-    inter = Intersect2()
+    inter = Intersect2(debug=debug_sim)
 
     done = False
     time = 0

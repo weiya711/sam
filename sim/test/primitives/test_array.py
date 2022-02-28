@@ -5,12 +5,12 @@ from sim.test.primitives.test_intersect import TIMEOUT
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_arr_load_1d(dim1, max_val=1000):
+def test_arr_load_1d(dim1, debug_sim, max_val=1000):
     in_val = [x for x in range(dim1)] + ['S', 'D']
 
     gold_val = [random.randint(0, max_val) for _ in range(dim1)]
 
-    arr = Array(init_arr=gold_val)
+    arr = Array(init_arr=gold_val, debug=debug_sim)
 
     done = False
     time = 0
@@ -34,14 +34,14 @@ def test_arr_load_1d(dim1, max_val=1000):
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_arr_store_1d(dim1, max_val=1000):
+def test_arr_store_1d(dim1, debug_sim, max_val=1000):
     in_addr = [x for x in range(dim1)] + ['S', 'D']
     in_val = [random.randint(0, max_val) for x in range(dim1)] + ['S', 'D']
     assert (len(in_val) == len(in_addr))
 
     gold_val = in_val[:-2]
 
-    arr = Array()
+    arr = Array(debug=debug_sim)
     arr.resize(len(gold_val))
 
     done = False

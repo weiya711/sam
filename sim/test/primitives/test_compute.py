@@ -5,7 +5,7 @@ from sim.test.primitives.test_intersect import TIMEOUT
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_add_1d(dim1):
+def test_add_1d(dim1, debug_sim):
 
     in1 = [x for x in range(dim1)]+['S', 'D']
     in2 = [2*x for x in range(dim1)] + ['S', 'D']
@@ -13,7 +13,7 @@ def test_add_1d(dim1):
 
     gold_val = [3*x for x in range(dim1)] + ['S', 'D']
 
-    add = Add2(debug=True)
+    add = Add2(debug=debug_sim)
 
     done = False
     time = 0
@@ -34,7 +34,7 @@ def test_add_1d(dim1):
     assert (out_val == gold_val)
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_mul_1d(dim1):
+def test_mul_1d(dim1, debug_sim):
 
     in1 = [x for x in range(dim1)]+['S', 'D']
     in2 = [2*x for x in range(dim1)] + ['S', 'D']
@@ -42,7 +42,7 @@ def test_mul_1d(dim1):
 
     gold_val = [2*x**2 for x in range(dim1)] + ['S', 'D']
 
-    mul = Multiply2()
+    mul = Multiply2(debug=debug_sim)
 
     done = False
     time = 0

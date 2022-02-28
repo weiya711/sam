@@ -8,14 +8,14 @@ from sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 # Uncompressed Read Scanner Unit Tests #
 ########################################
 @pytest.mark.parametrize("dim", [1, 2, 4, 16])
-def test_rd_scan_uncompress_1d(dim):
+def test_rd_scan_uncompress_1d(dim, debug_sim):
     gold_crd = [x for x in range(dim)]
     gold_crd.append('S')
     gold_crd.append('D')
     gold_ref = gold_crd
     assert (len(gold_crd) == len(gold_ref))
 
-    urs = UncompressRdScan(dim)
+    urs = UncompressRdScan(dim=dim, debug=debug_sim)
 
     in_ref = [0, 'D']
     done = False
@@ -37,14 +37,14 @@ def test_rd_scan_uncompress_1d(dim):
 
 
 @pytest.mark.parametrize("dim", [1, 2, 4])
-def test_rd_scan_uncompress_rd_scan_2d(dim):
+def test_rd_scan_uncompress_rd_scan_2d(dim, debug_sim):
     cnt = [x for x in range(dim)]
     gold_crd = (cnt + ['S']) * 4 + ['S', 'D']
     gold_ref = cnt + ['S'] + [dim + x for x in cnt] + ['S'] + [2 * dim + x for x in cnt] + ['S'] + \
                [3 * dim + x for x in cnt] + ['S'] + ['S', 'D']
     assert (len(gold_crd) == len(gold_ref))
 
-    urs = UncompressRdScan(dim)
+    urs = UncompressRdScan(dim=dim, debug=debug_sim)
 
     in_ref = [0, 1, 2, 3, 'S', 'D']
     done = False
@@ -65,7 +65,7 @@ def test_rd_scan_uncompress_rd_scan_2d(dim):
     assert (out_ref == gold_ref)
 
 
-def test_rd_scan_uncompress_3d(dim=4):
+def test_rd_scan_uncompress_3d(debug_sim, dim=4):
     cnt = [x for x in range(dim)]
     gold_crd = (cnt + ['S']) * 3 + ['S'] + (cnt + ['S']) * 2 + ['S'] + (cnt + ['S']) * 2 + ['S'] + ['S', 'D']
     gold_ref = cnt + ['S'] + [dim + x for x in cnt] + ['S'] + [2 * dim + x for x in cnt] + ['S'] + ['S'] + \
@@ -74,7 +74,7 @@ def test_rd_scan_uncompress_3d(dim=4):
                [6 * dim + x for x in cnt] + ['S'] + ['S'] + ['S', 'D']
     assert (len(gold_crd) == len(gold_ref))
 
-    urs = UncompressRdScan(dim)
+    urs = UncompressRdScan(dim=dim, debug=debug_sim)
 
     in_ref = [0, 1, 2, 'S', 3, 4, 'S', 5, 6, 'S', 'S', 'D']
     done = False
@@ -99,9 +99,7 @@ def test_rd_scan_uncompress_3d(dim=4):
 # Compressed Read Scanner Unit Tests #
 ######################################
 
-def test_rd_scan_comp_direct_1d():
-    debug = True
-
+def test_rd_scan_comp_direct_1d(debug_sim):
     seg_arr = [0, 3]
     crd_arr = [0, 1, 3]
 
@@ -110,7 +108,7 @@ def test_rd_scan_comp_direct_1d():
 
     assert (len(gold_crd) == len(gold_ref))
 
-    crdscan = CompressedRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug)
+    crdscan = CompressedRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
 
     in_ref = [0, 'D']
     done = False
@@ -138,9 +136,7 @@ arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 0, 'S
              "out_ref": [0, 1, 2, 'S', 0, 1, 2, 'S', 'S', 3, 'S', 'S', 4, 5, 'S', 'S', 'S', 'D']}
 
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2])
-def test_rd_scan_comp_direct(arrs):
-    debug = True
-
+def test_rd_scan_comp_direct(arrs, debug_sim):
     seg_arr = arrs["seg"]
     crd_arr = arrs["crd"]
 
@@ -148,7 +144,7 @@ def test_rd_scan_comp_direct(arrs):
     gold_ref = arrs["out_ref"]
     assert (len(gold_crd) == len(gold_ref))
 
-    crdscan = CompressedRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug)
+    crdscan = CompressedRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
 
     in_ref = arrs["in_ref"]
     done = False

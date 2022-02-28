@@ -1,34 +1,29 @@
-import numpy as np 
-import pytest
-import random 
-from sim.src.integration import vec_scalar_mul_u
+from sim.src.wr_scanner import WrScan, CompressWrScan
+from sim.src.array import Array
+
+TIMEOUT = 5000
 
 
+def check_arr(arr_obj, gold):
+    assert (isinstance(arr_obj, WrScan) or isinstance(arr_obj, Array))
+    # Assert the array stores values with the rest of the memory initialized to initial value
+    assert (arr_obj.get_arr() == gold + [arr_obj.fill] * (arr_obj.size - len(gold)))
 
-@pytest.mark.parametrize("dim", [16])
-@pytest.mark.parametrize("val_type", ["constant", "increment", "random"])
-@pytest.mark.parametrize("s2", [2])
-def test_ndarr_vec_scalar_mul_unc(dim, val_type, s2):
-    v1 = []
-    vout = []
-    
-    if val_type == "constant":
-        v1 = [3]*dim
-    elif val_type == "increment":
-        v1 = [*range(0, dim)]
+    # Assert the array stores only the values
+    if isinstance(arr_obj, WrScan):
+        arr_obj.resize_arr(len(gold))
+        print("New size", arr_obj.size)
+        if isinstance(arr_obj, CompressWrScan):
+            print("Seg size", arr_obj.seg_size)
     else:
-        v1 = [random.random() * N for x in range(dim)]
+        arr_obj.resize(len(gold))
+    assert (arr_obj.get_arr() == gold)
 
-    v1_ndarr = np.ndarray(v1)
-    s2_ndarr = np.ndarray([s2])
-    vec_scalar_mul_u(v1_ndarr, s2_ndarr, vout)
-    assert vout == s2*v1_ndarr
 
-@pytest.mark.parametrize("dim", [16])
-@pytest.mark.parametrize("val_type", ["constant", "increment", "random"])
-def test_ndarr_vec_elem_mul(dim, val_type): 
-    v1 = np.arange(0, dim, 1)
-    v2 = np.arange(0, dim, 1)
-    v_out = vec_elem_mull(v1, v2)
-    assert v_out == v1 * v2
-    
+def check_seg_arr(cwrscan, gold):
+    assert (isinstance(cwrscan, CompressWrScan))
+    # Assert the array stores values with the rest of the memory initialized to initial value
+    assert (cwrscan.get_seg_arr() == (gold + [0] * (cwrscan.seg_size - len(gold))))
+    # Assert the array stores only the values
+    cwrscan.resize_seg_arr(len(gold))
+    assert (cwrscan.get_seg_arr() == gold)

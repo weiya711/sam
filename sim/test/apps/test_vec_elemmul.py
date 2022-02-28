@@ -1,21 +1,21 @@
 import pytest
 import random
+
 from sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 from sim.src.wr_scanner import ValsWrScan, CompressWrScan
 from sim.src.joiner import Intersect2
 from sim.src.compute import Multiply2
 from sim.src.array import Array
 
-TIMEOUT = 5000
+from sim.test.test import TIMEOUT, check_arr, check_seg_arr
+
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_vec_elemmul_u_u_u(dim1, max_val=1000, size=100, fill=0):
-    debug = False
-
+def test_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
     in_vec1 = [random.randint(0, max_val) for _ in range(dim1)]
     in_vec2 = [random.randint(0, max_val) for _ in range(dim1)]
 
-    if debug:
+    if debug_sim:
         print("VECTOR 1:", in_vec1)
         print("VECTOR 2:", in_vec2)
 
@@ -25,11 +25,11 @@ def test_vec_elemmul_u_u_u(dim1, max_val=1000, size=100, fill=0):
     in_vec1 += ['S', 'D']
     in_vec2 += ['S', 'D']
 
-    rdscan = UncompressRdScan(dim=dim1, debug=debug)
-    val1 = Array(init_arr=in_vec1, debug=debug)
-    val2 = Array(init_arr=in_vec2, debug=debug)
-    mul = Multiply2(debug=debug)
-    wrscan = ValsWrScan(size=size, fill=fill, debug=debug)
+    rdscan = UncompressRdScan(dim=dim1, debug=debug_sim)
+    val1 = Array(init_arr=in_vec1, debug=debug_sim)
+    val2 = Array(init_arr=in_vec2, debug=debug_sim)
+    mul = Multiply2(debug=debug_sim)
+    wrscan = ValsWrScan(size=size, fill=fill, debug=debug_sim)
 
     in_ref = [0, 'D']
     done = False
@@ -47,17 +47,14 @@ def test_vec_elemmul_u_u_u(dim1, max_val=1000, size=100, fill=0):
         mul.update()
         wrscan.set_input(mul.out_val())
         wrscan.update()
-        print("Timestep", time, "\t Done --", "\tRdScan:", rdscan.out_done(), "\tArr:", val1.out_done(), val2.out_done(),
+        print("Timestep", time, "\t Done --", "\tRdScan:", rdscan.out_done(),
+              "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())
         done = wrscan.out_done()
         time += 1
 
-    # Assert the array stores values with the rest of the memory initialized to initial value
-    assert (wrscan.get_arr() == gold_vec + [fill]*(size-len(gold_vec)))
+    check_arr(wrscan, gold_vec)
 
-    # Assert the array stores only the values
-    wrscan.resize_arr(len(gold_vec))
-    assert (wrscan.get_arr() == gold_vec)
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
@@ -131,24 +128,15 @@ def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
         done = oval.out_done()
         time += 1
 
-    # Assert the array stores values with the rest of the memory initialized to initial value
-    assert (oval.get_arr() == gold_vec + [fill]*(size-len(gold_vec)))
-    # Assert the array stores only the values
-    oval.resize(len(gold_vec))
-    assert (oval.get_arr() == gold_vec)
+    check_arr(oval, gold_vec)
 
     if out_val:
-        # Assert the array stores values with the rest of the memory initialized to initial value
-        assert (wrscan.get_arr() == out_val + [fill]*(size-len(out_val)))
-        # Assert the array stores only the values
-        wrscan.resize_arr(len(out_val))
-        assert (wrscan.get_arr() == out_val)
+        check_arr(wrscan, out_val)
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_c_c_c(nnz, max_val=1000, size=1001, fill=0):
+def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     assert(size > max_val)
-    debug = False
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
@@ -160,7 +148,7 @@ def test_vec_elemmul_c_c_c(nnz, max_val=1000, size=1001, fill=0):
     seg_arr2 = [0, len(crd_arr2)]
     vals_arr2 = [random.randint(0, max_val) for _ in range(len(crd_arr2))]
 
-    if debug:
+    if debug_sim:
         print("Compressed VECTOR 1:\n", seg_arr1, "\n", crd_arr1, "\n", vals_arr1)
         print("Compressed VECTOR 2:\n", seg_arr2, "\n", crd_arr2, "\n", vals_arr2)
 
@@ -170,17 +158,17 @@ def test_vec_elemmul_c_c_c(nnz, max_val=1000, size=1001, fill=0):
     if gold_crd:
         gold_vals = [vals_arr1[crd_arr1.index(i)]*vals_arr2[crd_arr2.index(i)] for i in gold_crd]
 
-    if debug:
+    if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
 
-    crdscan1 = CompressedRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug)
-    crdscan2 = CompressedRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug)
-    inter = Intersect2(debug=debug)
-    val1 = Array(init_arr=vals_arr1, debug=debug)
-    val2 = Array(init_arr=vals_arr2, debug=debug)
-    mul = Multiply2(debug=debug)
+    crdscan1 = CompressedRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
+    crdscan2 = CompressedRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
+    inter = Intersect2(debug=debug_sim)
+    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
+    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
+    mul = Multiply2(debug=debug_sim)
     oval_wrscan = ValsWrScan(size=size, fill=fill)
-    ocrd_wrscan = CompressWrScan(size=size, fill=fill)
+    ocrd_wrscan = CompressWrScan(size=size, seg_size=size, fill=fill)
 
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
@@ -218,22 +206,8 @@ def test_vec_elemmul_c_c_c(nnz, max_val=1000, size=1001, fill=0):
         done = ocrd_wrscan.out_done()
         time += 1
 
-    # Assert the array stores values with the rest of the memory initialized to initial value
-    assert (oval_wrscan.get_arr() == gold_vals + [fill]*(size-len(gold_vals)))
-    # Assert the array stores only the values
-    oval_wrscan.resize_arr(len(gold_vals))
-    assert (oval_wrscan.get_arr() == gold_vals)
-
-    # Assert the array stores values with the rest of the memory initialized to initial value
-    assert (ocrd_wrscan.get_arr() == gold_crd + [fill]*(size-len(gold_crd)))
-    # Assert the array stores only the values
-    ocrd_wrscan.resize_arr(len(gold_crd))
-    assert (ocrd_wrscan.get_arr() == gold_crd)
-
-    # Assert the array stores values with the rest of the memory initialized to initial value
-    assert (ocrd_wrscan.get_seg_arr() == gold_seg + [fill]*(size-len(gold_seg)))
-    # Assert the array stores only the values
-    ocrd_wrscan.resize_seg_arr(len(gold_seg))
-    assert (ocrd_wrscan.get_seg_arr() == gold_seg)
+    check_arr(oval_wrscan, gold_vals)
+    check_arr(ocrd_wrscan, gold_crd)
+    check_seg_arr(ocrd_wrscan, gold_seg)
 
 

@@ -61,7 +61,7 @@ class ValsWrScan(WrScan):
 
 # Unique compressed (not from points)
 class CompressWrScan(WrScan):
-    def __init__(self, level=0, **kwargs):
+    def __init__(self, seg_size=0, level=0, **kwargs):
         super().__init__(**kwargs)
         # FIXME: Either use this later or remove
         self.level = level
@@ -71,7 +71,10 @@ class CompressWrScan(WrScan):
         self.curr_crd_cnt = 0
 
         self.end_fiber = False
-        self.seg_arr = Array(size=self.size, fill=0, debug=self.debug)
+
+        self.seg_size = seg_size
+        print("Seg Size: ", self.seg_size)
+        self.seg_arr = Array(size=self.seg_size, fill=0, debug=self.debug)
 
     def update(self):
         if len(self.input) > 0:
@@ -107,8 +110,8 @@ class CompressWrScan(WrScan):
         self.seg_arr.clear(self.fill)
 
     def resize_seg_arr(self, size):
-        self.size = size
-        self.seg_arr.resize(self.size)
+        self.seg_size = size
+        self.seg_arr.resize(self.seg_size)
 
     def get_seg_arr(self):
         return self.seg_arr.get_arr()
