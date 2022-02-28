@@ -46,7 +46,10 @@ class UncompressRdScan(RdScan):
     def update(self):
 
         # run out of coordinates, move to next input reference
-        if self.curr_crd == 'S':
+        if self.curr_crd == '' or self.curr_crd == 'D':
+            self.curr_crd = ''
+            self.curr_ref = ''
+        elif self.curr_crd == 'S':
             self.curr_in_ref = self.in_ref.pop(0)
             if self.curr_in_ref == 'D':
                 self.curr_crd = 'D'
@@ -67,6 +70,9 @@ class UncompressRdScan(RdScan):
             self.curr_crd += 1
             self.curr_ref = self.curr_crd + self.curr_in_ref * self.meta_dim
 
+        if self.debug:
+            print("DEBUG: U RD SCAN: \t "
+                  "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
 
 
 class CompressedRdScan(RdScan):
@@ -139,7 +145,7 @@ class CompressedRdScan(RdScan):
             self.curr_crd = self.crd_arr[self.curr_addr]
 
         if self.debug:
-            print("DEBUG: RD SCAN: \t "
+            print("DEBUG: C RD SCAN: \t "
                   "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
                   "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr)
 ''' 

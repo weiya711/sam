@@ -1,3 +1,5 @@
+import copy
+
 import pytest
 import random
 from sim.src.wr_scanner import ValsWrScan, CompressWrScan
@@ -63,7 +65,7 @@ arrs_dict1 = {"in_crd": [0, 2, 3, 'S', 0, 2, 3, 'S', 'S', 'D'], "gold_crd": [0, 
               "gold_seg":[0, 3, 6]}
 @pytest.mark.parametrize("arrs", [arrs_dict1])
 def test_comp_wr_scan_direct(arrs, debug_sim, size=1001, fill=0):
-    in_val = arrs["in_crd"]
+    in_val = copy.deepcopy(arrs["in_crd"])
 
     if debug_sim:
         print("Crd Stream:\n", in_val)

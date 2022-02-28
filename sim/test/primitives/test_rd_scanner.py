@@ -1,8 +1,10 @@
 import numpy as np
 import pytest
+import copy
 import random
 from sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 
+from sim.test.test import TIMEOUT
 
 ########################################
 # Uncompressed Read Scanner Unit Tests #
@@ -22,7 +24,7 @@ def test_rd_scan_uncompress_1d(dim, debug_sim):
     time = 0
     out_crd = []
     out_ref = []
-    while not done:
+    while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             urs.set_in_ref(in_ref.pop(0))
         urs.update()
@@ -51,7 +53,7 @@ def test_rd_scan_uncompress_rd_scan_2d(dim, debug_sim):
     time = 0
     out_crd = []
     out_ref = []
-    while not done:
+    while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             urs.set_in_ref(in_ref.pop(0))
         urs.update()
@@ -81,7 +83,7 @@ def test_rd_scan_uncompress_3d(debug_sim, dim=4):
     time = 0
     out_crd = []
     out_ref = []
-    while not done:
+    while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             urs.set_in_ref(in_ref.pop(0))
         urs.update()
@@ -115,7 +117,7 @@ def test_rd_scan_comp_direct_1d(debug_sim):
     time = 0
     out_crd = []
     out_ref = []
-    while not done:
+    while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             crdscan.set_in_ref(in_ref.pop(0))
         crdscan.update()
@@ -146,12 +148,12 @@ def test_rd_scan_comp_direct(arrs, debug_sim):
 
     crdscan = CompressedRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
 
-    in_ref = arrs["in_ref"]
+    in_ref = copy.deepcopy(arrs["in_ref"])
     done = False
     time = 0
     out_crd = []
     out_ref = []
-    while not done:
+    while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             crdscan.set_in_ref(in_ref.pop(0))
         crdscan.update()
