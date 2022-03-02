@@ -5,13 +5,14 @@ class Array(Primitive):
     def __init__(self, init_arr=None, size=1024, fill=0, **kwargs):
         super().__init__(**kwargs)
 
-        self.size = size
         self.fill = fill
         if init_arr is None:
+            self.size = size
             self.arr = [self.fill] * self.size
         else:
             assert (isinstance(init_arr, list))
             self.arr = init_arr
+            self.size = len(init_arr)
 
         self.load_addrs = []
         self.store_vals = []
@@ -54,6 +55,7 @@ class Array(Primitive):
 
     def load(self, addr):
         val = ''
+
         # Special handling of loads of stop tokens
         if addr == 'S':
             val = 'S'
@@ -61,7 +63,7 @@ class Array(Primitive):
             self.done = True
             val = 'D'
         elif addr > self.size:
-            Exception("Address is out of array size bounds, please resize")
+            raise Exception("Address is out of array size bounds, please resize")
         else:
             val = self.arr[addr]
 
@@ -78,7 +80,7 @@ class Array(Primitive):
             self.done = True
             return
         elif addr > self.size:
-            Exception("Address is out of array size bounds, please resize")
+            raise Exception("Address is out of array size bounds, please resize")
         else:
             self.arr[addr] = val
 

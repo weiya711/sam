@@ -136,7 +136,6 @@ arr_dict1 = {"seg": [0, 2, 3, 4], "crd": [0, 2, 2, 2], "in_ref": [0, 1, 2, 'S', 
 arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 0, 'S', 1, 'S', 2, 'S', 'S', 'D'],
              "out_crd": [0, 2, 3, 'S', 0, 2, 3, 'S', 'S', 0, 'S', 'S', 2, 3, 'S', 'S', 'S', 'D'],
              "out_ref": [0, 1, 2, 'S', 0, 1, 2, 'S', 'S', 3, 'S', 'S', 4, 5, 'S', 'S', 'S', 'D']}
-
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2])
 def test_rd_scan_comp_direct(arrs, debug_sim):
     seg_arr = arrs["seg"]

@@ -3,8 +3,8 @@ from .base import Primitive
 
 
 class Joiner2(Primitive):
-    def __init__(self, **kargs):
-        super().__init__(**kargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     @abstractmethod
     def out_crd(self):

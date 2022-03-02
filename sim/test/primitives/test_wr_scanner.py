@@ -30,6 +30,7 @@ def test_val_wr_scan_1d(dim1, debug_sim, max_val=1000, size=100, fill=0):
 
     check_arr(wrscan, gold_val)
 
+
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_comp_wr_scan_1d(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     in_val = [random.randint(0, max_val) for _ in range(nnz)]

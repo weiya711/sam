@@ -22,8 +22,6 @@ def test_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
     assert(len(in_vec1) == len(in_vec2))
 
     gold_vec = [in_vec1[i] * in_vec2[i] for i in range(len(in_vec1))]
-    in_vec1 += ['S', 'D']
-    in_vec2 += ['S', 'D']
 
     rdscan = UncompressRdScan(dim=dim1, debug=debug_sim)
     val1 = Array(init_arr=in_vec1, debug=debug_sim)
