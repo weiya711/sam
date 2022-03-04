@@ -57,6 +57,8 @@ class ValsWrScan(WrScan):
     def reset(self):
         self.curr_addr = 0
 
+    def autosize(self):
+        self.resize_arr(self.curr_addr)
 
 
 # Unique compressed (not from points)
@@ -70,7 +72,7 @@ class CompressWrScan(WrScan):
         self.curr_seg_addr = 1
         self.curr_crd_cnt = 0
 
-        self.end_fiber = False
+        self.end_fiber = True
 
         self.seg_size = seg_size
         print("Seg Size: ", self.seg_size)
@@ -115,3 +117,7 @@ class CompressWrScan(WrScan):
 
     def get_seg_arr(self):
         return self.seg_arr.get_arr()
+
+    def autosize(self):
+        self.resize_seg_arr(self.curr_seg_addr)
+        self.resize_arr(self.curr_crd_cnt)

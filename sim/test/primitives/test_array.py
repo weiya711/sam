@@ -1,7 +1,7 @@
 import pytest
 import random
 from sim.src.array import Array
-from sim.test.primitives.test_intersect import TIMEOUT
+from sim.test.test import TIMEOUT
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])

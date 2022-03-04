@@ -36,34 +36,6 @@ def test_repeat_gen_direct(arrs, debug_sim):
     out = remove_emptystr(out)
     assert (out == gold)
 
-
-@pytest.mark.parametrize("dim", [4, 16, 32, 64])
-def test_repeat_gen_1d(dim, debug_sim, max_val=100):
-    in_stream = [random.randint(0, max_val) for _ in range(dim)] + ['S', 'D']
-
-    if debug_sim:
-        print("Input:", in_stream)
-
-    gold = ['R'] * dim + ['S', 'D']
-
-    repsig = RepeatSigGen(debug=debug_sim)
-
-    done = False
-    time = 0
-    out = []
-    while not done and time < TIMEOUT:
-        if len(in_stream) > 0:
-            repsig.set_istream(in_stream.pop(0))
-        repsig.update()
-        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
-        out.append(repsig.out_repeat())
-        done = repsig.out_done()
-        time += 1
-
-    out = remove_emptystr(out)
-    assert (out == gold)
-
-
 @pytest.mark.parametrize("max", [4, 16, 32, 64])
 @pytest.mark.parametrize("nd", [1, 2, 3, 4, 5])
 def test_repeat_gen_nd(max, nd, debug_sim):

@@ -49,8 +49,8 @@ class Intersect2(Joiner2):
                 self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
                 self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
                 self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
-                self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_crd1 = self.in_crd1.pop(0)
+                self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
             elif self.curr_crd1 == 'S':
@@ -86,17 +86,18 @@ class Intersect2(Joiner2):
                 self.ocrd = 'D'
                 self.oref1 = 'D'
                 self.oref2 = 'D'
+                self.curr_crd1 = ''
+                self.curr_crd2 = ''
+                self.curr_ref1 = ''
+                self.curr_ref2 = ''
             else:
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
-            self.curr_crd1 = None
-            self.curr_crd2 = None
-            self.curr_ref1 = None
-            self.curr_ref2 = None
+
 
         if self.debug:
-            print("DEBUG: INTERSECT: \t OutCrd:", self.ocrd,
+            print("DEBUG: INTERSECT: \t OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
                   "\t Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
                   "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2)
 

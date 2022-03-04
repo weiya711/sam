@@ -96,6 +96,7 @@ class CompressedRdScan(RdScan):
 
     
     def update(self):
+        curr_in_ref = None
         if self.curr_crd == 'D' or self.curr_ref == 'D':
             self.curr_addr = 0
             self.stop_addr = 0
@@ -130,20 +131,25 @@ class CompressedRdScan(RdScan):
                     self.curr_crd = self.crd_arr[self.curr_addr]
                     self.curr_ref = self.curr_addr
         # End of fiber, get next input reference
-        elif self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1:
+        elif (self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1) and \
+                self.curr_crd is not None and self.curr_ref is not None:
             self.end_fiber = True
             self.curr_crd = 'S'
             self.curr_ref = 'S'
             self.curr_addr = 0
             self.stop_addr = 0
             self.start_addr = 0
-        else:
+        elif len(self.in_ref) > 0 and self.curr_crd is not None and self.curr_ref is not None:
             # Base case: increment address and reference by 1 and get next coordinate
             self.curr_addr += 1
             self.curr_ref = self.curr_addr
             self.curr_crd = self.crd_arr[self.curr_addr]
+        elif self.curr_crd is not None and self.curr_ref is not None:
+            self.curr_ref = ''
+            self.curr_crd = ''
 
         if self.debug:
             print("DEBUG: C RD SCAN: \t "
                   "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
-                  "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr)
+                  "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
+                  "\t end fiber:", self.end_fiber, "\t input", curr_in_ref)

@@ -62,7 +62,7 @@ class Array(Primitive):
         elif addr == 'D':
             self.done = True
             val = 'D'
-        elif addr > self.size:
+        elif addr >= self.size:
             raise Exception("Address is out of array size bounds, please resize")
         else:
             val = self.arr[addr]
@@ -79,7 +79,7 @@ class Array(Primitive):
         elif addr == 'D' or val == 'D':
             self.done = True
             return
-        elif addr > self.size:
+        elif addr >= self.size:
             raise Exception("Address is out of array size bounds, please resize")
         else:
             self.arr[addr] = val
