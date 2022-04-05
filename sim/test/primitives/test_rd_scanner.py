@@ -9,10 +9,10 @@ from sim.test.test import TIMEOUT
 ########################################
 # Uncompressed Read Scanner Unit Tests #
 ########################################
-@pytest.mark.parametrize("dim", [1, 2, 4, 16])
-def test_rd_scan_uncompress_1d(dim, debug_sim):
+@pytest.mark.parametrize("dim", [1, 2, 4, 16, 32, 100])
+def test_rd_scan_u_direct_1d(dim, debug_sim):
     gold_crd = [x for x in range(dim)]
-    gold_crd.append('S')
+    gold_crd.append('S0')
     gold_crd.append('D')
     gold_ref = gold_crd
     assert (len(gold_crd) == len(gold_ref))
@@ -38,17 +38,17 @@ def test_rd_scan_uncompress_1d(dim, debug_sim):
     assert (out_ref == gold_ref)
 
 
-@pytest.mark.parametrize("dim", [1, 2, 4])
-def test_rd_scan_uncompress_rd_scan_2d(dim, debug_sim):
+@pytest.mark.parametrize("dim", [1, 2, 4, 16, 32, 100])
+def test_rd_scan_u_direct_2d(dim, debug_sim):
     cnt = [x for x in range(dim)]
-    gold_crd = (cnt + ['S']) * 4 + ['S', 'D']
-    gold_ref = cnt + ['S'] + [dim + x for x in cnt] + ['S'] + [2 * dim + x for x in cnt] + ['S'] + \
-               [3 * dim + x for x in cnt] + ['S'] + ['S', 'D']
+    gold_crd = (cnt + ['S0']) * 3 + cnt + ['S1', 'D']
+    gold_ref = cnt + ['S0'] + [dim + x for x in cnt] + ['S0'] + [2 * dim + x for x in cnt] + ['S0'] + \
+               [3 * dim + x for x in cnt] + ['S1', 'D']
     assert (len(gold_crd) == len(gold_ref))
 
     urs = UncompressRdScan(dim=dim, debug=debug_sim)
 
-    in_ref = [0, 1, 2, 3, 'S', 'D']
+    in_ref = [0, 1, 2, 3, 'S0', 'D']
     done = False
     time = 0
     out_crd = []
@@ -67,18 +67,19 @@ def test_rd_scan_uncompress_rd_scan_2d(dim, debug_sim):
     assert (out_ref == gold_ref)
 
 
-def test_rd_scan_uncompress_3d(debug_sim, dim=4):
+@pytest.mark.parametrize("dim", [1, 2, 4, 16, 32, 100])
+def test_rd_scan_u_direct_3d(dim, debug_sim):
     cnt = [x for x in range(dim)]
-    gold_crd = (cnt + ['S']) * 3 + ['S'] + (cnt + ['S']) * 2 + ['S'] + (cnt + ['S']) * 2 + ['S'] + ['S', 'D']
-    gold_ref = cnt + ['S'] + [dim + x for x in cnt] + ['S'] + [2 * dim + x for x in cnt] + ['S'] + ['S'] + \
-               [3 * dim + x for x in cnt] + ['S'] + [4 * dim + x for x in cnt] + ['S', 'S'] + \
-               [5 * dim + x for x in cnt] + ['S'] + \
-               [6 * dim + x for x in cnt] + ['S'] + ['S'] + ['S', 'D']
+    gold_crd = (cnt + ['S0']) * 2 + cnt + ['S1'] + (cnt + ['S0']) + cnt + ['S1'] + (cnt + ['S0']) + cnt + ['S2', 'D']
+    gold_ref = cnt + ['S0'] + [dim + x for x in cnt] + ['S0'] + [2 * dim + x for x in cnt] + ['S1'] + \
+               [3 * dim + x for x in cnt] + ['S0'] + [4 * dim + x for x in cnt] + ['S1'] + \
+               [5 * dim + x for x in cnt] + ['S0'] + \
+               [6 * dim + x for x in cnt] + ['S2', 'D']
     assert (len(gold_crd) == len(gold_ref))
 
     urs = UncompressRdScan(dim=dim, debug=debug_sim)
 
-    in_ref = [0, 1, 2, 'S', 3, 4, 'S', 5, 6, 'S', 'S', 'D']
+    in_ref = [0, 1, 2, 'S0', 3, 4, 'S0', 5, 6, 'S1', 'D']
     done = False
     time = 0
     out_crd = []
@@ -101,12 +102,12 @@ def test_rd_scan_uncompress_3d(debug_sim, dim=4):
 # Compressed Read Scanner Unit Tests #
 ######################################
 
-def test_rd_scan_comp_direct_1d(debug_sim):
+def test_rd_scan_c_direct_1d(debug_sim):
     seg_arr = [0, 3]
     crd_arr = [0, 1, 3]
 
-    gold_crd = crd_arr + ['S', 'D']
-    gold_ref = [x for x in range(len(crd_arr))] + ['S', 'D']
+    gold_crd = crd_arr + ['S0', 'D']
+    gold_ref = [x for x in range(len(crd_arr))] + ['S0', 'D']
 
     assert (len(gold_crd) == len(gold_ref))
 
@@ -131,13 +132,13 @@ def test_rd_scan_comp_direct_1d(debug_sim):
     assert (out_ref == gold_ref)
 
 
-arr_dict1 = {"seg": [0, 2, 3, 4], "crd": [0, 2, 2, 2], "in_ref": [0, 1, 2, 'S', 'D'],
-             "out_crd": [0, 2, 'S', 2, 'S', 2, 'S', 'S', 'D'], "out_ref": [0, 1, 'S', 2, 'S', 3, 'S', 'S', 'D']}
-arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 0, 'S', 1, 'S', 2, 'S', 'S', 'D'],
-             "out_crd": [0, 2, 3, 'S', 0, 2, 3, 'S', 'S', 0, 'S', 'S', 2, 3, 'S', 'S', 'S', 'D'],
-             "out_ref": [0, 1, 2, 'S', 0, 1, 2, 'S', 'S', 3, 'S', 'S', 4, 5, 'S', 'S', 'S', 'D']}
+arr_dict1 = {"seg": [0, 2, 3, 4], "crd": [0, 2, 2, 2], "in_ref": [0, 1, 2, 'S0', 'D'],
+             "out_crd": [0, 2, 'S0', 2, 'S0', 2, 'S1', 'D'], "out_ref": [0, 1, 'S0', 2, 'S0', 3, 'S1', 'D']}
+arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 0, 'S0', 1, 'S0', 2, 'S1', 'D'],
+             "out_crd": [0, 2, 3, 'S0', 0, 2, 3, 'S1', 0, 'S1', 2, 3, 'S2', 'D'],
+             "out_ref": [0, 1, 2, 'S0', 0, 1, 2, 'S1', 3, 'S1', 4, 5, 'S2', 'D']}
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2])
-def test_rd_scan_comp_direct(arrs, debug_sim):
+def test_rd_scan_c_direct_nd(arrs, debug_sim):
     seg_arr = arrs["seg"]
     crd_arr = arrs["crd"]
 

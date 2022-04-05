@@ -9,7 +9,7 @@ from sim.test.test import *
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
 def test_val_wr_scan_1d(dim1, debug_sim, max_val=1000, size=100, fill=0):
-    in_val = [random.randint(0, max_val) for x in range(dim1)] + ['S', 'D']
+    in_val = [random.randint(0, max_val) for x in range(dim1)] + ['S0', 'D']
 
     gold_val = in_val[:-2]
 
@@ -34,7 +34,7 @@ def test_val_wr_scan_1d(dim1, debug_sim, max_val=1000, size=100, fill=0):
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_comp_wr_scan_1d(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     in_val = [random.randint(0, max_val) for _ in range(nnz)]
-    in_val = sorted(set(in_val)) + ['S', 'D']
+    in_val = sorted(set(in_val)) + ['S0', 'D']
 
     if debug_sim:
         print("Crd Stream:\n", in_val)
@@ -62,7 +62,7 @@ def test_comp_wr_scan_1d(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     check_seg_arr(wrscan, gold_seg)
 
 
-arrs_dict1 = {"in_crd": [0, 2, 3, 'S', 0, 2, 3, 'S', 'S', 'D'], "gold_crd": [0, 2, 3, 0, 2, 3],
+arrs_dict1 = {"in_crd": [0, 2, 3, 'S0', 0, 2, 3, 'S1', 'D'], "gold_crd": [0, 2, 3, 0, 2, 3],
               "gold_seg":[0, 3, 6]}
 @pytest.mark.parametrize("arrs", [arrs_dict1])
 def test_comp_wr_scan_direct(arrs, debug_sim, size=1001, fill=0):

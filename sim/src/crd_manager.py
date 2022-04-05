@@ -1,4 +1,4 @@
-from .base import Primitive
+from .base import *
 
 class CrdDrop(Primitive):
     def __init__(self, **kwargs):
@@ -42,11 +42,11 @@ class CrdDrop(Primitive):
                 self.curr_crd = ''
                 self.get_next_ocrd = False
                 self.get_next_icrd = True
-            elif icrd == 'S' and self.curr_ocrd == 'S':
+            elif is_stkn(icrd) and is_stkn(self.curr_ocrd):
                 self.get_next_ocrd = True
                 self.curr_crd = self.curr_ocrd
                 self.get_next_icrd = False
-            elif icrd == 'S':
+            elif is_stkn(icrd):
                 self.get_next_ocrd = True
                 self.curr_crd = self.curr_ocrd if self.has_crd else ''
                 self.get_next_icrd = False

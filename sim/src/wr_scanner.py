@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-from .base import Primitive, valid_tkns
+from .base import *
 from sim.src.array import Array
 
 
@@ -45,7 +44,7 @@ class ValsWrScan(WrScan):
         if (len(self.input) > 0):
             val = self.input.pop(0)
 
-            if val != 'S' and val != 'D':
+            if not is_stkn(val) and val != 'D':
                 self.arr.set_store(self.curr_addr, val)
                 self.curr_addr += 1
             else:
@@ -82,12 +81,12 @@ class CompressWrScan(WrScan):
         if len(self.input) > 0:
             in_crd = self.input.pop(0)
 
-            if in_crd != 'S' and in_crd != 'D':
+            if not is_stkn(in_crd) and in_crd != 'D':
                 self.arr.set_store(self.curr_addr, in_crd)
                 self.curr_addr += 1
                 self.curr_crd_cnt += 1
                 self.end_fiber = False
-            elif in_crd == 'S' and not self.end_fiber:
+            elif is_stkn(in_crd) and not self.end_fiber:
                 self.seg_arr.set_store(self.curr_seg_addr, self.curr_crd_cnt)
                 self.curr_seg_addr += 1
                 self.end_fiber = True

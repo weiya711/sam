@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-from .base import Primitive
+from .base import *
 
 
 class Joiner2(Primitive):
@@ -53,13 +52,13 @@ class Intersect2(Joiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-            elif self.curr_crd1 == 'S':
+            elif is_stkn(self.curr_crd1):
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-            elif self.curr_crd2 == 'S':
+            elif is_stkn(self.curr_crd2):
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''

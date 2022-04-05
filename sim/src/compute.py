@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-from .base import Primitive
+from .base import *
 
 
 class Compute2(Primitive):
@@ -39,7 +38,7 @@ class Add2(Compute2):
                 assert(curr_in1 == curr_in2)
                 self.curr_out = curr_in1
                 self.done = True
-            elif curr_in1 == 'S' or curr_in2 == 'S':
+            elif is_stkn(curr_in1) or is_stkn(curr_in2):
                 # Inputs are both the same and stop tokens
                 assert (curr_in1 == curr_in2)
                 self.curr_out = curr_in1
@@ -67,7 +66,7 @@ class Multiply2(Compute2):
                 assert(curr_in1 == curr_in2)
                 self.curr_out = curr_in1
                 self.done = True
-            elif curr_in1 == 'S' or curr_in2 == 'S':
+            elif is_stkn(curr_in1) or is_stkn(curr_in2):
                 # Inputs are both the same and stop tokens
                 assert (curr_in1 == curr_in2)
                 self.curr_out = curr_in1

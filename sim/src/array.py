@@ -1,4 +1,4 @@
-from .base import Primitive
+from .base import *
 
 
 class Array(Primitive):
@@ -57,8 +57,8 @@ class Array(Primitive):
         val = ''
 
         # Special handling of loads of stop tokens
-        if addr == 'S':
-            val = 'S'
+        if is_stkn(addr):
+            val = addr
         elif addr == 'D':
             self.done = True
             val = 'D'
@@ -74,7 +74,7 @@ class Array(Primitive):
 
     def store(self, addr, val):
         # Special handling of stores of stop tokens
-        if addr == 'S' or val == 'S':
+        if is_stkn(addr) or is_stkn(val):
             return
         elif addr == 'D' or val == 'D':
             self.done = True

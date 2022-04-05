@@ -1,7 +1,27 @@
 from abc import ABC, abstractmethod
 
 
-valid_tkns = ['', 'S', 'D']
+def gen_stkns(dim=10):
+    return ['S' + str(i) for i in range(dim)]
+
+
+valid_tkns = ['', 'D']
+valid_tkns += gen_stkns()
+
+
+def is_stkn(elem):
+    if isinstance(elem, str):
+        return elem.startswith('S') and (len(elem) == 2)
+    return False
+
+
+def get_stkn_order(elem):
+    assert is_stkn(elem)
+    return int(elem[1])
+
+
+def increment_stkn(elem):
+    return 'S' + str(get_stkn_order(elem) + 1)
 
 
 class Primitive(ABC):
@@ -19,6 +39,9 @@ class Primitive(ABC):
     def update(self):
         pass
 
+    def reset(self):
+        self.done = False
+
 
 def remove_emptystr(l):
     return [x for x in l if x != '']
@@ -30,4 +53,3 @@ def remove_stoptkn(l):
 
 def remove_donetkn(l):
     return [x for x in l if x != 'D']
-

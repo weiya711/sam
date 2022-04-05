@@ -8,15 +8,15 @@ from sim.test.test import TIMEOUT
 
 
 def test_intersect_direct_2d(debug_sim):
-    gold_crd = [0, 'S', 0, 1, 2, 'S', 'S', 'D']
-    gold_ref1 = [0, 'S', 1, 2, 3, 'S', 'S', 'D']
-    gold_ref2 = [0, 'S', 0, 1, 2, 'S', 'S', 'D']
+    gold_crd = [0, 'S0', 0, 1, 2, 'S1', 'D']
+    gold_ref1 = [0, 'S0', 1, 2, 3, 'S1', 'D']
+    gold_ref2 = [0, 'S0', 0, 1, 2, 'S1', 'D']
     assert(len(gold_crd) == len(gold_ref1) and len(gold_crd) == len(gold_ref2))
 
-    in_crd1 = [0, 'S', 0, 1, 2, 'S', 'S', 'D']
-    in_ref1 = [0, 'S', 1, 2, 3, 'S', 'S', 'D']
-    in_crd2 = [0, 1, 2, 'S', 0, 1, 2, 'S', 'S', 'D']
-    in_ref2 = [0, 1, 2, 'S', 0, 1, 2, 'S', 'S', 'D']
+    in_crd1 = [0, 'S0', 0, 1, 2, 'S1', 'D']
+    in_ref1 = [0, 'S0', 1, 2, 3, 'S1', 'D']
+    in_crd2 = [0, 1, 2, 'S0', 0, 1, 2, 'S1', 'D']
+    in_ref2 = [0, 1, 2, 'S0', 0, 1, 2, 'S1', 'D']
     assert(len(in_crd1) == len(in_ref1))
     assert(len(in_crd2) == len(in_ref2))
 
@@ -51,16 +51,16 @@ def test_intersect_direct_2d(debug_sim):
 @pytest.mark.parametrize("in1", [4, 16, 32, 64])
 def test_intersect_1d(in1, debug_sim):
 
-    in_crd1 = [x for x in range(in1)]+['S', 'D']
-    in_ref1 = [x for x in range(in1)]+['S', 'D']
-    in_crd2 = [0, 2, 4, 15, 17, 25, 31, 32, 50, 63, 'S', 'D']
-    in_ref2 = [x for x in range(10)] + ['S', 'D']
+    in_crd1 = [x for x in range(in1)]+['S0', 'D']
+    in_ref1 = [x for x in range(in1)]+['S0', 'D']
+    in_crd2 = [0, 2, 4, 15, 17, 25, 31, 32, 50, 63, 'S0', 'D']
+    in_ref2 = [x for x in range(10)] + ['S0', 'D']
     assert(len(in_crd1) == len(in_ref1))
     assert(len(in_crd2) == len(in_ref2))
 
-    gold_crd = [x for x in in_crd2[:-2] if x < in1] + ['S', 'D']
+    gold_crd = [x for x in in_crd2[:-2] if x < in1] + ['S0', 'D']
     gold_ref1 = gold_crd
-    gold_ref2 = [x for x in range(len(gold_crd[:-2]))] + ['S', 'D']
+    gold_ref2 = [x for x in range(len(gold_crd[:-2]))] + ['S0', 'D']
     assert(len(gold_crd) == len(gold_ref1) and len(gold_crd) == len(gold_ref2))
 
     inter = Intersect2(debug=debug_sim)
