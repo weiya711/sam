@@ -1,11 +1,11 @@
-# Sparse Compiler and Design Implementation (SCADI) 
+# The Sparse Abstract Machine (SAM) IR, Compiler, and Simulator 
 
-## SCADI Compiler
+## SAM Front-end Compiler
 ```
 TODO
 ```
 
-## SCADI Simulator
+## SAM Simulator
 
 ### Running Tests
 The simulator uses pytest to run tests
