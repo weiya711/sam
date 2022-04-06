@@ -7,7 +7,7 @@ import pytest
 from sim.src.wr_scanner import WrScan, CompressWrScan
 from sim.src.array import Array
 
-TIMEOUT = 5000
+TIMEOUT = 100000
 
 
 def check_arr(arr_obj, gold):
@@ -30,7 +30,8 @@ def check_seg_arr(cwrscan, gold):
     cwrscan.resize_seg_arr(len(gold))
     assert (cwrscan.get_seg_arr() == gold)
 
-
+# FIXME: Need to generate streams with hierarchical stop tokens or
+#           just delete this function
 def gen_stream(n=1, max_val=10, max_nnz=10):
     assert(max_val >= max_nnz)
 
@@ -47,8 +48,7 @@ def gen_stream(n=1, max_val=10, max_nnz=10):
             l.append(el)
 
         num_s = random.randint(1, n)
-        for _ in range(num_s):
-            l.append('S')
+        l.append('S'+str(num_s-1))
         end = num_s == n
 
     for _ in range(n - num_s):
@@ -160,6 +160,16 @@ def convert_point_tuple(pt_list):
             point.append(pt_list[j][i])
         pt_tup.append(tuple(point))
     return pt_tup
+
+
+# Remove all zero values from the point tuple
+def remove_zeros(pt_tup):
+    tup = sorted(pt_tup)
+    ret_tup = []
+    for x in tup:
+        if x[-1] != 0:
+            ret_tup.append(x)
+    return ret_tup
 
 
 # Given two array of struct format point lists,

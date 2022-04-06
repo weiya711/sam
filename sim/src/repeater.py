@@ -1,7 +1,6 @@
-from abc import ABC, abstractmethod
-from .base import Primitive
+from .base import *
 
-
+#
 class Repeat(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -17,8 +16,8 @@ class Repeat(Primitive):
     def update(self):
         if len(self.in_ref) > 0 and self.get_next_ref:
             self.curr_in_ref = self.in_ref.pop(0)
-            if self.curr_in_ref == 'S':
-                self.curr_out_ref = 'S'
+            if is_stkn(self.curr_in_ref):
+                self.curr_out_ref = self.curr_in_ref
                 self.get_next_rep = False
             elif self.curr_in_ref == 'D':
                 self.curr_out_ref = 'D'
@@ -35,7 +34,13 @@ class Repeat(Primitive):
             repeat = self.in_repeat.pop(0)
             if repeat == 'S':
                 self.get_next_ref = True
-                self.curr_out_ref = 'S'
+                next_in = self.in_ref[0]
+                if is_stkn(next_in):
+                    stkn = increment_stkn(next_in)
+                    self.in_ref.pop(0)
+                else:
+                    stkn = 'S0'
+                self.curr_out_ref = stkn
             elif repeat == 'D':
                 if self.curr_out_ref != 'D':
                     raise Exception("Both repeat and ref signal need to end in 'D'")
@@ -66,6 +71,10 @@ class Repeat(Primitive):
         return self.curr_out_ref
 
 
+# Repeat signal generator will take a crd stream and generate repeat, 'R',
+# or next coordinate, 'S', signals for broadcasting along a non-existent dimension.
+# It essentially snoops on the crd stream
+
 class RepeatSigGen(Primitive):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
@@ -78,10 +87,8 @@ class RepeatSigGen(Primitive):
 
             if len(self.istream) > 0:
                 istream = self.istream.pop(0)
-                if istream == 'S' and self.curr_repeat == 'R':
+                if is_stkn(istream):
                     self.curr_repeat = 'S'
-                elif istream == 'S':
-                    self.curr_repeat = ''
                 elif istream == 'D':
                     self.curr_repeat = 'D'
                     self.done = True

@@ -1,4 +1,4 @@
-from .base import Primitive
+from .base import *
 
 class CrdDrop(Primitive):
     def __init__(self, **kwargs):
@@ -14,6 +14,7 @@ class CrdDrop(Primitive):
         self.get_next_ocrd = True
 
     def update(self):
+        icrd = ""
         if self.debug:
             print("OuterCrds:", self.outer_crd)
             print("InnerCrds:", self.inner_crd)
@@ -34,19 +35,21 @@ class CrdDrop(Primitive):
                 if self.curr_ocrd == 'D':
                     self.done = True
             self.has_crd = False
+        elif self.get_next_ocrd:
+            self.curr_crd = ''
 
-        if len(self.inner_crd) > 0:
-            icrd = self.inner_crd.pop()
+        if len(self.inner_crd) > 0 and self.get_next_icrd:
+            icrd = self.inner_crd.pop(0)
             if isinstance(icrd, int):
                 self.has_crd = True
                 self.curr_crd = ''
                 self.get_next_ocrd = False
                 self.get_next_icrd = True
-            elif icrd == 'S' and self.curr_ocrd == 'S':
+            elif is_stkn(icrd) and is_stkn(self.curr_ocrd):
                 self.get_next_ocrd = True
                 self.curr_crd = self.curr_ocrd
                 self.get_next_icrd = False
-            elif icrd == 'S':
+            elif is_stkn(icrd):
                 self.get_next_ocrd = True
                 self.curr_crd = self.curr_ocrd if self.has_crd else ''
                 self.get_next_icrd = False
@@ -56,15 +59,14 @@ class CrdDrop(Primitive):
                 self.get_next_icrd = False
                 self.get_next_ocrd = False
             else:
-                # FIXME, need to figure out multiple 'S's in a row here
                 self.curr_crd = ''
                 self.get_next_icrd = False
                 self.get_next_ocrd = True
-        else:
+        elif self.get_next_icrd:
             self.curr_crd = ''
 
         if self.debug:
-            print("Curr OCrd:", self.curr_crd, "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
+            print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
                   "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd)
 
     def set_outer_crd(self, crd):
