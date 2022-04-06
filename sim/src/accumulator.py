@@ -31,7 +31,6 @@ class Reduce(Primitive):
                 self.done = True
                 self.curr_out = 'D'
             else:
-                print(self.curr_in_val)
                 self.sum += self.curr_in_val
                 self.curr_out = ""
         else:

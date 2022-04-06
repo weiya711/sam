@@ -7,7 +7,7 @@ import pytest
 from sim.src.wr_scanner import WrScan, CompressWrScan
 from sim.src.array import Array
 
-TIMEOUT = 5000
+TIMEOUT = 100000
 
 
 def check_arr(arr_obj, gold):
@@ -160,6 +160,16 @@ def convert_point_tuple(pt_list):
             point.append(pt_list[j][i])
         pt_tup.append(tuple(point))
     return pt_tup
+
+
+# Remove all zero values from the point tuple
+def remove_zeros(pt_tup):
+    tup = sorted(pt_tup)
+    ret_tup = []
+    for x in tup:
+        if x[-1] != 0:
+            ret_tup.append(x)
+    return ret_tup
 
 
 # Given two array of struct format point lists,
