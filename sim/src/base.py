@@ -15,14 +15,17 @@ def is_stkn(elem):
     return False
 
 
-def get_stkn_order(elem):
+def stkn_order(elem):
     assert is_stkn(elem)
     return int(elem[1])
 
 
 def increment_stkn(elem):
-    return 'S' + str(get_stkn_order(elem) + 1)
+    return 'S' + str(stkn_order(elem) + 1)
 
+def decrement_stkn(elem):
+    assert(stkn_order(elem) > 0)
+    return 'S' + str(stkn_order(elem) - 1)
 
 class Primitive(ABC):
     def __init__(self, debug=False, **kwargs):

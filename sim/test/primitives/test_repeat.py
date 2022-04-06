@@ -10,11 +10,13 @@ from sim.test.test import TIMEOUT, gen_stream, dedup_adj
 ####################
 # Test Repeat Signal Generator
 ##################
-arr_dict1 = {'istream':[0, 1, 'S', 2, 'S', 3, 'S', 'S', 'D'],
+arr_dict1 = {'istream':[0, 1, 'S0', 2, 'S0', 3, 'S1', 'D'],
              'gold': ['R', 'R', 'S', 'R', 'S', 'R', 'S', 'D']}
-arr_dict2 = {'istream':[0, 1, 2, 'S', 0, 1, 2, 'S', 'S', 3, 'S', 'S', 4, 5, 'S', 'S', 'S', 'D'],
+arr_dict2 = {'istream':[0, 1, 2, 'S0', 0, 1, 2, 'S1', 3, 'S1', 4, 5, 'S2', 'D'],
              'gold': ['R', 'R', 'R', 'S', 'R', 'R', 'R', 'S', 'R', 'S', 'R', 'R', 'S', 'D']}
-@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2])
+arr_dict3 = {'istream':[0, 1, 2, 'S0', 0, 1, 2, 'S1', 'S1', 4, 5, 'S2', 'D'],
+             'gold': ['R', 'R', 'R', 'S', 'R', 'R', 'R', 'S', 'S', 'R', 'R', 'S', 'D']}
+@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3])
 def test_repeat_gen_direct(arrs, debug_sim):
     in_stream = copy.deepcopy(arrs['istream'])
     gold = copy.deepcopy(arrs['gold'])
@@ -38,14 +40,14 @@ def test_repeat_gen_direct(arrs, debug_sim):
 
 @pytest.mark.parametrize("max", [4, 16, 32, 64])
 @pytest.mark.parametrize("nd", [1, 2, 3, 4, 5])
-def test_repeat_gen_nd(max, nd, debug_sim):
+def test_repeat_gen_random_nd(max, nd, debug_sim):
     in_stream = gen_stream(n=nd, max_val=max, max_nnz=max)
 
     if debug_sim:
         print("Input Stream:", in_stream)
 
     gold = dedup_adj(in_stream)
-    gold = ['R' if isinstance(x, int) else x for x in gold]
+    gold = ['R' if isinstance(x, int) else x if x == 'D' else 'S' for x in gold]
 
     repsig = RepeatSigGen(debug=debug_sim)
 
@@ -68,21 +70,21 @@ def test_repeat_gen_nd(max, nd, debug_sim):
 ####################
 # Test Repeater
 ##################
-arr_dict1 = {'in_ref': [0, 1, 2, 'S', 'D'],
+arr_dict1 = {'in_ref': [0, 1, 2, 'S0', 'D'],
              'repeat': ['R', 'R', 'S', 'R', 'S', 'R', 'S', 'D'],
-             'gold': [0, 0, 'S', 1, 'S', 2, 'S', 'S', 'D']}
-arr_dict2 = {'in_ref': [0, 1, 'S', 2, 'S', 3, 'S', 'S', 'D'],
+             'gold': [0, 0, 'S0', 1, 'S0', 2, 'S1', 'D']}
+arr_dict2 = {'in_ref': [0, 1, 'S0', 2, 'S0', 3, 'S1', 'D'],
              'repeat': ['R', 'R', 'R', 'S', 'R', 'R', 'R', 'S', 'R', 'S', 'R', 'R', 'S', 'D'],
-             'gold': [0, 0, 0, 'S', 1, 1, 1, 'S', 'S', 2, 'S', 'S', 3, 3] + ['S']*3+['D']}
-arr_dict3 = {'in_ref': [0, 'S', 1, 2, 3, 'S', 'S', 'D'],
+             'gold': [0, 0, 0, 'S0', 1, 1, 1, 'S1', 2, 'S1', 3, 3, 'S2', 'D']}
+arr_dict3 = {'in_ref': [0, 'S0', 1, 2, 3, 'S1', 'D'],
              'repeat': ['R', 'R', 'R', 'S', 'R', 'R', 'R', 'S', 'R', 'S', 'R', 'R', 'S', 'D'],
-             'gold': [0, 0, 0, 'S', 'S', 1, 1, 1, 'S', 2, 'S', 3, 3] + ['S']*3+['D']}
+             'gold': [0, 0, 0, 'S1', 1, 1, 1, 'S0', 2, 'S0', 3, 3, 'S2', 'D']}
 arr_dict4 = {'in_ref': [0, 'D'],
              'repeat': ['R', 'R', 'S', 'D'],
-             'gold': [0, 0, 'S', 'D']}
-arr_dict5 = {'in_ref': [0, 1, 'S', 'D'],
+             'gold': [0, 0, 'S0', 'D']}
+arr_dict5 = {'in_ref': [0, 1, 'S0', 'D'],
              'repeat': ['R', 'R', 'R', 'S']*2+['D'],
-             'gold': [0, 0, 0, 'S', 1, 1, 1, 'S', 'S', 'D']}
+             'gold': [0, 0, 0, 'S0', 1, 1, 1, 'S1', 'D']}
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
 def test_repeat_direct(arrs, debug_sim):
     in_ref = copy.deepcopy(arrs['in_ref'])

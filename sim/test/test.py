@@ -30,7 +30,8 @@ def check_seg_arr(cwrscan, gold):
     cwrscan.resize_seg_arr(len(gold))
     assert (cwrscan.get_seg_arr() == gold)
 
-
+# FIXME: Need to generate streams with hierarchical stop tokens or
+#           just delete this function
 def gen_stream(n=1, max_val=10, max_nnz=10):
     assert(max_val >= max_nnz)
 
@@ -47,8 +48,7 @@ def gen_stream(n=1, max_val=10, max_nnz=10):
             l.append(el)
 
         num_s = random.randint(1, n)
-        for _ in range(num_s):
-            l.append('S')
+        l.append('S'+str(num_s-1))
         end = num_s == n
 
     for _ in range(n - num_s):
