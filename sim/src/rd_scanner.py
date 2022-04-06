@@ -95,6 +95,7 @@ class CompressedRdScan(RdScan):
         self.end_fiber = False
         self.curr_ref = None
         self.curr_crd = None
+        self.emit_fiber_stkn = False
 
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
@@ -107,7 +108,20 @@ class CompressedRdScan(RdScan):
             self.start_addr = 0
             self.curr_crd = ''
             self.curr_ref = ''
+        elif len(self.in_ref) > 0 and self.emit_fiber_stkn:
+            next_in = self.in_ref[0]
+            if is_stkn(next_in):
+                self.in_ref.pop(0)
+                stkn = increment_stkn(next_in)
+            else:
+                stkn = 'S0'
+            self.curr_crd = stkn
+            self.curr_ref = stkn
 
+            self.curr_addr = 0
+            self.stop_addr = 0
+            self.start_addr = 0
+            self.emit_fiber_stkn = False
         # There exists another input reference at the segment and
         # either at the start of computation or end of fiber
         elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_crd is None or self.curr_ref is None)):
@@ -138,12 +152,16 @@ class CompressedRdScan(RdScan):
             # End of fiber, get next input reference
             self.end_fiber = True
 
-            next_in = self.in_ref[0]
-            if is_stkn(next_in):
-                self.in_ref.pop(0)
-                stkn = increment_stkn(next_in)
+            if len(self.in_ref) > 0:
+                next_in = self.in_ref[0]
+                if is_stkn(next_in):
+                    self.in_ref.pop(0)
+                    stkn = increment_stkn(next_in)
+                else:
+                    stkn = 'S0'
             else:
-                stkn = 'S0'
+                self.emit_fiber_stkn = True
+                stkn = ''
             self.curr_crd = stkn
             self.curr_ref = stkn
 
@@ -164,4 +182,4 @@ class CompressedRdScan(RdScan):
             print("DEBUG: C RD SCAN: \t "
                   "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
                   "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
-                  "\t end fiber:", self.end_fiber, "\t input", curr_in_ref)
+                  "\t end fiber:", self.end_fiber, "\t curr input:", curr_in_ref)

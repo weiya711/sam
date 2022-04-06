@@ -65,7 +65,7 @@ def test_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
     check_arr(wrscan, gold_vec)
 
 
-arrs_dict1 = {'pts1': [[1, 2, -778]],
+arrs_dict0 = {'pts1': [[1, 2, -778]],
               'seg_arrs1': [[0, 1], [0, 1]],
               'crd_arrs1': [[1], [2]],
               'val_arr1': [-778],
@@ -75,7 +75,7 @@ arrs_dict1 = {'pts1': [[1, 2, -778]],
               'crd_arrs2': [[0, 1, 2, 3], [0, 2, 1, 2, 3, 0, 1, 0]],
               'val_arr2': [-252, -816, 95, 939, -627, 422, 470, -948]
               }
-arrs_dict2 = {
+arrs_dict1 = {
     'pts1': [(0, 0, -586), (0, 2, 22), (1, 0, 716), (2, 0, 715), (2, 2, -566), (3, 0, 427), (3, 1, 114), (3, 2, -893),
              (3, 3, -146)],
     'seg_arrs1': [[0, 4], [0, 2, 3, 5, 9]],
@@ -86,7 +86,7 @@ arrs_dict2 = {
     'crd_arrs2': [[0, 3], [0, 0, 1]],
     'val_arr2': [985, -131, 718]
 }
-arrs_dict3 = {
+arrs_dict2 = {
     'seg_arrs1': [[0, 2], [0, 3, 4]],
     'crd_arrs1': [[0, 1], [0, 1, 3, 0]],
     'val_arr1': [559, 728, -79, 95],
@@ -96,7 +96,7 @@ arrs_dict3 = {
     'pts1': [(0, 0, 559), (0, 1, 728), (0, 3, -79), (1, 0, 95)],
     'pts2': [(0, 1, 704), (0, 2, -631), (1, 3, -377), (2, 0, -780), (3, 0, 337), (3, 2, 338), (3, 3, -83)]
 }
-arrs_dict4 = {
+arrs_dict3 = {
     'seg_arrs1': [[0, 3], [0, 1, 3, 4]],
     'crd_arrs1': [[0, 1, 2], [0, 2, 3, 2]],
     'val_arr1': [-158, -102, -674, -107],
@@ -106,7 +106,7 @@ arrs_dict4 = {
     'pts1': [(0, 0, -158), (1, 2, -102), (1, 3, -674), (2, 2, -107)],
     'pts2': [(0, 1, 399), (1, 2, 848), (1, 3, -325), (3, 1, -677)],
 }
-@pytest.mark.parametrize("arrs", [arrs_dict1, arrs_dict2, arrs_dict3, arrs_dict4])
+@pytest.mark.parametrize("arrs", [arrs_dict0, arrs_dict1, arrs_dict2, arrs_dict3])
 def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
     in_mat_crds1 = copy.deepcopy(arrs['crd_arrs1'])
     in_mat_segs1 = copy.deepcopy(arrs['seg_arrs1'])
@@ -230,9 +230,13 @@ def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
         print(out_crds)
         print(out_val)
 
-        print("IN DROP:", remove_emptystr(in_drop))
-        print("OUT DROP:", remove_emptystr(out_drop))
         print("OUT INTER1:", remove_emptystr(out_inter1))
+        print("OUT INTER1:", out_inter1)
+        print("IN DROP:", remove_emptystr(in_drop))
+        print("IN DROP:", in_drop)
+        print("OUT DROP:", remove_emptystr(out_drop))
+        print("OUT DROP:", out_drop)
+
 
     if out_val == []:
         assert out_val == gold_tup

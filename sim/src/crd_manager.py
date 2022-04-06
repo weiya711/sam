@@ -35,6 +35,8 @@ class CrdDrop(Primitive):
                 if self.curr_ocrd == 'D':
                     self.done = True
             self.has_crd = False
+        elif self.get_next_ocrd:
+            self.curr_crd = ''
 
         if len(self.inner_crd) > 0 and self.get_next_icrd:
             icrd = self.inner_crd.pop(0)
@@ -57,10 +59,11 @@ class CrdDrop(Primitive):
                 self.get_next_icrd = False
                 self.get_next_ocrd = False
             else:
-                # FIXME, need to figure out multiple 'S's in a row here
                 self.curr_crd = ''
                 self.get_next_icrd = False
                 self.get_next_ocrd = True
+        elif self.get_next_icrd:
+            self.curr_crd = ''
 
         if self.debug:
             print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
