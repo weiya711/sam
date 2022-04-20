@@ -7,13 +7,33 @@ tensor expression + format language + schedule
 -->
 SAM Graph 
 --> 
-dot file or JSON file
+dot file and png of dot file
 -->        
 RTL Graph or Simulator Graph
 
+### Compiling SAM graphs
+Init the taco/ repo as a submodule
 ```
-TODO
+git submodule update --init
 ```
+
+Setup the compilation for the taco/ repo
+```
+cd compiler/taco
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+make -j8
+```
+
+Run the script to generate a handful of example sam graphs
+```
+cd ../..   # This should be back into the compiler/dir
+./sam-kernels.sh
+```
+
+The example sam graphs should now be located in `compiler/sam-outputs/` in both the `dot/` and `png/` folers. 
+
 ### Naming convention
 Naming rules
 - all (block) types are lower case: repeat, repeat_gen, fiber_lookup, fiber_write, reduce, intersect, union, sparse_accum
