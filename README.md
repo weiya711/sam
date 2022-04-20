@@ -1,10 +1,35 @@
 # The Sparse Abstract Machine (SAM) IR, Compiler, and Simulator 
 
 ## SAM Front-end Compiler
+
+Overview:
+tensor expression + format language + schedule
+-->
+SAM Graph 
+--> 
+dot file or JSON file
+-->        
+RTL Graph or Simulator Graph
+
 ```
 TODO
 ```
+### Naming convention
+Naming rules
+- all (block) types are lower case: repeat, repeat_gen, fiber_lookup, fiber_write, reduce, intersect, union, sparse_accum
+- network signal types are: crd, ref, val, repsig, and bv
+- Tensor casing: Matrices and higher order tensors are upper case, scalars and vectors are lower case
+- Index variables are going to be i, j, k, ..., etc.
+- Tensor ranks are going to correspond to 0, 1, 2, ..., etc. (no longer using rows and columns)
+- For a given expression result is always 'x' (or 'X') and the inputs start from 'b, c, ..., etc.' of equivalently 'B, C, ..., etc.'
 
+Metadata Naming
+Metadata naming convention for other blocks: <block name>-<metadata>
+Metadata naming convention for fiber (lookup and write) blocks: fiber_<lookup|write>-<tensor>_<index>_<format>_<glb?>
+Examples:
+1. fiber_lookup_Bi_B0_compressed
+2. repeat_Ci
+ 
 ## SAM Simulator
 
 ### Running Tests
