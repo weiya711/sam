@@ -2,7 +2,9 @@ __pycache__/
 .DS_store
 *.swp
 *.swo
+*.txt
+.idea/
 
-out.txt
-temp.txt
+build/
 
+sam-outputs/
