@@ -1,0 +1,27 @@
+import pydot
+import os
+import networkx as nx
+directory = '../compiler/sam-outputs/dot'
+ 
+# iterate over files in
+# that directory
+file_paths = []
+for filename in os.listdir(directory):
+    f = os.path.join(directory, filename)
+    # checking if it is a file
+    if os.path.isfile(f):
+        file_paths.append(f)
+        
+for apath in file_paths:
+    #print(apath)
+    graphs = pydot.graph_from_dot_file(apath)
+    graph = graphs[0]
+    networkx_graph = nx.nx_pydot.from_pydot(graph)
+
+
+    for u in networkx_graph.nodes(data=True):
+        print(u)
+    print("--------------------------------")
+    for u in list(nx.topological_sort(networkx_graph)):
+        print(u)
+    assert(0)
