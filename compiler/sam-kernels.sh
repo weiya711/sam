@@ -34,7 +34,7 @@ TACO_ARGS=(
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ds:1,0  -s=reorder(i,j,k)"
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss -f=C:ds:1,0  -s=reorder(j,i,k)"
   "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ds"
-  "X(i,j)=B(i,j) -f:X=ss -f=B:ss"
+  "X(i,j)=B(i,j) -f=X:ss -f=B:ss"
   "x(i)=B(i,j)*c(j) -f=x:s -f=B:ds -f=c:s"
   "x(i)=b(i)*c(i) -f=x:s -f=b:s -f=c:d"
   "x(i)=b(i) -f=x:s -f=b:s"
