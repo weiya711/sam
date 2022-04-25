@@ -22,19 +22,25 @@ class SAMDotGraph():
         for node in self.graph.get_nodes():
             if 'fiberlookup' in node.get_comment():
                 # Rewrite this node to a read
-                root = 'root' in node.get_name()
+                root = bool(node.get_root())
                 attrs = node.get_attributes()
                 rd_scan = pydot.Node("rd_scan", attrs=attrs)
                 wr_scan = pydot.Node("wr_scan", attrs=attrs)
                 buffet = pydot.Node("buffet", attrs=attrs)
                 glb_write = pydot.Node("glb_write", attrs=attrs)
                 memory = pydot.Node("memory", attrs=attrs)
-                crd_out_edge = [edge for edge in self.graph.get_edges() if edge.get_label() == "crd" and edge.get_source() == node][0]
-                ref_out_edge = [edge for edge in self.graph.get_edges() if edge.get_label() == "ref" and edge.get_source() == node][0]
+                # for edge in self.graph.get_edges():
+                #     print(edge.get_destination())
+                crd_out_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_source() == node.get_name()][0]
+                # print(crd_out_edge)
+                ref_out_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_source() == node.get_name()][0]
+                # print(ref_out_edge)
                 ref_in_edge = None
                 if not root:
                     # Then we have ref in edge...
-                    ref_in_edge = [edge for edge in self.graph.get_edges() if edge.get_label() == "ref" and edge.get_destination() == node][0]
+                    # ref_in_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_destination() == node.get_name()][0]
+                    ref_in_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_destination() == node.get_name()][0]
+                    # print(ref_in_edge)
                 # Now add the nodes and move the edges...
                 self.graph.add_node(rd_scan)
                 self.graph.add_node(wr_scan)
@@ -53,12 +59,12 @@ class SAMDotGraph():
                 mem_to_buff = pydot.Edge(src=buffet, dst=memory, label='mem_to_buff')
                 self.graph.add_edge(mem_to_buff)
                 # Now inject the read scanner to other nodes...
-                rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(), attrs=crd_out_edge.get_attributes())
-                rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(), attrs=ref_out_edge.get_attributes())
+                rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(), **crd_out_edge.get_attributes())
+                rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(), **ref_out_edge.get_attributes())
                 self.graph.add_edge(rd_to_down_crd)
                 self.graph.add_edge(rd_to_down_ref)
                 if ref_in_edge is not None:
-                    up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, attrs=ref_in_edge.get_attributes())
+                    up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, **ref_in_edge.get_attributes())
                     self.graph.add_edge(up_to_ref)
 
                 # Delte old stuff...
@@ -72,17 +78,28 @@ class SAMDotGraph():
                 # Rewrite this node to a write
                 # root = 'root' in node.get_name()
                 attrs = node.get_attributes()
+                node.create_attribute_methods(attrs)
                 rd_scan = pydot.Node("rd_scan", attrs=attrs)
                 wr_scan = pydot.Node("wr_scan", attrs=attrs)
                 buffet = pydot.Node("buffet", attrs=attrs)
                 glb_read = pydot.Node("glb_read", attrs=attrs)
                 memory = pydot.Node("memory", attrs=attrs)
                 vals = 'vals' in node.get_mode()
+                # for edge in self.graph.get_edges():
+                    # print()
+                #     t_att = edge.get_attributes()
+                #     edge.create_attribute_methods(t_att)
                 in_edge = None
+                # print(vals)
+                # print(node.get_name())
                 if vals:
-                    in_edge = [edge for edge in self.graph.get_edges() if edge.get_label() == "vals" and edge.get_source() == node][0]
+                    in_edge = [edge for edge in self.graph.get_edges() if "val" in edge.get_label() and edge.get_destination() == node.get_name()][0]
                 else:
-                    in_edge = [edge for edge in self.graph.get_edges() if edge.get_label() == "crd" and edge.get_source() == node][0]
+                    # in_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_source() == node.get_name()][0]
+                    # for edge in self.graph.get_edges():
+                        # print(edge.get_label())
+                    in_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_destination() == node.get_name()][0]
+                    # print(in_edge)
 
                 # Now add the nodes and move the edges...
                 self.graph.add_node(rd_scan)
@@ -102,7 +119,7 @@ class SAMDotGraph():
                 mem_to_buff = pydot.Edge(src=buffet, dst=memory, label='mem_to_buff')
                 self.graph.add_edge(mem_to_buff)
                 # Now inject the read scanner to other nodes...
-                up_to_wr = pydot.Edge(src=in_edge.get_source(), dst=wr_scan, attrs=in_edge.get_attributes())
+                up_to_wr = pydot.Edge(src=in_edge.get_source(), dst=wr_scan, **in_edge.get_attributes())
                 self.graph.add_edge(up_to_wr)
 
                 # Delte old stuff...
@@ -125,5 +142,6 @@ if __name__ == "__main__":
     temp_out = "/home/max/Documents/SPARSE/sam/mek.gv"
     sdg = SAMDotGraph(filename=matmul_dot)
     graph = sdg.get_graph()
+    print(graph)
     output_graphviz = graph.create_dot()
     graph.write_dot(temp_out)

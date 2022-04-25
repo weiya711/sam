@@ -1,8 +1,23 @@
 
 
 class HWNode():
-    def __init__(self) -> None:
+    def __init__(self, name=None) -> None:
         self._dot_node = None
+        if name is not None:
+            self.name = name
+        else:
+            self.name = "default_name"
+
+    def connect(self, other):
+        pass
+
+    def configure(self, **kwargs):
+        pass
+
+
+class GLBNode(HWNode):
+    def __init__(self) -> None:
+        super().__init__()
 
     def connect(self, other):
         pass
