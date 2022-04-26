@@ -1,6 +1,7 @@
 import pydot
 import os
 import networkx as nx
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
 directory = '../compiler/sam-outputs/dot'
 
@@ -63,18 +64,33 @@ out_name = []
 for filename in os.listdir(directory):
     f = os.path.join(directory, filename)
     out_name.append(filename.strip(".gv"))
+=======
+directory = '../compiler/sam-outputs/dot'
+ 
+# iterate over files in
+# that directory
+file_paths = []
+for filename in os.listdir(directory):
+    f = os.path.join(directory, filename)
+>>>>>>> 104e1882e45da6c5991cc924c5b48251129541b6
     # checking if it is a file
     if os.path.isfile(f):
         file_paths.append(f)
         
+<<<<<<< HEAD
 i =0
 for apath in file_paths[0:1]:
     print(apath)
     apath = os.path.join(directory, "matmul_ijk.gv")
+=======
+for apath in file_paths:
+    #print(apath)
+>>>>>>> 104e1882e45da6c5991cc924c5b48251129541b6
     graphs = pydot.graph_from_dot_file(apath)
     graph = graphs[0]
     networkx_graph = nx.nx_pydot.from_pydot(graph)
 
+<<<<<<< HEAD
     #for u in list(nx.topological_sort(networkx_graph)):#    networkx_graph.nodes(data=True):
     #    print(str(u) + " " + networkx_graph.nodes[u]["comment"])
     #print("--------------------------------")
@@ -181,3 +197,12 @@ for apath in file_paths[0:1]:
 
     f.close()
     i += 1
+=======
+
+    for u in networkx_graph.nodes(data=True):
+        print(u)
+    print("--------------------------------")
+    for u in list(nx.topological_sort(networkx_graph)):
+        print(u)
+    assert(0)
+>>>>>>> 104e1882e45da6c5991cc924c5b48251129541b6
