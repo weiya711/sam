@@ -79,7 +79,7 @@ for apath in file_paths[0:1]:
     #    print(str(u) + " " + networkx_graph.nodes[u]["comment"])
     #print("--------------------------------")
      
-    f = open(out_name[i]+ ".py", "w")
+    f = open(out_name[i]+ ".txt", "w")
     generate_header(f, out_name[i])
     
     nx.draw(networkx_graph, with_labels=True)
@@ -119,17 +119,20 @@ for apath in file_paths[0:1]:
         if node_info["name"] == "fiberlookup":
             print(u, " fiber lookup in :: ", networkx_graph.nodes[u]['comment'])
             if node_info["format"] == "dense":
-                f.write(tab(1) + node_info["name"] + "_" + node_info["tensor"] + node_info["index"] +"_" + str(u) +" = UncompressRdScan( dim = " + node_info["mode"] + ", debug = debug_sim) \n")
-                d[u]["object"] =  node_info["name"] + "_" + node_info["tensor"] + node_info["index"] +"_" + str(u);
+                f.write(tab(1) + "rdscan_" + node_info["tensor"] + node_info["index"] +"_" + str(u) +" = UncompressRdScan( dim = " + node_info["mode"] + ", debug = debug_sim) \n")
+                d[u]["object"] = "rd_scan_" + node_info["tensor"] + node_info["index"] +"_" + str(u);
 
             if node_info["format"] == "compressed":
-                f.write(tab(1) +  node_info["name"] + "_" + node_info["tensor"] + node_info["index"]+"_" + str(u)  +" = CompressedRdScan(crd_arr=in_mat_crds1[" + node_info["mode"] + "], seg_arr=in_mat_segs1[" +node_info["mode"] + "], debug=debug_sim)\n")
-                d[u]["object"] =  node_info["name"] + "_" + node_info["tensor"] + node_info["index"] +"_" + str(u);
+                f.write(tab(1) + "rdscan_" + node_info["tensor"] + node_info["index"]+"_" + str(u)  +" = CompressedRdScan(crd_arr=in_mat_crds1[" + node_info["mode"] + "], seg_arr=in_mat_segs1[" +node_info["mode"] + "], debug=debug_sim)\n")
+                d[u]["object"] = "rd_scan_" + node_info["tensor"] + node_info["index"] +"_" + str(u);
 
         if node_info["name"] == "arrayvals":
             print(u, " arrayvals in ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["name"] + "_"+ node_info["tensor"] + "_" + str(u) +  " = Array(init_arr=in_mat_vals2, debug = debug_sim)\n")
-            d[u]["object"] =  node_info["name"] + "_" + node_info["tensor"] + "_" + str(u);
+            f.write(tab(1) + "val_"+ node_info["tensor"] + "_" + str(u) +  " = Array(init_arr=in_mat_vals2, debug = debug_sim)\n")
+            d[u]["object"] = "val_" + node_info["tensor"] + "_" + str(u);
+
+
+        
 
         if "broadcast" in networkx_graph.nodes[u]['comment']:
             print(u, "broadcast in :: ", networkx_graph.nodes[u]['comment'])
@@ -138,51 +141,43 @@ for apath in file_paths[0:1]:
 
         if node_info["name"] == "repsiggen":
             print(u, " repeatsiggen in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["name"] + "_" + node_info["index"] +  "_" + str(u) +  " = RepeatSigGen(debug=debug_sim)\n")
-            d[u]["object"] = node_info["name"] + "_" + node_info["index"] + "_" + str(u);
+            f.write(tab(1) + "repeatsiggen_" + node_info["tensor"] +node_info["index"] +  "_" + str(u) +  " = RepeatSigGen(debug=debug_sim)\n")
+            d[u]["object"] = "repeatsiggen_" + node_info["tensor"] +node_info["index"] +"_" + str(u);
 
         if node_info["name"] == "repeat":
             print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["name"] + "_" + node_info["tensor"] + node_info["index"]  +  "_" + str(u) + " = Repeat(debu=debug_sim)\n")
-            d[u]["object"] =  node_info["name"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u);
+            f.write(tab(1) + "repeat_" + node_info["tensor"] + node_info["index"]  +  "_" + str(u) + " = Repeat(debu=debug_sim)\n")
+            d[u]["object"] = "repeat_" + node_info["tensor"] + node_info["index"] +"_" + str(u);
+
 
         if node_info["name"] == "intersect":
             print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["name"] + "_" + str(u)  + " = Intersect2(debug = debug_sim)\n")
-            d[u]["object"] =  node_info["name"] + "_" +  str(u);
-
-
+            f.write(tab(1) + "inter_" + str(u)  + " = Intersect2(debug = debug_sim)\n")
+            d[u]["object"] = "rd_scan_" + node_info["tensor"] + node_info["index"] +"_" + str(u);
 
         if node_info["name"] == "mul":
-            f.write(tab(1) +  node_info["name"] + "_" + str(u) + " = Multiply2(debug=debug_sim)\n")
-            d[u]["object"] =  node_info["name"] + "_" + str(u)
+            f.write(tab(1) + "mul_" + str(u) + " = Multiply2(debug=debug_sim)\n")
 
         if node_info["name"] == "reduce":
             f.write(tab(1) + "reduce_" + str(u) +" = Reduce(debug=debug_sum)\n")
 
         if node_info["name"] == "fibrewrite":
             if node_info["mode"] == "vals":
-                f.write(tab(1) +  node_info["name"] + "_" + name_info["tensor"]  +  name_info["mode"]  + "_" + str(u) + " = ValsWrScan(size=dim*dim, fill=fill, debug=debug_sim)\n")
+                f.write(tab(1) + "vals_" + name_info["tensor"]  + "_" + str(u) + " = ValsWrScan(size=dim*dim, fill=fill, debug=debug_sim)\n")
 
             else:
-                f.write(tab(1) +  node_info["name"] + "_" + name_info["tensor"] + name_info["mode"] + " = CompressWrScan(seg_size = ", size_computation_write(int(node_info["mode"]) + 1) +  ", size=dim, fill = fill)\n")
+                f.write(tab(1) + "wrscan_" + name_info["tensor"] + name_info["mode"] + " = CompressWrScan(seg_size = ", size_computation_write(int(node_info["mode"]) + 1) +  ", size=dim, fill = fill)\n")
 
 
 
 # nx.topological_sort(networkx_graph)
-    f.write("\n\n")
     f.write(tab(1) + "while not done and time < TIMEOUT:\n")
     for u,v,a in networkx_graph.edges(data=True):
         print(u, " ", v, " ", a)
-        if d[v]["name"] == "fiberlookup":
-            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + str(d[u]["object"]) + ".in_ref_" + d[u]["tensor"] +".pop())\n")
-            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-
-        if d[v]["name"] == "repsiggen":
-            f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u]["object"]) + ".out_" + str(a["label"])+")\n")
-            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-
-        if d[v]["name"] == "repeat":
-            f.write(tab(2) + d[v]["object"] + ".set_in_" + str(a["label"]) + "(" + d[u]["object"]+ ".out_repeat())\n\n")
 
 
+
+    
+
+    f.close()
+    i += 1
