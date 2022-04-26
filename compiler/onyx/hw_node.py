@@ -1,3 +1,20 @@
+from enum import Enum
+
+
+class HWNodeType(Enum):
+    GLB = 1
+    Buffet = 2
+    Memory = 3
+    ReadScanner = 4
+    WriteScanner = 5
+    Intersect = 6
+    Reduce = 7
+    Lookup = 8
+    Merge = 9
+    Repeat = 10
+    Compute = 11
+    Broadcast = 12
+    RepSigGen = 13
 
 
 class HWNode():

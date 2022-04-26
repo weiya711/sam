@@ -1,5 +1,9 @@
 import pydot
+from sam.compiler.onyx.hw_node import HWNodeType
 
+class SAMDotGraphLoweringError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 class SAMDotGraph():
 
@@ -12,6 +16,38 @@ class SAMDotGraph():
         # Passes to lower to CGRA
         self.rewrite_lookup()
         self.rewrite_arrays()
+        self.map_nodes()
+
+
+    def map_nodes(self):
+        '''
+        Iterate through the nodes and map them to the proper HWNodes
+        '''
+        for node in self.graph.get_nodes():
+            # Simple write the HWNodeType attribute
+            n_type = node.get_type()
+            assert n_type is not "fiberwrite", "fiberwrite should have been rewritten out..."
+            assert n_type is not "fiberlookup", "fiberlookup should have been rewritten out..."
+            assert n_type is not "arrayvals", "arrayvals should have been rewritten out..."
+
+            hw_nt = None
+            if n_type == "broadcast":
+                hw_nt = HWNodeType.Broadcast
+            elif n_type == "repsiggen":
+                hw_nt = HWNodeType.RepSigGen
+            elif n_type == "repeat":
+                hw_nt = HWNodeType.Repeat
+            elif n_type == "mul":
+                hw_nt = HWNodeType.Compute
+            elif n_type == "reduce":
+                hw_nt = HWNodeType.Reduce
+            elif n_type == "intersect":
+                hw_nt = HWNodeType.Intersect
+            else:
+                raise SAMDotGraphLoweringError()
+
+            node.get_attributes()['hwnode'] = hw_nt
+
 
     def get_next_seq(self):
         ret = self.seq
@@ -35,11 +71,11 @@ class SAMDotGraph():
                 attrs = node.get_attributes()
                 og_label = attrs['label']
                 del attrs['label']
-                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_rd_scan")
-                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan")
-                buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet")
-                glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_write")
-                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM")
+                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_rd_scan", hwnode=HWNodeType.ReadScanner)
+                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan", hwnode=HWNodeType.WriteScanner)
+                buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet", hwnode=HWNodeType.Buffet)
+                glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_write", hwnode=HWNodeType.GLB)
+                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM",  hwnode=HWNodeType.Memory)
                 crd_out_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_source() == node.get_name()][0]
                 ref_out_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_source() == node.get_name()][0]
                 ref_in_edge = None
@@ -87,11 +123,11 @@ class SAMDotGraph():
                 node.create_attribute_methods(attrs)
                 og_label = attrs['label']
                 del attrs['label']
-                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_rd_scan")
-                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan")
-                buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet")
-                glb_read = pydot.Node(f"glb_read_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_read")
-                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM")
+                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_rd_scan", hwnode=HWNodeType.ReadScanner)
+                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan", hwnode=HWNodeType.WriteScanner)
+                buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet", hwnode=HWNodeType.Buffet)
+                glb_read = pydot.Node(f"glb_read_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_read", hwnode=HWNodeType.GLB)
+                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM", hwnode=HWNodeType.Memory)
                 vals = 'vals' in node.get_mode()
                 in_edge = None
                 if vals:
@@ -136,7 +172,8 @@ class SAMDotGraph():
 
 
 if __name__ == "__main__":
-    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
+    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
+    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
     temp_out = "/home/max/Documents/SPARSE/sam/mek.gv"
     sdg = SAMDotGraph(filename=matmul_dot)
     graph = sdg.get_graph()
