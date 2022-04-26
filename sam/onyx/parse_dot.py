@@ -1,5 +1,5 @@
 import pydot
-from sam.compiler.onyx.hw_node import HWNodeType
+from sam.onyx.hw_node import HWNodeType
 
 class SAMDotGraphLoweringError(Exception):
     def __init__(self, *args: object) -> None:
