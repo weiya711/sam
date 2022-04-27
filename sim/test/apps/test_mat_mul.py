@@ -153,6 +153,8 @@ def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
 
     if not out_val:
         assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
     else:
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
         out_tup = remove_zeros(out_tup)
