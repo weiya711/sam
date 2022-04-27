@@ -5,6 +5,9 @@ import os
 import glob
 import numpy
 
+import numpy as np
+from dataclasses import dataclass
+
 SUITESPARSE_PATH = os.environ['SUITESPARSE_PATH']
 
 # TnsFileLoader loads a tensor stored in .tns format.
@@ -139,6 +142,15 @@ class ScipyTensorShifter:
         else:
             assert(False)
 
+@dataclass
+class DCMatrix:
+    seg0: [int]
+    crd0: [int]
+    seg1: [int]
+    crd1: [int]
+    data: [float]
+
+
 # ScipyMatrixMarketTensorLoader loads tensors in the matrix market format
 # into scipy.sparse matrices.
 class ScipyMatrixMarketTensorLoader:
@@ -153,8 +165,26 @@ class ScipyMatrixMarketTensorLoader:
             return scipy.sparse.csc_matrix(coo)
         elif self.format == "coo":
             return coo
+        elif self.format == "cooT":
+            return coo
         else:
-            assert(False)
+            if self.format == "dense":
+                return coo.todense()
+            elif self.format == "denseT":
+                return np.transpose(coo.todense())
+
+            dok = scipy.sparse.dok_matrix(coo)
+            data = dok.items()
+
+            dok.
+
+            if self.format == "dcsr":
+
+                matrix = DCMatrix()
+            elif self.format == "dcsc":
+
+            else:
+                assert(False)
 
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
 # into pydata.sparse matrices.
