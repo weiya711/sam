@@ -31,7 +31,7 @@ def size_computation_write(a):
 def breakup_node_info(node_name):
     d  = dict(x.split("=") for x in node_name[1:-1].split(","))
     #for a, b in d.items():
-     #   print(a, "", b)
+    #   b.strip()
     return d
 
 
@@ -169,32 +169,75 @@ for apath in file_paths[0:1]:
             d[u]["object"] =  node_info["name"] + "_" + str(u)
 
         if node_info["name"] == "reduce":
-            f.write(tab(1) + "reduce_" + str(u) +" = Reduce(debug=debug_sum)\n")
+            f.write(tab(1) + node_info["name"] + "_" + str(u) +" = Reduce(debug=debug_sum)\n")
+            d[u]["object"] =  node_info["name"] + "_" + str(u)
 
         if node_info["name"] == "fibrewrite":
             if node_info["mode"] == "vals":
                 f.write(tab(1) +  node_info["name"] + "_" + name_info["tensor"]  +  name_info["mode"]  + "_" + str(u) + " = ValsWrScan(size=dim*dim, fill=fill, debug=debug_sim)\n")
-
+                d[u]["object"] =  node_info["name"] + "_" + name_info["tensor"]  +  name_info["mode"]  + "_" + str(u)
             else:
-                f.write(tab(1) +  node_info["name"] + "_" + name_info["tensor"] + name_info["mode"] + " = CompressWrScan(seg_size = ", size_computation_write(int(node_info["mode"]) + 1) +  ", size=dim, fill = fill)\n")
+                f.write(tab(1) +  node_info["name"] + "_" + name_info["tensor"] + name_info["mode"] + str(u) + " = CompressWrScan(seg_size = ", size_computation_write(int(node_info["mode"]) + 1) +  ", size=dim, fill = fill)\n")
 
+                d[u]["object"] =  node_info["name"] + "_" + name_info["tensor"]  +  name_info["mode"]  + "_" + str(u)
 
 
 # nx.topological_sort(networkx_graph)
     f.write("\n\n")
     f.write(tab(1) + "while not done and time < TIMEOUT:\n")
+    intersect_dataset = {}
+    mul_dataset = {}
     for u,v,a in networkx_graph.edges(data=True):
         print(u, " ", v, " ", a)
         if d[v]["name"] == "fiberlookup":
-            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + str(d[u]["object"]) + ".in_ref_" + d[u]["tensor"] +".pop())\n")
+            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + str(d[u]["object"]).strip('"') + ".in_ref_" + d[u]["tensor"] +".pop())\n")
             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
 
         if d[v]["name"] == "repsiggen":
-            f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u]["object"]) + ".out_" + str(a["label"])+")\n")
+            f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u]["object"]).strip('"') + ".out_" + str(a["label"]).strip('"')+")\n")
             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
 
         if d[v]["name"] == "repeat":
-            f.write(tab(2) + d[v]["object"] + ".set_in_" + str(a["label"]) + "(" + d[u]["object"]+ ".out_repeat())\n\n")
+            f.write(tab(2) + d[v]["object"] + ".set_in_" + str(a["label"]).strip('"') + "(" + d[u]["object"]+ ".out_repeat())\n\n")
+            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+
+        if d[v]["name"] == "arrayvals":
+            f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u]["object"]+ ".out_ref())\n")
+            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+            
+        if d[v]["name"] == "intersect":
+            if d[v]["object"] not in intersect_dataset:
+                intersect_dataset[d[v]["object"]] = [d[u]["object"]]  
+                f.write(tab(2) + d[v]["object"] + ".set_in" + "1" + "(" + d[u]["object"] + ".out_ref(), " +  d[u]["object"]+ ".out_crd()))\n")
+            else:
+                if d[u]["object"] not in intersect_dataset[d[v]["object"]]:
+                    intersect_dataset[d[v]["object"]].append(d[u]["object"])
+                    f.write(tab(2) + d[v]["object"] + ".set_in" + str(len(intersect_dataset[d[v]["object"]])) + "(" + d[u]["object"] + ".out_ref(), " +  d[u]["object"]+ ".out_crd()))\n\n")
+                    f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
+
+        if d[v]["name"] == "mul":
+            if d[v]["object"] not in mul_dataset:
+                mul_dataset[d[v]["object"]] = [d[u]["object"]]  
+                f.write(tab(2) + d[v]["object"] + ".set_in" + "1" + "(" + d[u]["object"] + ".out_load())\n")
+            else:
+                if d[u]["object"] not in mul_dataset[d[v]["object"]]:
+                    mul_dataset[d[v]["object"]].append(d[u]["object"])
+                    f.write(tab(2) + d[v]["object"] + ".set_in" + str(len(mul_dataset[d[v]["object"]])) + "(" + d[u]["object"] + ".out_load" +  str(len(mul_dataset[d[v]["object"]])) + "())\n\n")
+                    f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
+
+
+        if d[v]["name"] == "reduce":
+            f.write(tab(2) + d[v]["object"] + ".set_in_"+ str(a["label"]).strip('"')  +"(" + d[u]["object"] + ".out_" + str(a["label"]).strip('"') + "())\n")
+            f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
+
+
+        if d[v]["name"] == "fiberwrite":
+            if d[v]["mode"] == "vals":
+                print("")
+            else:
+                print(u, " ", v)
+               # f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u]["object"] + "out_" + str(a["label"]).strip('"') + "())\n")
+                #f.write(tab(2) + d[v]["object"] + ".update()\n\n")
 
 
 

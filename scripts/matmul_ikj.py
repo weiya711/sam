@@ -22,12 +22,16 @@ def test_matmul_ikj():
 
 
 	while not done and time < TIMEOUT:
-		repeat_Bj_10.set_in_"ref"(fiberlookup_Bi_17.out_repeat())
+		repeat_Bj_10.set_in_ref(fiberlookup_Bi_17.out_repeat())
 
-		repsiggen_i_15.set_istream(fiberlookup_Bi_17.out_"crd")
+		repeat_Bj_10.update()
+
+		repsiggen_i_15.set_istream(fiberlookup_Bi_17.out_crd)
 		repsiggen_i_15.update()
 
-		repeat_Ci_14.set_in_"repsig"(repsiggen_i_15.out_repeat())
+		repeat_Ci_14.set_in_repsig(repsiggen_i_15.out_repeat())
+
+		repeat_Ci_14.update()
 
 		fiberlookup_Cj_13.set_in_ref(repeat_Ci_14.in_ref_C.pop())
 		fiberlookup_Cj_13.update()
@@ -35,11 +39,32 @@ def test_matmul_ikj():
 		fiberlookup_Ck_9.set_in_ref(fiberlookup_Cj_13.in_ref_C.pop())
 		fiberlookup_Ck_9.update()
 
-		repsiggen_j_11.set_istream(fiberlookup_Cj_13.out_"crd")
+		repsiggen_j_11.set_istream(fiberlookup_Cj_13.out_crd)
 		repsiggen_j_11.update()
 
-		repeat_Bj_10.set_in_"repsig"(repsiggen_j_11.out_repeat())
+		repeat_Bj_10.set_in_repsig(repsiggen_j_11.out_repeat())
+
+		repeat_Bj_10.update()
 
 		fiberlookup_Bk_8.set_in_ref(repeat_Bj_10.in_ref_B.pop())
 		fiberlookup_Bk_8.update()
+
+		intersect_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd()))
+		arrayvals_B_5.set_load(intersect_7.out_ref())
+		arrayvals_B_5.update()
+
+		arrayvals_C_6.set_load(intersect_7.out_ref())
+		arrayvals_C_6.update()
+
+		mul_4.set_in1(arrayvals_B_5.out_load())
+		reduce_3.set_in_val(mul_4.out_val())
+		reduce_3.update()
+
+		mul_4.set_in2(arrayvals_C_6.out_load2())
+
+		mul_4.update()
+
+		intersect_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd()))
+
+		intersect_7.update()
 
