@@ -1,7 +1,7 @@
 import pytest
-from sim.src.base import remove_emptystr
-from sim.src.compute import Add2, Multiply2
-from sim.test.primitives.test_intersect import TIMEOUT
+from sam.sim.src.base import remove_emptystr
+from sam.sim.src.compute import Add2, Multiply2
+from sam.sim.test.primitives.test_intersect import TIMEOUT
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])

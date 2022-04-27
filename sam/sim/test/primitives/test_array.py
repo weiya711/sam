@@ -1,7 +1,7 @@
 import pytest
 import random
-from sim.src.array import Array
-from sim.test.test import TIMEOUT
+from sam.sim.src.array import Array
+from sam.sim.test.test import TIMEOUT
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])

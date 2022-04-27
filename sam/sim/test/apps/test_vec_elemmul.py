@@ -1,13 +1,13 @@
 import pytest
 import random
 
-from sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
-from sim.src.wr_scanner import ValsWrScan, CompressWrScan
-from sim.src.joiner import Intersect2
-from sim.src.compute import Multiply2
-from sim.src.array import Array
+from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.wr_scanner import ValsWrScan, CompressWrScan
+from sam.sim.src.joiner import Intersect2
+from sam.sim.src.compute import Multiply2
+from sam.sim.src.array import Array
 
-from sim.test.test import TIMEOUT, check_arr, check_seg_arr
+from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])

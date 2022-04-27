@@ -4,8 +4,8 @@ import random
 import numpy as np
 import pytest
 
-from sim.src.wr_scanner import WrScan, CompressWrScan
-from sim.src.array import Array
+from sam.sim.src.wr_scanner import WrScan, CompressWrScan
+from sam.sim.src.array import Array
 
 TIMEOUT = 100000
 

@@ -2,9 +2,9 @@ import copy
 
 import pytest
 import random
-from sim.src.wr_scanner import ValsWrScan, CompressWrScan
+from sam.sim.src.wr_scanner import ValsWrScan, CompressWrScan
 
-from sim.test.test import *
+from sam.sim.test.test import *
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])

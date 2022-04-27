@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 import copy
 import random
-from sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 
-from sim.test.test import TIMEOUT
+from sam.sim.test.test import TIMEOUT
 
 ########################################
 # Uncompressed Read Scanner Unit Tests #
