@@ -1,12 +1,12 @@
-from sim.src.rd_scanner import CompressedRdScan
-from sim.src.wr_scanner import ValsWrScan
-from sim.src.joiner import Intersect2
-from sim.src.compute import Multiply2
-from sim.src.crd_manager import CrdDrop
-from sim.src.repeater import Repeat, RepeatSigGen
-from sim.src.accumulator import Reduce
+from sam.sim.src.rd_scanner import CompressedRdScan
+from sam.sim.src.wr_scanner import ValsWrScan
+from sam.sim.src.joiner import Intersect2
+from sam.sim.src.compute import Multiply2
+from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.repeater import Repeat, RepeatSigGen
+from sam.sim.src.accumulator import Reduce
 
-from sim.test.test import *
+from sam.sim.test.test import *
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
