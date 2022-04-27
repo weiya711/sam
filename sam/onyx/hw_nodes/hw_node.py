@@ -30,3 +30,6 @@ class HWNode():
 
     def configure(self, **kwargs):
         pass
+
+    def get_name(self):
+        return self.name

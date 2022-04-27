@@ -1,4 +1,5 @@
 from sam.onyx.hw_nodes.hw_node import *
+from sam.onyx.hw_nodes.compute_node import *
 from sam.onyx.hw_nodes.glb_node import *
 from sam.onyx.hw_nodes.buffet_node import *
 from sam.onyx.hw_nodes.memory_node import *
@@ -9,7 +10,6 @@ from sam.onyx.hw_nodes.reduce_node import *
 from sam.onyx.hw_nodes.lookup_node import *
 from sam.onyx.hw_nodes.merge_node import *
 from sam.onyx.hw_nodes.repeat_node import *
-from sam.onyx.hw_nodes.compute_node import *
 from sam.onyx.hw_nodes.broadcast_node import *
 from sam.onyx.hw_nodes.repsiggen_node import *
 

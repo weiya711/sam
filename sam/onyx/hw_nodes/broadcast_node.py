@@ -1,7 +1,8 @@
 from sam.onyx.hw_nodes.hw_node import *
+from sam.onyx.hw_nodes.broadcast_node import *
+from sam.onyx.hw_nodes.memory_node import *
 from sam.onyx.hw_nodes.glb_node import *
 from sam.onyx.hw_nodes.buffet_node import *
-from sam.onyx.hw_nodes.memory_node import *
 from sam.onyx.hw_nodes.read_scanner_node import *
 from sam.onyx.hw_nodes.write_scanner_node import *
 from sam.onyx.hw_nodes.intersect_node import *
@@ -10,7 +11,8 @@ from sam.onyx.hw_nodes.lookup_node import *
 from sam.onyx.hw_nodes.merge_node import *
 from sam.onyx.hw_nodes.repeat_node import *
 from sam.onyx.hw_nodes.compute_node import *
-from sam.onyx.hw_nodes.repeat_node import *
+from sam.onyx.hw_nodes.repsiggen_node import *
+
 
 
 class BroadcastNode(HWNode):

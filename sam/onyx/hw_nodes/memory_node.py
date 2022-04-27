@@ -1,7 +1,7 @@
 from sam.onyx.hw_nodes.hw_node import *
+from sam.onyx.hw_nodes.memory_node import *
 from sam.onyx.hw_nodes.glb_node import *
 from sam.onyx.hw_nodes.buffet_node import *
-from sam.onyx.hw_nodes.memory_node import *
 from sam.onyx.hw_nodes.read_scanner_node import *
 from sam.onyx.hw_nodes.write_scanner_node import *
 from sam.onyx.hw_nodes.intersect_node import *
@@ -15,41 +15,65 @@ from sam.onyx.hw_nodes.repsiggen_node import *
 
 
 class MemoryNode(HWNode):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, name=None) -> None:
+        super().__init__(name=name)
+        self._connected_to_buffet = False
 
     def connect(self, other):
 
+        # Return false if already connected...
+        if self._connected_to_buffet:
+            return None
+        new_conns = None
         other_type = type(other)
 
+        this_name = self.get_name()
+        other_name = other.get_name()
+
         if other_type == GLBNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == BuffetNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            buffet = other_name
+            mem = this_name
+            new_conns = {
+                'addr_to_mem' : [
+            ([(buffet, "addr_to_mem"), (mem, "input_width_16_num_1"), (mem, "input_width_16_num_2")], 16),
+            ([(buffet, "data_to_mem"), (mem, "input_width_16_num_0")], 16),
+            ([(buffet, "wen_to_mem"), (mem, "input_width_1_num_1")], 1),
+            ([(buffet, "ren_to_mem"), (mem, "input_width_1_num_0")], 1),
+            ([(mem, "output_width_16_num_0"), (buffet, "data_from_mem")], 16),
+            ([(mem, "output_width_1_num_1"), (buffet, "valid_from_mem")], 1),
+            ([(mem, "output_width_1_num_0"), (buffet, "ready_from_mem")], 1),
+            # Values
+            # ([(wscan_vals, "ready_out_0"), (scan_aroot, "ready_in_0")], 1),
+                ]
+            }
+            self._connected_to_buffet = True
+            return new_conns
         elif other_type == MemoryNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == ReadScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == WriteScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == IntersectNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == ReduceNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == LookupNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == MergeNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == RepeatNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == ComputeNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == BroadcastNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == RepSigGenNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         else:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
 
     def configure(self, **kwargs):
         pass
