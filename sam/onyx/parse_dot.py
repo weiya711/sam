@@ -1,9 +1,11 @@
 import pydot
-from sam.onyx.hw_node import HWNodeType
+from sam.onyx.hw_nodes.hw_node import HWNodeType
+
 
 class SAMDotGraphLoweringError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
 
 class SAMDotGraph():
 
@@ -17,7 +19,6 @@ class SAMDotGraph():
         self.rewrite_lookup()
         self.rewrite_arrays()
         self.map_nodes()
-
 
     def map_nodes(self):
         '''
@@ -52,7 +53,6 @@ class SAMDotGraph():
 
                 node.get_attributes()['hwnode'] = hw_nt
 
-
     def get_next_seq(self):
         ret = self.seq
         self.seq += 1
@@ -77,7 +77,7 @@ class SAMDotGraph():
                 wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
                 buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
                 glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
-                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM",  hwnode=f"{HWNodeType.Memory}")
+                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
                 crd_out_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_source() == node.get_name()][0]
                 ref_out_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_source() == node.get_name()][0]
                 ref_in_edge = None
@@ -177,7 +177,7 @@ class SAMDotGraph():
             wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
             buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
             glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
-            memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM",  hwnode=f"{HWNodeType.Memory}")
+            memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
             # crd_out_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_source() == node.get_name()][0]
             # ref_out_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_source() == node.get_name()][0]
             val_out_edge = [edge for edge in self.graph.get_edges() if "val" in edge.get_label() and edge.get_source() == node.get_name()][0]

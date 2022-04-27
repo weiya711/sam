@@ -6,6 +6,7 @@ from sam.sim.test.test import TIMEOUT
 from sam.sim.src.base import remove_emptystr
 
 
+
 ########################################
 # Uncompressed Read Scanner Unit Tests #
 ########################################

@@ -58,6 +58,7 @@ def gen_stream(n=1, max_val=10, max_nnz=10):
     return result
 
 
+
 def dedup_adj(olist):
     result = copy.deepcopy(olist)
     for i in range(len(result) - 1, 0, -1):
@@ -66,11 +67,13 @@ def dedup_adj(olist):
     return result
 
 
+
 def gen_crd_arr(dim=4):
     result = [i for i in range(dim) if bool(random.getrandbits(1))]
     if len(result) == 0:
         return [0]
     return result
+
 
 
 # Returns crd_arr, seg_arr given a list of coordinates
@@ -130,6 +133,7 @@ def repeat_crds(crd_arr, seg_arr):
         crd = crd_arr[i]
         result += [crd] * n
     return result
+
 
 
 # Given coordinate and segment arrays,

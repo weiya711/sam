@@ -1,7 +1,5 @@
 from .base import *
-
 from .repeater import RepeatSigGen, Repeat
-
 
 class CrdDrop(Primitive):
     def __init__(self, **kwargs):

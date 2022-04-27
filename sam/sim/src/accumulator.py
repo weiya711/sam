@@ -2,6 +2,7 @@ from .base import *
 from .crd_manager import CrdPtConverter
 
 
+
 class Reduce(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

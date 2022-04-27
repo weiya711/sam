@@ -58,6 +58,7 @@ def test_crd_drop_1d(arrs, debug_sim):
     assert (out_inner == remove_emptystr(icrd_gold))
 
 
+
 arrs_dict0 = {"ocrd_in": ['', 0, 1, '', '', 'S0', 'D', '', '', '', ''],
               "icrd_in": ['', '', '', 1, '', '', 'S0', '', '', 'S1', 'D'],
               "gold": [0, 'S0', 'D']}
