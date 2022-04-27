@@ -14,7 +14,6 @@ from sam.onyx.hw_nodes.compute_node import *
 from sam.onyx.hw_nodes.repsiggen_node import *
 
 
-
 class BroadcastNode(HWNode):
 
     def __init__(self) -> None:
