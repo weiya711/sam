@@ -4,6 +4,7 @@ import sparse
 import os
 import glob
 import numpy
+import itertools
 
 import numpy as np
 from dataclasses import dataclass
@@ -143,7 +144,8 @@ class ScipyTensorShifter:
             assert(False)
 
 @dataclass
-class DCMatrix:
+class DoublyCompressedMatrix:
+    shape: (int)
     seg0: [int]
     crd0: [int]
     seg1: [int]
@@ -155,34 +157,166 @@ class DCMatrix:
 # into scipy.sparse matrices.
 class ScipyMatrixMarketTensorLoader:
     def __init__(self, format):
-        self.format = format 
+        self.format = format
 
     def load(self, path):
         coo = scipy.io.mmread(path)
-        if self.format == "csr":
+        return coo
+
+def shape_str(shape):
+    return str(shape[0]) + " " + str(shape[1])
+
+# FIXME: This fixed point number of decimals may not be enough
+def array_str(array):
+    if isinstance(array[0], float):
+        return ' '.join(['{:5.5f}'.format(item) for item in array])
+
+    return ' '.join([str(item) for item in array])
+
+# InputCacheSuiteSparse attempts to avoid reading the same tensor from disk multiple
+# times in a benchmark run.
+class InputCacheSuiteSparse:
+    def __init__(self):
+        self.lastLoaded = None
+        self.lastName = None
+        self.tensor = None
+
+    def load(self, tensor, cast, format_str):
+        if self.lastName == str(tensor):
+            return self.tensor
+        else:
+            self.lastLoaded = tensor.load(ScipyMatrixMarketTensorLoader(format_str))
+            self.lastName = str(tensor)
+            if cast:
+                self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
+            else:
+                self.tensor = self.lastLoaded
+            return self.tensor
+
+    def convert_format(self, tensor, cast, format_str):
+        coo = self.load(tensor, cast, format_str)
+
+        if format_str == "csr":
             return scipy.sparse.csr_matrix(coo)
-        elif self.format == "csc":
+        elif format_str == "csc":
             return scipy.sparse.csc_matrix(coo)
-        elif self.format == "coo":
+        elif format_str == "coo":
             return coo
-        elif self.format == "cooT":
+        elif format_str == "cooT":
+            # This matrix will get transposed on writeout
             return coo
         else:
-            if self.format == "dense":
+            if format_str == "dense":
                 return coo.todense()
-            elif self.format == "denseT":
-                return np.transpose(coo.todense())
+            elif format_str == "denseT":
+                return coo.todense().getT()
+            if format_str == "dcsr":
+                csr = scipy.sparse.csr_matrix(coo)
+                has_row = [rc > 0 for rc in csr.getnnz(1)]
+                segend = sum(has_row)
+                seg0 = [0, segend]
+                crd0 = [i for i, r in enumerate(has_row) if r]
+                seg1 = [0] + list(itertools.accumulate(map(int, csr.getnnz(1))))
+                crd1 = csr.indices
+                data = csr.data
+                dcsr = DoublyCompressedMatrix(csr.shape, seg0, crd0, seg1, crd1, data)
+                return dcsr
+            elif format_str == "dcsc":
+                csc = scipy.sparse.csr_matrix(coo)
+                has_col = [rc > 0 for rc in csc.getnnz(0)]
+                segend = sum(has_col)
+                seg0 = [0, segend]
+                crd0 = [i for i, c in enumerate(has_col) if c]
+                seg1 = [0] + list(itertools.accumulate(map(int, csc.getnnz(0))))
+                crd1 = csc.indices
+                data = csc.data
+                dcsc = DoublyCompressedMatrix(csc.shape, seg0, crd0, seg1, crd1, data)
+                return dcsc
+            else:
+                assert (False)
 
-            dok = scipy.sparse.dok_matrix(coo)
-            data = dok.items()
+    def writeout(self, tensor, cast, format_str, filename):
+        tensor = self.convert_format(tensor, cast, format_str)
 
-            dok.
-
-            if self.format == "dcsr":
-
-                matrix = DCMatrix()
-            elif self.format == "dcsc":
-
+        with open(filename, "w") as outfile:
+            if format_str == "dense":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(str(tensor.shape[0]) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(str(tensor.shape[1]) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.getA1()) + '\n')
+            elif format_str == "denseT":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(str(tensor.shape[0]) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(str(tensor.shape[1]) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.getA1()) + '\n')
+            elif format_str == "csr":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(str(tensor.shape[0]) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(array_str(tensor.indptr) + '\n')
+                outfile.write(array_str(tensor.indices) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.data) + '\n')
+            elif format_str == "csc":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(str(tensor.shape[1]) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(array_str(tensor.indptr) + '\n')
+                outfile.write(array_str(tensor.indices) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.data) + '\n')
+            elif format_str == "coo":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(array_str(tensor.row) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(array_str(tensor.col) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.data) + '\n')
+            elif format_str == "cooT":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(array_str(tensor.col) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(array_str(tensor.row) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.data) + '\n')
+            elif format_str == "dcsr":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(array_str(tensor.seg0) + '\n')
+                outfile.write(array_str(tensor.crd0) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(array_str(tensor.seg1) + '\n')
+                outfile.write(array_str(tensor.crd1) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.data) + '\n')
+            elif format_str == "dcsc":
+                outfile.write("shape\n")
+                outfile.write(shape_str(tensor.shape) + '\n')
+                outfile.write("mode 1\n")
+                outfile.write(array_str(tensor.seg0) + '\n')
+                outfile.write(array_str(tensor.crd0) + '\n')
+                outfile.write("mode 0\n")
+                outfile.write(array_str(tensor.seg1) + '\n')
+                outfile.write(array_str(tensor.crd1) + '\n')
+                outfile.write("vals\n")
+                outfile.write(array_str(tensor.data) + '\n')
             else:
                 assert(False)
 
