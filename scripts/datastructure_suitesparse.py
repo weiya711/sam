@@ -5,11 +5,10 @@ import numpy
 
 from pathlib import Path 
 
-from util import TensorCollectionSuiteSparse, ScipyTensorShifter, PydataMatrixMarketTensorLoader, ScipyMatrixMarketTensorLoader, SuiteSparseTensor, safeCastPydataTensorToInts, InputCacheSuiteSparse
+from util import FormatWriter, SuiteSparseTensor, safeCastPydataTensorToInts, InputCacheSuiteSparse
 
 SS_PATH = os.getenv('SUITESPARSE_PATH')
-#SS_PATH = Path("~/aha-sparsity/")
-
+out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats')
 formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]
 scipy_formats = ["coo", "csr", "csc"]
 
@@ -32,29 +31,9 @@ def get_datastructure_string(format, mode):
         return "cooT"
     else:
         return ""
-
-
-# UfuncInputCache attempts to avoid reading the same tensor from disk multiple
-# times in a benchmark run.
-class InputCacheTensor:
-    def __init__(self):
-        self.lastLoaded = None
-        self.lastName = None
-        self.tensor = None
-
-    def load(self, tensor, suiteSparse, cast, format_str):
-        if self.lastName == str(tensor):
-            return self.tensor
-        else:
-            self.lastLoaded = tensor.load()
-            self.lastName = str(tensor)
-            if cast:
-                self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
-            else:
-                self.tensor = self.lastLoaded
-            return self.tensor
  
 inputCache = InputCacheSuiteSparse()
+formatWriter = FormatWriter()
 
 parser = argparse.ArgumentParser(description="Process some suitesparse matrices into per-level datastructures")
 parser.add_argument('-n', '--name', metavar='ssname', type=str, action='store', help='tensor name to run format conversion on one SS tensor')
@@ -62,7 +41,7 @@ parser.add_argument('-f', '--format', metavar='ssformat', type=str, action='stor
 
 args = parser.parse_args()
 
-out_dirname = './mode_formats/'
+
 out_path = Path(out_dirname)  
 out_path.mkdir(parents=True, exist_ok=True)
 
@@ -71,14 +50,20 @@ if args.name is None:
     exit()
 
 tensor = SuiteSparseTensor(os.path.join(SS_PATH, args.name))
+
 if args.format is not None:
     assert(args.format in formats)
     filename = os.path.join(out_path, args.name+"_"+args.format + ".txt")
-    inputCache.writeout(tensor, False, args.format, filename)
+
+    coo = inputCache.load(tensor, False)
+    formatWriter.writeout(coo, args.format, filename)
 else:
     for format_str in formats:
         filename = os.path.join(out_path, args.name+"_"+format_str + ".txt")
         print("Writing " + args.name + " " + format_str + "...")
-        inputCache.writeout(tensor, False, format_str, filename)
+
+        coo = inputCache.load(tensor, False)
+        formatWriter.writeout(coo, format_str, filename)
+
 
 

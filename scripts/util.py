@@ -140,8 +140,11 @@ class ScipyTensorShifter:
             return scipy.sparse.csr_matrix(result)
         elif self.format == "csc":
             return scipy.sparse.csc_matrix(result)
+        elif self.format == "coo":
+            return scipy.sparse.coo_matrix(result)
         else:
             assert(False)
+
 
 @dataclass
 class DoublyCompressedMatrix:
@@ -156,8 +159,8 @@ class DoublyCompressedMatrix:
 # ScipyMatrixMarketTensorLoader loads tensors in the matrix market format
 # into scipy.sparse matrices.
 class ScipyMatrixMarketTensorLoader:
-    def __init__(self, format):
-        self.format = format
+    def __init__(self):
+        pass
 
     def load(self, path):
         coo = scipy.io.mmread(path)
@@ -181,11 +184,11 @@ class InputCacheSuiteSparse:
         self.lastName = None
         self.tensor = None
 
-    def load(self, tensor, cast, format_str):
+    def load(self, tensor, cast):
         if self.lastName == str(tensor):
             return self.tensor
         else:
-            self.lastLoaded = tensor.load(ScipyMatrixMarketTensorLoader(format_str))
+            self.lastLoaded = tensor.load(ScipyMatrixMarketTensorLoader())
             self.lastName = str(tensor)
             if cast:
                 self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
@@ -193,8 +196,12 @@ class InputCacheSuiteSparse:
                 self.tensor = self.lastLoaded
             return self.tensor
 
-    def convert_format(self, tensor, cast, format_str):
-        coo = self.load(tensor, cast, format_str)
+
+class FormatWriter:
+    def __init__(self):
+        pass
+
+    def convert_format(self, coo, format_str):
 
         if format_str == "csr":
             return scipy.sparse.csr_matrix(coo)
@@ -235,8 +242,8 @@ class InputCacheSuiteSparse:
             else:
                 assert (False)
 
-    def writeout(self, tensor, cast, format_str, filename):
-        tensor = self.convert_format(tensor, cast, format_str)
+    def writeout(self, coo, format_str, filename):
+        tensor = self.convert_format(coo, format_str)
 
         with open(filename, "w") as outfile:
             if format_str == "dense":
@@ -318,7 +325,28 @@ class InputCacheSuiteSparse:
                 outfile.write("vals\n")
                 outfile.write(array_str(tensor.data) + '\n')
             else:
-                assert(False)
+                assert (False)
+
+
+# UfuncInputCache attempts to avoid reading the same tensor from disk multiple
+# times in a benchmark run.
+class InputCacheTensor:
+    def __init__(self):
+        self.lastLoaded = None
+        self.lastName = None
+        self.tensor = None
+
+    def load(self, tensor, suiteSparse, cast, format_str):
+        if self.lastName == str(tensor):
+            return self.tensor
+        else:
+            self.lastLoaded = tensor.load()
+            self.lastName = str(tensor)
+            if cast:
+                self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
+            else:
+                self.tensor = self.lastLoaded
+            return self.tensor
 
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
 # into pydata.sparse matrices.
