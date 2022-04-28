@@ -1,6 +1,9 @@
 export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
 export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
 
+run: submodules
+	./scripts/pytest_suitesparse.sh
+
 .PHONY: formats
 formats:
 	./scripts/generate_suitesparse_formats.sh

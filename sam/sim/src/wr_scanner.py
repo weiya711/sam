@@ -14,7 +14,7 @@ class WrScan(Primitive, ABC):
 
     def set_input(self, val):
         # Make sure streams have correct token type
-        assert(isinstance(val, int) or val in valid_tkns)
+        assert(isinstance(val, int) or isinstance(val, float) or val in valid_tkns)
 
         if val != '':
             self.input.append(val)

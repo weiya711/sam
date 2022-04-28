@@ -206,6 +206,36 @@ def gen_val_arr(size=4, max_val=100, min_val=-100):
     result = [x if x != 0 else 1 for x in result]
     return result
 
+def read_inputs(filename, formatlist):
+    return_list = []
+    with open(filename) as file:
+        file.readline()
+        shape = file.readline().split()
+        print(shape)
+        shape = list(map(int, shape))
+        return_list.append(shape)
+
+        for f in formatlist:
+            file.readline()
+            if f == 'd':
+                dimension = int(file.readline())
+                return_list.append(dimension)
+            elif f == 's':
+                seg = file.readline().split()
+                seg = list(map(int, seg))
+                crd = file.readline().split()
+                crd = list(map(int, crd))
+                return_list.append((seg, crd))
+            else:
+                assert(False)
+
+        file.readline()
+        vals = file.readline().split()
+        vals = list(map(float, vals))
+        return_list.append(vals)
+
+    return return_list
+
 
 
 
