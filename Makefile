@@ -1,6 +1,10 @@
 export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
 export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
 
+.PHONY: environment
+environment:
+	conda env export > environment.yml
+	pip list --format=freeze > requirements.txt
 
 sam: taco/build 
 	 cd compiler && bash -x ./sam-kernels.sh
