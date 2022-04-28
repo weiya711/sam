@@ -1,17 +1,17 @@
 from sam.onyx.hw_nodes.hw_node import *
-from sam.onyx.hw_nodes.memory_node import *
-from sam.onyx.hw_nodes.glb_node import *
-from sam.onyx.hw_nodes.buffet_node import *
-from sam.onyx.hw_nodes.read_scanner_node import *
-from sam.onyx.hw_nodes.write_scanner_node import *
-from sam.onyx.hw_nodes.intersect_node import *
-from sam.onyx.hw_nodes.reduce_node import *
-from sam.onyx.hw_nodes.lookup_node import *
-from sam.onyx.hw_nodes.merge_node import *
-from sam.onyx.hw_nodes.repeat_node import *
-from sam.onyx.hw_nodes.compute_node import *
-from sam.onyx.hw_nodes.broadcast_node import *
-from sam.onyx.hw_nodes.repsiggen_node import *
+from sam.onyx.hw_nodes.memory_node import MemoryNode
+from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
+from sam.onyx.hw_nodes.compute_node import ComputeNode
+from sam.onyx.hw_nodes.glb_node import GLBNode
+from sam.onyx.hw_nodes.buffet_node import BuffetNode
+from sam.onyx.hw_nodes.read_scanner_node import ReadScannerNode
+from sam.onyx.hw_nodes.write_scanner_node import WriteScannerNode
+from sam.onyx.hw_nodes.intersect_node import IntersectNode
+from sam.onyx.hw_nodes.reduce_node import ReduceNode
+from sam.onyx.hw_nodes.lookup_node import LookupNode
+from sam.onyx.hw_nodes.merge_node import MergeNode
+from sam.onyx.hw_nodes.repeat_node import RepeatNode
+from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
 
 
 class MemoryNode(HWNode):
@@ -36,16 +36,14 @@ class MemoryNode(HWNode):
             buffet = other_name
             mem = this_name
             new_conns = {
-                'addr_to_mem' : [
-            ([(buffet, "addr_to_mem"), (mem, "input_width_16_num_1"), (mem, "input_width_16_num_2")], 16),
-            ([(buffet, "data_to_mem"), (mem, "input_width_16_num_0")], 16),
-            ([(buffet, "wen_to_mem"), (mem, "input_width_1_num_1")], 1),
-            ([(buffet, "ren_to_mem"), (mem, "input_width_1_num_0")], 1),
-            ([(mem, "output_width_16_num_0"), (buffet, "data_from_mem")], 16),
-            ([(mem, "output_width_1_num_1"), (buffet, "valid_from_mem")], 1),
-            ([(mem, "output_width_1_num_0"), (buffet, "ready_from_mem")], 1),
-            # Values
-            # ([(wscan_vals, "ready_out_0"), (scan_aroot, "ready_in_0")], 1),
+                'addr_to_mem': [
+                    ([(buffet, "addr_to_mem"), (mem, "input_width_16_num_1"), (mem, "input_width_16_num_2")], 16),
+                    ([(buffet, "data_to_mem"), (mem, "input_width_16_num_0")], 16),
+                    ([(buffet, "wen_to_mem"), (mem, "input_width_1_num_1")], 1),
+                    ([(buffet, "ren_to_mem"), (mem, "input_width_1_num_0")], 1),
+                    ([(mem, "output_width_16_num_0"), (buffet, "data_from_mem")], 16),
+                    ([(mem, "output_width_1_num_1"), (buffet, "valid_from_mem")], 1),
+                    ([(mem, "output_width_1_num_0"), (buffet, "ready_from_mem")], 1),
                 ]
             }
             self._connected_to_buffet = True

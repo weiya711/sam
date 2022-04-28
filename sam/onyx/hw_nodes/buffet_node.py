@@ -1,24 +1,24 @@
 from sam.onyx.hw_nodes.hw_node import *
-from sam.onyx.hw_nodes.buffet_node import *
-from sam.onyx.hw_nodes.glb_node import *
-from sam.onyx.hw_nodes.memory_node import *
-from sam.onyx.hw_nodes.read_scanner_node import *
-from sam.onyx.hw_nodes.write_scanner_node import *
-from sam.onyx.hw_nodes.intersect_node import *
-from sam.onyx.hw_nodes.reduce_node import *
-from sam.onyx.hw_nodes.lookup_node import *
-from sam.onyx.hw_nodes.merge_node import *
-from sam.onyx.hw_nodes.repeat_node import *
-from sam.onyx.hw_nodes.compute_node import *
-from sam.onyx.hw_nodes.broadcast_node import *
-from sam.onyx.hw_nodes.repsiggen_node import *
+from sam.onyx.hw_nodes.buffet_node import BuffetNode
+from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
+from sam.onyx.hw_nodes.compute_node import ComputeNode
+from sam.onyx.hw_nodes.glb_node import GLBNode
+from sam.onyx.hw_nodes.memory_node import MemoryNode
+from sam.onyx.hw_nodes.read_scanner_node import ReadScannerNode
+from sam.onyx.hw_nodes.write_scanner_node import WriteScannerNode
+from sam.onyx.hw_nodes.intersect_node import IntersectNode
+from sam.onyx.hw_nodes.reduce_node import ReduceNode
+from sam.onyx.hw_nodes.lookup_node import LookupNode
+from sam.onyx.hw_nodes.merge_node import MergeNode
+from sam.onyx.hw_nodes.repeat_node import RepeatNode
+from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
 
 
 class BuffetNode(HWNode):
     def __init__(self) -> None:
         super().__init__()
 
-    def connect(self, other):
+    def connect(self, other, edge):
 
         other_type = type(other)
 
@@ -30,7 +30,7 @@ class BuffetNode(HWNode):
             mem = other.get_name()
             buffet = self.get_name()
             new_conns = {
-                'addr_to_mem' : [
+                'addr_to_mem': [
                     ([(buffet, "addr_to_mem"), (mem, "input_width_16_num_1"), (mem, "input_width_16_num_2")], 16),
                     ([(buffet, "data_to_mem"), (mem, "input_width_16_num_0")], 16),
                     ([(buffet, "wen_to_mem"), (mem, "input_width_1_num_1")], 1),
@@ -45,7 +45,7 @@ class BuffetNode(HWNode):
             rd_scan = other.get_name()
             buffet = self.get_name()
             new_conns = {
-                'buffet_to_rd_scan' : [
+                'buffet_to_rd_scan': [
                     # rd rsp
                     ([(buffet, "rd_rsp_data"), (rd_scan, "rd_rsp_data_in")], 16),
                     ([(rd_scan, "rd_rsp_ready_out"), (buffet, "rd_rsp_ready")], 1),
@@ -71,7 +71,7 @@ class BuffetNode(HWNode):
             wr_scan = other.get_name()
             buffet = self.get_name()
             new_conns = {
-                'buffet_to_wr_scan' : [
+                'buffet_to_wr_scan': [
                     # wr op/data
                     ([(wr_scan, "data_out"), (buffet, "wr_data")], 1),
                     ([(wr_scan, "op_out"), (buffet, "wr_op")], 1),

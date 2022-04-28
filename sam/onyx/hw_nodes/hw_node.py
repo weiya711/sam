@@ -25,7 +25,7 @@ class HWNode():
         else:
             self.name = "default_name"
 
-    def connect(self, other):
+    def connect(self, other, edge):
         pass
 
     def configure(self, **kwargs):
