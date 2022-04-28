@@ -3,7 +3,7 @@ export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
 
 .PHONY: formats
 formats:
-	./scripts/generate_suitesparse_formats.py
+	./scripts/generate_suitesparse_formats.sh
 
 .PHONY: environment
 environment:
