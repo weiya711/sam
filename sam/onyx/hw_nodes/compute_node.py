@@ -88,7 +88,7 @@ class ComputeNode(HWNode):
                     # send output to rd scanner
                     ([(pe, "data_out"), (other_red, f"data_in")], 16),
                     ([(pe, "eos_out"), (other_red, f"eos_in")], 1),
-                    ([(other_red, f"ready_out}"), (pe, "ready_in")], 1),
+                    ([(other_red, f"ready_out"), (pe, "ready_in")], 1),
                     ([(pe, "valid_out"), (other_red, f"valid_in")], 1),
                 ]
             }
