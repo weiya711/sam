@@ -1,5 +1,5 @@
 from .base import *
-from sim.src.array import Array
+from sam.sim.src.array import Array
 
 
 class WrScan(Primitive, ABC):

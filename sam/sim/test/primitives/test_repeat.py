@@ -1,10 +1,10 @@
 import pytest
 import copy
 import random
-from sim.src.repeater import RepeatSigGen, Repeat
-from sim.src.base import remove_emptystr
+from sam.sim.src.repeater import RepeatSigGen, Repeat
+from sam.sim.src.base import remove_emptystr
 
-from sim.test.test import TIMEOUT, gen_stream, dedup_adj
+from sam.sim.test.test import TIMEOUT, gen_stream, dedup_adj
 
 
 ####################

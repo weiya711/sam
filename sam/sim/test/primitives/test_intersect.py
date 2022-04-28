@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 import random
-from sim.src.base import remove_emptystr
-from sim.src.joiner import Intersect2
+from sam.sim.src.base import remove_emptystr
+from sam.sim.src.joiner import Intersect2
 
-from sim.test.test import TIMEOUT
+from sam.sim.test.test import TIMEOUT
 
 
 def test_intersect_direct_2d(debug_sim):

@@ -1,9 +1,9 @@
 import copy
 import pytest
 
-from sim.src.crd_manager import CrdDrop
-from sim.src.base import remove_emptystr
-from sim.test.test import TIMEOUT
+from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.base import remove_emptystr
+from sam.sim.test.test import TIMEOUT
 
 arrs_dict1 = {'ocrd_in': [0, 1, 'S0', 'D'],
               'icrd_in': [1, 'S0', 'S1', 'D'],

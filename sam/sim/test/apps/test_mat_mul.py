@@ -1,12 +1,12 @@
-from sim.src.rd_scanner import CompressedRdScan
-from sim.src.wr_scanner import ValsWrScan
-from sim.src.joiner import Intersect2
-from sim.src.compute import Multiply2
-from sim.src.crd_manager import CrdDrop
-from sim.src.repeater import Repeat, RepeatSigGen
-from sim.src.accumulator import Reduce
+from sam.sim.src.rd_scanner import CompressedRdScan
+from sam.sim.src.wr_scanner import ValsWrScan
+from sam.sim.src.joiner import Intersect2
+from sam.sim.src.compute import Multiply2
+from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.repeater import Repeat, RepeatSigGen
+from sam.sim.src.accumulator import Reduce
 
-from sim.test.test import *
+from sam.sim.test.test import *
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
@@ -153,6 +153,8 @@ def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
 
     if not out_val:
         assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
     else:
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
         out_tup = remove_zeros(out_tup)
