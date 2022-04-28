@@ -24,4 +24,6 @@ cd $outdir
 
 for i in ${!DATASET_NAMES[@]}; do
     name=${DATASET_NAMES[$i]} 
-    python scripts/suitesparse_datastructure.py -n $name
+    echo "Generating input format files for $name..."
+    python /home/owhsu/aha-sparsity/sam/scripts/datastructure_suitesparse.py -n $name
+done
