@@ -124,8 +124,8 @@ class PydataTensorShifter:
 # ScipyTensorShifter shifts all elements in the last mode
 # of the input scipy/sparse tensor by one.
 class ScipyTensorShifter:
-    def __init__(self, format):
-        self.format = format
+    def __init__(self):
+        pass
 
     def shiftLastMode(self, tensor):
         dok = scipy.sparse.dok_matrix(tensor)
@@ -136,14 +136,7 @@ class ScipyTensorShifter:
             # result[tuple(newCoord)] = val
             # TODO (rohany): Temporarily use a constant as the value.
             result[tuple(newCoord)] = 2
-        if self.format == "csr":
-            return scipy.sparse.csr_matrix(result)
-        elif self.format == "csc":
-            return scipy.sparse.csc_matrix(result)
-        elif self.format == "coo":
-            return scipy.sparse.coo_matrix(result)
-        else:
-            assert(False)
+        return scipy.sparse.coo_matrix(result)
 
 
 @dataclass

@@ -5,11 +5,13 @@ import numpy
 
 from pathlib import Path 
 
-from util import FormatWriter, SuiteSparseTensor, safeCastPydataTensorToInts, InputCacheSuiteSparse
+from util import FormatWriter, SuiteSparseTensor, safeCastPydataTensorToInts, InputCacheSuiteSparse, ScipyTensorShifter
 
 SS_PATH = os.getenv('SUITESPARSE_PATH')
 out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats')
-formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]
+
+all_formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]
+formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense"]
 scipy_formats = ["coo", "csr", "csc"]
 
 def get_datastructure_string(format, mode):
@@ -64,6 +66,10 @@ else:
 
         coo = inputCache.load(tensor, False)
         formatWriter.writeout(coo, format_str, filename)
+
+        shifted_filename = os.path.join(out_path, args.name+"_shifted_"+format_str + ".txt")
+        shifted = ScipyTensorShifter().shiftLastMode(coo)
+        formatWriter.writeout(shifted, format_str, shifted_filename)
 
 
 
