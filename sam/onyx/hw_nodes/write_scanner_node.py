@@ -1,5 +1,4 @@
 from sam.onyx.hw_nodes.hw_node import *
-from sam.onyx.hw_nodes.write_scanner_node import WriteScannerNode
 from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
 from sam.onyx.hw_nodes.compute_node import ComputeNode
 from sam.onyx.hw_nodes.glb_node import GLBNode
