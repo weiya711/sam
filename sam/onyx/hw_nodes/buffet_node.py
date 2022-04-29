@@ -73,7 +73,7 @@ class BuffetNode(HWNode):
             new_conns = {
                 'buffet_to_wr_scan': [
                     # wr op/data
-                    ([(wr_scan, "data_out"), (buffet, "wr_data")], 1),
+                    ([(wr_scan, "data_out"), (buffet, "wr_data")], 16),
                     ([(wr_scan, "op_out"), (buffet, "wr_op")], 1),
                     ([(buffet, "wr_data_ready"), (wr_scan, "data_out_ready_in")], 1),
                     ([(wr_scan, "data_out_valid_out"), (buffet, "wr_data_valid")], 1),

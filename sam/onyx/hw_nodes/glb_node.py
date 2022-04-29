@@ -29,9 +29,11 @@ class GLBNode(HWNode):
         elif other_type == MemoryNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == ReadScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            # raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            pass
         elif other_type == WriteScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            # raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            pass
         elif other_type == IntersectNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == ReduceNode:

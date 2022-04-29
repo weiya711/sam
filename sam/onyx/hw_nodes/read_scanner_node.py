@@ -24,7 +24,8 @@ class ReadScannerNode(HWNode):
         other_type = type(other)
 
         if other_type == GLBNode:
-            raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
+            pass
+            # raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == BuffetNode:
             buffet = other.get_name()
             new_conns = {
