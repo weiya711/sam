@@ -14,22 +14,17 @@ RTL Graph or Simulator Graph
 ### Compiling SAM graphs
 Init the taco/ repo as a submodule
 ```
-git submodule update --init
+make submodules
 ```
 
 Setup the compilation for the taco/ repo
 ```
-cd compiler/taco
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug ..
-make -j8
+make taco/build
 ```
 
 Run the script to generate a handful of example sam graphs
 ```
-cd ../..   # This should be back into the compiler/dir
-./sam-kernels.sh
+make sam
 ```
 
 The example sam graphs should now be located in `compiler/sam-outputs/` in both the `dot/` and `png/` folers. 
@@ -51,20 +46,24 @@ Examples:
 2. repeat_Ci
  
 ## SAM Simulator
-
+### Installing SAM Simulator as a Package
+ ```
+ pip install -e .
+ ```
+ 
 ### Running Tests
 The simulator uses pytest to run tests
 
 To run all tests type 
 ```
-cd 
+cd sam/sim/
 pytest
 ```
 
 Use the following pytest optional arguments below
 ```
 --debug-sim                 Turn on debug mode for sim
---count <n>                 Repeat each test for n iterations 
+--count=<n>                 Repeat each test for n iterations 
 -k <testname>[<paramlist>]  Run only tests with testname and paramlist
 -vv                         Double verbose
 -s                          Forward printouts to stdout

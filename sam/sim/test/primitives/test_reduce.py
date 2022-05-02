@@ -1,11 +1,11 @@
 import pytest
 import copy
 import random
-from sim.src.accumulator import Reduce
-from sim.src.rd_scanner import CompressedRdScan
-from sim.src.wr_scanner import CompressWrScan, ValsWrScan
-from sim.src.base import remove_emptystr
-from sim.test.test import *
+from sam.sim.src.accumulator import Reduce
+from sam.sim.src.rd_scanner import CompressedRdScan
+from sam.sim.src.wr_scanner import CompressWrScan, ValsWrScan
+from sam.sim.src.base import remove_emptystr
+from sam.sim.test.test import *
 
 arrs_dict0 = {'in_val': [5, 5, 'S0', 5, 'S0', 4, 8, 'S0', 4, 3, 'S0', 4, 3, 'S1', 'D'],
               'gold_val': [10, 5, 12, 7, 7, 'S0', 'D']}
