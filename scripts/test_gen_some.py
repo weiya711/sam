@@ -54,17 +54,6 @@ def remove_broadcast_nodes(G):
         g = g0
     return g
 
-def parents_done(G, done, u):
-    g = G.copy()
-    ans = True
-    for pred in G.predecessors(u):
-        if pred not in done:
-            ans = ans and True
-        elif done[pred] == 1:
-            ans = ans and True
-        else:
-            ans = False
-    return ans
 
 
 # iterate over files in
@@ -133,7 +122,7 @@ for apath in file_paths[0:1]:
     plt.show()
 
     d = {}
-    
+
 
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
@@ -198,138 +187,74 @@ for apath in file_paths[0:1]:
     stream_join_elements = {}
     ready_dataset = {}
     edge_data = {}
-    mul_dataset ={}
-    intersect_dataset ={}
-
-    done_all = {}
     for u, v, a in networkx_graph.edges(data = True):
-        if v not in done_all:
-            done_all[v] = 0
         if v not in stream_join_elements:
             stream_join_elements[v] = [u]
             ready_dataset[v] = [0]
-            edge_data[v] = [str((a["label"]).strip('"'))]
+            edge_dataset = str(a["label"]).strip('"')
         else:
-            if u not in stream_join_elements[v]:
-                stream_join_elements[v].append(u)
-                ready_dataset[v].append(0)
-                edge_data[v].append(str((a["label"]).strip('"')))
-    
-    #for u, v, a in networkx_graph.edges():
-    #    if u in ready_dataset:
-    #        ready_dataset[v][stream_join_elements[v].index(d[u]["object"])] = 1
-    #        if ready_dataset[v].sum() == len(ready_dataset[v]):
-    #            stack.push([u, v])
-    #        else:
-    #            print("")
-    for u in networkx_graph.nodes():
+            stream_join_elements[v].append(u)
+            ready_dataset[v].append(0)
+            edge_dataset = str(a["label"]).strip('"')
+    intersect_dataset = {}
+    mul_dataset = {}
 
-        if d[u]["root"]
-        if d[u]["name"] == "fiberlookup" and u not in done_all:        
-            f.write(tab(2) + "if len(in_ref_" + d[u]["tensor"] + ") > 0:\n")
-            f.write(tab(3) + d[u]["object"] + ".set_in_ref(in_ref_" + d[u]["tensor"] +".pop(0))\n")
+    for u,v,a in list(nx.edge_bfs(networkx_graph)): #.edges(data=True), networkx_graph.nodes())):
+
+        print(u, " ", v, " ", a , " ", d[v]["object"], " ", d[u]["object"])
+        a = networkx_graph.get_edge_data(u, v)[0] 
+        #print(a)
+        #ready_dataset[v][stream_join_elements[v].index(d[u]["object"])] = 1
+
+        if d[v]["name"] == "fiberlookup":            
+            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + u + ".in_ref_" + d[u]["tensor"] +".pop())\n")
             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-            #done_all[u] = 1
+
+        if d[v]["name"] == "repsiggen":
+            f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u]["object"]).strip('"') + ".out_" + str(a["label"]).strip('"')+")\n")
+            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+
+        if d[v]["name"] == "repeat":
+            f.write(tab(2) + d[v]["object"] + ".set_in_" + str(a["label"]).strip('"') + "(" + d[u]["object"]+ ".out_repeat())\n\n")
+            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+
+        if d[v]["name"] == "arrayvals":
+            f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u]["object"]+ ".out_ref())\n")
+            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
             
-
- 
-
-    for i in range(3):
-        for u,v,a in list(nx.edge_bfs(networkx_graph)): #.edges(data=True), networkx_graph.nodes())): 
-            if i == 0:
-                print(u, " ", v, " ", a , " ", d[v]["object"], " ", d[u]["object"])
-            a = networkx_graph.get_edge_data(u, v)[0] 
-            #if d[v]["name"] != "fiberlookup": 
-            ready_dataset[v][stream_join_elements[v].index(u)] = 1
-        
-            if d[v]["name"] == "fiberlookup" and done_all[v] == 0:        
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + d[u_]["object"]  + ".out_" +  str(edge_data[v][stream_join_elements[v].index(u_)]) +"())\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    done_all[v] = 1
-            
-
-            if d[v]["name"] == "repsiggen" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u_]["object"]).strip('"') + ".out_" + str(edge_data[v][stream_join_elements[v].index(u_)])+")\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    done_all[v] = 1
-
-            if d[v]["name"] == "repeat" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:            
-                        f.write(tab(2) + d[v]["object"] + ".set_in_" + str(edge_data[v][stream_join_elements[v].index(u_)]) + "(" + d[u_]["object"]+ ".out_repeat())\n\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n") 
-                    done_all[v] = 1
-
-            if d[v]["name"] == "arrayvals" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"]+ ".out_ref())\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n") 
-                    done_all[v] = 1
-
-
-            if d[v]["name"] == "intersect" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in" + str(stream_join_elements[v].index(u_)) + "(" + d[u_]["object"] + ".out_ref(), " +  d[u_]["object"]+ ".out_crd()))\n")
-
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    done_all[v] = 1
-            
-            
-            #if d[v]["object"] not in intersect_dataset:
-            #    intersect_dataset[d[v]["object"]] = [d[u]["object"]]  
-            #    f.write(tab(2) + d[v]["object"] + ".set_in" + "1" + "(" + d[u]["object"] + ".out_ref(), " +  d[u]["object"]+ ".out_crd()))\n")
-            #else:
-            #    if d[u]["object"] not in intersect_dataset[d[v]["object"]]:
-            #        intersect_dataset[d[v]["object"]].append(d[u]["object"])
-            #        f.write(tab(2) + d[v]["object"] + ".set_in" + str(len(intersect_dataset[d[v]["object"]])) + "(" + d[u]["object"] + ".out_ref(), " +  d[u]["object"]+ ".out_crd()))\n\n")
-            #        f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
-
-            if d[v]["name"] == "mul" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:
-                    
-                        f.write(tab(2) + d[v]["object"] + ".set_in" + str(i) + "(" + d[u_]["object"]+ ".out_load())\n")
-                        #f.write(tab(2) + d[v]["object"] + ".set_in" + stream_join_elements[v].index(u_) + "(" + d[u_]["object"] + ".out_ref(), " +  d[u_]["object"]+ ".out_crd()))\n")
-
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    done_all[v] = 1
-            
-
-            
-            #if d[v]["object"] not in mul_dataset:
-            #    mul_dataset[d[v]["object"]] = [d[u]["object"]]  
-            #else:
-            #    mul_dataset[d[v]["object"]].append(d[u]["object"])
-            #    #if len(d[v]["object"]) == 2:
-            #    for i in range(mul_dataset(d[v]["object"])):
-            #        f.write(tab(2) + d[v]["object"] + ".set_in" + str(i) + "(" + mul_dataset[d[v]["object"]][i]+ ".out_load())\n")
-            #    f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
-
-
-            if d[v]["name"] == "reduce" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_" + str(edge_data[v][stream_join_elements[v].index(u_)]) + "(" + d[u_]["object"] + ".out_" + str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
+        if d[v]["name"] == "intersect":
+            if d[v]["object"] not in intersect_dataset:
+                intersect_dataset[d[v]["object"]] = [d[u]["object"]]  
+                f.write(tab(2) + d[v]["object"] + ".set_in" + "1" + "(" + d[u]["object"] + ".out_ref(), " +  d[u]["object"]+ ".out_crd()))\n")
+            else:
+                if d[u]["object"] not in intersect_dataset[d[v]["object"]]:
+                    intersect_dataset[d[v]["object"]].append(d[u]["object"])
+                    f.write(tab(2) + d[v]["object"] + ".set_in" + str(len(intersect_dataset[d[v]["object"]])) + "(" + d[u]["object"] + ".out_ref(), " +  d[u]["object"]+ ".out_crd()))\n\n")
                     f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
-                    done_all[v] = 1
+
+        if d[v]["name"] == "mul":
+            if d[v]["object"] not in mul_dataset:
+                mul_dataset[d[v]["object"]] = [d[u]["object"]]  
+            else:
+                mul_dataset[d[v]["object"]].append(d[u]["object"])
+                #if len(d[v]["object"]) == 2:
+                for i in range(len(mul_dataset[d[v]["object"]])):
+                    f.write(tab(2) + d[v]["object"] + ".set_in" + str(i) + "(" + mul_dataset[d[v]["object"]][i]+ ".out_load())\n")
+                f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
 
 
-            if d[v]["name"] == "fiberwrite" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0 :
-                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-                    for u_ in stream_join_elements[v]:
-                        if d[v]["mode"] == "vals":
-                            f.write("write  ------ \n")
-                            #f.write(tab(2) + d[v]["object"] + )                                    )
-                        else: 
-                            f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u]["object"] + "out_" + str(a["label"]).strip('"') + "())\n")
-                            f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                            done_all[v] = 1
+        if d[v]["name"] == "reduce":
+            f.write(tab(2) + d[v]["object"] + ".set_in_"+ str(a["label"]).strip('"')  +"(" + d[u]["object"] + ".out_" + str(a["label"]).strip('"') + "())\n")
+            f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
+
+
+        if d[v]["name"] == "fiberwrite":
+            if d[v]["mode"] == "vals":
+                f.write("write  ------ \n")
+            else:
+                print(u, " ", v)
+                f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u]["object"] + "out_" + str(a["label"]).strip('"') + "())\n")
+                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
 
 
 
