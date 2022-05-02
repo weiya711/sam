@@ -16,6 +16,10 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats'
 
 
 # FIXME: Figure out what formats we want to test for the chip
+@pytest.mark.skipif(
+    True and os.getenv('CI'),
+    reason='CI lacks datasets',
+)
 def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     filename = os.path.join(formatted_dir, ssname+"_"+"csr.txt")
     formats = ['d', 's']
@@ -30,11 +34,11 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
         print("Mat C:", C_shape, C_dim1, C_seg0, C_crd0, C_vals)
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B_crd1, B_seg1), shape=B_shape)
-    C_scipy = scipy.sparse.csr_matrix((C_vals, C_crd0, C_seg0), shape=C_shape)
+    C_scipy = scipy.sparse.csc_matrix((C_vals, C_crd0, C_seg0), shape=C_shape)
 
     B_nd = np.asarray(B_scipy.todense())
     C_nd = np.asarray(C_scipy.todense())
-    gold_nd = B_nd @ C_nd.T
+    gold_nd = B_nd @ C_nd
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
@@ -62,7 +66,7 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     #drop = CrdDrop(debug=debug_sim)
     vals_X = ValsWrScan(size=B_dim0 * C_dim1, fill=fill, debug=debug_sim)
     wrscan_Xi = CompressWrScan(seg_size=2, size=B_dim0, fill=fill)
-    wrscan_Xj = CompressWrScan(seg_size=C_dim1 + 1, size=B_dim0 * C_dim1, fill=fill)
+    wrscan_Xj = CompressWrScan(seg_size=B_dim0 + 1, size=B_dim0 * B_dim0, fill=fill)
 
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']

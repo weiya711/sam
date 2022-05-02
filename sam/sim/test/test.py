@@ -7,7 +7,7 @@ import pytest
 from sam.sim.src.wr_scanner import WrScan, CompressWrScan
 from sam.sim.src.array import Array
 
-TIMEOUT = 100000
+TIMEOUT = 10000000
 
 
 def check_arr(arr_obj, gold):
