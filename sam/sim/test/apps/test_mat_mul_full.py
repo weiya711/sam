@@ -17,7 +17,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats'
 
 # FIXME: Figure out what formats we want to test for the chip
 @pytest.mark.skipif(
-    True and os.getenv('CI'),
+    os.getenv('CI') == "github",
     reason='CI lacks datasets',
 )
 def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
