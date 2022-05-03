@@ -17,7 +17,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats'
 
 # FIXME: Figure out what formats we want to test for the chip
 @pytest.mark.skipif(
-    os.getenv('CI', False),
+    os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
 def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
@@ -25,7 +25,7 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     formats = ['d', 's']
     [B_shape, B_dim0, (B_seg1, B_crd1), B_vals] = read_inputs(filename, formats)
 
-    filename = os.path.join(formatted_dir, ssname+"_"+"shifted_csc.txt")
+    filename = os.path.join(formatted_dir, ssname+"_"+"trans_shifted_csc.txt")
     formats = ['d', 's']
     [C_shape, C_dim1, (C_seg0, C_crd0), C_vals] = read_inputs(filename, formats)
 
@@ -36,8 +36,8 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     B_scipy = scipy.sparse.csr_matrix((B_vals, B_crd1, B_seg1), shape=B_shape)
     C_scipy = scipy.sparse.csc_matrix((C_vals, C_crd0, C_seg0), shape=C_shape)
 
-    B_nd = np.asarray(B_scipy.todense())
-    C_nd = np.asarray(C_scipy.todense())
+    B_nd = B_scipy.toarray()
+    C_nd = C_scipy.toarray()
     gold_nd = B_nd @ C_nd
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 

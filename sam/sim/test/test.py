@@ -182,8 +182,9 @@ def check_point_tuple(pt_tup1, pt_tup2):
 
     for i in range(len(tup1)):
         if tup1[i] != tup2[i]:
-            print(str(i)+":", tup1[i], "!=", tup2[i])
-            return False
+            if abs(tup1[i][-1] - tup2[i][-1]) > 1e-7:
+                print(str(i)+":", tup1[i], "!=", tup2[i])
+                return False
     return True
 
 
@@ -235,7 +236,4 @@ def read_inputs(filename, formatlist):
         return_list.append(vals)
 
     return return_list
-
-
-
 

@@ -71,5 +71,7 @@ else:
         shifted = ScipyTensorShifter().shiftLastMode(coo)
         formatWriter.writeout(shifted, format_str, shifted_filename)
 
-
+        trans_filename = os.path.join(out_path, args.name+"_trans_shifted_"+format_str + ".txt")
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout(trans_shifted, format_str, trans_filename)
 

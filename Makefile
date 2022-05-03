@@ -1,5 +1,6 @@
 export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
 export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
+export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 
 run: submodules
 	./scripts/pytest_suitesparse.sh
@@ -8,8 +9,14 @@ run: submodules
 formats:
 	./scripts/generate_suitesparse_formats.sh
 
-.PHONY: environment
-environment:
+.PHONY: env
+env:
+	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
+	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
+	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+
+.PHONY: pydepends
+pydepends:
 	conda env export > environment.yml
 	pip list --format=freeze > requirements.txt
 
