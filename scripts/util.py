@@ -321,6 +321,7 @@ class FormatWriter:
             else:
                 assert (False)
 
+        os.chmod(filename, 0o766)
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
