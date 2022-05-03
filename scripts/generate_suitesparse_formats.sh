@@ -1,7 +1,10 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -t 360
+
+# THIS FILE MUST BE RUN FROM sam/ location
 outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+basedir=$(pwd)
 
 DATASET_NAMES=(
   bcsstm04
@@ -25,5 +28,5 @@ cd $outdir
 for i in ${!DATASET_NAMES[@]}; do
     name=${DATASET_NAMES[$i]} 
     echo "Generating input format files for $name..."
-    python ./scripts/datastructure_suitesparse.py -n $name
+    python $basedir/scripts/datastructure_suitesparse.py -n $name
 done
