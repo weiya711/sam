@@ -1,6 +1,6 @@
 import scipy.sparse
 import scipy.io
-import sparse
+#import sparse
 import os
 import glob
 import numpy
@@ -77,49 +77,49 @@ class ScipySparseTensorLoader:
 
 # PydataSparseTensorLoader loads a sparse tensor from a file into
 # a pydata.sparse tensor.
-class PydataSparseTensorLoader:
-    def __init__(self):
-        self.loader = TnsFileLoader()
-    
-    def load(self, path):
-        dims, coords, values = self.loader.load(path)
-        return sparse.COO(coords, values, tuple(dims))
-
-# PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
-class PydataSparseTensorDumper:
-    def __init__(self):
-        self.dumper = TnsFileDumper()
-
-    def dump(self, tensor, path):
-        self.dumper.dump_dict_to_file(tensor.shape, sparse.DOK(tensor).data, path)
-
-
-
-# PydataTensorShifter shifts all elements in the last mode
-# of the input pydata/sparse tensor by one.
-class PydataTensorShifter:
-    def __init__(self):
-        pass
-
-    def shiftLastMode(self, tensor):
-        coords = tensor.coords
-        data = tensor.data
-        resultCoords = []
-        for j in range(len(tensor.shape)):
-            resultCoords.append([0] * len(data))
-        resultValues = [0] * len(data)
-        for i in range(len(data)):
-            for j in range(len(tensor.shape)):
-                resultCoords[j][i] = coords[j][i]
-            # resultValues[i] = data[i]
-            # TODO (rohany): Temporarily use a constant as the value.
-            resultValues[i] = 2
-            # For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
-            # that have even last coordinates. This ensures that there is at least some overlap
-            # between the original tensor and its shifted counter part.
-            if len(tensor.shape) <= 2 or resultCoords[-1][i] % 2 == 0:
-                resultCoords[-1][i] = (resultCoords[-1][i] + 1) % tensor.shape[-1]
-        return sparse.COO(resultCoords, resultValues, tensor.shape)
+# class PydataSparseTensorLoader:
+#     def __init__(self):
+#         self.loader = TnsFileLoader()
+#     
+#     def load(self, path):
+#         dims, coords, values = self.loader.load(path)
+#         return sparse.COO(coords, values, tuple(dims))
+# 
+# # PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
+# class PydataSparseTensorDumper:
+#     def __init__(self):
+#         self.dumper = TnsFileDumper()
+# 
+#     def dump(self, tensor, path):
+#         self.dumper.dump_dict_to_file(tensor.shape, sparse.DOK(tensor).data, path)
+# 
+# 
+# 
+# # PydataTensorShifter shifts all elements in the last mode
+# # of the input pydata/sparse tensor by one.
+# class PydataTensorShifter:
+#     def __init__(self):
+#         pass
+# 
+#     def shiftLastMode(self, tensor):
+#         coords = tensor.coords
+#         data = tensor.data
+#         resultCoords = []
+#         for j in range(len(tensor.shape)):
+#             resultCoords.append([0] * len(data))
+#         resultValues = [0] * len(data)
+#         for i in range(len(data)):
+#             for j in range(len(tensor.shape)):
+#                 resultCoords[j][i] = coords[j][i]
+#             # resultValues[i] = data[i]
+#             # TODO (rohany): Temporarily use a constant as the value.
+#             resultValues[i] = 2
+#             # For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
+#             # that have even last coordinates. This ensures that there is at least some overlap
+#             # between the original tensor and its shifted counter part.
+#             if len(tensor.shape) <= 2 or resultCoords[-1][i] % 2 == 0:
+#                 resultCoords[-1][i] = (resultCoords[-1][i] + 1) % tensor.shape[-1]
+#         return sparse.COO(resultCoords, resultValues, tensor.shape)
 
 # ScipyTensorShifter shifts all elements in the last mode
 # of the input scipy/sparse tensor by one.
@@ -184,7 +184,8 @@ class InputCacheSuiteSparse:
             self.lastLoaded = tensor.load(ScipyMatrixMarketTensorLoader())
             self.lastName = str(tensor)
             if cast:
-                self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
+                self.tensor = self.lastLoaded
+                # self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
             else:
                 self.tensor = self.lastLoaded
             return self.tensor
@@ -343,13 +344,13 @@ class InputCacheTensor:
 
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
 # into pydata.sparse matrices.
-class PydataMatrixMarketTensorLoader:
-    def __init__(self):
-        pass
-
-    def load(self, path):
-        coo = scipy.io.mmread(path)
-        return sparse.COO.from_scipy_sparse(coo)
+# class PydataMatrixMarketTensorLoader:
+#     def __init__(self):
+#         pass
+# 
+#     def load(self, path):
+#         coo = scipy.io.mmread(path)
+#         return sparse.COO.from_scipy_sparse(coo)
 
 # SuiteSparseTensor represents a tensor in the suitesparse collection.
 class SuiteSparseTensor:
@@ -381,15 +382,15 @@ class TensorCollectionSuiteSparse:
 
 # safeCastPydataTensorToInts casts a floating point tensor to integers
 # in a way that preserves the sparsity pattern.
-def safeCastPydataTensorToInts(tensor):
-    data = numpy.zeros(len(tensor.data), dtype='int64')
-    for i in range(len(data)):
-        # If the cast would turn a value into 0, instead write a 1. This preserves
-        # the sparsity pattern of the data.
-        if int(tensor.data[i]) == 0:
-            data[i] = 1
-        else:
-            data[i] = int(tensor.data[i])
-    return sparse.COO(tensor.coords, data, tensor.shape)
+# def safeCastPydataTensorToInts(tensor):
+#     data = numpy.zeros(len(tensor.data), dtype='int64')
+#     for i in range(len(data)):
+#         # If the cast would turn a value into 0, instead write a 1. This preserves
+#         # the sparsity pattern of the data.
+#         if int(tensor.data[i]) == 0:
+#             data[i] = 1
+#         else:
+#             data[i] = int(tensor.data[i])
+#     return sparse.COO(tensor.coords, data, tensor.shape)
 
 

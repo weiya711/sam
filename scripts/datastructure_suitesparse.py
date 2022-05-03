@@ -5,7 +5,7 @@ import numpy
 
 from pathlib import Path 
 
-from util import FormatWriter, SuiteSparseTensor, safeCastPydataTensorToInts, InputCacheSuiteSparse, ScipyTensorShifter
+from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 
 SS_PATH = os.getenv('SUITESPARSE_PATH')
 out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats')
