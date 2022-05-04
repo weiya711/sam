@@ -28,7 +28,7 @@ class HWNode():
     def connect(self, other, edge):
         pass
 
-    def configure(self, **kwargs):
+    def configure(self, attributes):
         pass
 
     def get_name(self):

@@ -108,5 +108,7 @@ class BuffetNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect BuffetNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+    def configure(self, attributes):
+        capacity_0 = 1024
+        capacity_1 = 1024
+        return (capacity_0, capacity_1)

@@ -1,3 +1,4 @@
+from numpy import block
 from sam.onyx.hw_nodes.hw_node import *
 
 
@@ -24,8 +25,18 @@ class ReadScannerNode(HWNode):
         other_type = type(other)
 
         if other_type == GLBNode:
-            pass
-            # raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
+            other_data = other.get_data()
+            other_ready = other.get_ready()
+            other_valid = other.get_valid()
+            new_conns = {
+                'rd_scan_to_glb': [
+                    # send output to rd scanner
+                    ([(rd_scan, "coord_out"), (other_data, "f2io_16")], 16),
+                    ([(other_ready, "io2f_1"), (rd_scan, "ready_in_0")], 1),
+                    ([(rd_scan, "valid_out_0"), (other_valid, "f2io_1")], 1),
+                ]
+            }
+            return new_conns
         elif other_type == BuffetNode:
             buffet = other.get_name()
             new_conns = {
@@ -120,5 +131,34 @@ class ReadScannerNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+    def configure(self, attributes):
+        inner_offset = 0
+        max_outer_dim = 0
+        strides = [0]
+        ranges = [1]
+        if attributes['type'].strip('"') == 'fiberwrite':
+            # in fiberwrite case, we are in block mode
+            mode = attributes['mode'].strip('"')
+            if mode == 'vals' or int(mode) != 0:
+                is_root = 0
+            else:
+                is_root = 1
+        elif attributes['type'].strip('"') == 'arrayvals':
+            is_root = 0
+        else:
+            is_root = int(attributes['root'].strip('"') == 'true')
+        do_repeat = 0
+        repeat_outer = 0
+        repeat_factor = 0
+        if attributes['type'].strip('"') == 'arrayvals':
+            stop_lvl = 0
+            lookup = 1
+        elif attributes['mode'].strip('"') == 'vals':
+            stop_lvl = 0
+            lookup = 1
+        else:
+            stop_lvl = int(attributes['mode'].strip('"'))
+            lookup = 0
+        block_mode = int(attributes['type'].strip('"') == 'fiberwrite')
+        return (inner_offset, max_outer_dim, strides, ranges, is_root, do_repeat,
+                repeat_outer, repeat_factor, stop_lvl, block_mode, lookup)

@@ -2,8 +2,20 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class GLBNode(HWNode):
-    def __init__(self, name=None) -> None:
+    def __init__(self, name=None, data=None, valid=None, ready=None) -> None:
         super().__init__(name=name)
+        self.data = data
+        self.valid = valid
+        self.ready = ready
+
+    def get_data(self):
+        return self.data
+
+    def get_valid(self):
+        return self.data
+
+    def get_ready(self):
+        return self.data
 
     def connect(self, other, edge):
 
@@ -29,11 +41,18 @@ class GLBNode(HWNode):
         elif other_type == MemoryNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == ReadScannerNode:
-            # raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
-            pass
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == WriteScannerNode:
-            # raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
-            pass
+            wr_scan = other.get_name()
+            new_conns = {
+                'glb_to_wr_scan': [
+                    # send output to rd scanner
+                    ([(self.data, "io2f_16"), (wr_scan, "data_in_0")], 16),
+                    ([(wr_scan, "ready_out_0"), (self.ready, "f2io_1")], 1),
+                    ([(self.valid, "io2f_1"), (wr_scan, "valid_in_0")], 1),
+                ]
+            }
+            return new_conns
         elif other_type == IntersectNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == ReduceNode:
@@ -53,5 +72,5 @@ class GLBNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+    def configure(self, attributes):
+        return None

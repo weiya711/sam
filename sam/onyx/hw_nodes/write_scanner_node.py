@@ -72,5 +72,25 @@ class WriteScannerNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+    def configure(self, attributes):
+        inner_offset = 0
+        # compressed = int(attributes['format'] == 'compressed')
+        if 'format' in attributes:
+            compressed = int(attributes['format'].strip('"') == 'compressed')
+        # elif attributes['type'].strip('"') == 'arrayvals':
+        else:
+            compressed = 1
+
+        # compressed = int(attributes['format'] == 'compressed')
+        if attributes['type'].strip('"') == 'arrayvals':
+            lowest_level = 1
+            stop_lvl = 0
+        elif attributes['mode'].strip('"') == 'vals':
+            lowest_level = 1
+            stop_lvl = 0
+        else:
+            lowest_level = 0
+            stop_lvl = int(attributes['mode'].strip('"'))
+        block_mode = int(attributes['type'].strip('"') == 'fiberlookup')
+        cfg_tuple = (inner_offset, compressed, lowest_level, stop_lvl, block_mode)
+        return cfg_tuple
