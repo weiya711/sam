@@ -2,11 +2,12 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class GLBNode(HWNode):
-    def __init__(self, name=None, data=None, valid=None, ready=None) -> None:
+    def __init__(self, name=None, data=None, valid=None, ready=None, direction=None) -> None:
         super().__init__(name=name)
         self.data = data
         self.valid = valid
         self.ready = ready
+        self.direction = direction
 
     def get_data(self):
         return self.data
@@ -16,6 +17,9 @@ class GLBNode(HWNode):
 
     def get_ready(self):
         return self.data
+
+    def get_direction(self):
+        return self.direction
 
     def connect(self, other, edge):
 
