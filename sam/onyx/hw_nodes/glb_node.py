@@ -2,21 +2,34 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class GLBNode(HWNode):
-    def __init__(self, name=None, data=None, valid=None, ready=None, direction=None) -> None:
+    def __init__(self, name=None, data=None, valid=None, ready=None,
+                 direction=None, num_blocks=None, file_number=None, tx_size=None) -> None:
         super().__init__(name=name)
         self.data = data
         self.valid = valid
         self.ready = ready
         self.direction = direction
+        self.num_blocks = num_blocks
+        self.file_number = file_number
+        self.tx_size = tx_size
+
+    def get_file_number(self):
+        return self.file_number
+
+    def get_tx_size(self):
+        return self.tx_size
+
+    def get_num_blocks(self):
+        return self.num_blocks
 
     def get_data(self):
         return self.data
 
     def get_valid(self):
-        return self.data
+        return self.valid
 
     def get_ready(self):
-        return self.data
+        return self.ready
 
     def get_direction(self):
         return self.direction
