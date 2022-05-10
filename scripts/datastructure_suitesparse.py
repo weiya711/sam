@@ -7,8 +7,10 @@ from pathlib import Path
 
 from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 
+cwd = os.getcwd()
 SS_PATH = os.getenv('SUITESPARSE_PATH')
-out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats')
+
+out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 all_formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]
 formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense"]
@@ -40,7 +42,8 @@ formatWriter = FormatWriter()
 parser = argparse.ArgumentParser(description="Process some suitesparse matrices into per-level datastructures")
 parser.add_argument('-n', '--name', metavar='ssname', type=str, action='store', help='tensor name to run format conversion on one SS tensor')
 parser.add_argument('-f', '--format', metavar='ssformat', type=str, action='store', help='The format that the tensor should be converted to')
-
+parser.add_argument('-c', '--combined', action='store_true', default=False, help='Whether the formatted datastructures should be in separate files')
+parser.add_argument('-o', '--omit-dense', action='store_true', default=False, help='Do not create fully dense format')
 args = parser.parse_args()
 
 
@@ -59,7 +62,7 @@ if args.format is not None:
 
     coo = inputCache.load(tensor, False)
     formatWriter.writeout(coo, args.format, filename)
-else:
+elif args.combined:
     for format_str in formats:
         filename = os.path.join(out_path, args.name+"_"+format_str + ".txt")
         print("Writing " + args.name + " " + format_str + "...")
@@ -74,4 +77,27 @@ else:
         trans_filename = os.path.join(out_path, args.name+"_trans_shifted_"+format_str + ".txt")
         trans_shifted = shifted.transpose()
         formatWriter.writeout(trans_shifted, format_str, trans_filename)
+else:
+    print("Writing " + args.name + " original...")
+    dirname = os.path.join(out_path, args.name, "orig")
+    dirpath = Path(dirname)
+    dirpath.mkdir(parents=True, exist_ok=True)
+    tensorname = "B"
+    coo = inputCache.load(tensor, False)
+    formatWriter.writeout_separate(coo, dirname, tensorname, omit_dense=args.omit_dense)
 
+    print("Writing " + args.name + " shifted...")
+    dirname = os.path.join(out_path, args.name, "shift")
+    dirpath = Path(dirname)
+    dirpath.mkdir(parents=True, exist_ok=True)
+    tensorname = "C"
+    shifted = ScipyTensorShifter().shiftLastMode(coo)
+    formatWriter.writeout_separate(shifted, dirname, tensorname, omit_dense=args.omit_dense)
+
+    print("Writing " + args.name + " shifted and transposed...")
+    dirname = os.path.join(out_path, args.name, "shift-trans")
+    dirpath = Path(dirname)
+    dirpath.mkdir(parents=True, exist_ok=True)
+    tensorname = "C"
+    trans_shifted = shifted.transpose()
+    formatWriter.writeout_separate(shifted, dirname, tensorname, omit_dense=args.omit_dense)

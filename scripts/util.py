@@ -1,15 +1,18 @@
 import scipy.sparse
 import scipy.io
-#import sparse
+# import sparse
 import os
 import glob
 import numpy
 import itertools
-
+import shutil
 import numpy as np
+
+from pathlib import Path
 from dataclasses import dataclass
 
 SUITESPARSE_PATH = os.environ['SUITESPARSE_PATH']
+
 
 # TnsFileLoader loads a tensor stored in .tns format.
 class TnsFileLoader:
@@ -37,13 +40,14 @@ class TnsFileLoader:
                 values.append(float(data[-1]))
         return dims, coordinates, values
 
+
 # TnsFileDumper dumps a dictionary of coordinates to values
 # into a coordinate list tensor file.
 class TnsFileDumper:
     def __init__(self):
         pass
 
-    def dump_dict_to_file(self, shape, data, path, write_shape = False):
+    def dump_dict_to_file(self, shape, data, path, write_shape=False):
         # Sort the data so that the output is deterministic.
         sorted_data = sorted([list(coords) + [value] for coords, value in data.items()])
         with open(path, 'w+') as f:
@@ -56,6 +60,7 @@ class TnsFileDumper:
                 shape_strings = [str(elem) for elem in shape] + ['0']
                 f.write(" ".join(shape_strings))
                 f.write("\n")
+
 
 # ScipySparseTensorLoader loads a sparse tensor from a file into a
 # scipy.sparse CSR matrix.
@@ -73,7 +78,8 @@ class ScipySparseTensorLoader:
         elif self.format == "coo":
             return scipy.sparse.coo_matrix(values, (coords[0], coords[1]), shape=tuple(dims))
         else:
-            assert(False)
+            assert (False)
+
 
 # PydataSparseTensorLoader loads a sparse tensor from a file into
 # a pydata.sparse tensor.
@@ -159,8 +165,10 @@ class ScipyMatrixMarketTensorLoader:
         coo = scipy.io.mmread(path)
         return coo
 
+
 def shape_str(shape):
     return str(shape[0]) + " " + str(shape[1])
+
 
 # FIXME: This fixed point number of decimals may not be enough
 def array_str(array):
@@ -168,6 +176,14 @@ def array_str(array):
         return ' '.join(['{:5.5f}'.format(item) for item in array])
 
     return ' '.join([str(item) for item in array])
+
+
+def array_newline_str(array):
+    if isinstance(array[0], float):
+        return '\n'.join(['{:5.5f}'.format(item) for item in array])
+
+    return '\n'.join([str(item) for item in array])
+
 
 # InputCacheSuiteSparse attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
@@ -321,7 +337,128 @@ class FormatWriter:
             else:
                 assert (False)
 
-        os.chmod(filename, 0o766)
+            os.chmod(filename, 0o666)
+
+    def writeout_separate(self, coo, dir_path, tensorname, omit_dense=True):
+
+        csr_dir = Path(os.path.join(dir_path, "ds01"))
+        if os.path.exists(csr_dir):
+            shutil.rmtree(csr_dir)
+        csr_dir.mkdir(parents=True, exist_ok=True)
+
+        dcsr_dir = Path(os.path.join(dir_path, "ss01"))
+        if os.path.exists(dcsr_dir):
+            shutil.rmtree(dcsr_dir)
+        dcsr_dir.mkdir(parents=True, exist_ok=True)
+
+        csc_dir = Path(os.path.join(dir_path, "ds10"))
+        if os.path.exists(csc_dir):
+            shutil.rmtree(csc_dir)
+        csc_dir.mkdir(parents=True, exist_ok=True)
+
+        dcsc_dir = Path(os.path.join(dir_path, "ss10"))
+        if os.path.exists(dcsc_dir):
+            shutil.rmtree(dcsc_dir)
+        dcsc_dir.mkdir(parents=True, exist_ok=True)
+
+        dcsr = self.convert_format(coo, "dcsr")
+
+        # Shape shared between all formats
+        filename = os.path.join(dir_path, tensorname + "_shape.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsr.shape))
+            os.chmod(filename, 0o666)
+
+            os.symlink(filename, os.path.join(dcsr_dir, tensorname+"_shape.txt"))
+            os.symlink(filename, os.path.join(csr_dir, tensorname+"_shape.txt"))
+            os.symlink(filename, os.path.join(dcsc_dir, tensorname+"_shape.txt"))
+            os.symlink(filename, os.path.join(csc_dir, tensorname+"_shape.txt"))
+
+        filename = os.path.join(dcsr_dir, tensorname+"0_seg.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsr.seg0))
+            os.chmod(filename, 0o666)
+
+        filename = os.path.join(dcsr_dir, tensorname+"0_crd.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsr.crd0))
+            os.chmod(filename, 0o666)
+
+        filename = os.path.join(dcsr_dir, tensorname+"1_seg.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsr.seg1))
+            os.chmod(filename, 0o666)
+
+        filename = os.path.join(dir_path, tensorname + "1_crd_s1.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsr.crd1))
+            os.chmod(filename, 0o666)
+            os.symlink(filename, os.path.join(dcsr_dir, tensorname+"1_crd.txt"))
+            os.symlink(filename, os.path.join(csr_dir, tensorname+"1_crd.txt"))
+
+
+        filename = os.path.join(dir_path, tensorname + "_vals_s.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsr.data))
+            os.chmod(filename, 0o666)
+            os.symlink(filename, os.path.join(dcsr_dir, tensorname+"_vals.txt"))
+            os.symlink(filename, os.path.join(csr_dir, tensorname+"_vals.txt"))
+
+        csr = self.convert_format(coo, "csr")
+        filename = os.path.join(csr_dir, tensorname+"1_seg.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(csr.indptr))
+            os.chmod(filename, 0o666)
+
+        dcsc = self.convert_format(coo, "dcsc")
+
+        filename = os.path.join(dcsc_dir, tensorname + "1_seg.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsc.seg0))
+            os.chmod(filename, 0o666)
+
+        filename = os.path.join(dcsc_dir, tensorname + "1_crd.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsc.crd0))
+            os.chmod(filename, 0o666)
+
+        filename = os.path.join(dcsc_dir, tensorname + "0_seg.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsc.seg1))
+            os.chmod(filename, 0o666)
+
+        filename = os.path.join(dir_path, tensorname + "0_crd.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsc.crd1))
+            os.chmod(filename, 0o666)
+            os.symlink(filename, os.path.join(dcsc_dir, tensorname+"0_crd.txt"))
+            os.symlink(filename, os.path.join(csc_dir, tensorname+"0_crd.txt"))
+
+        filename = os.path.join(dir_path, tensorname + "_vals_sT.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(dcsc.data))
+            os.chmod(filename, 0o666)
+            os.symlink(filename, os.path.join(dcsc_dir, tensorname+"_vals.txt"))
+            os.symlink(filename, os.path.join(csc_dir, tensorname+"_vals.txt"))
+
+        csc = self.convert_format(coo, "csc")
+        filename = os.path.join(csc_dir, tensorname+"0_seg.txt")
+        with open(filename, "w") as ofile:
+            ofile.write(array_newline_str(csc.indptr))
+            os.chmod(filename, 0o666)
+
+        if not omit_dense:
+            dense = self.convert_format(coo, "dense")
+
+            dense_dir = Path(os.path.join(dir_path, "dd01"))
+            dense_dir.mkdir(parents=True, exist_ok=True)
+            os.symlink(filename, os.path.join(dense_dir, "B_shape.txt"))
+
+            filename = os.path.join(dense_dir, tensorname + "_vals.txt")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dense))
+                os.chmod(filename, 0o666)
+
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
@@ -342,6 +479,7 @@ class InputCacheTensor:
             else:
                 self.tensor = self.lastLoaded
             return self.tensor
+
 
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
 # into pydata.sparse matrices.
@@ -366,18 +504,21 @@ class SuiteSparseTensor:
     def load(self, loader):
         return loader.load(self.path)
 
+
 # TensorCollectionSuiteSparse represents the set of all downloaded
 # SuiteSparse tensors.
 class TensorCollectionSuiteSparse:
     def __init__(self):
-        data = SUITESPARSE_PATH 
+        data = SUITESPARSE_PATH
         sstensors = glob.glob(os.path.join(data, "*.mtx"))
         self.tensors = [SuiteSparseTensor(t) for t in sstensors]
 
     def getTensors(self):
         return self.tensors
+
     def getTensorNames(self):
         return [str(tensor) for tensor in self.getTensors()]
+
     def getTensorsAndNames(self):
         return [(str(tensor), tensor) for tensor in self.getTensors()]
 
@@ -393,5 +534,3 @@ class TensorCollectionSuiteSparse:
 #         else:
 #             data[i] = int(tensor.data[i])
 #     return sparse.COO(tensor.coords, data, tensor.shape)
-
-

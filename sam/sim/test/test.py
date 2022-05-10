@@ -207,7 +207,7 @@ def gen_val_arr(size=4, max_val=100, min_val=-100):
     result = [x if x != 0 else 1 for x in result]
     return result
 
-def read_inputs(filename, formatlist):
+def read_combined_inputs(filename, formatlist):
     return_list = []
     with open(filename) as file:
         file.readline()
@@ -237,3 +237,9 @@ def read_inputs(filename, formatlist):
 
     return return_list
 
+def read_inputs(filename, type=int):
+    return_list = []
+    with open(filename) as f:
+        for line in f:
+            return_list.append(type(line))
+    return return_list

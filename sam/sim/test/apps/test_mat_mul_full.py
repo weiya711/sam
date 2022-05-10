@@ -12,7 +12,8 @@ from sam.sim.test.test import *
 
 import os
 
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats')
+cwd = os.getcwd()
+formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd,'mode-formats'))
 
 
 # FIXME: Figure out what formats we want to test for the chip
@@ -21,20 +22,50 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default='./mode-formats'
     reason='CI lacks datasets',
 )
 def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
-    filename = os.path.join(formatted_dir, ssname+"_"+"csr.txt")
-    formats = ['d', 's']
-    [B_shape, B_dim0, (B_seg1, B_crd1), B_vals] = read_inputs(filename, formats)
+    # filename = os.path.join(formatted_dir, ssname+"_"+"csr.txt")
+    # formats = ['d', 's']
+    # [B_shape, B0_dim, (B1_seg, B1_crd), B_vals] = read_combined_inputs(filename, formats)
+    #
+    # filename = os.path.join(formatted_dir, ssname+"_"+"trans_shifted_csc.txt")
+    # formats = ['d', 's']
+    # [C_shape, C1_dim, (C0_seg, C0_crd), C_vals] = read_combined_inputs(filename, formats)
 
-    filename = os.path.join(formatted_dir, ssname+"_"+"trans_shifted_csc.txt")
-    formats = ['d', 's']
-    [C_shape, C_dim1, (C_seg0, C_crd0), C_vals] = read_inputs(filename, formats)
+    # CSR
+    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ds01")
+    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape = read_inputs(B_shape_filename)
+
+    B0_dim = B_shape[0]
+
+    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg = read_inputs(B1_seg_filename)
+    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd = read_inputs(B1_crd_filename)
+
+    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals = read_inputs(B_vals_filename, float)
+
+    # CSC
+    C_dirname = os.path.join(formatted_dir, ssname, "shift-trans", "ds10")
+    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_shape = read_inputs(C_shape_filename)
+
+    C1_dim = C_shape[0]
+
+    C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
+    C0_seg = read_inputs(C0_seg_filename)
+    C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
+    C0_crd = read_inputs(C0_crd_filename)
+
+    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    C_vals = read_inputs(C_vals_filename, float)
 
     if debug_sim:
-        print("Mat B:", B_shape, B_dim0, B_seg1, B_crd1, B_vals)
-        print("Mat C:", C_shape, C_dim1, C_seg0, C_crd0, C_vals)
+        print("Mat B:", B_shape, B0_dim, B1_seg, B1_crd, B_vals)
+        print("Mat C:", C_shape, C1_dim, C0_seg, C0_crd, C_vals)
 
-    B_scipy = scipy.sparse.csr_matrix((B_vals, B_crd1, B_seg1), shape=B_shape)
-    C_scipy = scipy.sparse.csc_matrix((C_vals, C_crd0, C_seg0), shape=C_shape)
+    B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
+    C_scipy = scipy.sparse.csc_matrix((C_vals, C0_crd, C0_seg), shape=C_shape)
 
     B_nd = B_scipy.toarray()
     C_nd = C_scipy.toarray()
@@ -47,12 +78,12 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_Bi = UncompressRdScan(dim=B_dim0, debug=debug_sim)
-    rdscan_Bk = CompressedRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    rdscan_Bi = UncompressRdScan(dim=B0_dim, debug=debug_sim)
+    rdscan_Bk = CompressedRdScan(crd_arr=B1_crd, seg_arr=B1_seg, debug=debug_sim)
     val_B = Array(init_arr=B_vals, debug=debug_sim)
 
-    rdscan_Cj = UncompressRdScan(dim=C_dim1, debug=debug_sim)
-    rdscan_Ck = CompressedRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
+    rdscan_Cj = UncompressRdScan(dim=C1_dim, debug=debug_sim)
+    rdscan_Ck = CompressedRdScan(crd_arr=C0_crd, seg_arr=C0_seg, debug=debug_sim)
     val_C = Array(init_arr=C_vals, debug=debug_sim)
 
     repsiggen_Bi = RepeatSigGen(debug=debug_sim)
@@ -64,9 +95,9 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     reduce = Reduce(debug=debug_sim)
 
     #drop = CrdDrop(debug=debug_sim)
-    vals_X = ValsWrScan(size=B_dim0 * C_dim1, fill=fill, debug=debug_sim)
-    wrscan_Xi = CompressWrScan(seg_size=2, size=B_dim0, fill=fill)
-    wrscan_Xj = CompressWrScan(seg_size=B_dim0 + 1, size=B_dim0 * B_dim0, fill=fill)
+    vals_X = ValsWrScan(size=B0_dim * C1_dim, fill=fill, debug=debug_sim)
+    wrscan_Xi = CompressWrScan(seg_size=2, size=B0_dim, fill=fill)
+    wrscan_Xj = CompressWrScan(seg_size=B0_dim + 1, size=B0_dim * B0_dim, fill=fill)
 
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']

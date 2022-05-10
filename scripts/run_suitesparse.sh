@@ -33,7 +33,7 @@ for i in ${!DATASET_NAMES[@]}; do
 
     cd $outdir
     echo "Generating input format files for $name..."
-    python $basedir/scripts/datastructure_suitesparse.py -n $name
+    python $basedir/scripts/datastructure_suitesparse.py -n $name 
 
     cd $basedir/sam/sim
     echo "Testing $name..."
