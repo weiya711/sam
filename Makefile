@@ -7,6 +7,7 @@ run: submodules
 
 .PHONY: formats
 formats:
+	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
 	./scripts/generate_suitesparse_formats.sh
 
 .PHONY: env
