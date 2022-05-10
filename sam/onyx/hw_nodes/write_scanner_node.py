@@ -91,6 +91,13 @@ class WriteScannerNode(HWNode):
         else:
             lowest_level = 0
             stop_lvl = int(attributes['mode'].strip('"'))
-        block_mode = int(attributes['type'].strip('"') == 'fiberlookup')
+
+        # Setting block mode if this write scanner is attached to an application read
+        if attributes['type'].strip('"') == 'fiberlookup' or attributes['type'].strip('"') == 'arrayvals':
+            block_mode = 1
+        else:
+            block_mode = 0
+
+        # block_mode = int(attributes['type'].strip('"') == 'fiberlookup')
         cfg_tuple = (inner_offset, compressed, lowest_level, stop_lvl, block_mode)
         return cfg_tuple
