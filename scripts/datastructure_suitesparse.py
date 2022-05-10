@@ -100,4 +100,4 @@ else:
     dirpath.mkdir(parents=True, exist_ok=True)
     tensorname = "C"
     trans_shifted = shifted.transpose()
-    formatWriter.writeout_separate(shifted, dirname, tensorname, omit_dense=args.omit_dense)
+    formatWriter.writeout_separate(trans_shifted, dirname, tensorname, omit_dense=args.omit_dense)

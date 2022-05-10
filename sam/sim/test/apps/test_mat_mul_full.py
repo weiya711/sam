@@ -50,7 +50,7 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
-    C1_dim = C_shape[0]
+    C1_dim = C_shape[1]
 
     C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
     C0_seg = read_inputs(C0_seg_filename)

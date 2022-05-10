@@ -239,7 +239,7 @@ class FormatWriter:
                 dcsr = DoublyCompressedMatrix(csr.shape, seg0, crd0, seg1, crd1, data)
                 return dcsr
             elif format_str == "dcsc":
-                csc = scipy.sparse.csr_matrix(coo)
+                csc = scipy.sparse.csc_matrix(coo)
                 has_col = [rc > 0 for rc in csc.getnnz(0)]
                 segend = sum(has_col)
                 seg0 = [0, segend]
