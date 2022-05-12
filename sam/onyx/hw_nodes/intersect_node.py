@@ -37,7 +37,9 @@ class IntersectNode(HWNode):
         elif other_type == ReadScannerNode:
             rd_scan = other.get_name()
             out_conn = 0
-            if other.get_tensor() == "C":
+            print(edge)
+            comment = edge.get_attributes()['comment'].strip('"')
+            if "C" in comment:
                 out_conn = 1
             new_conns = {
                 f'isect_to_rd_scan': [
@@ -87,5 +89,9 @@ class IntersectNode(HWNode):
     def get_num_inputs(self):
         return self.num_inputs_connected
 
-    def configure(self, **kwargs):
-        pass
+    def configure(self, attributes):
+        print("INTERSECT CONFIGURE")
+        print(attributes)
+        cmrg_enable = 0
+        cmrg_stop_lvl = 0
+        return (cmrg_enable, cmrg_stop_lvl)

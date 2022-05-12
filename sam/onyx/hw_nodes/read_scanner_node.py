@@ -3,8 +3,12 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class ReadScannerNode(HWNode):
-    def __init__(self, name=None) -> None:
+    def __init__(self, name=None, tensor=None) -> None:
         super().__init__(name=name)
+        self.tensor = tensor
+
+    def get_tensor(self):
+        return self.tensor
 
     def connect(self, other, edge):
 
@@ -93,26 +97,37 @@ class ReadScannerNode(HWNode):
         elif other_type == IntersectNode:
             # Send both....
             isect = other.get_name()
-            isect_conn = 1
-            if self.get_tensor == "B":
-                isect_conn = 0
-            new_conns = {
-                f'rd_scan_to_isect_{isect_conn}_crd': [
-                    # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 16),
-                    ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn * 2}")], 1),
-                    ([(isect, f"ready_out_{isect_conn * 2}"), (rd_scan, "ready_in_0")], 1),
-                    ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn * 2}")], 1),
-                ],
-                f'rd_scan_to_isect_{isect_conn}_pos': [
-                    # send output to rd scanner
-                    ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 16),
-                    ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn * 2 + 1}")], 1),
-                    ([(isect, f"ready_out_{isect_conn * 2 + 1}"), (rd_scan, "ready_in_1")], 1),
-                    ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn * 2 + 1}")], 1),
-                ]
-            }
-            other.update_input_connections()
+            isect_conn = 0
+            print(edge)
+            print("CHECKING READ TENSOR - INTERSECT")
+            print(self.get_tensor())
+            # comment = edge.get_attributes()['comment'].strip('"')
+            if self.get_tensor() == 'C':
+                isect_conn = 1
+            e_type = edge.get_attributes()['type'].strip('"')
+            if "crd" in e_type:
+                new_conns = {
+                    f'rd_scan_to_isect_{isect_conn}_crd': [
+                        # send output to rd scanner
+                        ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 16),
+                        ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn * 2}")], 1),
+                        ([(isect, f"ready_out_{isect_conn * 2}"), (rd_scan, "ready_in_0")], 1),
+                        ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn * 2}")], 1),
+                    ]
+                }
+            elif 'ref' in e_type:
+                new_conns = {
+                    f'rd_scan_to_isect_{isect_conn}_pos': [
+                        # send output to rd scanner
+                        ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 16),
+                        ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn * 2 + 1}")], 1),
+                        ([(isect, f"ready_out_{isect_conn * 2 + 1}"), (rd_scan, "ready_in_1")], 1),
+                        ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn * 2 + 1}")], 1),
+                    ]
+                }
+            else:
+                raise NotImplementedError(f'Only accept ref or crd types to intersect....you used {type}')
+            # other.update_input_connections()
             return new_conns
         elif other_type == ReduceNode:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
@@ -123,7 +138,24 @@ class ReadScannerNode(HWNode):
         elif other_type == RepeatNode:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == ComputeNode:
-            raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
+            compute = other.get_name()
+            compute_conn = 0
+            print(edge)
+            print("CHECKING READ TENSOR - COMPUTE")
+            print(self.get_tensor())
+            if self.get_tensor() == 'C':
+                compute_conn = 1
+            new_conns = {
+                f'rd_scan_to_compute_{compute_conn}': [
+                    # send output to rd scanner
+                    ([(rd_scan, "coord_out"), (compute, f"data_in_{compute_conn}")], 16),
+                    ([(rd_scan, "eos_out_0"), (compute, f"eos_in_{compute_conn}")], 1),
+                    ([(compute, f"ready_out_{compute_conn}"), (rd_scan, "ready_in_0")], 1),
+                    ([(rd_scan, "valid_out_0"), (compute, f"valid_in_{compute_conn}")], 1),
+                ]
+            }
+            return new_conns
+
         elif other_type == BroadcastNode:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == RepSigGenNode:

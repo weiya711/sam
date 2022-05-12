@@ -131,5 +131,14 @@ class ComputeNode(HWNode):
     def get_num_inputs(self):
         return self.num_inputs_connected
 
-    def configure(self, **kwargs):
-        pass
+    def configure(self, attributes):
+        print("PE CONFIGURE")
+        print(attributes)
+        c_op = attributes['type'].strip('"')
+        print(c_op)
+        op_code = 0
+        if c_op == 'mul':
+            op_code = 0
+        elif c_op == 'add':
+            op_code = 1
+        return op_code
