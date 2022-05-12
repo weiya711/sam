@@ -31,26 +31,26 @@ class SAMDotGraph():
             if 'hwnode' not in node.get_attributes():
                 node.create_attribute_methods(node.get_attributes())
                 n_type = node.get_type().strip('"')
-                print(n_type)
+                # print(n_type)
                 assert n_type != "fiberwrite", "fiberwrite should have been rewritten out..."
                 assert n_type != "fiberlookup", "fiberlookup should have been rewritten out..."
                 assert n_type != "arrayvals", "arrayvals should have been rewritten out..."
 
                 hw_nt = None
                 if n_type == "broadcast":
-                    hw_nt = HWNodeType.Broadcast
+                    hw_nt = f"HWNodeType.Broadcast"
                 elif n_type == "repsiggen":
-                    hw_nt = HWNodeType.RepSigGen
+                    hw_nt = f"HWNodeType.RepSigGen"
                 elif n_type == "repeat":
-                    hw_nt = HWNodeType.Repeat
+                    hw_nt = f"HWNodeType.Repeat"
                 elif n_type == "mul":
-                    hw_nt = HWNodeType.Compute
+                    hw_nt = f"HWNodeType.Compute"
                 elif n_type == "reduce":
-                    hw_nt = HWNodeType.Reduce
+                    hw_nt = f"HWNodeType.Reduce"
                 elif n_type == "intersect":
-                    hw_nt = HWNodeType.Intersect
+                    hw_nt = f"HWNodeType.Intersect"
                 elif n_type == "crddrop":
-                    hw_nt = HWNodeType.Merge
+                    hw_nt = f"HWNodeType.Merge"
                 else:
                     raise SAMDotGraphLoweringError(f"Node is of type {n_type}")
 
@@ -67,7 +67,7 @@ class SAMDotGraph():
         '''
         nodes_to_proc = []
         for node in self.graph.get_nodes():
-            print(node)
+            # print(node)
             if 'repsiggen' in node.get_attributes()['type'].strip('"'):
                 nodes_to_proc.append(node)
         # Now we have the rep sig gen - want to find the incoming edge from the broadcast node
@@ -77,8 +77,20 @@ class SAMDotGraph():
             og_label = attrs['label']
             # del attrs['label']
             # Find the upstream broadcast node
-            broadcast_nodes = [edge.get_source() for edge in self.graph.get_edges() if "broadcast" in self.graph.get_node(edge.get_source()).get_attributes()['type'].strip('"') and edge.get_destination() == node.get_name()]
-            assert len(broadcast_nodes) == 1
+            broadcast_nodes = []
+            for edge in self.graph.get_edges():
+                # print(edge)
+                source_node = edge.get_source()
+                source_node = self.graph.get_node(source_node)[0]
+                # print(source_node)
+                if "broadcast" in source_node.get_attributes()['type'].strip('"') and edge.get_destination() == rsg_node.get_name():
+                    broadcast_nodes.append(source_node)
+
+            # broadcast_nodes = [edge.get_source() for edge in self.graph.get_edges() if "broadcast" in self.graph.get_node(edge.get_source())[0].get_attributes()['type'].strip('"') and edge.get_destination() == node.get_name()]
+            # Leave early.
+            if len(broadcast_nodes) == 0:
+                # print(f"NO BROADCAST NODES?")
+                return
             bc_node = broadcast_nodes[0]
             # Now that we have the broadcast node, get the incoming edge and other outgoing edge
             incoming_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == bc_node.get_name()][0]
@@ -89,10 +101,15 @@ class SAMDotGraph():
             rsg_to_branch = pydot.Edge(src=rsg_node, dst=other_outgoing_edge.get_destination(), **other_outgoing_edge.get_attributes())
 
             # Now delete the broadcast and all original edge
-            self.graph.del_node(bc_node)
-            self.graph.del_edge(incoming_edge)
-            self.graph.del_edge(outgoing_edge)
-            self.graph.del_edge(other_outgoing_edge)
+            ret = self.graph.del_edge(incoming_edge.get_source(), incoming_edge.get_destination())
+            # print(f"DELETED EDGE0? : {ret}")
+            ret = self.graph.del_edge(outgoing_edge.get_source(), outgoing_edge.get_destination())
+            # print(f"DELETED EDGE1? : {ret}")
+            ret = self.graph.del_edge(other_outgoing_edge.get_source(), other_outgoing_edge.get_destination())
+            # print(f"DELETED EDGE2? : {ret}")
+            ret = self.graph.del_node(bc_node)
+
+            # print(f"DELETED NODE? : {ret}")
 
             # ...and add in the new edges
             self.graph.add_edge(og_to_rsg)
@@ -266,6 +283,7 @@ class SAMDotGraph():
 if __name__ == "__main__":
     matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
     # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
+    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_elemmul.gv"
     temp_out = "/home/max/Documents/SPARSE/sam/mek.gv"
     sdg = SAMDotGraph(filename=matmul_dot)
     graph = sdg.get_graph()
