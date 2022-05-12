@@ -5,56 +5,48 @@ import numpy
 
 from pathlib import Path 
 
-from util import TensorCollectionSuiteSparse, ScipyTensorShifter, PydataMatrixMarketTensorLoader, ScipyMatrixMarketTensorLoader, SuiteSparseTensor, safeCastPydataTensorToInts
+from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 
-#SS_PATH = os.getenv('SUITESPARSE_PATH')
-SS_PATH = Path("~/aha-sparsity/")
+cwd = os.getcwd()
+SS_PATH = os.getenv('SUITESPARSE_PATH')
 
-formats = ["coo", "csr", "dcsr", "dcsc", "csc", "dense"]
+out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
-# UfuncInputCache attempts to avoid reading the same tensor from disk multiple
-# times in a benchmark run.
-class UfuncInputCache:
-    def __init__(self):
-        self.lastLoaded = None
-        self.lastName = None
-        self.tensor = None
+all_formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]
+formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense"]
+scipy_formats = ["coo", "csr", "csc"]
 
-    def load(self, tensor, suiteSparse, cast, format_str):
-        if self.lastName == str(tensor):
-            return self.tensor 
-        else:
-            if suiteSparse:
-                self.lastLoaded = tensor.load(ScipyMatrixMarketTensorLoader(format_str))
-            else:
-                self.lastLoaded = tensor.load()
-            self.lastName  = str(tensor)
-            if cast:
-              self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
-            else:
-              self.tensor = self.lastLoaded
-            return self.tensor
-
-    def writeout(self, tensor, suiteSparse, cast, format_str, filename):
-        with open(filename, "w") as outfile: 
-            tensor = self.load(tensor, suiteSparse, cast, format_str)
-            match format_str:
-                case "csr":
-                    outfile.write(tensor.shape)
-                    outfile.write(tensor.indptr)
-                    outfile.write(tensor.indices)
-                    outfile.write(tensor.values)
-
+def get_datastructure_string(format, mode):
+    if format == ['d','d'] and mode == [0, 1]:
+        return "dense"
+    elif format == ['d','d']:
+        return "denseT"
+    elif format == ['d', 's'] and mode == [0, 1]:
+        return "csr"
+    elif format == ['d', 's']:
+        return "csc"
+    elif format == ['s', 's'] and mode == [0, 1]:
+        return "dcsr"
+    elif format == ['s', 's']:
+        return "dcsc"
+    elif format == ['c', 'q'] and mode == [0, 1]:
+        return "coo"
+    elif format == ['c', 'q']:
+        return "cooT"
+    else:
+        return ""
  
-inputCache = UfuncInputCache()
+inputCache = InputCacheSuiteSparse()
+formatWriter = FormatWriter()
 
 parser = argparse.ArgumentParser(description="Process some suitesparse matrices into per-level datastructures")
-parser.add_argument('-n', '--name', metavar='ssname', type=str, action='store', help='tensor name to run tile analysis on one SS tensor')
-parser.add_argument('-f', '--format', metavar='ssformat', type=str, action='store', default='format', help='The format that the tensor should be converted to')
-
+parser.add_argument('-n', '--name', metavar='ssname', type=str, action='store', help='tensor name to run format conversion on one SS tensor')
+parser.add_argument('-f', '--format', metavar='ssformat', type=str, action='store', help='The format that the tensor should be converted to')
+parser.add_argument('-c', '--combined', action='store_true', default=False, help='Whether the formatted datastructures should be in separate files')
+parser.add_argument('-o', '--omit-dense', action='store_true', default=False, help='Do not create fully dense format')
 args = parser.parse_args()
 
-out_dirname = './mode_formats/'
+
 out_path = Path(out_dirname)  
 out_path.mkdir(parents=True, exist_ok=True)
 
@@ -63,9 +55,49 @@ if args.name is None:
     exit()
 
 tensor = SuiteSparseTensor(os.path.join(SS_PATH, args.name))
-for format_str in formats:
-    filename = os.join(out_path, args.name+format_str + ".txt") 
-    inputCache.writeout(tensor, True, True, format_str, filename)
-    
 
+if args.format is not None:
+    assert(args.format in formats)
+    filename = os.path.join(out_path, args.name+"_"+args.format + ".txt")
 
+    coo = inputCache.load(tensor, False)
+    formatWriter.writeout(coo, args.format, filename)
+elif args.combined:
+    for format_str in formats:
+        filename = os.path.join(out_path, args.name+"_"+format_str + ".txt")
+        print("Writing " + args.name + " " + format_str + "...")
+
+        coo = inputCache.load(tensor, False)
+        formatWriter.writeout(coo, format_str, filename)
+
+        shifted_filename = os.path.join(out_path, args.name+"_shifted_"+format_str + ".txt")
+        shifted = ScipyTensorShifter().shiftLastMode(coo)
+        formatWriter.writeout(shifted, format_str, shifted_filename)
+
+        trans_filename = os.path.join(out_path, args.name+"_trans_shifted_"+format_str + ".txt")
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout(trans_shifted, format_str, trans_filename)
+else:
+    print("Writing " + args.name + " original...")
+    dirname = os.path.join(out_path, args.name, "orig")
+    dirpath = Path(dirname)
+    dirpath.mkdir(parents=True, exist_ok=True)
+    tensorname = "B"
+    coo = inputCache.load(tensor, False)
+    formatWriter.writeout_separate(coo, dirname, tensorname, omit_dense=args.omit_dense)
+
+    print("Writing " + args.name + " shifted...")
+    dirname = os.path.join(out_path, args.name, "shift")
+    dirpath = Path(dirname)
+    dirpath.mkdir(parents=True, exist_ok=True)
+    tensorname = "C"
+    shifted = ScipyTensorShifter().shiftLastMode(coo)
+    formatWriter.writeout_separate(shifted, dirname, tensorname, omit_dense=args.omit_dense)
+
+    print("Writing " + args.name + " shifted and transposed...")
+    dirname = os.path.join(out_path, args.name, "shift-trans")
+    dirpath = Path(dirname)
+    dirpath.mkdir(parents=True, exist_ok=True)
+    tensorname = "C"
+    trans_shifted = shifted.transpose()
+    formatWriter.writeout_separate(trans_shifted, dirname, tensorname, omit_dense=args.omit_dense)

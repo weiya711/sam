@@ -142,11 +142,29 @@ class CompressedRdScan(RdScan):
                 if curr_in_ref == 'D':
                     self.done = True
             else:
+
                 self.start_addr = self.seg_arr[curr_in_ref]
                 self.stop_addr = self.seg_arr[curr_in_ref + 1]
                 self.curr_addr = self.start_addr
-                self.curr_crd = self.crd_arr[self.curr_addr]
-                self.curr_ref = self.curr_addr
+                if self.curr_addr >= self.stop_addr:
+                    # End of fiber, get next input reference
+                    self.end_fiber = True
+
+                    if len(self.in_ref) > 0:
+                        next_in = self.in_ref[0]
+                        if is_stkn(next_in):
+                            self.in_ref.pop(0)
+                            stkn = increment_stkn(next_in)
+                        else:
+                            stkn = 'S0'
+                    else:
+                        self.emit_fiber_stkn = True
+                        stkn = ''
+                    self.curr_crd = stkn
+                    self.curr_ref = stkn
+                else:
+                    self.curr_crd = self.crd_arr[self.curr_addr]
+                    self.curr_ref = self.curr_addr
         elif (self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1) and \
                 self.curr_crd is not None and self.curr_ref is not None:
             # End of fiber, get next input reference
