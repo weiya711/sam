@@ -2,10 +2,20 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class MergeNode(HWNode):
-    def __init__(self, name=None) -> None:
+    def __init__(self, name=None, outer=None, inner=None) -> None:
         super().__init__(name=name)
+        self.outer = outer
+        self.inner = inner
+
+    def get_outer(self):
+        return self.outer
+
+    def get_inner(self):
+        return self.inner
 
     def connect(self, other, edge):
+
+        merge = self.get_name()
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -20,6 +30,7 @@ class MergeNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
 
+        new_conns = None
         other_type = type(other)
 
         if other_type == GLBNode:
@@ -31,7 +42,23 @@ class MergeNode(HWNode):
         elif other_type == ReadScannerNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == WriteScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            wr_scan = other.get_name()
+            conn = 0
+            comment = edge.get_attributes()['comment'].strip('"')
+            print("MERGE TO WR SCAN")
+            print(comment)
+            if 'outer' in comment:
+                conn = 1
+            new_conns = {
+                f'merge_{conn}_to_wr_scan': [
+                    ([(merge, f"cmrg_coord_out_{conn}"), (wr_scan, f"data_in_0")], 16),
+                    ([(merge, f"cmrg_eos_out_{conn}"), (wr_scan, f"eos_in_0")], 1),
+                    ([(wr_scan, f"ready_out_0"), (merge, f"cmrg_ready_in_{conn}")], 1),
+                    ([(merge, f"cmrg_valid_out_{conn}"), (wr_scan, f"valid_in_0")], 1),
+                ]
+            }
+
+            return new_conns
         elif other_type == IntersectNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == ReduceNode:
@@ -51,5 +78,12 @@ class MergeNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+        return new_conns
+
+    def configure(self, attributes):
+        print("MERGE CONFIGURE")
+        print(attributes)
+        cmrg_enable = 1
+        # TODO what is this supposed to be?
+        cmrg_stop_lvl = 1
+        return (cmrg_enable, cmrg_stop_lvl)

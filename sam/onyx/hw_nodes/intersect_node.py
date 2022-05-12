@@ -24,6 +24,7 @@ class IntersectNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
 
+        new_conns = None
         isect = self.get_name()
 
         other_type = type(other)
@@ -73,7 +74,30 @@ class IntersectNode(HWNode):
         elif other_type == LookupNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == MergeNode:
-            raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+            merge = other.get_name()
+            # Use inner to process outer
+            merge_outer = other.get_outer()
+            merge_inner = other.get_inner()
+            conn = 0
+            print(edge)
+            print("INTERSECT TO MERGE")
+            comment = edge.get_attributes()['comment'].strip('"')
+            print(comment)
+            print(merge_outer)
+            print(merge_inner)
+            if merge_outer in comment:
+                conn = 1
+            new_conns = {
+                f'isect_to_merger_{conn}': [
+                    # Send isect row and isect col to merger inside isect_col
+                    ([(isect, "coord_out"), (merge, f"cmrg_coord_in_{conn}")], 16),
+                    ([(isect, "eos_out_0"), (merge, f"cmrg_eos_in_{conn}")], 1),
+                    ([(merge, f"cmrg_ready_out_{conn}"), (isect, "ready_in_0")], 1),
+                    ([(isect, "valid_out_0"), (merge, f"cmrg_valid_in_{conn}")], 1),
+                ]
+            }
+
+            return new_conns
         elif other_type == RepeatNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == ComputeNode:
@@ -84,6 +108,8 @@ class IntersectNode(HWNode):
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+
+        return new_conns
 
     def update_input_connections(self):
         self.num_inputs_connected += 1

@@ -18,6 +18,7 @@ class SAMDotGraph():
         # Passes to lower to CGRA
         self.rewrite_lookup()
         self.rewrite_arrays()
+        self.rewrite_rsg_broadcast()
         self.map_nodes()
 
     def map_nodes(self):
@@ -48,6 +49,8 @@ class SAMDotGraph():
                     hw_nt = HWNodeType.Reduce
                 elif n_type == "intersect":
                     hw_nt = HWNodeType.Intersect
+                elif n_type == "crddrop":
+                    hw_nt = HWNodeType.Merge
                 else:
                     raise SAMDotGraphLoweringError(f"Node is of type {n_type}")
 
@@ -58,11 +61,54 @@ class SAMDotGraph():
         self.seq += 1
         return ret
 
+    def rewrite_rsg_broadcast(self):
+        '''
+        Rewrites the broadcast going into an RSG and uses it with passthru
+        '''
+        nodes_to_proc = []
+        for node in self.graph.get_nodes():
+            print(node)
+            if 'repsiggen' in node.get_attributes()['type'].strip('"'):
+                nodes_to_proc.append(node)
+        # Now we have the rep sig gen - want to find the incoming edge from the broadcast node
+        # then rip that out and wire the original edge to the rsg and the edge to the other guy from rsg to it
+        for rsg_node in nodes_to_proc:
+            attrs = node.get_attributes()
+            og_label = attrs['label']
+            # del attrs['label']
+            # Find the upstream broadcast node
+            broadcast_nodes = [edge.get_source() for edge in self.graph.get_edges() if "broadcast" in self.graph.get_node(edge.get_source()).get_attributes()['type'].strip('"') and edge.get_destination() == node.get_name()]
+            assert len(broadcast_nodes) == 1
+            bc_node = broadcast_nodes[0]
+            # Now that we have the broadcast node, get the incoming edge and other outgoing edge
+            incoming_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == bc_node.get_name()][0]
+            outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and edge.get_destination() == rsg_node.get_name()][0]
+            other_outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and edge.get_destination() != rsg_node.get_name()][0]
+            # Now, connect the original source to the rsg and the rsg to the original other branch
+            og_to_rsg = pydot.Edge(src=incoming_edge.get_source(), dst=rsg_node, **incoming_edge.get_attributes())
+            rsg_to_branch = pydot.Edge(src=rsg_node, dst=other_outgoing_edge.get_destination(), **other_outgoing_edge.get_attributes())
+
+            # Now delete the broadcast and all original edge
+            self.graph.del_node(bc_node)
+            self.graph.del_edge(incoming_edge)
+            self.graph.del_edge(outgoing_edge)
+            self.graph.del_edge(other_outgoing_edge)
+
+            # ...and add in the new edges
+            self.graph.add_edge(og_to_rsg)
+            self.graph.add_edge(rsg_to_branch)
+
     def rewrite_lookup(self):
         '''
         Rewrites the lookup nodes to become (wr_scan, rd_scan, buffet) triples
         '''
         nodes_to_proc = [node for node in self.graph.get_nodes() if 'fiberlookup' in node.get_comment() or 'fiberwrite' in node.get_comment()]
+        # nodes_to_proc = []
+        # for node in self.graph.get_nodes():
+        #     print(node)
+        #     if 'fiberlookup' in node.get_attributes()['type'].strip('"') or 'fiberwrite' in node.get_attributes()['type'].strip('"'):
+        #         nodes_to_proc.append(node)
+        # nodes_to_proc = [node for node in self.graph.get_nodes() if 'fiberlookup' in node.get_attributes()['type'].strip('"') or 'fiberwrite' in node.get_attributes()['type'].strip('"')]
         for node in nodes_to_proc:
             if 'fiberlookup' in node.get_comment():
                 # Rewrite this node to a read
@@ -218,8 +264,8 @@ class SAMDotGraph():
 
 
 if __name__ == "__main__":
-    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
-    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
+    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
+    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
     temp_out = "/home/max/Documents/SPARSE/sam/mek.gv"
     sdg = SAMDotGraph(filename=matmul_dot)
     graph = sdg.get_graph()
