@@ -8,7 +8,7 @@ run: submodules
 .PHONY: formats
 formats:
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
-	./scripts/generate_suitesparse_formats.sh
+	set -e && ./scripts/generate_suitesparse_formats.sh
 
 .PHONY: env
 env:
@@ -22,7 +22,7 @@ pydepends:
 	pip list --format=freeze > requirements.txt
 
 sam: taco/build 
-	 cd compiler && bash -x ./sam-kernels.sh
+	 cd compiler && bash -xe ./sam-kernels.sh
 
 taco/build: submodules
 	 mkdir -p compiler/taco/build 
