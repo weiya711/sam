@@ -52,4 +52,21 @@ class Reduce(Primitive):
         self.in_val_size = max(self.in_val_size, len(self.in_val))
 
     def print_fifos(self):
-        print("FiFOo Val size for Reduce block: ", self.in_val_size)
+        print("FiFO Val size for Reduce block: ", self.in_val_size)
+
+class SparseAccumulator(Primitive):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.in_val = []
+        self.order = 0
+
+
+    def update(self):
+        pass
+
+    def set_in_val(self, val):
+        pass
+
+    def out_val(self):
+        pass
