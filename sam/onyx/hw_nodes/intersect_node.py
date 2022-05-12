@@ -53,10 +53,12 @@ class IntersectNode(HWNode):
             return new_conns
         elif other_type == WriteScannerNode:
             wr_scan = other.get_name()
+            comment = edge.get_attributes()['type'].strip('"')
+            assert 'crd' in comment, f"isect to wrscan not crd type - is something up?"
             new_conns = {
-                f'isect_to_rd_scan': [
+                f'isect_to_wr_scan': [
                     # send output to rd scanner
-                    ([(isect, f"pos_out_0"), (wr_scan, f"data_in_0")], 16),
+                    ([(isect, f"coord_out"), (wr_scan, f"data_in_0")], 16),
                     ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
                     ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
                     ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
