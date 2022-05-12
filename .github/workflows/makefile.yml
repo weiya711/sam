@@ -14,9 +14,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Install dependencies
+    - name: Install Graphviz
+      run: sudo apt-get install graphviz
+
+    - name: Update submodules
       run: make submodules
-      
+            
     - name: Build TACO
       run: make taco/build
       
