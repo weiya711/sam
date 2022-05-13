@@ -8,15 +8,15 @@ basedir=$(pwd)
 
 DATASET_NAMES=(
   bcsstm04
-  bcsstm02
-  bcsstm03
-  lpi_bgprtr
-  cage4
-  klein-b1
-  GD02_a
-  GD95_b
-  Hamrle1
-  LF10
+#  bcsstm02
+#  bcsstm03
+#  lpi_bgprtr
+#  cage4
+#  klein-b1
+#  GD02_a
+#  GD95_b
+#  Hamrle1
+#  LF10
 )
 
 errors=()
@@ -38,6 +38,7 @@ for i in ${!DATASET_NAMES[@]}; do
     cd $basedir/sam/sim
     echo "Testing $name..."
     pytest -k test_mat_mul_ijk_csr_full --ssname $name
+    #pytest -k test_matmul_ijk --ssname $name
     status=$?
 
     if [ $status -gt 0 ]
