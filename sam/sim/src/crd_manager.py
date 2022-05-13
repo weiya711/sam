@@ -85,6 +85,7 @@ class CrdDrop(Primitive):
         return self.curr_crd
 
 
+# Converts coordinate streams to point streams
 class CrdHold(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -131,3 +132,17 @@ class CrdHold(Primitive):
 
     def out_crd_outer(self):
         return self.curr_crd
+
+# Converts point streams back into coordinate streams
+# Helper for the sparse accumulator
+class CrdPtConverter(Primitive):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.outer_crdpt = []
+        self.inner_crdpt = []
+
+        self.curr_ocrd = None
+
+    def update(self):
+        pass

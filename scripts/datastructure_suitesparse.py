@@ -52,8 +52,8 @@ parser.add_argument('-o', '--omit-dense', action='store_true', default=False, he
 args = parser.parse_args()
 
 
-out_path = Path(out_dirname)
-out_path.mkdir(parents=True, exist_ok=True)
+out_path = Path(out_dirname)  
+out_path.mkdir(parents=True, exist_ok=True, mode=0o777)
 
 if args.name is None:
     print("Please enter a matrix name")
@@ -86,7 +86,7 @@ else:
     print("Writing " + args.name + " original...")
     dirname = os.path.join(out_path, args.name, "orig")
     dirpath = Path(dirname)
-    dirpath.mkdir(parents=True, exist_ok=True)
+    dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
     tensorname = "B"
     coo = inputCache.load(tensor, False)
     formatWriter.writeout_separate(coo, dirname, tensorname, omit_dense=args.omit_dense)
@@ -94,7 +94,7 @@ else:
     print("Writing " + args.name + " shifted...")
     dirname = os.path.join(out_path, args.name, "shift")
     dirpath = Path(dirname)
-    dirpath.mkdir(parents=True, exist_ok=True)
+    dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
     tensorname = "C"
     shifted = ScipyTensorShifter().shiftLastMode(coo)
     formatWriter.writeout_separate(shifted, dirname, tensorname, omit_dense=args.omit_dense)
@@ -102,7 +102,7 @@ else:
     print("Writing " + args.name + " shifted and transposed...")
     dirname = os.path.join(out_path, args.name, "shift-trans")
     dirpath = Path(dirname)
-    dirpath.mkdir(parents=True, exist_ok=True)
+    dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
     tensorname = "C"
     trans_shifted = shifted.transpose()
     formatWriter.writeout_separate(trans_shifted, dirname, tensorname, omit_dense=args.omit_dense)
