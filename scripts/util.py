@@ -344,22 +344,22 @@ class FormatWriter:
         csr_dir = Path(os.path.join(dir_path, "ds01"))
         if os.path.exists(csr_dir):
             shutil.rmtree(csr_dir)
-        csr_dir.mkdir(parents=True, exist_ok=True)
+        csr_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
 
         dcsr_dir = Path(os.path.join(dir_path, "ss01"))
         if os.path.exists(dcsr_dir):
             shutil.rmtree(dcsr_dir)
-        dcsr_dir.mkdir(parents=True, exist_ok=True)
+        dcsr_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
 
         csc_dir = Path(os.path.join(dir_path, "ds10"))
         if os.path.exists(csc_dir):
             shutil.rmtree(csc_dir)
-        csc_dir.mkdir(parents=True, exist_ok=True)
+        csc_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
 
         dcsc_dir = Path(os.path.join(dir_path, "ss10"))
         if os.path.exists(dcsc_dir):
             shutil.rmtree(dcsc_dir)
-        dcsc_dir.mkdir(parents=True, exist_ok=True)
+        dcsc_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
 
         dcsr = self.convert_format(coo, "dcsr")
 
@@ -450,7 +450,7 @@ class FormatWriter:
             dense = self.convert_format(coo, "dense")
 
             dense_dir = Path(os.path.join(dir_path, "dd01"))
-            dense_dir.mkdir(parents=True, exist_ok=True)
+            dense_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
             os.symlink(filename, os.path.join(dense_dir, "B_shape.txt"))
 
             filename = os.path.join(dense_dir, tensorname + "_vals.txt")

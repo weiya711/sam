@@ -121,3 +121,24 @@ class CompressWrScan(WrScan):
     def autosize(self):
         self.resize_seg_arr(self.curr_seg_addr)
         self.resize_arr(self.curr_crd_cnt)
+
+# Unique compressed (not from points)
+class UncompressWrScan(WrScan):
+    def __init__(self, seg_size=0, level=0, **kwargs):
+        super().__init__(**kwargs)
+
+        self.input = None
+        self.dim = ''
+
+    def update(self):
+        if isinstance(self.input, int):
+            self.dim = self.input
+        elif self.input == 'D':
+            self.done = True
+
+    def set_in_dim(self, dim):
+        if dim != '' and not is_stkn(dim):
+            self.input = dim
+
+    def out_dim(self):
+        return self.dim
