@@ -35,4 +35,9 @@ def test_tkn_drop(arrs, debug_sim, max_val=1000):
         time += 1
 
     out = remove_emptystr(out)
+
+    if debug_sim:
+        print(out)
+        print(gold)
+        
     assert (out == gold)
