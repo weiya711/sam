@@ -25,6 +25,7 @@ class ReadScannerNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
 
+        new_conns = None
         rd_scan = self.get_name()
         other_type = type(other)
 
@@ -136,7 +137,17 @@ class ReadScannerNode(HWNode):
         elif other_type == MergeNode:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == RepeatNode:
-            raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
+            repeat = other.get_name()
+            new_conns = {
+                'rd_scan_to_repeat': [
+                    # send output to rd scanner
+                    ([(rd_scan, "pos_out"), (repeat, "proc_data_in")], 16),
+                    ([(rd_scan, "eos_out_1"), (repeat, "proc_eos_in")], 1),
+                    ([(repeat, "proc_ready_out"), (rd_scan, "ready_in_1")], 1),
+                    ([(rd_scan, "valid_out_1"), (repeat, "proc_valid_in")], 1),
+                ]
+            }
+            return new_conns
         elif other_type == ComputeNode:
             compute = other.get_name()
             compute_conn = 0
@@ -159,9 +170,20 @@ class ReadScannerNode(HWNode):
         elif other_type == BroadcastNode:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == RepSigGenNode:
-            raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
+            rsg = other.get_name()
+            new_conns = {
+                f'rd_scan_to_rsg': [
+                    ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 16),
+                    ([(rd_scan, "eos_out_0"), (rsg, f"base_eos_in")], 1),
+                    ([(rsg, f"base_ready_out"), (rd_scan, "ready_in_0")], 1),
+                    ([(rd_scan, "valid_out_0"), (rsg, f"base_valid_in")], 1),
+                ]
+            }
+            return new_conns
         else:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
+
+        return new_conns
 
     def configure(self, attributes):
         inner_offset = 0

@@ -20,6 +20,8 @@ class RepSigGenNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
 
+        rsg = self.get_name()
+        new_conns = None
         other_type = type(other)
 
         if other_type == GLBNode:
@@ -31,7 +33,17 @@ class RepSigGenNode(HWNode):
         elif other_type == ReadScannerNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == WriteScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            wr_scan = other.get_name()
+            new_conns = {
+                'rsg_to_wr_scan': [
+                    # send output to rd scanner
+                    ([(rsg, "passthru_data_out"), (wr_scan, "data_in_0")], 16),
+                    ([(rsg, "passthru_eos_out"), (wr_scan, "eos_in_0")], 1),
+                    ([(wr_scan, "ready_out_0"), (rsg, "passthru_ready_in")], 1),
+                    ([(rsg, "passthru_valid_out"), (wr_scan, "valid_in_0")], 1),
+                ]
+            }
+            return new_conns
         elif other_type == IntersectNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == ReduceNode:
@@ -41,7 +53,17 @@ class RepSigGenNode(HWNode):
         elif other_type == MergeNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == RepeatNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            # This has to be the repsig edge....
+            repeat = other.get_name()
+            new_conns = {
+                'rsg_to_repeat': [
+                    ([(rsg, "repsig_data_out"), (repeat, "repsig_data_in")], 16),
+                    ([(rsg, "repsig_eos_out"), (repeat, "repsig_eos_in")], 1),
+                    ([(repeat, "repsig_ready_out"), (rsg, "repsig_ready_in")], 1),
+                    ([(rsg, "repsig_valid_out"), (repeat, "repsig_valid_in")], 1),
+                ]
+            }
+            return new_conns
         elif other_type == ComputeNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == BroadcastNode:
@@ -51,5 +73,8 @@ class RepSigGenNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+        return new_conns
+
+    def configure(self, attributes):
+        stop_lvl = 0
+        return stop_lvl

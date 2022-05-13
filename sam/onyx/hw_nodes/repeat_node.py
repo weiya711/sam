@@ -20,6 +20,8 @@ class RepeatNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
 
+        repeat = self.get_name()
+        new_conns = None
         other_type = type(other)
 
         if other_type == GLBNode:
@@ -29,7 +31,18 @@ class RepeatNode(HWNode):
         elif other_type == MemoryNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == ReadScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            rd_scan = other.get_name()
+            new_conns = {
+                f'repeat_to_read_scan': [
+                    # send output to rd scanner
+                    ([(repeat, f"ref_data_out"), (rd_scan, f"us_pos_in")], 16),
+                    ([(repeat, f"ref_eos_out"), (rd_scan, f"us_eos_in")], 1),
+                    ([(rd_scan, f"us_ready_out"), (repeat, f"ref_ready_in")], 1),
+                    ([(repeat, f"ref_valid_out"), (rd_scan, f"us_valid_in")], 1),
+                ]
+            }
+
+            return new_conns
         elif other_type == WriteScannerNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == IntersectNode:
@@ -51,5 +64,11 @@ class RepeatNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+        return new_conns
+
+    def configure(self, attributes):
+        root = 0
+        if 'true' in attributes['root'].strip('"'):
+            root = 1
+        stop_lvl = 1
+        return (stop_lvl, root)

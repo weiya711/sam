@@ -63,5 +63,7 @@ class ReduceNode(HWNode):
         else:
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
 
-    def configure(self, **kwargs):
-        pass
+    def configure(self, attributes):
+        # TODO
+        stop_lvl = 2
+        return stop_lvl

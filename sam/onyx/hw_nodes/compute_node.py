@@ -85,7 +85,7 @@ class ComputeNode(HWNode):
             other_red = other.get_name()
             pe = self.get_name()
             new_conns = {
-                f'pe_to_pe_{other_conn}': [
+                f'pe_to_reduce': [
                     # send output to rd scanner
                     ([(pe, "data_out"), (other_red, f"data_in")], 16),
                     ([(pe, "eos_out"), (other_red, f"eos_in")], 1),
