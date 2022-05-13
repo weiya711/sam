@@ -75,6 +75,7 @@ class SparseCrdPtAccumulator1(Primitive):
         self.maxdim = maxdim
         self.order = 1
 
+        self.seen_done = False
         # Accumulation scratchpad storage
         self.storage = dict()
         self.valtype = valtype
@@ -92,7 +93,7 @@ class SparseCrdPtAccumulator1(Primitive):
             self.curr_in_inner_crdpt = self.inner_crdpt.pop(0)
 
             ocrd = self.outer_crdpt.pop(0)
-            emit_output = ocrd == self.curr_in_outer_crdpt and self.curr_in_outer_crdpt is not None
+            emit_output = ocrd != self.curr_in_outer_crdpt and self.curr_in_outer_crdpt is not None
             if emit_output:
                 self.emit_output.append([self.curr_in_outer_crdpt, -1])
             self.curr_in_outer_crdpt = ocrd
@@ -103,6 +104,11 @@ class SparseCrdPtAccumulator1(Primitive):
                     inner_dict[self.curr_in_inner_crdpt] += self.valtype(self.curr_in_val)
                 else:
                     inner_dict[self.curr_in_inner_crdpt] = self.valtype(self.curr_in_val)
+            # If a done token is seen, cannot emit done until all coordinates have been written out
+            elif self.curr_in_outer_crdpt == 'D':
+                assert self.curr_in_inner_crdpt == 'D' and self.curr_in_val, \
+                    "If one item is a 'D' token, then all inputs must be"
+                self.seen_done = True
             else:
                 self.storage[self.curr_in_outer_crdpt] = {self.curr_in_inner_crdpt: self.valtype(self.curr_in_val)}
 
@@ -118,23 +124,38 @@ class SparseCrdPtAccumulator1(Primitive):
                 self.emit_output.pop(0)
             else:
                 self.emit_output[0][1] = self.curr_inner_crdpt
+        elif self.seen_done:
+            self.done = True
+            self.seen_done = False
+            self.curr_outer_crdpt = 'D'
+            self.curr_inner_crdpt = 'D'
+            self.curr_val = 'D'
         else:
             self.curr_outer_crdpt = ''
             self.curr_inner_crdpt = ''
             self.curr_val = ''
 
+        if self.debug:
+            print("Done:", self.out_done(),
+                  "\n Curr in ocrd: ", self.curr_in_outer_crdpt, "\t Curr in icrd", self.curr_in_inner_crdpt,
+                  "\t Curr in val", self.curr_in_val,
+                  "\n Curr out ocrd: ", self.curr_outer_crdpt, "\t Curr out icrd: ", self.curr_inner_crdpt,
+                  "\t Curr out val: ", self.curr_val,
+                  "\n Emit crds: ", self.emit_output,
+                  "\n Storage: ", self.storage)
+
     def set_inner_crdpt(self, crdpt):
-        assert (not is_stkn(crdpt), 'Coordinate points should not have stop tokens')
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
             self.inner_crdpt.append(crdpt)
 
     def set_outer_crdpt(self, crdpt):
-        assert (not is_stkn(crdpt), 'Coordinate points should not have stop tokens')
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
             self.outer_crdpt.append(crdpt)
 
     def set_val(self, val):
-        assert (not is_stkn(val), 'Values associated with points should not have stop tokens')
+        assert not is_stkn(val), 'Values associated with points should not have stop tokens'
         if val != '':
             self.in_val.append(val)
 
@@ -144,7 +165,7 @@ class SparseCrdPtAccumulator1(Primitive):
     def out_inner_crdpt(self):
         return self.curr_inner_crdpt
 
-    def out_val_crd(self):
+    def out_val(self):
         return self.curr_val
 
 # Accumulation into a vector    
@@ -179,17 +200,17 @@ class SparseAccumulator1(Primitive):
 
         # TODO: Finish point converter here
     def set_inner_crdpt(self, crdpt):
-        assert(not is_stkn(crdpt), 'Coordinate points should not have stop tokens')
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
             self.inner_crdpt.append(crdpt)
             
     def set_outer_crdpt(self, crdpt):
-        assert(not is_stkn(crdpt), 'Coordinate points should not have stop tokens')
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
             self.outer_crdpt.append(crdpt)
 
     def set_val(self, val):
-        assert(not is_stkn(val), 'Values associated with points should not have stop tokens')
+        assert not is_stkn(val), 'Values associated with points should not have stop tokens'
         if val != '':
             self.in_val.append(val)
 
