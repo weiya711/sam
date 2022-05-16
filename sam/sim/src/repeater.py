@@ -7,12 +7,13 @@ class Repeat(Primitive):
 
         self.in_ref = []
         self.in_repeat = []
-
+        self.in_ref_size= 0
+        self.in_repeat_size = 0
         self.curr_out_ref = ''
         self.curr_in_ref = ''
         self.get_next_ref = True
         self.get_next_rep = True
-
+        self.stop_token_cnt = 0
     def update(self):
         if len(self.in_ref) > 0 and self.get_next_ref:
             self.curr_in_ref = self.in_ref.pop(0)
@@ -53,7 +54,7 @@ class Repeat(Primitive):
                 raise Exception('Repeat signal cannot be: ' + str(repeat))
         elif self.get_next_rep:
             self.curr_out_ref = ''
-
+        self.compute_fifos()
         if self.debug:
             print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
                   "\t Get Rep:", self.get_next_rep, "\t Rep:", repeat,
@@ -67,9 +68,22 @@ class Repeat(Primitive):
         if repeat != '':
             self.in_repeat.append(repeat)
 
+    def set_in_repsig(self, repeat):
+        if repeat != '':
+            self.in_repeat.append(repeat)
+
+
     def out_ref(self):
         return self.curr_out_ref
+    
+    def compute_fifos(self):
+        self.in_ref_size= max(self.in_ref_size, len(self.in_ref))
+        self.in_repeat_size = max(self.in_repeat_size, len(self.in_repeat))
 
+    def print_fifos(self):
+        print("FIFOs size in the ref for repeat block: ", self.in_ref_size)
+        print("Repeat size for repeat block: ", self.in_repeat_size)
+ 
 
 # Repeat signal generator will take a crd stream and generate repeat, 'R',
 # or next coordinate, 'S', signals for broadcasting along a non-existent dimension.
@@ -81,6 +95,7 @@ class RepeatSigGen(Primitive):
 
             self.istream = []
             self.curr_repeat = ''
+            self.istream_size = 0
 
         def update(self):
             istream = ''
@@ -96,7 +111,7 @@ class RepeatSigGen(Primitive):
                     self.curr_repeat = 'R'
             else:
                 self.curr_repeat = ''
-
+            self.compute_fifos()
             if self.debug:
                 print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat)
 
@@ -107,3 +122,13 @@ class RepeatSigGen(Primitive):
 
         def out_repeat(self):
             return self.curr_repeat
+
+        def out_repsig(self):
+            return self.curr_repeat
+
+
+        def compute_fifos(self):
+            self.istream_size = max(self.istream_size, len(self.istream))
+
+        def print_fifos(self):
+            print("Repeat sig gen size;:" , self.istream_size)

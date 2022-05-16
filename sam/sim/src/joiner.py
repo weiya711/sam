@@ -27,6 +27,11 @@ class Intersect2(Joiner2):
         self.in_crd1 = []
         self.in_crd2 = []
 
+        self.size_in_ref1 = 0
+        self.size_in_ref2 = 0
+        self.size_in_crd1 = 0
+        self.size_in_crd2 = 0
+
         self.ocrd = 0
         self.oref1 = 0
         self.oref2 = 0
@@ -93,6 +98,7 @@ class Intersect2(Joiner2):
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
+        self.compute_fifos()
 
 
         if self.debug:
@@ -109,6 +115,18 @@ class Intersect2(Joiner2):
         if in_ref2 != '' and in_crd2 != '':
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
+
+    def compute_fifos(self):
+        self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
+        self.size_in_ref2 = max(self.size_in_ref2, len(self.in_ref2)) 
+        self.size_in_crd1 = max(self.size_in_crd1, len(self.in_crd1))
+        self.size_in_crd2 = max(self.size_in_crd2, len(self.in_crd2))
+
+    def print_fifos(self):
+        print("FIFO in ref 1: ", self.size_in_ref1)
+        print("FIFO in ref 2: ", self.size_in_ref2)
+        print("FIFO in crd 1: ", self.size_in_crd1)
+        print("FIFO in crd 2: ", self.size_in_crd2)
 
     def out_crd(self):
         return self.ocrd
