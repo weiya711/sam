@@ -30,7 +30,8 @@ for i in ${!DATASET_NAMES[@]}; do
     name=${DATASET_NAMES[$i]} 
 
     echo "Testing $name..."
-    pytest -k test_matmul_ijk --ssname $name -s
+    #pytest -k test_matmul_ijk --ssname $name 
+    pytest -k test_mat_identity --ssname $name -s
     status=$?
 
     if [ $status -gt 0 ]

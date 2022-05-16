@@ -435,17 +435,17 @@ for apath in file_paths:
                 print(u, " ", apath)
                 print(networkx_graph.nodes[u]["comment"])
             if node_info["format"] == "dense":
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"]  +" = UncompressRdScan( dim = " + node_info["tensor"] + "_shape[" + node_info["mode"] + "]"+ ", debug = debug_sim) \n")
-                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] ;
+                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"]  + "_"+ str(u) +  " = UncompressRdScan( dim = " + node_info["tensor"] + "_shape[" + node_info["mode"] + "]"+ ", debug = debug_sim) \n")
+                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u);
 
             if node_info["format"] == "compressed":
-                f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +" = CompressedRdScan(crd_arr=" + node_info["tensor"] + "_crd"+ node_info["mode"] + ", seg_arr=" + node_info["tensor"] + "_seg"  + node_info["mode"] + ", debug=debug_sim)\n")
-                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"]
+                f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)+ "  = CompressedRdScan(crd_arr=" + node_info["tensor"] + "_crd"+ node_info["mode"] + ", seg_arr=" + node_info["tensor"] + "_seg"  + node_info["mode"] + ", debug=debug_sim)\n")
+                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "arrayvals":
             print(u, " arrayvals in ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["type"] + "_"+ node_info["tensor"] +  " = Array(init_arr= "+ node_info["tensor"] + "_vals, " + "debug = debug_sim)\n")
-            d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"]
+            f.write(tab(1) +  node_info["type"] + "_"+ node_info["tensor"] + "_" + str(u) +  " = Array(init_arr= "+ node_info["tensor"] + "_vals, " + "debug = debug_sim)\n")
+            d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + "_" + str(u)
 
         elif "broadcast" in networkx_graph.nodes[u]['comment']:
             print(u, "broadcast in :: ", networkx_graph.nodes[u]['comment'])
@@ -454,42 +454,47 @@ for apath in file_paths:
 
         elif node_info["type"] == "repsiggen":
             print(u, " repeatsiggen in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["type"] + "_" + node_info["index"] + " = RepeatSigGen(debug=debug_sim)\n")
-            d[u]["object"] = node_info["type"] + "_" + node_info["index"];
+            f.write(tab(1) +  node_info["type"] + "_" + node_info["index"] + "_" + str(u) +" = RepeatSigGen(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "repeat":
             print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + " = Repeat(debug=debug_sim)\n")
-            d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"];
+            f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_"  + str(u) +" = Repeat(debug=debug_sim)\n")
+            d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +  "_" + str(u)
 
         elif node_info["type"] == "intersect":
             print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["type"]  + " = Intersect2(debug = debug_sim)\n")
-            d[u]["object"] =  node_info["type"]
+            f.write(tab(1) +  node_info["type"]  +  "_" + str(u) + " = Intersect2(debug = debug_sim)\n")
+            d[u]["object"] =  node_info["type"] + "_" + str(u)
 
 
 
         elif node_info["type"] == "mul":
-            f.write(tab(1) +  node_info["type"]  + " = Multiply2(debug=debug_sim)\n")
-            d[u]["object"] =  node_info["type"]
+            f.write(tab(1) +  node_info["type"]  + "_" + str(u) +   " = Multiply2(debug=debug_sim)\n")
+            d[u]["object"] =  node_info["type"] + "_" + str(u)
 
         elif node_info["type"] == "reduce":
-            f.write(tab(1) + node_info["type"] +" = Reduce(debug=debug_sim)\n")
-            d[u]["object"] =  node_info["type"]
+            f.write(tab(1) + node_info["type"] + "_" + str(u)+ " = Reduce(debug=debug_sim)\n")
+            d[u]["object"] =  node_info["type"] + "_" + str(u)
 
         elif node_info["type"] == "fiberwrite":
 
             print(node_info)
                 
             if node_info["mode"] == "vals":
-                f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"] + " = ValsWrScan(size= " + array_size_computation(node_info["size"])   + ", fill=fill, debug=debug_sim)\n")
-                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"]
+                f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"]  + "_" + str(u)
+    +    " = ValsWrScan(size= " + array_size_computation(node_info["size"])   + ", fill=fill, debug=debug_sim)\n")
+                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"]  + "_" + str(u)
+
             elif node_info["format"] == "compressed":
-                f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + " = CompressWrScan(seg_size = " + array_size_computation(node_info["segsize"])  +  ", size=" + array_size_computation(node_info["crdsize"]) + ", fill = fill, debug = debug_sim)\n")
-                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"]
+                f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["mode"]  + "_" + str(u)
+    + " = CompressWrScan(seg_size = " + array_size_computation(node_info["segsize"])  +  ", size=" + array_size_computation(node_info["crdsize"]) + ", fill = fill, debug = debug_sim)\n")
+                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"]  + "_" + str(u)
+
             else:
                 print("uncompressed_node write" + apath +"  \n")
-                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"]
+                d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"]  +  node_info["mode"]  + "_" + str(u)
+
                 continue
             
             if node_info["sink"] == "true":
@@ -658,5 +663,7 @@ for apath in file_paths:
     if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
         os.system("cp " + out_name[num]+ ".py ../sam/sim/test/apps/test_" +  out_name[num]+ ".py" )
         os.system("rm " + out_name[num]+ ".py")
+    else:
+        os.system("rm " + out_name[num] + ".py")
 
     num += 1
