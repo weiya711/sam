@@ -141,4 +141,7 @@ class ComputeNode(HWNode):
             op_code = 1
         elif c_op == 'add':
             op_code = 0
-        return op_code
+        cfg_kwargs = {
+            'op': op_code
+        }
+        return op_code, cfg_kwargs

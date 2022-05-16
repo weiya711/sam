@@ -1,3 +1,4 @@
+from numpy import inner
 from sam.onyx.hw_nodes.hw_node import *
 
 
@@ -100,4 +101,11 @@ class WriteScannerNode(HWNode):
 
         # block_mode = int(attributes['type'].strip('"') == 'fiberlookup')
         cfg_tuple = (inner_offset, compressed, lowest_level, stop_lvl, block_mode)
-        return cfg_tuple
+        cfg_kwargs = {
+            'inner_offset': inner_offset,
+            'compressed': compressed,
+            'lowest_level': lowest_level,
+            'stop_lvl': stop_lvl,
+            'block_mode': block_mode
+        }
+        return cfg_tuple, cfg_kwargs

@@ -74,4 +74,4 @@ class MemoryNode(HWNode):
             raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
 
     def configure(self, attributes):
-        return {"config": ["mek"], "mode": 'sram'}
+        return {"config": ["mek"], "mode": 'sram'}, {"config": ["mek"], "mode": 'ROM'}

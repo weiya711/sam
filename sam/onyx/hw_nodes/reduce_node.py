@@ -66,4 +66,7 @@ class ReduceNode(HWNode):
     def configure(self, attributes):
         # TODO
         stop_lvl = 2
-        return stop_lvl
+        cfg_kwargs = {
+            'stop_lvl': stop_lvl
+        }
+        return stop_lvl, cfg_kwargs

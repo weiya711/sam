@@ -111,4 +111,8 @@ class BuffetNode(HWNode):
     def configure(self, attributes):
         capacity_0 = 1024
         capacity_1 = 1024
-        return (capacity_0, capacity_1)
+        cfg_kwargs = {
+            'capacity_0': capacity_0,
+            'capacity_1': capacity_1
+        }
+        return (capacity_0, capacity_1), cfg_kwargs

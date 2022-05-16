@@ -71,4 +71,8 @@ class RepeatNode(HWNode):
         if 'true' in attributes['root'].strip('"'):
             root = 1
         stop_lvl = 1
-        return (stop_lvl, root)
+        cfg_kwargs = {
+            'stop_lvl': stop_lvl,
+            'root': root
+        }
+        return (stop_lvl, root), cfg_kwargs

@@ -77,4 +77,7 @@ class RepSigGenNode(HWNode):
 
     def configure(self, attributes):
         stop_lvl = 0
-        return stop_lvl
+        cfg_kwargs = {
+            'stop_lvl': stop_lvl
+        }
+        return stop_lvl, cfg_kwargs

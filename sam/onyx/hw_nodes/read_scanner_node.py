@@ -216,5 +216,20 @@ class ReadScannerNode(HWNode):
         block_mode = int(attributes['type'].strip('"') == 'fiberwrite')
         if attributes['type'].strip('"') == 'fiberwrite':
             lookup = 0
+
+        cfg_kwargs = {
+            'inner_offset': inner_offset,
+            'max_out': max_outer_dim,
+            'strides': strides,
+            'ranges': ranges,
+            'root': is_root,
+            'do_repeat': do_repeat,
+            'repeat_outer': repeat_outer,
+            'repeat_factor': repeat_factor,
+            'stop_lvl': stop_lvl,
+            'block_mode': block_mode,
+            'lookup': lookup
+        }
+
         return (inner_offset, max_outer_dim, strides, ranges, is_root, do_repeat,
-                repeat_outer, repeat_factor, stop_lvl, block_mode, lookup)
+                repeat_outer, repeat_factor, stop_lvl, block_mode, lookup), cfg_kwargs
