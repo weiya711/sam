@@ -6,7 +6,7 @@ class Reduce(Primitive):
 
         self.in_val = []
         self.curr_out = ""
-
+        self.in_val_size = 0
         self.sum = 0
         self.emit_stkn = False
         self.curr_in_val = None
@@ -35,7 +35,7 @@ class Reduce(Primitive):
                 self.curr_out = ""
         else:
             self.curr_out = ""
-
+        self.compute_fifos()
         if self.debug:
             print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
                   "\t Sum:", self.sum)
@@ -46,3 +46,10 @@ class Reduce(Primitive):
 
     def out_val(self):
         return self.curr_out
+
+    def compute_fifos(self):
+        self.in_val_size = max(self.in_val_size, len(self.in_val))
+
+    def print_fifos(self):
+        print("FiFOo Val size for Reduce block: ", self.in_val_size)
+

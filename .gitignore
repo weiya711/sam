@@ -5,6 +5,9 @@ __pycache__/
 *.txt
 .idea/
 
+*.png
+*.pdf
+
 build/
 
 sam-outputs/

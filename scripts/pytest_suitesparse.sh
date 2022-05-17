@@ -31,13 +31,26 @@ for i in ${!DATASET_NAMES[@]}; do
 
     echo "Testing $name..."
     pytest -k test_mat_mul_ijk_csr_full --ssname $name 
-    #pytest -k test_matmul_ijk --ssname $name
     status=$?
-
     if [ $status -gt 0 ]
     then 
-      errors+=($name)
+      errors+=("${name} matmul_ijk_full")
     fi
+
+    pytest -k test_matmul_ijk --ssname $name 
+    status=$?
+    if [ $status -gt 0 ]
+    then 
+      errors+=("${name} matmul_ijk")
+    fi
+
+    pytest -k test_mat_identity --ssname $name 
+    status=$?
+    if [ $status -gt 0 ]
+    then 
+      errors+=("${name} mat_identity")
+    fi
+
 done
 
 echo -e "${RED}Failed tests:"

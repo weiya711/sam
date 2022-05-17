@@ -44,6 +44,7 @@ class UncompressRdScan(RdScan):
         self.curr_in_ref = 0
 
         self.meta_dim = dim
+        self.stop_token_cnt =0
 
     def update(self):
 
@@ -52,6 +53,7 @@ class UncompressRdScan(RdScan):
             self.curr_crd = ''
             self.curr_ref = ''
         elif is_stkn(self.curr_crd):
+            self.stop_token_cnt +=1
             self.curr_in_ref = self.in_ref.pop(0)
             if self.curr_in_ref == 'D':
                 self.curr_crd = 'D'
@@ -97,6 +99,7 @@ class CompressedRdScan(RdScan):
         self.curr_crd = None
         self.emit_fiber_stkn = False
 
+        self.stop_token_cnt = 0
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
 
@@ -113,11 +116,14 @@ class CompressedRdScan(RdScan):
             if is_stkn(next_in):
                 self.in_ref.pop(0)
                 stkn = increment_stkn(next_in)
+                self.stop_token_cnt +=1
+
             else:
                 stkn = 'S0'
             self.curr_crd = stkn
             self.curr_ref = stkn
 
+            self.stop_token_cnt +=1
             self.curr_addr = 0
             self.stop_addr = 0
             self.start_addr = 0
@@ -141,6 +147,8 @@ class CompressedRdScan(RdScan):
                 self.end_fiber = True
                 if curr_in_ref == 'D':
                     self.done = True
+
+                self.stop_token_cnt +=1
             else:
 
                 self.start_addr = self.seg_arr[curr_in_ref]
@@ -162,6 +170,7 @@ class CompressedRdScan(RdScan):
                         stkn = ''
                     self.curr_crd = stkn
                     self.curr_ref = stkn
+                    self.stop_token_cnt +=1
                 else:
                     self.curr_crd = self.crd_arr[self.curr_addr]
                     self.curr_ref = self.curr_addr
@@ -182,7 +191,7 @@ class CompressedRdScan(RdScan):
                 stkn = ''
             self.curr_crd = stkn
             self.curr_ref = stkn
-
+            self.stop_token_cnt +=1
             self.curr_addr = 0
             self.stop_addr = 0
             self.start_addr = 0

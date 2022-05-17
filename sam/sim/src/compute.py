@@ -7,7 +7,8 @@ class Compute2(Primitive):
 
         self.in1 = []
         self.in2 = []
-
+        self.in1_size = 0
+        self.in2_size = 0
         self.curr_out = None
 
     @abstractmethod
@@ -24,6 +25,15 @@ class Compute2(Primitive):
 
     def out_val(self):
         return self.curr_out
+
+    def compute_fifos(self):
+        self.in1_size = max(self.in1_size, len(self.in1))
+        self.in2_size = max(self.in2_size, len(self.in2))
+
+    def print_fifos(self):
+        print("Compute block in 1: ", self.in1_size)
+        print("Compute block in 2: ", self.in2_size)
+
 
 class Add2(Compute2):
     def __init__(self, **kwargs):
@@ -45,7 +55,7 @@ class Add2(Compute2):
             else:
                 # Both inputs are values
                 self.curr_out = curr_in1 + curr_in2
-
+            self.compute_fifos()
             if self.debug:
                 print("DEBUG: Curr Out:", self.curr_out, "\t Curr In1:", curr_in1, "\t Curr In2:", curr_in2)
         else:
@@ -73,7 +83,7 @@ class Multiply2(Compute2):
             else:
                 # Both inputs are values
                 self.curr_out = curr_in1 * curr_in2
-
+            self.compute_fifos()
             if self.debug:
                 print("DEBUG: MULT: \t "
                       "Curr Out:", self.curr_out, "\t Curr In1:", curr_in1, "\t Curr In2:", curr_in2)
