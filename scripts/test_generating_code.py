@@ -3,7 +3,6 @@ import os
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict
-directory = '../../../../compiler/sam-outputs/dot'
 
 class TensorFormat:
     def __init__(self):
@@ -22,7 +21,7 @@ class TensorFormat:
         read_f = open(apath, "r")
         comment_line = read_f.readlines()
         comment = comment_line[1]
-        comment = comment[comment.index("\"")+ 1: -1]
+        comment = comment[comment.index("\"") + 1: -1]
         comment = comment[0: comment.index("\"")]
         comment = comment.split(",")
         for tensor_info in comment:
@@ -58,11 +57,11 @@ def generate_header(f, out_name):
     # f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default = './mode-formats')\n\n")
     f.write("# FIXME: Figureout formats\n\n")
     f.write("@pytest.mark.skipif(\n")
-    f.write(tab(1)+ "os.getenv('CI', 'false') == 'true',\n") 
-    f.write(tab(1)+ "reason = 'CI lacks datasets',\n")
+    f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n") 
+    f.write(tab(1) + "reason = 'CI lacks datasets',\n")
     f.write(")\n")
 
-    f.write("def test_"+ out_name+ "(ssname, debug_sim, fill = 0):\n")
+    f.write("def test_" + out_name + "(ssname, debug_sim, fill = 0):\n")
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
     # Assuming tje format is csr and csc:
@@ -375,7 +374,7 @@ for apath in file_paths:
     # plt.savefig("Graph.png", format="PNG")
     # plt.show()
     #
-    # networkx_graph = remove_broadcast_nodes(networkx_graph)
+    networkx_graph = remove_broadcast_nodes(networkx_graph)
     # nx.draw(networkx_graph, with_labels=True)
     # plt.savefig("Graph_pruned.png", format="PNG")
     # plt.show()
@@ -437,25 +436,20 @@ for apath in file_paths:
         d[u] = node_info
         if node_info["type"] == "fiberlookup" and node_info["tensor"] not in node_number:
             node_number.append(node_info["tensor"])
-        if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
+        if (node_info["type"] == "fiberlookup" 
+                or node_info["type"] == "repeat") and node_info["root"] == "true":
             root_nodes.append(node_info["tensor"])
         if node_info["type"] == "fiberlookup":
             #print(u, " fiber lookup in :: ", networkx_graph.nodes[u]['comment'])
-            if "matmul" in out_name[num]:
-                print(out_name[num])
-                print(node_info)
-                print(u, " ", apath)
-                print(networkx_graph.nodes[u]["comment"])
             if node_info["format"] == "dense":
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"]  + "_"+ str(u) +
-                        " = UncompressRdScan( dim = " + node_info["tensor"] + "_shape[" + node_info["mode"] + "]" +
-                        ", debug = debug_sim) \n")
+                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + 
+                        node_info["index"]  + "_" + str(u) +  " = UncompressRdScan( dim = " + node_info["tensor"] + "_shape[" + node_info["mode"] + "]" + ", debug = debug_sim) \n")
                 d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u);
 
             if node_info["format"] == "compressed":
-                f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) +
-                        "  = CompressedRdScan(crd_arr=" + node_info["tensor"] + "_crd" + node_info["mode"] +
-                        ", seg_arr=" + node_info["tensor"] + "_seg"  + node_info["mode"] + ", debug=debug_sim)\n")
+                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] 
+                        + "_" + str(u) + "  = CompressedRdScan(crd_arr = " + node_info["tensor"] + 
+                        "_crd"+ node_info["mode"] + ", seg_arr = " + node_info["tensor"] + "_seg"  + node_info["mode"] + ", debug = debug_sim)\n")
                 d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "arrayvals":
@@ -471,14 +465,14 @@ for apath in file_paths:
 
         elif node_info["type"] == "repsiggen":
             print(u, " repeatsiggen in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["type"] + "_" + node_info["index"] + " = RepeatSigGen(debug=debug_sim)\n")
-            d[u]["object"] = node_info["type"] + "_" + node_info["index"]
+            f.write(tab(1) +  node_info["type"] + "_" + node_info["index"] + "_" + str(u) + " = RepeatSigGen(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "repeat":
             print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
+            f.write(tab(1) +  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + 
                     " = Repeat(debug=debug_sim)\n")
-            d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"]
+            d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +  "_" + str(u)
 
         elif node_info["type"] == "intersect":
             print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
@@ -520,8 +514,8 @@ for apath in file_paths:
             if node_info["sink"] == "true":
                 output_nodes[d[u]["object"]]= node_info["mode"]
         else:
-            invaid_flag = 1
-            print("Error invalid node detected", node_info["type"], "\n")
+           invaid_flag = 1
+           print("Error invalid node detected", node_info["type"], "\n")
     if invalid_flag == 1:
         num += 1
         continue
@@ -558,20 +552,20 @@ for apath in file_paths:
     #            print("")
     
     for u in networkx_graph.nodes():
-            if d[u]["type"] == "fiberlookup" and u not in done_all:        
+        if d[u]["type"] == "fiberlookup" and u not in done_all:        
                 
-                    if d[u]["root"] == "true": 
-                            f.write(tab(2) + "if len(in_ref_" + d[u]["tensor"] + ") > 0:\n")
-                            f.write(tab(3) + d[u]["object"] + ".set_in_ref(in_ref_" + d[u]["tensor"] + ".pop(0))\n")
-                            f.write(tab(2) + d[u]["object"] + ".update()\n\n")
-                            done_all[u] = 1
+            if d[u]["root"] == "true": 
+                f.write(tab(2) + "if len(in_ref_" + d[u]["tensor"] + ") > 0:\n")
+                f.write(tab(3) + d[u]["object"] + ".set_in_ref(in_ref_" + d[u]["tensor"] + ".pop(0))\n")
+                f.write(tab(2) + d[u]["object"] + ".update()\n\n")
+                done_all[u] = 1
 
 
 
  
 
     for i in range(3):
-        for u,v,_ in list(nx.edge_bfs(networkx_graph)): # .edges(data=True), networkx_graph.nodes())):
+        for u,v,a in list(nx.edge_bfs(networkx_graph)): # .edges(data=True), networkx_graph.nodes())):
             a = networkx_graph.get_edge_data(u, v)[0] 
             ready_dataset[v][stream_join_elements[v].index(u)] = 1
         
@@ -587,8 +581,7 @@ for apath in file_paths:
             if d[v]["type"] == "repsiggen" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u_]["object"]).strip('"') + ".out_" +
-                                str(edge_data[v][stream_join_elements[v].index(u_)])+   "())\n")
+                        f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u_]["object"]).strip('"') + ".out_" + str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
 
@@ -596,13 +589,12 @@ for apath in file_paths:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     
                     if d[v]["root"] == "true":
+                        print("--------------REPEAT IS TRUE")
                         f.write(tab(2) + "if len(in_ref_" + d[v]["tensor"] + ") > 0:\n")
                         f.write(tab(3) + d[v]["object"] + ".set_in_ref(in_ref_" + d[v]["tensor"] + ".pop(0))\n")
                     
                     for u_ in stream_join_elements[v]:            
-                        f.write(tab(2) + d[v]["object"] + ".set_in_" +
-                                str(edge_data[v][stream_join_elements[v].index(u_)]) + "(" + d[u_]["object"] +
-                                ".out_" +   str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
+                        f.write(tab(2) + d[v]["object"] + ".set_in_" + str(edge_data[v][stream_join_elements[v].index(u_)]) + "(" + d[u_]["object"]+ ".out_" + str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n") 
                     done_all[v] = 1
 
@@ -611,7 +603,7 @@ for apath in file_paths:
                     
                     for u_ in stream_join_elements[v]:
                         if "intersect" in d[u_]["object"]:
-                            f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"]+ ".out_ref" +
+                            f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"] + ".out_ref" +
                                     str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
                         else:
                             f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"]+ ".out_ref" + "())\n")
@@ -679,21 +671,17 @@ for apath in file_paths:
                                     str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                             done_all[v] = 1
-                        else: 
+                        else:
                             f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u]["object"] + ".out_" +
                                     str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                             done_all[v] = 1
 
-    # print(output_nodes)
     finish_outputs(f, output_nodes)
-
     f.close()
-    # assert(0)
     if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
         os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
         os.system("rm " + out_name[num] + ".py")
     else:
         os.system("rm " + out_name[num] + ".py")
-
     num += 1
