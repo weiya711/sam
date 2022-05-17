@@ -2,6 +2,10 @@ export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
 export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
 export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 
+tests: formats sam 
+	python scripts/test_generating_code.py
+	make run
+
 run: submodules
 	./scripts/pytest_suitesparse.sh
 
