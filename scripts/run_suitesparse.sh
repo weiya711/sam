@@ -35,9 +35,9 @@ for i in ${!DATASET_NAMES[@]}; do
     echo "Generating input format files for $name..."
     python $basedir/scripts/datastructure_suitesparse.py -n $name 
 
-    cd $basedir/sam/sim
+    cd $basedir/sam/sim/test/apps
     echo "Testing $name..."
-    pytest -k test_mat_mul_ijk_csr_full --ssname $name
+    pytest --ssname $name
     status=$?
 
     if [ $status -gt 0 ]
