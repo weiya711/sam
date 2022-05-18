@@ -8,7 +8,7 @@ import numpy
 
 from pathlib import Path
 
-from util import TensorCollectionSuiteSparse, ScipyTensorShifter, PydataMatrixMarketTensorLoader, \
+from util import TensorCollectionSuiteSparse, ScipyTensorShifter, \
     ScipyMatrixMarketTensorLoader, SuiteSparseTensor, safeCastPydataTensorToInts
 
 SS_PATH = os.getenv('SUITESPARSE_PATH')

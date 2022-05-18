@@ -193,6 +193,7 @@ def gen_data_formats(size, app_name, path):
 
             return ans_list
     else:
+        ans_list = []
         for i in range(size-1):
             ans_list.append("dummy")
         return ans_list

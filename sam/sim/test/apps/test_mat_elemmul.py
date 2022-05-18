@@ -75,10 +75,10 @@ def test_mat_elemmul(ssname, debug_sim, fill = 0):
             fiberlookup_Ci_12.set_in_ref(in_ref_C.pop(0))
         fiberlookup_Ci_12.update()
 
-        fiberlookup_Bj_8.set_in_ref(intersect_10.out_ref_out-B())
+        fiberlookup_Bj_8.set_in_ref(intersect_10.out_ref_out())
         fiberlookup_Bj_8.update()
 
-        fiberlookup_Cj_9.set_in_ref(intersect_10.out_ref_out-C())
+        fiberlookup_Cj_9.set_in_ref(intersect_10.out_ref_out())
         fiberlookup_Cj_9.update()
 
         intersect_7.set_in1(fiberlookup_Bj_8.out_ref(), fiberlookup_Bj_8.out_crd())
