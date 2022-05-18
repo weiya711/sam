@@ -521,6 +521,7 @@ class TensorCollectionSuiteSparse:
     def getTensorsAndNames(self):
         return [(str(tensor), tensor) for tensor in self.getTensors()]
 
+
 # safeCastPydataTensorToInts casts a floating point tensor to integers
 # in a way that preserves the sparsity pattern.
 def safeCastPydataTensorToInts(tensor):
