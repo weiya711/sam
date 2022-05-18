@@ -735,6 +735,10 @@ for apath in file_paths:
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
+     
+    for u in networkx_graph.nodes():
+        if "intersect" in d[u]["object"]:
+            f.write(tab(1) + d[u]["object"] + ".return_intersection_rate()\n")
  
     f.close()
     
