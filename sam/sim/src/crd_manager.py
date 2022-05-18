@@ -7,7 +7,9 @@ class CrdDrop(Primitive):
 
         self.outer_crd = []
         self.inner_crd = []
-
+        self.inner_crd_fifo = 0
+        self.outer_crd_fifo = 0
+        self.curr_inner_crd = ''
         self.curr_ocrd = ''
         self.curr_crd = ''
         self.has_crd = False
@@ -25,6 +27,8 @@ class CrdDrop(Primitive):
             return
 
         if len(self.outer_crd) > 0 and self.get_next_ocrd:
+            
+            self.outer_crd_fifo =  max(self.outer_crd_fifo, len(self.outer_crd))
             self.curr_ocrd = self.outer_crd.pop(0)
             if isinstance(self.curr_ocrd, int):
                 self.get_next_icrd = True
@@ -39,8 +43,11 @@ class CrdDrop(Primitive):
         elif self.get_next_ocrd:
             self.curr_crd = ''
 
-        if len(self.inner_crd) > 0 and self.get_next_icrd:
+        if len(self.inner_crd) > 0 and self.get_next_icrd: 
+            
+            self.inner_crd_fifo =  max(self.inner_crd_fifo, len(self.inner_crd))
             icrd = self.inner_crd.pop(0)
+            self.curr_inner_crd = icrd
             if isinstance(icrd, int):
                 self.has_crd = True
                 self.curr_crd = ''
@@ -81,3 +88,10 @@ class CrdDrop(Primitive):
 
     def out_crd_outer(self):
         return self.curr_crd
+
+    def out_crd_inner(self):
+        return self.curr_inner_crd
+
+    def print_fifos(self):
+        print("Crdrop Inner crd fifos size: ", self.inner_crd_fifo)
+        print("CrdDrop Outer crd fifo size: ", self.outer_crd_fifo)
