@@ -36,11 +36,11 @@ def test_mat_identity(ssname, debug_sim, fill = 0):
     B_vals = read_inputs(B_vals_filename, float)
 
     fiberlookup_Bi_5  = CompressedRdScan(crd_arr = B_crd0, seg_arr = B_seg0, debug = debug_sim)
-    fiberwrite_X0_3 = CompressWrScan(seg_size = 2, size=B_shape[0], fill = fill, debug = debug_sim)
     fiberlookup_Bj_4  = CompressedRdScan(crd_arr = B_crd1, seg_arr = B_seg1, debug = debug_sim)
-    fiberwrite_X1_2 = CompressWrScan(seg_size = B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill = fill, debug = debug_sim)
     arrayvals_B_1 = Array(init_arr= B_vals, debug = debug_sim)
     fiberwrite_Xvals_0 = ValsWrScan(size= 1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_X1_2 = CompressWrScan(seg_size = B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill = fill, debug = debug_sim)
+    fiberwrite_X0_3 = CompressWrScan(seg_size = 2, size=B_shape[0], fill = fill, debug = debug_sim)
     in_ref_B = [0, 'D']
     done = False
     time = 0
@@ -66,13 +66,16 @@ def test_mat_identity(ssname, debug_sim, fill = 0):
         fiberwrite_Xvals_0.set_input(arrayvals_B_1.out_val())
         fiberwrite_Xvals_0.update()
 
-        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done()
+    
+
+        done = fiberwrite_Xvals_0.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X0_3.out_done()
         time += 1
 
-    fiberwrite_X0_3.autosize()
-    fiberwrite_X1_2.autosize()
     fiberwrite_Xvals_0.autosize()
+    fiberwrite_X1_2.autosize()
+    fiberwrite_X0_3.autosize()
 
-    out_crds = [fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr()]
-    out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr()]
+    out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_3.get_arr()]
+    out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_3.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+    arrayvals_B_1.print_fifos()
