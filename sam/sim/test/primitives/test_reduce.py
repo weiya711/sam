@@ -15,6 +15,8 @@ arrs_dict2 = {'in_val': [5, 5, 'S0', 'S0', 4, 8, 'S0', 4, 3, 'S0', 4, 3, 'S1', '
               'gold_val': [10, 0, 12, 7, 7, 'S0', 'D']}
 arrs_dict2 = {'in_val': [5, 5, 'S0', 'S0', 4, 8, 'S0', 4, 3, 'S0', 'S1', 'D'],
               'gold_val': [10, 0, 12, 7, 0, 'S0', 'D']}
+
+
 @pytest.mark.parametrize("arrs", [arrs_dict0, arrs_dict1])
 def test_reduce_direct_nd(arrs, debug_sim):
     in_val = copy.deepcopy(arrs['in_val'])
@@ -37,6 +39,7 @@ def test_reduce_direct_nd(arrs, debug_sim):
     out_val = remove_emptystr(out_val)
 
     assert (out_val == gold_val)
+
 
 # FIXME: Need to get this test working with reduce
 @pytest.mark.skip

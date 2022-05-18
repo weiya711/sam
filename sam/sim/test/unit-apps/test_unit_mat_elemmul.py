@@ -1,3 +1,5 @@
+import pytest
+
 from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
@@ -106,6 +108,8 @@ arrs_dict3 = {
     'pts1': [(0, 0, -158), (1, 2, -102), (1, 3, -674), (2, 2, -107)],
     'pts2': [(0, 1, 399), (1, 2, 848), (1, 3, -325), (3, 1, -677)],
 }
+
+
 @pytest.mark.parametrize("arrs", [arrs_dict0, arrs_dict1, arrs_dict2, arrs_dict3])
 def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
     in_mat_crds1 = copy.deepcopy(arrs['crd_arrs1'])
@@ -197,7 +201,7 @@ def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
         out_inter1.append(inter1.out_crd())
         in_drop.append(inter2.out_crd())
 
-        #wrscan_X1.set_input(inter1.out_crd())
+        # wrscan_X1.set_input(inter1.out_crd())
         wrscan_X1.set_input(drop.out_crd_outer())
         wrscan_X1.update()
 
@@ -237,8 +241,7 @@ def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
         print("OUT DROP:", remove_emptystr(out_drop))
         print("OUT DROP:", out_drop)
 
-
-    if out_val == []:
+    if not out_val:
         assert out_val == gold_tup
     else:
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
@@ -363,7 +366,7 @@ def test_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
         print(out_crds)
         print(out_val)
 
-    if out_val == []:
+    if not out_val:
         assert out_val == gold_tup
     else:
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))

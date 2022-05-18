@@ -1,3 +1,4 @@
+import pytest
 import scipy.sparse
 
 from sam.sim.src.rd_scanner import CompressedRdScan, UncompressRdScan
@@ -13,7 +14,7 @@ from sam.sim.test.test import *
 import os
 
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
 # FIXME: Figure out what formats we want to test for the chip
@@ -94,7 +95,7 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     mul = Multiply2(debug=debug_sim)
     reduce = Reduce(debug=debug_sim)
 
-    #drop = CrdDrop(debug=debug_sim)
+    # drop = CrdDrop(debug=debug_sim)
     vals_X = ValsWrScan(size=B0_dim * C1_dim, fill=fill, debug=debug_sim)
     wrscan_Xi = CompressWrScan(seg_size=2, size=B0_dim, fill=fill)
     wrscan_Xj = CompressWrScan(seg_size=B0_dim + 1, size=B0_dim * B0_dim, fill=fill)

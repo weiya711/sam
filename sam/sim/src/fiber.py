@@ -1,8 +1,9 @@
-## NOT CURRENTLY USED FILE
+# NOT CURRENTLY USED FILE
 
 class FiberCoordinateLookupError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
+
 
 class Fiber():
 
@@ -10,7 +11,7 @@ class Fiber():
                  coordinates=[],
                  payloads=[],
                  format="CSR"):
-    
+
         self.coordinates = coordinates
         self.payloads = payloads
 
@@ -18,7 +19,6 @@ class Fiber():
 
         for (idx, coord) in enumerate(self.coordinates):
             self.cpmap[coord] = self.payloads[idx]
-
 
     def get_coordinates(self):
         return self.coordinates
@@ -32,5 +32,3 @@ class Fiber():
             raise FiberCoordinateLookupError
         else:
             return self.cpmap[coord]
-
-
