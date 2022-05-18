@@ -1,5 +1,6 @@
 from .base import *
 
+
 class CrdDrop(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -54,7 +55,7 @@ class CrdDrop(Primitive):
                 self.curr_crd = self.curr_ocrd if self.has_crd else ''
                 self.get_next_icrd = False
             elif self.done:
-                assert(icrd == 'D')
+                assert (icrd == 'D')
                 self.curr_crd = 'D'
                 self.get_next_icrd = False
                 self.get_next_ocrd = False
@@ -66,7 +67,8 @@ class CrdDrop(Primitive):
             self.curr_crd = ''
 
         if self.debug:
-            print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
+            print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd,
+                  "\tHasCrd", self.has_crd,
                   "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd)
 
     def set_outer_crd(self, crd):

@@ -74,8 +74,8 @@ def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 
     out_crd = sorted(set(crd_arr1) & set(crd_arr2))
     if out_crd:
-        out_val = [vals_arr1[crd_arr1.index(i)]*vals_arr2[crd_arr2.index(i)] for i in out_crd]
-        gold_vec = [out_val[out_crd.index(i)] if i in out_crd else 0 for i in range(max(out_crd)+1)]
+        out_val = [vals_arr1[crd_arr1.index(i)] * vals_arr2[crd_arr2.index(i)] for i in out_crd]
+        gold_vec = [out_val[out_crd.index(i)] if i in out_crd else 0 for i in range(max(out_crd) + 1)]
     else:
         out_val = ''
         gold_vec = [fill] * size
@@ -154,7 +154,7 @@ def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     gold_seg = [0, len(gold_crd)]
     gold_vals = []
     if gold_crd:
-        gold_vals = [vals_arr1[crd_arr1.index(i)]*vals_arr2[crd_arr2.index(i)] for i in gold_crd]
+        gold_vals = [vals_arr1[crd_arr1.index(i)] * vals_arr2[crd_arr2.index(i)] for i in gold_crd]
 
     if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
@@ -213,10 +213,10 @@ def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 def test_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
     assert(size >= dim)
 
-    crd_arr1 = [random.randint(0, dim-1) for _ in range(nnz)]
+    crd_arr1 = [random.randint(0, dim - 1) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
     seg_arr1 = [0, len(crd_arr1)]
-    vals_arr1 = [random.randint(0, dim-1) for _ in range(len(crd_arr1))]
+    vals_arr1 = [random.randint(0, dim - 1) for _ in range(len(crd_arr1))]
 
     # arr2 val == crd
     vals_arr2 = [i for i in range(dim)]
@@ -228,7 +228,7 @@ def test_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
     gold_seg = [0, len(gold_crd)]
     gold_vals = []
     if gold_crd:
-        gold_vals = [vals_arr1[crd_arr1.index(i)]*i for i in gold_crd]
+        gold_vals = [vals_arr1[crd_arr1.index(i)] * i for i in gold_crd]
 
     if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
@@ -281,5 +281,3 @@ def test_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
     check_arr(oval_wrscan, gold_vals)
     check_arr(ocrd_wrscan, gold_crd)
     check_seg_arr(ocrd_wrscan, gold_seg)
-
-

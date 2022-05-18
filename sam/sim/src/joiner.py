@@ -41,8 +41,9 @@ class Intersect2(Joiner2):
         self.curr_ref1 = None
         self.curr_ref2 = None
 
-        self.total_count =0;
-        self.count =0;
+        self.total_count = 0
+        self.count = 0
+
     def update(self):
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
             # FIXME: See when only one 'D' signal is present
@@ -59,36 +60,36 @@ class Intersect2(Joiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count +=1
-                self.count +=1 
+                self.total_count += 1
+                self.count += 1
             elif is_stkn(self.curr_crd1):
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count +=1
+                self.total_count += 1
             elif is_stkn(self.curr_crd2):
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count +=1
+                self.total_count += 1
             elif self.curr_crd1 < self.curr_crd2:
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count +=1
+                self.total_count += 1
             elif self.curr_crd1 > self.curr_crd2:
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count +=1
+                self.total_count += 1
             else:
                 raise Exception('Intersect2: should not enter this case')
         else:
@@ -108,11 +109,11 @@ class Intersect2(Joiner2):
                 self.oref2 = ''
         self.compute_fifos()
 
-
         if self.debug:
             print("DEBUG: INTERSECT: \t OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
                   "\t Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
-                  "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ", self.count/self.total_count) 
+                  "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
+                  self.count / self.total_count)
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '':
@@ -126,7 +127,7 @@ class Intersect2(Joiner2):
 
     def compute_fifos(self):
         self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
-        self.size_in_ref2 = max(self.size_in_ref2, len(self.in_ref2)) 
+        self.size_in_ref2 = max(self.size_in_ref2, len(self.in_ref2))
         self.size_in_crd1 = max(self.size_in_crd1, len(self.in_crd1))
         self.size_in_crd2 = max(self.size_in_crd2, len(self.in_crd2))
 
@@ -146,5 +147,4 @@ class Intersect2(Joiner2):
         return self.oref2
 
     def return_intersection_rate(self):
-        return self.count/self.total_count
-
+        return self.count / self.total_count

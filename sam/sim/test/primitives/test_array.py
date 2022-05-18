@@ -36,7 +36,7 @@ def test_arr_load_1d(dim1, debug_sim, max_val=1000):
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
 def test_arr_store_1d(dim1, debug_sim, max_val=1000):
     in_addr = [x for x in range(dim1)] + ['S0', 'D']
-    in_val = [random.randint(0, max_val) for x in range(dim1)] + ['S0', 'D']
+    in_val = [random.randint(0, max_val) for _ in range(dim1)] + ['S0', 'D']
     assert (len(in_val) == len(in_addr))
 
     gold_val = in_val[:-2]
