@@ -7,7 +7,7 @@ import pytest
 from sam.sim.src.wr_scanner import WrScan, CompressWrScan
 from sam.sim.src.array import Array
 
-TIMEOUT = 100000
+TIMEOUT = 10000000
 
 
 def check_arr(arr_obj, gold):
@@ -182,8 +182,9 @@ def check_point_tuple(pt_tup1, pt_tup2):
 
     for i in range(len(tup1)):
         if tup1[i] != tup2[i]:
-            print(str(i)+":", tup1[i], "!=", tup2[i])
-            return False
+            if abs(tup1[i][-1] - tup2[i][-1]) > 1e-7:
+                print(str(i)+":", tup1[i], "!=", tup2[i])
+                return False
     return True
 
 
@@ -206,6 +207,39 @@ def gen_val_arr(size=4, max_val=100, min_val=-100):
     result = [x if x != 0 else 1 for x in result]
     return result
 
+def read_combined_inputs(filename, formatlist):
+    return_list = []
+    with open(filename) as file:
+        file.readline()
+        shape = file.readline().split()
+        print(shape)
+        shape = list(map(int, shape))
+        return_list.append(shape)
 
+        for f in formatlist:
+            file.readline()
+            if f == 'd':
+                dimension = int(file.readline())
+                return_list.append(dimension)
+            elif f == 's':
+                seg = file.readline().split()
+                seg = list(map(int, seg))
+                crd = file.readline().split()
+                crd = list(map(int, crd))
+                return_list.append((seg, crd))
+            else:
+                assert(False)
 
+        file.readline()
+        vals = file.readline().split()
+        vals = list(map(float, vals))
+        return_list.append(vals)
 
+    return return_list
+
+def read_inputs(filename, type=int):
+    return_list = []
+    with open(filename) as f:
+        for line in f:
+            return_list.append(type(line))
+    return return_list

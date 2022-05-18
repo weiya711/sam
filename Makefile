@@ -1,9 +1,32 @@
 export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
 export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
+export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 
+tests: formats sam 
+	python scripts/test_generating_code.py
+	make run
+
+run: submodules
+	./scripts/pytest_suitesparse.sh
+
+.PHONY: formats
+formats:
+	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
+	set -e && ./scripts/generate_suitesparse_formats.sh
+
+.PHONY: env
+env:
+	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
+	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
+	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+
+.PHONY: pydepends
+pydepends:
+	conda env export > environment.yml
+	pip list --format=freeze > requirements.txt
 
 sam: taco/build 
-	 cd compiler && bash -x ./sam-kernels.sh
+	 cd compiler && bash -xe ./sam-kernels.sh
 
 taco/build: submodules
 	 mkdir -p compiler/taco/build 
