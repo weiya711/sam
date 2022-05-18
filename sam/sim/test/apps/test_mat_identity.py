@@ -1,3 +1,4 @@
+import pytest
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
