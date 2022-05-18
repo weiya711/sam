@@ -42,7 +42,7 @@ def test_repeat_gen_direct(arrs, debug_sim):
 @pytest.mark.parametrize("max_val", [4, 16, 32, 64])
 @pytest.mark.parametrize("nd", [1, 2, 3, 4, 5])
 def test_repeat_gen_random_nd(max_val, nd, debug_sim):
-    in_stream = gen_stream(n=nd, max_val=max_val, max_nnz=max)
+    in_stream = gen_stream(n=nd, max_val=max_val, max_nnz=max_val)
 
     if debug_sim:
         print("Input Stream:", in_stream)
