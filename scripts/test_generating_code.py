@@ -32,6 +32,15 @@ class TensorFormat:
     def return_size(self):
         return len(self.tensors)
 
+    def return_all_tensors(self):
+        return self.tensors.keys()
+
+    def get_location(self, ten):
+        if ten == "X" or ten == "x":
+            return 0
+        else:
+            return 1
+
 
 
 def tab(a):
@@ -65,7 +74,9 @@ def generate_header(f, out_name):
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
     # Assuming tje format is csr and csc:
-    for ten in tensor_formats.keys():
+    for ten in tensor_format_parse.return_all_tensors():
+        if tensor_format_parse.get_location(ten) == 0:
+            continue
         f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname, \""+  tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
         f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
@@ -384,8 +395,8 @@ for apath in file_paths:
     invalid_flag = 0
     root_nodes = []
     output_nodes = {}
-    
     tensor_information = {}
+
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         if node_info["type"] == "fiberlookup":
@@ -396,36 +407,41 @@ for apath in file_paths:
 
     tens_fmt = {}
     count = 0
-    for k in tensor_information.keys(): 
-        count += 1
-        temp = ""
-        if tensor_information[k] == 0:
-            tens_fmt[k] = {}
-            tens_fmt[k]["format"] = "dense"
-            temp = "dd00"
-        elif tensor_information[k] == 3:
-            tens_fmt[k] = {}
-            tens_fmt[k]["format"] = "dcsr"
-            temp = "ss01"
-        elif tensor_information[k] == 1:
-            tens_fmt[k] = {}
-            tens_fmt[k]["format"] = "csc"
-            temp = "ds10"
-        elif tensor_information[k] == 2:
-            tens_fmt[k] = {}
-            tens_fmt[k]["format"] = "csr"
-            temp = "ds10"
-        else:
-            tens_fmt[k] = {}
-            tens_fmt[k]["format"] = "cccc"
+    #for k in tensor_information.keys(): 
+    #    count += 1
+    #    temp = ""
+    #    if tensor_information[k] == 0:
+    #        tens_fmt[k] = {}
+    #        tens_fmt[k]["format"] = "dense"
+    #        temp = "dd00"
+    #    elif tensor_information[k] == 3:
+    #        tens_fmt[k] = {}
+    #        tens_fmt[k]["format"] = "dcsr"
+    #        temp = "ss01"
+    #    elif tensor_information[k] == 1:
+    #        tens_fmt[k] = {}
+    #        tens_fmt[k]["format"] = "csc"
+    #        temp = "ds10"
+    #    elif tensor_information[k] == 2:
+    #        tens_fmt[k] = {}
+    #        tens_fmt[k]["format"] = "csr"
+    #        temp = "ds10"
+    #    else:
+    #        tens_fmt[k] = {}
+    #        tens_fmt[k]["format"] = "cccc"
         
-    data_formats = gen_data_formats(tensor_format_parse.return_size(), out_name[num], apath)
+    data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
     
     ct = 0 
-    for k in tensor_information.keys(): 
-        tens_fmt[k]["information"] = data_formats[ct]
+    for k in tensor_format_parse.return_all_tensors():
+        if ct != 0:
+            tens_fmt[k] = {}
+            tens_fmt[k]["information"] = data_formats[ct-1]
         ct += 1
-            
+
+    
+    #tens_fmt["B"]["information"] = data_formats[0]
+    #tens_fmt["C"]["information"] = data_formats[1]
     
     
     generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse)
@@ -476,10 +492,12 @@ for apath in file_paths:
             d[u]["object"] =  node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +  "_" + str(u)
 
         elif node_info["type"] == "intersect":
-            print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) +  node_info["type"]  +  "_" + str(u) + " = Intersect2(debug = debug_sim)\n")
-            d[u]["object"] =  node_info["type"] + "_" + str(u)
+            f.write(tab(1) +  node_info["type"]  + node_info["index"]  + "_" + str(u) + " = Intersect2(debug = debug_sim)\n")
+            d[u]["object"] =  node_info["type"] + node_info["index"] + "_" + str(u)
 
+        elif node_info["type"] == "crddrop":
+            f.write(tab(1) +  node_info["type"]  +  "_" + str(u) + " = CrdDrop(debug = debug_sim)\n")
+            d[u]["object"] =  node_info["type"] + "_" + str(u)
 
 
         elif node_info["type"] == "mul":
@@ -515,7 +533,7 @@ for apath in file_paths:
             if node_info["sink"] == "true":
                 output_nodes[d[u]["object"]]= node_info["mode"]
         else:
-           invaid_flag = 1
+           invalid_flag = 1
            print("Error invalid node detected", node_info["type"], "\n")
     if invalid_flag == 1:
         num += 1
@@ -568,16 +586,24 @@ for apath in file_paths:
     for i in range(3):
         for u,v,a in list(nx.edge_bfs(networkx_graph)): # .edges(data=True), networkx_graph.nodes())):
             a = networkx_graph.get_edge_data(u, v)[0] 
-            ready_dataset[v][stream_join_elements[v].index(u)] = 1
+            ready_dataset[v][stream_join_elements[v].index(u)] = done_all[u]
         
             if d[v]["type"] == "fiberlookup" and done_all[v] == 0:        
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + d[u_]["object"]  + ".out_" +
-                                str(edge_data[v][stream_join_elements[v].index(u_)]) +"())\n")
+                        if "intersect" in d[u_]["object"]:
+                            print(intersect_dataset[d[u_]["object"]], " ", d[u_]["object"])
+                            print(ready_dataset[v])
+                            print(apath)  
+                            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + d[u_]["object"]  + ".out_ref" +
+                                 str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) +"())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + d[u_]["object"]  + ".out_" +
+                                    str(edge_data[v][stream_join_elements[v].index(u_)]) +"())\n")
                         # f.write(tab(3) + d[v]["object"] + ".set_in_ref(0)\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
+
 
             if d[v]["type"] == "repsiggen" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
@@ -610,7 +636,6 @@ for apath in file_paths:
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n") 
                     done_all[v] = 1
 
-
             if d[v]["type"] == "intersect" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
@@ -619,6 +644,30 @@ for apath in file_paths:
                         intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = stream_join_elements[v].index(u_) + 1
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
+
+            if d[v]["type"] == "crddrop" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
+                if sum(ready_dataset[v]) == len(ready_dataset[v]):
+                    for u_ in stream_join_elements[v]:
+                        index_value = edge_data[v][stream_join_elements[v].index(u_)][-1] 
+                        print(d[v])
+                        if index_value == d[v]["inner"]:
+                            f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"]+ ".out_crd())\n")
+                        if index_value == d[v]["outer"]:
+                            f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"]+ ".out_crd())\n")
+                    done_all[v] = 1
+
+
+
+
+
+#            if d[v]["type"] == "intersect" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
+#                if sum(ready_dataset[v]) == len(ready_dataset[v]):
+#                    for u_ in stream_join_elements[v]:
+#                        f.write(tab(2) + d[v]["object"] + ".set_in" + str(stream_join_elements[v].index(u_)+ 1) + "(" +
+#                                d[u_]["object"] + ".out_ref(), " + d[u_]["object"]+ ".out_crd())\n")
+#                        intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = stream_join_elements[v].index(u_) + 1
+#                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+#                    done_all[v] = 1
 
             # if d[v]["object"] not in intersect_dataset:
             #    intersect_dataset[d[v]["object"]] = [d[u]["object"]]
@@ -666,6 +715,8 @@ for apath in file_paths:
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
+                        if "inner-" in edge_data[v][stream_join_elements[v].index(u_)] or "outer-" in edge_data[v][stream_join_elements[v].index(u_)]:
+                            edge_data[v][stream_join_elements[v].index(u_)] = edge_data[v][stream_join_elements[v].index(u_)][:-2] 
                         if d[v]["mode"] == "vals":
                             f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                     str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
@@ -677,11 +728,19 @@ for apath in file_paths:
                             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                             done_all[v] = 1
 
+    f.write(tab(1) + "\n\n")
     finish_outputs(f, output_nodes)
+
+    for u in networkx_graph.nodes():
+        if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
+            f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
+ 
     f.close()
+    
     if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
         os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
         os.system("rm " + out_name[num] + ".py")
     else:
         os.system("rm " + out_name[num] + ".py")
     num += 1
+
