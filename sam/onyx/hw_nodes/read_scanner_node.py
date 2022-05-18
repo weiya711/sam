@@ -110,10 +110,14 @@ class ReadScannerNode(HWNode):
                 new_conns = {
                     f'rd_scan_to_isect_{isect_conn}_crd': [
                         # send output to rd scanner
+                        # ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 16),
+                        # ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn * 2}")], 1),
+                        # ([(isect, f"ready_out_{isect_conn * 2}"), (rd_scan, "ready_in_0")], 1),
+                        # ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn * 2}")], 1),
                         ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 16),
-                        ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn * 2}")], 1),
-                        ([(isect, f"ready_out_{isect_conn * 2}"), (rd_scan, "ready_in_0")], 1),
-                        ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn * 2}")], 1),
+                        ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn}")], 1),
+                        ([(isect, f"ready_out_{isect_conn}"), (rd_scan, "ready_in_0")], 1),
+                        ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn}")], 1),
                     ]
                 }
             elif 'ref' in e_type:
@@ -121,9 +125,13 @@ class ReadScannerNode(HWNode):
                     f'rd_scan_to_isect_{isect_conn}_pos': [
                         # send output to rd scanner
                         ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 16),
-                        ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn * 2 + 1}")], 1),
-                        ([(isect, f"ready_out_{isect_conn * 2 + 1}"), (rd_scan, "ready_in_1")], 1),
-                        ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn * 2 + 1}")], 1),
+                        ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn + 2}")], 1),
+                        ([(isect, f"ready_out_{isect_conn + 2}"), (rd_scan, "ready_in_1")], 1),
+                        ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn + 2}")], 1),
+                        # ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 16),
+                        # ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn * 2 + 1}")], 1),
+                        # ([(isect, f"ready_out_{isect_conn * 2 + 1}"), (rd_scan, "ready_in_1")], 1),
+                        # ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn * 2 + 1}")], 1),
                     ]
                 }
             else:
@@ -190,6 +198,8 @@ class ReadScannerNode(HWNode):
         max_outer_dim = 0
         strides = [0]
         ranges = [1]
+        print("READ SCANNER")
+        print(attributes)
         if attributes['type'].strip('"') == 'fiberwrite':
             # in fiberwrite case, we are in block mode
             mode = attributes['mode'].strip('"')
@@ -212,6 +222,20 @@ class ReadScannerNode(HWNode):
             lookup = 1
         else:
             stop_lvl = int(attributes['mode'].strip('"'))
+
+            # Do some hex
+            tensor = attributes['tensor'].strip('"')
+            index = attributes['index'].strip('"')
+
+            if tensor == 'B' and index == 'i':
+                stop_lvl = 0
+            elif tensor == 'B' and index == 'k':
+                stop_lvl = 2
+            elif tensor == 'C' and index == 'j':
+                stop_lvl = 1
+            elif tensor == 'C' and index == 'k':
+                stop_lvl = 2
+
             lookup = 0
         block_mode = int(attributes['type'].strip('"') == 'fiberwrite')
         if attributes['type'].strip('"') == 'fiberwrite':

@@ -67,10 +67,13 @@ class RepeatNode(HWNode):
         return new_conns
 
     def configure(self, attributes):
+        print("Repeat stop")
         root = 0
+        stop_lvl = 1
         if 'true' in attributes['root'].strip('"'):
             root = 1
-        stop_lvl = 1
+            stop_lvl = 0
+        print(attributes)
         cfg_kwargs = {
             'stop_lvl': stop_lvl,
             'root': root
