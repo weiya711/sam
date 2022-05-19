@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from .base import *
 
 
@@ -13,6 +12,8 @@ class RdScan(Primitive, ABC):
 
         self.curr_ref = 'S0'
         self.curr_crd = 'S0'
+
+        self.in_ref = []
 
     def set_in_ref(self, in_ref):
         if in_ref != '':
@@ -32,7 +33,6 @@ class UncompressRdScan(RdScan):
         self.start_addr = 0
         self.stop_addr = dim
 
-        self.in_ref = []
         self.curr_in_ref = 0
 
         self.meta_dim = dim
@@ -83,7 +83,6 @@ class CompressedRdScan(RdScan):
         self.start_addr = 0
         self.stop_addr = 0
 
-        self.in_ref = []
         self.curr_addr = 0
 
         self.end_fiber = False
