@@ -363,6 +363,7 @@ for apath in file_paths:
     root_nodes = []
     output_nodes = {}
     tensor_information = {}
+
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         if node_info["type"] == "fiberlookup":
@@ -535,7 +536,6 @@ for apath in file_paths:
                         # f.write(tab(3) + d[v]["object"] + ".set_in_ref(0)\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
-
             if d[v]["type"] == "repsiggen" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
@@ -651,7 +651,6 @@ for apath in file_paths:
 
     f.write(tab(1) + "\n\n")
     finish_outputs(f, output_nodes)
-
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")

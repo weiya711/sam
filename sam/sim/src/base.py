@@ -48,13 +48,13 @@ class Primitive(ABC):
         self.done = False
 
 
-def remove_emptystr(l):
-    return [x for x in l if x != '']
+def remove_emptystr(stream):
+    return [x for x in stream if x != '']
 
 
-def remove_stoptkn(l):
-    return [x for x in l if x != 'S']
+def remove_stoptkn(stream):
+    return [x for x in stream if x != 'S']
 
 
-def remove_donetkn(l):
-    return [x for x in l if x != 'D']
+def remove_donetkn(stream):
+    return [x for x in stream if x != 'D']

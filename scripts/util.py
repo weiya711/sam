@@ -1,6 +1,6 @@
 import scipy.sparse
 import scipy.io
-# import sparse
+import sparse
 import os
 import glob
 import numpy
@@ -521,15 +521,16 @@ class TensorCollectionSuiteSparse:
     def getTensorsAndNames(self):
         return [(str(tensor), tensor) for tensor in self.getTensors()]
 
+
 # safeCastPydataTensorToInts casts a floating point tensor to integers
 # in a way that preserves the sparsity pattern.
-# def safeCastPydataTensorToInts(tensor):
-#     data = numpy.zeros(len(tensor.data), dtype='int64')
-#     for i in range(len(data)):
-#         # If the cast would turn a value into 0, instead write a 1. This preserves
-#         # the sparsity pattern of the data.
-#         if int(tensor.data[i]) == 0:
-#             data[i] = 1
-#         else:
-#             data[i] = int(tensor.data[i])
-#     return sparse.COO(tensor.coords, data, tensor.shape)
+def safeCastPydataTensorToInts(tensor):
+    data = numpy.zeros(len(tensor.data), dtype='int64')
+    for i in range(len(data)):
+        # If the cast would turn a value into 0, instead write a 1. This preserves
+        # the sparsity pattern of the data.
+        if int(tensor.data[i]) == 0:
+            data[i] = 1
+        else:
+            data[i] = int(tensor.data[i])
+    return sparse.COO(tensor.coords, data, tensor.shape)
