@@ -88,7 +88,6 @@ class SparseCrdPtAccumulator1(Primitive):
             self.curr_val = ''
             return
 
-        ocrd = None
         if len(self.in_val) > 0 and len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0:
             self.curr_in_val = self.in_val.pop(0)
             self.curr_in_inner_crdpt = self.inner_crdpt.pop(0)
@@ -171,7 +170,7 @@ class SparseCrdPtAccumulator1(Primitive):
         return self.curr_val
 
 
-# Accumulation into a vector    
+# Accumulation into a vector
 class SparseAccumulator1(Primitive):
     def __init__(self, maxdim=100, valtype=float, last_level=True, val_stkn=False, **kwargs):
         super().__init__(**kwargs)
@@ -231,8 +230,8 @@ class SparseAccumulator1(Primitive):
 
         if self.val_stkn:
             self.curr_val = self.crdpt_spacc_out_val.pop(0) if isinstance(self.curr_inner_crd, int) and \
-                                                           len(self.crdpt_spacc_out_val) > 0 \
-            else self.curr_inner_crd
+                len(self.crdpt_spacc_out_val) > 0 \
+                else self.curr_inner_crd
         else:
             self.curr_val = self.crdpt_spacc_out_val.pop(0) if len(self.crdpt_spacc_out_val) > 0 else ''
 

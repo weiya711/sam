@@ -16,6 +16,8 @@ arrs_dict2 = {'ocrd_in': [0, 1, 2, 5, 'S0', 'D'],
 arrs_dict3 = {'ocrd_in': [0, 2, 'S0', 3, 'S0', 4, 'S1', 'D'],
               'icrd_in': [0, 2, 3, 'S0', 0, 2, 3, 'S1', 0, 'S1', 2, 3, 'S2', 'D'],
               'gold': [0, 0, 0, 'S0', 2, 2, 2, 'S1', 3, 'S1', 4, 4, 'S2', 'D']}
+
+
 @pytest.mark.parametrize("arrs", [arrs_dict1, arrs_dict2, arrs_dict3])
 def test_crd_hold_nd(arrs, debug_sim, max_val=1000):
     icrd = copy.deepcopy(arrs['icrd_in'])

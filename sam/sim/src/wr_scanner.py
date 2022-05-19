@@ -14,7 +14,7 @@ class WrScan(Primitive, ABC):
 
     def set_input(self, val):
         # Make sure streams have correct token type
-        assert(isinstance(val, int) or isinstance(val, float) or val in valid_tkns)
+        assert (isinstance(val, int) or isinstance(val, float) or val in valid_tkns)
 
         if val != '':
             self.input.append(val)
@@ -121,6 +121,7 @@ class CompressWrScan(WrScan):
     def autosize(self):
         self.resize_seg_arr(self.curr_seg_addr)
         self.resize_arr(self.curr_crd_cnt)
+
 
 # Unique compressed (not from points)
 class UncompressWrScan(WrScan):

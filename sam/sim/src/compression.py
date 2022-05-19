@@ -1,5 +1,6 @@
 from .base import *
 
+
 class Compression(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -19,7 +20,8 @@ class Compression(Primitive):
             icrd = self
 
         if self.debug:
-            print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
+            print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd,
+                  "\tHasCrd", self.has_crd,
                   "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd)
 
     def set_val(self, val):

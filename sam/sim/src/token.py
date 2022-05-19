@@ -1,5 +1,6 @@
 from .base import *
 
+
 # Drops tokens
 class TknDrop(Primitive):
     def __init__(self, **kwargs):
