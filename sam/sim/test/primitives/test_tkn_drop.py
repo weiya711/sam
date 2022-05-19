@@ -13,8 +13,10 @@ arrs_dict4 = {'in': [1, 'S0', 1, 'S1', 'D']}
 arrs_dict5 = {'in': [0, 1, 2, 3, 'S0', 'D']}
 arrs_dict6 = {'in': [1, 'S0', 1, 'S0', 'S0', 1, 'S1', 'D']}
 arrs_dict7 = {'in': [0, 1, 3, 'S0', 'D']}
+
+
 @pytest.mark.parametrize("arrs", [arrs_dict1, arrs_dict2, arrs_dict3, arrs_dict4, arrs_dict5, arrs_dict6, arrs_dict7])
-def test_tkn_drop(arrs, debug_sim, max_val=1000):
+def test_tkn_drop(arrs, debug_sim):
     ival = copy.deepcopy(arrs['in'])
 
     gold = [item for item in arrs['in'] if not is_stkn(item)]
@@ -39,5 +41,5 @@ def test_tkn_drop(arrs, debug_sim, max_val=1000):
     if debug_sim:
         print(out)
         print(gold)
-        
+
     assert (out == gold)
