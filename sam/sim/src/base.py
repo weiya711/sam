@@ -21,6 +21,8 @@ def stkn_order(elem):
 
 
 def increment_stkn(elem):
+    if elem == '':
+        return 'S0'
     return 'S' + str(stkn_order(elem) + 1)
 
 
