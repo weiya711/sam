@@ -1,10 +1,11 @@
 import scipy.sparse
+import pytest
 
 from sam.sim.src.rd_scanner import CompressedRdScan, UncompressRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
-from sam.sim.src.crd_manager import CrdDrop
+# from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.base import remove_emptystr
@@ -55,7 +56,7 @@ def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
     mul = Multiply2(debug=debug_sim)
     reduce = Reduce(debug=debug_sim)
 
-    #drop = CrdDrop(debug=debug_sim)
+    # drop = CrdDrop(debug=debug_sim)
     vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim)
     wrscan_Xi = CompressWrScan(seg_size=2, size=dim, fill=fill)
     wrscan_Xj = CompressWrScan(seg_size=dim + 1, size=dim * dim, fill=fill)
@@ -163,6 +164,7 @@ def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
         out_tup = remove_zeros(out_tup)
         assert (check_point_tuple(out_tup, gold_tup))
 
+
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
 def test_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
@@ -208,7 +210,7 @@ def test_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
     mul = Multiply2(debug=debug_sim)
     reduce = Reduce(debug=debug_sim)
 
-    #drop = CrdDrop(debug=debug_sim)
+    # drop = CrdDrop(debug=debug_sim)
     vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim)
     wrscan_Xi = CompressWrScan(seg_size=2, size=dim, fill=fill)
     wrscan_Xj = CompressWrScan(seg_size=dim + 1, size=dim * dim, fill=fill)
@@ -345,8 +347,11 @@ def test_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
         out_tup = remove_zeros(out_tup)
         assert (check_point_tuple(out_tup, gold_tup))
 
-arr_dict = {'in1':{'shape':(4, 4), 'seg':[0, 0, 2, 3, 3], 'crd':[2, 3, 3], 'data':[-340., -481.,  -30.]},
-            'in2':{'shape':(4, 4), 'seg':[0, 2, 3, 5, 5], 'crd':[1, 2, 2, 1, 2], 'data':[-284.,  386., -223.,  707.,  411.]}}
+
+arr_dict = {'in1': {'shape': (4, 4), 'seg': [0, 0, 2, 3, 3], 'crd': [2, 3, 3], 'data': [-340., -481., -30.]},
+            'in2': {'shape': (4, 4), 'seg': [0, 2, 3, 5, 5], 'crd': [1, 2, 2, 1, 2],
+                    'data': [-284., 386., -223., 707., 411.]}}
+
 
 @pytest.mark.parametrize("arrs", [arr_dict])
 def test_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
@@ -388,7 +393,7 @@ def test_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
     mul = Multiply2(debug=debug_sim)
     reduce = Reduce(debug=debug_sim)
 
-    #drop = CrdDrop(debug=debug_sim)
+    # drop = CrdDrop(debug=debug_sim)
     vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim)
     wrscan_Xi = CompressWrScan(seg_size=2, size=dim, fill=fill)
     wrscan_Xj = CompressWrScan(seg_size=dim + 1, size=dim * dim, fill=fill)
@@ -401,7 +406,6 @@ def test_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
     Ck_lookup_out = []
     mul_out = []
     reduce_out = []
-
 
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']

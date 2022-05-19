@@ -41,7 +41,7 @@ class ValsWrScan(WrScan):
         self.curr_addr = 0
 
     def update(self):
-        if (len(self.input) > 0):
+        if len(self.input) > 0:
             val = self.input.pop(0)
 
             if not is_stkn(val) and val != 'D':
@@ -100,7 +100,8 @@ class CompressWrScan(WrScan):
 
         if self.debug:
             print("DEBUG: WR SCAN: \t "
-                  "Curr crd addr:", self.curr_addr, "\t curr crd cnt:", self.curr_crd_cnt, "\t curr seg addr:", self.curr_seg_addr,
+                  "Curr crd addr:", self.curr_addr, "\t curr crd cnt:", self.curr_crd_cnt, "\t curr seg addr:",
+                  self.curr_seg_addr,
                   "\t end fiber:", self.end_fiber)
 
     def reset(self):

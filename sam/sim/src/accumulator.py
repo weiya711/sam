@@ -1,5 +1,6 @@
 from .base import *
 
+
 class Reduce(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -52,4 +53,3 @@ class Reduce(Primitive):
 
     def print_fifos(self):
         print("FiFOo Val size for Reduce block: ", self.in_val_size)
-

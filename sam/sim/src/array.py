@@ -56,13 +56,11 @@ class Array(Primitive):
 
     def out_load(self):
         return self.curr_load
+
     def out_val(self):
         return self.curr_load
 
-
     def load(self, addr):
-        val = ''
-
         # Special handling of loads of stop tokens
         if is_stkn(addr):
             val = addr

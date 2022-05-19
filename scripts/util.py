@@ -86,27 +86,27 @@ class ScipySparseTensorLoader:
 # class PydataSparseTensorLoader:
 #     def __init__(self):
 #         self.loader = TnsFileLoader()
-#     
+#
 #     def load(self, path):
 #         dims, coords, values = self.loader.load(path)
 #         return sparse.COO(coords, values, tuple(dims))
-# 
+#
 # # PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
 # class PydataSparseTensorDumper:
 #     def __init__(self):
 #         self.dumper = TnsFileDumper()
-# 
+#
 #     def dump(self, tensor, path):
 #         self.dumper.dump_dict_to_file(tensor.shape, sparse.DOK(tensor).data, path)
-# 
-# 
-# 
+#
+#
+#
 # # PydataTensorShifter shifts all elements in the last mode
 # # of the input pydata/sparse tensor by one.
 # class PydataTensorShifter:
 #     def __init__(self):
 #         pass
-# 
+#
 #     def shiftLastMode(self, tensor):
 #         coords = tensor.coords
 #         data = tensor.data
@@ -369,22 +369,22 @@ class FormatWriter:
             ofile.write(array_newline_str(dcsr.shape))
             os.chmod(filename, 0o666)
 
-            os.symlink(filename, os.path.join(dcsr_dir, tensorname+"_shape.txt"))
-            os.symlink(filename, os.path.join(csr_dir, tensorname+"_shape.txt"))
-            os.symlink(filename, os.path.join(dcsc_dir, tensorname+"_shape.txt"))
-            os.symlink(filename, os.path.join(csc_dir, tensorname+"_shape.txt"))
+            os.symlink(filename, os.path.join(dcsr_dir, tensorname + "_shape.txt"))
+            os.symlink(filename, os.path.join(csr_dir, tensorname + "_shape.txt"))
+            os.symlink(filename, os.path.join(dcsc_dir, tensorname + "_shape.txt"))
+            os.symlink(filename, os.path.join(csc_dir, tensorname + "_shape.txt"))
 
-        filename = os.path.join(dcsr_dir, tensorname+"0_seg.txt")
+        filename = os.path.join(dcsr_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.seg0))
             os.chmod(filename, 0o666)
 
-        filename = os.path.join(dcsr_dir, tensorname+"0_crd.txt")
+        filename = os.path.join(dcsr_dir, tensorname + "0_crd.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.crd0))
             os.chmod(filename, 0o666)
 
-        filename = os.path.join(dcsr_dir, tensorname+"1_seg.txt")
+        filename = os.path.join(dcsr_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.seg1))
             os.chmod(filename, 0o666)
@@ -393,19 +393,18 @@ class FormatWriter:
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.crd1))
             os.chmod(filename, 0o666)
-            os.symlink(filename, os.path.join(dcsr_dir, tensorname+"1_crd.txt"))
-            os.symlink(filename, os.path.join(csr_dir, tensorname+"1_crd.txt"))
-
+            os.symlink(filename, os.path.join(dcsr_dir, tensorname + "1_crd.txt"))
+            os.symlink(filename, os.path.join(csr_dir, tensorname + "1_crd.txt"))
 
         filename = os.path.join(dir_path, tensorname + "_vals_s.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.data))
             os.chmod(filename, 0o666)
-            os.symlink(filename, os.path.join(dcsr_dir, tensorname+"_vals.txt"))
-            os.symlink(filename, os.path.join(csr_dir, tensorname+"_vals.txt"))
+            os.symlink(filename, os.path.join(dcsr_dir, tensorname + "_vals.txt"))
+            os.symlink(filename, os.path.join(csr_dir, tensorname + "_vals.txt"))
 
         csr = self.convert_format(coo, "csr")
-        filename = os.path.join(csr_dir, tensorname+"1_seg.txt")
+        filename = os.path.join(csr_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(csr.indptr))
             os.chmod(filename, 0o666)
@@ -431,18 +430,18 @@ class FormatWriter:
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsc.crd1))
             os.chmod(filename, 0o666)
-            os.symlink(filename, os.path.join(dcsc_dir, tensorname+"0_crd.txt"))
-            os.symlink(filename, os.path.join(csc_dir, tensorname+"0_crd.txt"))
+            os.symlink(filename, os.path.join(dcsc_dir, tensorname + "0_crd.txt"))
+            os.symlink(filename, os.path.join(csc_dir, tensorname + "0_crd.txt"))
 
         filename = os.path.join(dir_path, tensorname + "_vals_sT.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsc.data))
             os.chmod(filename, 0o666)
-            os.symlink(filename, os.path.join(dcsc_dir, tensorname+"_vals.txt"))
-            os.symlink(filename, os.path.join(csc_dir, tensorname+"_vals.txt"))
+            os.symlink(filename, os.path.join(dcsc_dir, tensorname + "_vals.txt"))
+            os.symlink(filename, os.path.join(csc_dir, tensorname + "_vals.txt"))
 
         csc = self.convert_format(coo, "csc")
-        filename = os.path.join(csc_dir, tensorname+"0_seg.txt")
+        filename = os.path.join(csc_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(csc.indptr))
             os.chmod(filename, 0o666)
@@ -486,7 +485,7 @@ class InputCacheTensor:
 # class PydataMatrixMarketTensorLoader:
 #     def __init__(self):
 #         pass
-# 
+#
 #     def load(self, path):
 #         coo = scipy.io.mmread(path)
 #         return sparse.COO.from_scipy_sparse(coo)
