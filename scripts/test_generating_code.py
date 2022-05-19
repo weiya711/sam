@@ -45,7 +45,7 @@ class TensorFormat:
 
 def tab(a):
     ans = ""
-    for i in rang(a):
+    for i in range(a):
         ans += "    "
     return ans
 
