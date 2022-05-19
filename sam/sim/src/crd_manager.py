@@ -157,8 +157,6 @@ class CrdPtConverter(Primitive):
 
         self.inner_last_level = last_level
 
-
-
     def update(self):
 
         if self.curr_ocrd != '':

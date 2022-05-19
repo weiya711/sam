@@ -1,20 +1,19 @@
 import copy
 import pytest
 
-from sam.sim.src.accumulator import SparseCrdPtAccumulator1
+from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.base import remove_emptystr
 from sam.sim.test.test import TIMEOUT
 
 arrs_dict1 = {'ocrd_in': [0, 0, 0, 2, 2, 2, 2, 2, 2, 'D'],
               'icrd_in': [0, 2, 3, 0, 2, 3, 0, 2, 3, 'D'],
               'val_in': [50, 5, 10, 40, 4, 8, -40, 33, 36, 'D'],
-              'ocrd_gold': [0, 0, 0, 2, 2, 2, 'D'],
-              'icrd_gold': [0, 2, 3, 0, 2, 3, 'D'],
-              'val_gold': [50, 5, 10, 0, 37, 44, 'D']}
-
+              'ocrd_gold': [0, 2, 'S0', 'D'],
+              'icrd_gold': [0, 2, 3, 'S0', 0, 2, 3, 'S1', 'D'],
+              'val_gold': [50, 5, 10, 'S0',  0, 37, 44, 'S1', 'D']}
 
 @pytest.mark.parametrize("arrs", [arrs_dict1])
-def test_spcrdpt_accum_direct(arrs, debug_sim):
+def test_spacc_direct(arrs, debug_sim):
     icrd = copy.deepcopy(arrs['icrd_in'])
     ocrd = copy.deepcopy(arrs['ocrd_in'])
     val = copy.deepcopy(arrs['val_in'])
@@ -23,7 +22,7 @@ def test_spcrdpt_accum_direct(arrs, debug_sim):
     gold_icrd = copy.deepcopy(arrs['icrd_gold'])
     gold_val = copy.deepcopy(arrs['val_gold'])
 
-    sa = SparseCrdPtAccumulator1(debug=debug_sim)
+    sa = SparseAccumulator1(val_stkn=True, debug=debug_sim)
 
     done = False
     time = 0
@@ -38,13 +37,10 @@ def test_spcrdpt_accum_direct(arrs, debug_sim):
         if len(val) > 0:
             sa.set_val(val.pop(0))
         sa.update()
-        print("Timestep", time, "\t Done:", sa.out_done(),
-              "\n Curr in ocrd: ", sa.curr_in_outer_crdpt, "\t Curr in icrd", sa.curr_in_inner_crdpt,
-              "\t Curr in val", sa.curr_in_val,
-              "\n Emit crds: ", sa.emit_output,
-              "\n Storage: ", sa.storage)
-        out_ocrd.append(sa.out_outer_crdpt())
-        out_icrd.append(sa.out_inner_crdpt())
+        print("Timestep", time, "\t Done:", sa.out_done())
+
+        out_ocrd.append(sa.out_outer_crd())
+        out_icrd.append(sa.out_inner_crd())
         out_val.append(sa.out_val())
         done = sa.out_done()
         time += 1
