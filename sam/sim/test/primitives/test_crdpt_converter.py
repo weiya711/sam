@@ -23,7 +23,7 @@ arrs_dict3 = {'ocrd_in': [0, 0, 1, 'S0', 0, 1, 2, 3, 'S0', 1, 1, 1, 'S0', 'D'],
 
 @pytest.mark.parametrize("arrs", [arrs_dict1, arrs_dict2, arrs_dict3])
 @pytest.mark.parametrize("last_level", [True, False])
-def test_crdpt_converter(arrs, last_level, debug_sim):
+def test_crdpt_converter_direct(arrs, last_level, debug_sim):
     icrd = copy.deepcopy(arrs['icrd_in'])
     ocrd = copy.deepcopy(arrs['ocrd_in'])
 
