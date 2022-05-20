@@ -60,16 +60,16 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.repeater import Repeat, RepeatSigGen\n")
     f.write("from sam.sim.src.accumulator import Reduce\n")
     f.write("from sam.sim.test.test import *\n")
-    f.write("import os \n")
+    f.write("import os\n")
     f.write("cwd = os.getcwd()\n")
-    f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd,'mode-formats'))\n\n")
+    f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n\n")
     # f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default = './mode-formats')\n\n")
-    f.write("# FIXME: Figureout formats\n\n")
+    f.write("# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
-    f.write(tab(1) + "reason = 'CI lacks datasets',\n")
+    f.write(tab(1) + "reason='CI lacks datasets',\n")
     f.write(")\n")
-    f.write("def test_" + out_name + "(ssname, debug_sim, fill = 0):\n")
+    f.write("def test_" + out_name + "(ssname, debug_sim, fill=0):\n")
 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
@@ -417,20 +417,20 @@ for apath in file_paths:
             # print(u, " fiber lookup in :: ", networkx_graph.nodes[u]['comment'])
             if node_info["format"] == "dense":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] +
-                        node_info["index"] + "_" + str(u) + " = UncompressRdScan( dim = " + node_info["tensor"] +
-                        "_shape[" + node_info["mode"] + "]" + ", debug = debug_sim) \n")
+                        node_info["index"] + "_" + str(u) + " = UncompressRdScan(dim=" + node_info["tensor"] +
+                        "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
             if node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
-                        "_" + str(u) + "  = CompressedRdScan(crd_arr = " + node_info["tensor"] +
-                        "_crd" + node_info["mode"] + ", seg_arr = " + node_info["tensor"] + "_seg" + node_info["mode"] + ", debug = debug_sim)\n")
+                        "_" + str(u) + " = CompressedRdScan(crd_arr=" + node_info["tensor"] +
+                        "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] + "_seg" + node_info["mode"] + ", debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "arrayvals":
             print(u, " arrayvals in ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + " = Array(init_arr= " +
-                    node_info["tensor"] + "_vals, " + "debug = debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + " = Array(init_arr=" +
+                    node_info["tensor"] + "_vals, " + "debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u)
 
         elif "broadcast" in networkx_graph.nodes[u]['comment']:
@@ -447,10 +447,10 @@ for apath in file_paths:
                     " = Repeat(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "intersect":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug = debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "crddrop":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug = debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "mul":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim)\n")
@@ -462,14 +462,14 @@ for apath in file_paths:
             print(node_info)
             if node_info["mode"] == "vals":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                        " = ValsWrScan(size= " + array_size_computation(node_info["size"]) +
+                        " = ValsWrScan(size=" + array_size_computation(node_info["size"]) +
                         ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
 
             elif node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                        " = CompressWrScan(seg_size = " + array_size_computation(node_info["segsize"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill = fill, debug = debug_sim)\n")
+                        " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
+                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
                 print("uncompressed_node write" + apath + "  \n")
@@ -485,7 +485,7 @@ for apath in file_paths:
         continue
     output_check_nodes(f, root_nodes)
 # nx.topological_sort(networkx_graph)
-    f.write("\n\n")
+    f.write("\n")
     f.write(tab(1) + "while not done and time < TIMEOUT:\n")
     stream_join_elements = {}
     ready_dataset = {}
@@ -649,7 +649,7 @@ for apath in file_paths:
                             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                             done_all[v] = 1
 
-    f.write(tab(1) + "\n\n")
+    #f.write(tab(1) + "\n\n")
     finish_outputs(f, output_nodes)
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
