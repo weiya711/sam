@@ -26,7 +26,7 @@ class Flatten(Primitive):
         if self.get_inner and len(self.in_inner_crd) == 0:
             self.curr_crd = ''
             return
-        
+
         icrd = self.in_inner_crd.pop(0) if len(self.in_inner_crd) > 0 and self.get_inner else None
         self.get_outer |= not isinstance(icrd, int)
 

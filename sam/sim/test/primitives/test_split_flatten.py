@@ -182,4 +182,3 @@ def test_split_flat_direct(arrs, debug_sim):
     assert (out_ocrd == gold_ocrd)
     assert (out_icrd == gold_icrd)
     assert (out_crd == arrs['crd_in'])
-
