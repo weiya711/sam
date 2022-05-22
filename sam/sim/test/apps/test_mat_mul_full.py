@@ -22,6 +22,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.suitesparse
 def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     # filename = os.path.join(formatted_dir, ssname+"_"+"csr.txt")
     # formats = ['d', 's']
