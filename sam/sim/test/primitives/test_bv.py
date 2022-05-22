@@ -119,16 +119,16 @@ arrs_dict7 = {'crd_in': [0, 2, 3, 9, 11, 12, 'S0', 'D'],
 def test_split_bv_intersect_direct(arrs, debug_sim):
     split_factor = arrs[1]
     arrs = arrs[0]
-    
+
     crd = copy.deepcopy(arrs['crd_in'])
 
     gold_ocrd = copy.deepcopy(arrs['ocrd_gold'])
     gold_icrd = copy.deepcopy(arrs['icrd_gold'])
     gold_icrd = [x % split_factor if isinstance(x, int) else x for x in gold_icrd]
-    
+
     gold_ibv = get_bv(gold_icrd)
     gold_obv = get_bv(gold_ocrd)
-    
+
     if debug_sim:
         print("Gold Outer BV:", gold_ibv)
         print("Gold Inner BV:", gold_obv)
@@ -149,14 +149,14 @@ def test_split_bv_intersect_direct(arrs, debug_sim):
             split.set_in_crd(crd.pop(0))
 
         split.update()
-        
+
         out_ocrd.append(split.out_outer_crd())
         out_icrd.append(split.out_inner_crd())
-        
+
         obv.set_in_crd(split.out_outer_crd())
         obv.update()
         out_obv.append(obv.out_bv())
-        
+
         ibv.set_in_crd(split.out_inner_crd())
         ibv.update()
         out_ibv.append(ibv.out_bv())
