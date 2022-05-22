@@ -222,7 +222,6 @@ class IntersectBV2(BVJoiner2):
         self.total_count = 0
         self.count = 0
 
-
     def update(self):
         if self.done:
             self.obv = self.curr_bv1
