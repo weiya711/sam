@@ -192,10 +192,6 @@ class SparseAccumulator1(Primitive):
 
         self.val_stkn = val_stkn
 
-        self.temp = []
-        self.temp1 = []
-        self.temp2 = []
-
     def update(self):
         if len(self.in_outer_crdpt) > 0:
             self.crdpt_spacc.set_outer_crdpt(self.in_outer_crdpt.pop(0))
@@ -211,18 +207,8 @@ class SparseAccumulator1(Primitive):
         self.crdpt_converter.set_outer_crdpt(self.crdpt_spacc.out_outer_crdpt())
         self.crdpt_converter.set_inner_crdpt(self.crdpt_spacc.out_inner_crdpt())
 
-        self.temp.append(self.crdpt_spacc.out_outer_crdpt())
-        self.temp1.append(self.crdpt_spacc.out_inner_crdpt())
-        self.temp2.append(self.crdpt_spacc.out_val())
-
         if self.crdpt_spacc.out_val() != '':
             self.crdpt_spacc_out_val.append(self.crdpt_spacc.out_val())
-
-        if self.debug:
-            print("TEMP")
-            print(self.temp)
-            print(self.temp1)
-            print(self.temp2)
 
         self.crdpt_converter.update()
         self.curr_outer_crd = self.crdpt_converter.out_crd_outer()
