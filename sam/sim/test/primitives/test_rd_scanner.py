@@ -3,7 +3,7 @@ import copy
 
 import pytest
 
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.test.test import TIMEOUT
 
 
@@ -18,7 +18,7 @@ def test_rd_scan_u_direct_1d(dim, debug_sim):
     gold_ref = gold_crd
     assert (len(gold_crd) == len(gold_ref))
 
-    urs = UncompressRdScan(dim=dim, debug=debug_sim)
+    urs = UncompressCrdRdScan(dim=dim, debug=debug_sim)
 
     in_ref = [0, 'D']
     done = False
@@ -47,7 +47,7 @@ def test_rd_scan_u_direct_2d(dim, debug_sim):
         [3 * dim + x for x in cnt] + ['S1', 'D']
     assert (len(gold_crd) == len(gold_ref))
 
-    urs = UncompressRdScan(dim=dim, debug=debug_sim)
+    urs = UncompressCrdRdScan(dim=dim, debug=debug_sim)
 
     in_ref = [0, 1, 2, 3, 'S0', 'D']
     done = False
@@ -78,7 +78,7 @@ def test_rd_scan_u_direct_3d(dim, debug_sim):
         [6 * dim + x for x in cnt] + ['S2', 'D']
     assert (len(gold_crd) == len(gold_ref))
 
-    urs = UncompressRdScan(dim=dim, debug=debug_sim)
+    urs = UncompressCrdRdScan(dim=dim, debug=debug_sim)
 
     in_ref = [0, 1, 2, 'S0', 3, 4, 'S0', 5, 6, 'S1', 'D']
     done = False
@@ -112,7 +112,7 @@ def test_rd_scan_c_direct_1d(debug_sim):
 
     assert (len(gold_crd) == len(gold_ref))
 
-    crdscan = CompressedRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
+    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
 
     in_ref = [0, 'D']
     done = False
@@ -151,7 +151,7 @@ def test_rd_scan_c_direct_nd(arrs, debug_sim):
     gold_ref = arrs["out_ref"]
     assert (len(gold_crd) == len(gold_ref))
 
-    crdscan = CompressedRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
+    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
 
     in_ref = copy.deepcopy(arrs["in_ref"])
     done = False
