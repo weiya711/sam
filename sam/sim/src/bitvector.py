@@ -1,3 +1,5 @@
+from abc import ABC
+
 from .base import *
 from .token import EmptyFiberStknDrop
 
@@ -54,7 +56,7 @@ class BV(Primitive):
         return result
 
 
-class BVDropSuper(Primitive):
+class BVDropSuper(Primitive, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

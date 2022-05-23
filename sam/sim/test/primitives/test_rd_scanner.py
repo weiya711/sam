@@ -1,6 +1,4 @@
-import pytest
 import copy
-
 import pytest
 
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
