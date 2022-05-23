@@ -34,8 +34,10 @@ def decrement_stkn(elem):
 def smaller_stkn(a, b):
     return a if stkn_order(a) < stkn_order(b) else b
 
+
 def larger_stkn(a, b):
     return a if stkn_order(a) > stkn_order(b) else b
+
 
 class Primitive(ABC):
     def __init__(self, debug=False, **kwargs):
@@ -88,7 +90,7 @@ def popcount(bits):
 def get_nth_bit(bits, n):
     assert popcount(bits) > n
     rbit = None
-    for i in range(n+1):
+    for i in range(n + 1):
         rbit = right_bit_set(bits)
         bits &= ~rbit
     return rbit
