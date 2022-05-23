@@ -59,8 +59,15 @@ class BVDrop(Primitive):
         self.outer_bv = []
         self.inner_bv = []
 
+        self.get_ibv_count = 0
+
+        self.running_obv = ''
+        self.orig_obv = ''
         self.curr_obv = ''
-        self.curr_bv = ''
+
+        # FIXME: finish doing this
+        self.curr_ibv = ''
+
         self.has_bv = False
         self.get_next_ibv = False
         self.get_next_obv = True
@@ -72,55 +79,75 @@ class BVDrop(Primitive):
             print("Inner BV:", self.inner_bv)
 
         if self.done:
-            self.curr_bv = ''
+            self.curr_obv = ''
             return
 
         if len(self.outer_bv) > 0 and self.get_next_obv:
-            self.curr_obv = self.outer_bv.pop(0)
-            if isinstance(self.curr_obv, int):
-                self.get_next_ibv = True
+            obv = self.outer_bv.pop(0)
+            if isinstance(obv, int):
+                self.running_obv = obv
+                self.orig_obv = self.running_obv
+                self.get_ibv_count = popcount(self.running_obv)
+                self.get_next_ibv = self.get_ibv_count > 0
                 self.get_next_obv = False
             else:
-                self.curr_bv = self.curr_obv
+                self.running_obv = obv
+                self.curr_obv = obv
                 self.get_next_ibv = False
                 self.get_next_obv = True
-                if self.curr_obv == 'D':
+                if obv == 'D':
                     self.done = True
+                    self.get_next_ibv = True
+                    self.curr_obv = 'D'
             self.has_bv = False
         elif self.get_next_obv:
-            self.curr_bv = ''
+            self.curr_obv = ''
+
+        if self.debug:
+            print("\t before getting ibv: GetNext InnerBV:", self.get_next_ibv)
 
         if len(self.inner_bv) > 0 and self.get_next_ibv:
             ibv = self.inner_bv.pop(0)
             if isinstance(ibv, int):
                 self.has_bv = True
-                self.curr_bv = ''
+                self.curr_obv = ''
                 self.get_next_obv = False
                 self.get_next_ibv = True
-            elif is_stkn(ibv) and is_stkn(self.curr_obv):
+            elif is_stkn(ibv) and is_stkn(self.running_obv):
                 self.get_next_obv = True
-                self.curr_bv = self.curr_obv
+                self.curr_obv = self.running_obv
                 self.get_next_ibv = False
-            elif is_stkn(ibv):
-                self.get_next_obv = True
-                self.curr_bv = self.curr_obv if self.has_bv else ''
-                self.get_next_ibv = False
+            elif is_stkn(ibv) and self.get_ibv_count and self.has_bv:
+                self.get_ibv_count -= 1
+                self.get_next_obv = self.get_ibv_count == 0
+                self.curr_obv = self.running_obv if self.get_ibv_count == 0 else ''
+                self.get_next_ibv = self.get_ibv_count > 0
+                self.has_bv = False
+            elif is_stkn(ibv) and self.get_ibv_count:
+                self.get_ibv_count -= 1
+                bitn = popcount(self.orig_obv) - self.get_ibv_count - 1
+                print(bitn)
+                self.running_obv &= ~get_nth_bit(self.running_obv, bitn)
+                self.get_next_obv = self.get_ibv_count == 0
+                self.curr_obv = self.running_obv if self.get_ibv_count == 0 else ''
+                self.get_next_ibv = self.get_ibv_count > 0
+                self.has_bv = False
             elif self.done:
                 assert (ibv == 'D')
-                self.curr_bv = 'D'
+                self.curr_obv = 'D'
                 self.get_next_ibv = False
                 self.get_next_obv = False
             else:
-                self.curr_bv = ''
+                self.curr_obv = ''
                 self.get_next_ibv = False
                 self.get_next_obv = True
         elif self.get_next_ibv:
-            self.curr_bv = ''
+            self.curr_obv = ''
 
         if self.debug:
-            print("DEBUG: bvDROP: Curr Outerbv:", self.curr_obv, "\tCurr Innerbv:", ibv,
-                  "\t Curr Outputbv:", self.curr_bv, "\tHasbv", self.has_bv,
-                  "\t GetNext Innerbv:", self.get_next_ibv, "\t GetNext Outerbv:", self.get_next_obv)
+            print("DEBUG: BVDROP: Curr OuterBV:", self.running_obv, "Orig OuterBV:", self.orig_obv,
+                  "\n Curr Output BV:", self.curr_obv, "\t GetNext OuterBV:", self.get_next_obv,
+                  "\n HasBV", self.has_bv, "\t BitCount", self.get_ibv_count, "\t GetNext InnerBV:", self.get_next_ibv)
 
     def set_outer_bv(self, bv):
         if bv != '':
@@ -131,4 +158,4 @@ class BVDrop(Primitive):
             self.inner_bv.append(bv)
 
     def out_bv_outer(self):
-        return self.curr_bv
+        return self.curr_obv
