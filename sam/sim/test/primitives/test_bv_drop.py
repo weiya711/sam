@@ -12,7 +12,7 @@ arrs_dict1 = {'obv_in': [0b1100, 'S0', 'D'],
 
 arrs_dict2 = {'obv_in': [0b1111, 'S0', 'D'],
               'ibv_in': ['S0', 0b1000, 'S0', 'S0', 'S1', 'D'],
-              'obv_gold': [0b0010, 'S0',  'D'],
+              'obv_gold': [0b0010, 'S0', 'D'],
               'ibv_gold': [0b1000, 'S1', 'D']}
 
 arrs_dict3 = {'obv_in': [0b1111, 'S0', 0b0101, 'S1', 'D'],
@@ -28,7 +28,7 @@ def test_bv_drop_nd(arrs, debug_sim):
 
     gold_obv = copy.deepcopy(arrs['obv_gold'])
     gold_ibv = copy.deepcopy(arrs['ibv_gold'])
-    
+
     bd = BVDrop(debug=debug_sim)
 
     done = False
