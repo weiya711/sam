@@ -17,7 +17,8 @@ KERNEL_NAMES=(
   matmul_jik
   mat_elemmul
   mat_identity
-  vecmul
+  vecmul_ij
+  vecmul_ji
   vec_elemmul
   vec_identity
   vec_elemadd
@@ -27,20 +28,21 @@ KERNEL_NAMES=(
 )
 
 TACO_ARGS=(
-  "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ds -s=reorder(k,i,j)"
-  "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss:1,0 -f=C:ds -s=reorder(k,j,i)"
-  "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ds -s=reorder(i,k,j)"
-  "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss -f=C:ds:1,0 -s=reorder(j,k,i)"
-  "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ds:1,0  -s=reorder(i,j,k)"
-  "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss -f=C:ds:1,0  -s=reorder(j,i,k)"
+  "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"
+  "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss:1,0 -f=C:ss -s=reorder(k,j,i)"
+  "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)"
+  "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss:1,0 -f=C:ss:1,0 -s=reorder(j,k,i)"
+  "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)"
+  "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss -f=C:ss:1,0  -s=reorder(j,i,k)"
   "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ds"
   "X(i,j)=B(i,j) -f=X:ss -f=B:ss"
-  "x(i)=B(i,j)*c(j) -f=x:s -f=B:ds -f=c:s"
-  "x(i)=b(i)*c(i) -f=x:s -f=b:s -f=c:d"
+  "x(i)=B(i,j)*c(j) -f=x:s -f=B:ss -f=c:s"
+  "x(i)=B(i,j)*c(j) -f=x:s -f=B:ss:1,0 -f=c:s -s=reorder(j,i)"
+  "x(i)=b(i)*c(i) -f=x:s -f=b:s -f=c:s"
   "x(i)=b(i) -f=x:s -f=b:s"
-  "x(i)=b(i)+c(i) -f=x:s -f=b:s -f=c:d"
+  "x(i)=b(i)+c(i) -f=x:s -f=b:s -f=c:s"
   "x(i)=b*c(i) -f=x:s -f=c:s"
-  "X(i,j,k)=B(i,j,k)*C(i,j,k) -f=X:dss -f=B:sss -f=C:sds"
+  "X(i,j,k)=B(i,j,k)*C(i,j,k) -f=X:sss -f=B:sss -f=C:sss"
   "X(i,j,k)=B(i,j,k) -f=X:sss -f=B:sss"
 )
 
