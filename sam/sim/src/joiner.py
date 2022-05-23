@@ -147,7 +147,7 @@ class Intersect2(Joiner2):
         return self.oref2
 
     def return_intersection_rate(self):
-        return self.count/self.total_count
+        return self.count / self.total_count
 
     def print_intersection_rate(self):
-        return print("Intersection rate: ", self.count/self.total_count)
+        return print("Intersection rate: ", self.count / self.total_count)
