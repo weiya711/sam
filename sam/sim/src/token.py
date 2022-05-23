@@ -63,6 +63,7 @@ class EmptyFiberStknDrop(Primitive):
             self.emit_ival = False
 
             if self.prev_ival == 'D':
+                self.curr_out = self.prev_ival
                 self.done = True
                 self.prev_stkn = False
                 self.leading_stkn = False

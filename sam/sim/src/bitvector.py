@@ -1,4 +1,6 @@
 from .base import *
+from .token import EmptyFiberStknDrop
+
 from functools import reduce
 
 
@@ -52,18 +54,35 @@ class BV(Primitive):
         return result
 
 
-class BVDrop(Primitive):
+class BVDropSuper(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         self.outer_bv = []
         self.inner_bv = []
 
+        self.curr_obv = ''
+
+    def set_outer_bv(self, bv):
+        if bv != '':
+            self.outer_bv.append(bv)
+
+    def set_inner_bv(self, bv):
+        if bv != '':
+            self.inner_bv.append(bv)
+
+    def out_bv_outer(self):
+        return self.curr_obv
+
+
+class BVDropOnly(BVDropSuper):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
         self.get_ibv_count = 0
 
         self.running_obv = ''
         self.orig_obv = ''
-        self.curr_obv = ''
 
         # FIXME: finish doing this
         self.curr_ibv = ''
@@ -127,9 +146,9 @@ class BVDrop(Primitive):
                 self.get_ibv_count -= 1
                 bitn = popcount(self.orig_obv) - self.get_ibv_count - 1
                 print(bitn)
-                self.running_obv &= ~get_nth_bit(self.running_obv, bitn)
+                self.running_obv &= ~get_nth_bit(self.orig_obv, bitn)
                 self.get_next_obv = self.get_ibv_count == 0
-                self.curr_obv = self.running_obv if self.get_ibv_count == 0 else ''
+                self.curr_obv = self.running_obv if self.get_ibv_count == 0 and self.running_obv != 0 else ''
                 self.get_next_ibv = self.get_ibv_count > 0
                 self.has_bv = False
             elif self.done:
@@ -149,13 +168,37 @@ class BVDrop(Primitive):
                   "\n Curr Output BV:", self.curr_obv, "\t GetNext OuterBV:", self.get_next_obv,
                   "\n HasBV", self.has_bv, "\t BitCount", self.get_ibv_count, "\t GetNext InnerBV:", self.get_next_ibv)
 
-    def set_outer_bv(self, bv):
-        if bv != '':
-            self.outer_bv.append(bv)
 
-    def set_inner_bv(self, bv):
-        if bv != '':
-            self.inner_bv.append(bv)
+class BVDrop(BVDropSuper):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    def out_bv_outer(self):
-        return self.curr_obv
+        self.bv_drop = BVDropOnly(**kwargs)
+        self.outer_stkn_drop = EmptyFiberStknDrop(**kwargs)
+        self.inner_stkn_drop = EmptyFiberStknDrop(**kwargs)
+
+        self.curr_ibv = ''
+
+    def update(self):
+        if len(self.outer_bv) > 0:
+            self.bv_drop.set_outer_bv(self.outer_bv.pop(0))
+
+        if len(self.inner_bv) > 0:
+            ibv = self.inner_bv.pop(0)
+            self.bv_drop.set_inner_bv(ibv)
+            self.inner_stkn_drop.set_in_stream(ibv)
+
+        self.bv_drop.update()
+
+        self.outer_stkn_drop.set_in_stream(self.bv_drop.out_bv_outer())
+        self.outer_stkn_drop.update()
+
+        self.inner_stkn_drop.update()
+
+        self.curr_obv = self.outer_stkn_drop.out_val()
+        self.curr_ibv = self.inner_stkn_drop.out_val()
+
+        self.done = self.outer_stkn_drop.out_done() and self.inner_stkn_drop.out_done() and self.bv_drop.out_done()
+
+    def out_bv_inner(self):
+        return self.curr_ibv
