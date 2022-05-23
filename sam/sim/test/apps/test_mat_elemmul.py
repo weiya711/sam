@@ -1,6 +1,6 @@
 import pytest
 import scipy.sparse
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -49,11 +49,11 @@ def test_mat_elemmul(ssname, debug_sim, fill = 0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_11  = CompressedRdScan(crd_arr = B_crd0, seg_arr = B_seg0, debug = debug_sim)
-    fiberlookup_Ci_12 = UncompressRdScan( dim = C_shape[0], debug = debug_sim) 
+    fiberlookup_Bi_11  = CompressedCrdRdScan(crd_arr = B_crd0, seg_arr = B_seg0, debug = debug_sim)
+    fiberlookup_Ci_12 = UncompressCrdRdScan(dim = C_shape[0], debug = debug_sim)
     intersect_10 = Intersect2(debug = debug_sim)
-    fiberlookup_Bj_8  = CompressedRdScan(crd_arr = B_crd1, seg_arr = B_seg1, debug = debug_sim)
-    fiberlookup_Cj_9  = CompressedRdScan(crd_arr = C_crd1, seg_arr = C_seg1, debug = debug_sim)
+    fiberlookup_Bj_8  = CompressedCrdRdScan(crd_arr = B_crd1, seg_arr = B_seg1, debug = debug_sim)
+    fiberlookup_Cj_9  = CompressedCrdRdScan(crd_arr = C_crd1, seg_arr = C_seg1, debug = debug_sim)
     intersect_7 = Intersect2(debug = debug_sim)
     arrayvals_B_2 = Array(init_arr= B_vals, debug = debug_sim)
     arrayvals_C_3 = Array(init_arr= C_vals, debug = debug_sim)

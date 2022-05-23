@@ -1,6 +1,6 @@
 import pytest
 
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -26,8 +26,8 @@ def test_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
 
     gold_vec = [in_mat1[i] * in_mat2[i] for i in range(len(in_mat1))]
 
-    rdscan_d1 = UncompressRdScan(dim=dim1, debug=debug_sim)
-    rdscan_d2 = UncompressRdScan(dim=dim2, debug=debug_sim)
+    rdscan_d1 = UncompressCrdRdScan(dim=dim1, debug=debug_sim)
+    rdscan_d2 = UncompressCrdRdScan(dim=dim2, debug=debug_sim)
 
     val1 = Array(init_arr=in_mat1, debug=debug_sim)
     val2 = Array(init_arr=in_mat2, debug=debug_sim)
@@ -135,11 +135,11 @@ def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_B1 = CompressedRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
-    rdscan_B2 = CompressedRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
+    rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
+    rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
 
-    rdscan_C1 = CompressedRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
-    rdscan_C2 = CompressedRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
+    rdscan_C1 = CompressedCrdRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
+    rdscan_C2 = CompressedCrdRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
 
     val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
     val_C = Array(init_arr=in_mat_vals2, debug=debug_sim)
@@ -275,11 +275,11 @@ def test_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_B1 = CompressedRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
-    rdscan_B2 = CompressedRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
+    rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
+    rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
 
-    rdscan_C1 = CompressedRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
-    rdscan_C2 = CompressedRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
+    rdscan_C1 = CompressedCrdRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
+    rdscan_C2 = CompressedCrdRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
 
     val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
     val_C = Array(init_arr=in_mat_vals2, debug=debug_sim)

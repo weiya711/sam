@@ -1,7 +1,7 @@
 import pytest
 import scipy.sparse
 
-from sam.sim.src.rd_scanner import CompressedRdScan, UncompressRdScan
+from sam.sim.src.rd_scanner import CompressedCrdRdScan, UncompressCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -80,12 +80,12 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_Bi = UncompressRdScan(dim=B0_dim, debug=debug_sim)
-    rdscan_Bk = CompressedRdScan(crd_arr=B1_crd, seg_arr=B1_seg, debug=debug_sim)
+    rdscan_Bi = UncompressCrdRdScan(dim=B0_dim, debug=debug_sim)
+    rdscan_Bk = CompressedCrdRdScan(crd_arr=B1_crd, seg_arr=B1_seg, debug=debug_sim)
     val_B = Array(init_arr=B_vals, debug=debug_sim)
 
-    rdscan_Cj = UncompressRdScan(dim=C1_dim, debug=debug_sim)
-    rdscan_Ck = CompressedRdScan(crd_arr=C0_crd, seg_arr=C0_seg, debug=debug_sim)
+    rdscan_Cj = UncompressCrdRdScan(dim=C1_dim, debug=debug_sim)
+    rdscan_Ck = CompressedCrdRdScan(crd_arr=C0_crd, seg_arr=C0_seg, debug=debug_sim)
     val_C = Array(init_arr=C_vals, debug=debug_sim)
 
     repsiggen_Bi = RepeatSigGen(debug=debug_sim)
