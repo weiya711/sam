@@ -182,18 +182,6 @@ class Intersect2(CrdJoiner2):
     def print_intersection_rate(self):
         return print("Intersection rate: ", self.count / self.total_count)
 
-def right_bit_set(bits):
-    pos = 0
-    m = 1
-
-    while not (bits & m):
-        # left shift
-        m = m << 1
-        pos += 1
-
-    return 1 << pos
-
-
 class IntersectBV2(BVJoiner2):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

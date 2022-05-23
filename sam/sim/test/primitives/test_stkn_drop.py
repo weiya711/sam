@@ -2,7 +2,7 @@ import copy
 import pytest
 
 from sam.sim.src.base import is_stkn
-from sam.sim.src.token import TknDrop
+from sam.sim.src.token import StknDrop
 from sam.sim.src.base import remove_emptystr
 from sam.sim.test.test import TIMEOUT
 
@@ -21,7 +21,7 @@ def test_tkn_drop(arrs, debug_sim):
 
     gold = [item for item in arrs['in'] if not is_stkn(item)]
 
-    td = TknDrop(debug=debug_sim)
+    td = StknDrop(debug=debug_sim)
 
     done = False
     time = 0
