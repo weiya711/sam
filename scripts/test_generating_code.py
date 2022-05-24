@@ -51,6 +51,7 @@ def tab(a):
 
 
 def generate_header(f, out_name):
+    f.write("import pytest\n")
     f.write("import scipy.sparse\n")
     f.write("from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan\n")
     f.write("from sam.sim.src.wr_scanner import ValsWrScan\n")

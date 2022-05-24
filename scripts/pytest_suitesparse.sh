@@ -51,7 +51,7 @@ for i in ${!DATASET_NAMES[@]}; do
       errors+=("${name} mat_identity")
     fi
 
-    pytest -k test_mat_elemmul_i --ssname $name -s
+    pytest -k test_mat_elemmul --ssname $name -s
     status=$?
     if [ $status -gt 0 ]
     then 
