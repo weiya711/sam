@@ -108,3 +108,6 @@ sim
         │   ...     # Primitive unit tests
    
 ```
+
+## License
+All files in this project (code, scripts, documentaiton) are released under the [MIT License](LICENSE) 

@@ -2,7 +2,6 @@ import copy
 import random
 
 import numpy as np
-import pytest
 
 from sam.sim.src.wr_scanner import WrScan, CompressWrScan
 from sam.sim.src.array import Array
@@ -30,45 +29,49 @@ def check_seg_arr(cwrscan, gold):
     cwrscan.resize_seg_arr(len(gold))
     assert (cwrscan.get_seg_arr() == gold)
 
+
 # FIXME: Need to generate streams with hierarchical stop tokens or
 #           just delete this function
 def gen_stream(n=1, max_val=10, max_nnz=10):
-    assert(max_val >= max_nnz)
+    assert (max_val >= max_nnz)
 
     num_s = 0
-    l = []
+    result = []
     end = False
     while not end:
         t = []
-        num_v = random.randint(1, max_nnz-1)
+        num_v = random.randint(1, max_nnz - 1)
         for _ in range(num_v):
             t.append(random.randint(0, max_val))
             t = sorted(set(t))
         for el in t:
-            l.append(el)
+            result.append(el)
 
         num_s = random.randint(1, n)
-        l.append('S'+str(num_s-1))
+        result.append('S' + str(num_s - 1))
         end = num_s == n
 
     for _ in range(n - num_s):
-        l.append('S')
+        result.append('S')
 
-    l.append('D')
-    return l
+    result.append('D')
+    return result
+
 
 def dedup_adj(olist):
-    l = copy.deepcopy(olist)
-    for i in range(len(l)-1, 0, -1):
-        if l[i] == l[i-1]:
-            del l[i]
-    return l
+    result = copy.deepcopy(olist)
+    for i in range(len(result) - 1, 0, -1):
+        if result[i] == result[i - 1]:
+            del result[i]
+    return result
+
 
 def gen_crd_arr(dim=4):
-    l = [i for i in range(dim) if bool(random.getrandbits(1))]
-    if len(l) == 0:
+    result = [i for i in range(dim) if bool(random.getrandbits(1))]
+    if len(result) == 0:
         return [0]
-    return l
+    return result
+
 
 # Returns crd_arr, seg_arr given a list of coordinates
 def gen_comp_arrs(crd_lists, count=0, max_el=4):
@@ -78,25 +81,28 @@ def gen_comp_arrs(crd_lists, count=0, max_el=4):
         return [], []
     if len(crd_lists) == 1:
         return crd_lists[0], [count, count + len(crd_lists[0])]
-    rest = gen_comp_arrs(crd_lists[1:], count=count+len(crd_lists[0]), max_el=max_el)
+    rest = gen_comp_arrs(crd_lists[1:], count=count + len(crd_lists[0]), max_el=max_el)
     return crd_lists[0] + rest[0], [count] + rest[1]
+
 
 # Returns crd_arr, seg_arr given a list of coordinates
 def gen_uncomp_arrs(crd_lists, count=0, max_el=4):
-    assert len(crd_lists) == max_el, "Invalid: "+ str(len(crd_lists)) + "!=" + str(max_el)
+    assert len(crd_lists) == max_el, "Invalid: " + str(len(crd_lists)) + "!=" + str(max_el)
 
     if len(crd_lists) == 0:
         return [], []
     if len(crd_lists) == 1:
         return crd_lists[0], [count, count + len(crd_lists[0])]
-    rest = gen_comp_arrs(crd_lists[1:], count=count+len(crd_lists[0]), max_el=max_el)
+    rest = gen_comp_arrs(crd_lists[1:], count=count + len(crd_lists[0]), max_el=max_el)
     return crd_lists[0] + rest[0], [count] + rest[1]
+
 
 # Generates a n-dim CSF datastructure of dim**4 to populate arrays
 def gen_n_comp_arrs(n=1, dim=4):
     crd_arrs = []
     seg_arrs = []
     return gen_n_comp_arrs_helper(1, crd_arrs, seg_arrs, n, n, dim)
+
 
 def gen_n_comp_arrs_helper(prev_nnz=1, crd_arrs=[], seg_arrs=[], lvl=1, n=1, dim=4):
     if lvl <= 0:
@@ -108,30 +114,32 @@ def gen_n_comp_arrs_helper(prev_nnz=1, crd_arrs=[], seg_arrs=[], lvl=1, n=1, dim
         c = gen_crd_arr(dim)
         crds.append(c)
         new_nnz += len(c)
-    max_el = dim ** (n+1-lvl)
+    max_el = dim ** (n + 1 - lvl)
     crd_arr, seg_arr = gen_comp_arrs(crds, max_el=max_el)
     crd_arrs.append(crd_arr)
     seg_arrs.append(seg_arr)
-    return gen_n_comp_arrs_helper(new_nnz, crd_arrs, seg_arrs, lvl=lvl-1, n=n, dim=dim)
+    return gen_n_comp_arrs_helper(new_nnz, crd_arrs, seg_arrs, lvl=lvl - 1, n=n, dim=dim)
+
 
 def repeat_crds(crd_arr, seg_arr):
-    assert(len(crd_arr)+1 == len(seg_arr))
+    assert (len(crd_arr) + 1 == len(seg_arr))
 
-    l = []
+    result = []
     for i in range(len(crd_arr)):
-        n = seg_arr[i+1] - seg_arr[i]
+        n = seg_arr[i + 1] - seg_arr[i]
         crd = crd_arr[i]
-        l += [crd]*n
-    return l
+        result += [crd] * n
+    return result
+
 
 # Given coordinate and segment arrays,
 # get points in a struct of arrays format
 def get_point_list(crd_arrs, seg_arrs, val_arr=None):
-    assert(len(crd_arrs) == len(seg_arrs))
+    assert (len(crd_arrs) == len(seg_arrs))
 
     repeat_list = []
     for i in range(1, len(seg_arrs)):
-        repeat_list.append(crd_arrs[i-1])
+        repeat_list.append(crd_arrs[i - 1])
         new_repeat_list = []
         for rl in repeat_list:
             result = repeat_crds(rl, seg_arrs[i])
@@ -143,6 +151,7 @@ def get_point_list(crd_arrs, seg_arrs, val_arr=None):
     if val_arr is not None:
         repeat_list.append(val_arr)
     return repeat_list
+
 
 # Convert points into array of struct format
 def convert_point_tuple(pt_list):
@@ -183,14 +192,14 @@ def check_point_tuple(pt_tup1, pt_tup2):
     for i in range(len(tup1)):
         if tup1[i] != tup2[i]:
             if abs(tup1[i][-1] - tup2[i][-1]) > 1e-7:
-                print(str(i)+":", tup1[i], "!=", tup2[i])
+                print(str(i) + ":", tup1[i], "!=", tup2[i])
                 return False
     return True
 
 
 def convert_point_tuple_ndarr(pt_tup, dim=4):
-    n = len(pt_tup[0])-1
-    shape = [dim]*n
+    n = len(pt_tup[0]) - 1
+    shape = [dim] * n
     result = np.zeros(shape)
     for pt in pt_tup:
         result[tuple(pt[:-1])] = pt[-1]
@@ -206,6 +215,7 @@ def gen_val_arr(size=4, max_val=100, min_val=-100):
     result = [random.randint(min_val, max_val) for _ in range(size)]
     result = [x if x != 0 else 1 for x in result]
     return result
+
 
 def read_combined_inputs(filename, formatlist):
     return_list = []
@@ -228,7 +238,7 @@ def read_combined_inputs(filename, formatlist):
                 crd = list(map(int, crd))
                 return_list.append((seg, crd))
             else:
-                assert(False)
+                assert False
 
         file.readline()
         vals = file.readline().split()
@@ -237,9 +247,10 @@ def read_combined_inputs(filename, formatlist):
 
     return return_list
 
-def read_inputs(filename, type=int):
+
+def read_inputs(filename, intype=int):
     return_list = []
     with open(filename) as f:
         for line in f:
-            return_list.append(type(line))
+            return_list.append(intype(line))
     return return_list
