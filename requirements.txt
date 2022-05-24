@@ -39,3 +39,4 @@ sparse==0.13.0
 toml==0.10.2
 tornado==6.1
 wheel==0.37.1
+tqdm==4.64.0
