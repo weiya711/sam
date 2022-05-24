@@ -70,7 +70,7 @@ def generate_header(f, out_name):
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
     f.write(tab(1) + "reason='CI lacks datasets',\n")
     f.write(")\n")
-    f.write("def test_" + out_name + "(ssname, debug_sim, fill=0):\n")
+    f.write("def test_" + out_name + "_i(ssname, debug_sim, fill=0):\n")
 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
@@ -657,11 +657,12 @@ for apath in file_paths:
             f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
     for u in networkx_graph.nodes():
         if "intersect" in d[u]["object"]:
-            f.write(tab(1) + d[u]["object"] + ".return_intersection_rate()\n")
+            f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
     f.close()
     if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
         os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
         os.system("rm " + out_name[num] + ".py")
     else:
+        os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
         os.system("rm " + out_name[num] + ".py")
     num += 1

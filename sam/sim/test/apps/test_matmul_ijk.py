@@ -1,3 +1,4 @@
+import pytest
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
@@ -17,7 +18,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-def test_matmul_ijk(ssname, debug_sim, fill=0):
+def test_matmul_ijk_i(ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -48,21 +49,21 @@ def test_matmul_ijk(ssname, debug_sim, fill=0):
     C_vals = read_inputs(C_vals_filename, float)
 
     fiberlookup_Bi_17 = CompressedRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
+    fiberwrite_X0_6 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
     repsiggen_i_15 = RepeatSigGen(debug=debug_sim)
     repeat_Ci_14 = Repeat(debug=debug_sim)
     fiberlookup_Cj_13 = UncompressRdScan(dim=C_shape[1], debug=debug_sim)
+    fiberlookup_Ck_9 = CompressedRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
+    fiberwrite_X1_5 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
     repsiggen_j_11 = RepeatSigGen(debug=debug_sim)
     repeat_Bj_10 = Repeat(debug=debug_sim)
     fiberlookup_Bk_8 = CompressedRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberwrite_X1_5 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
-    fiberlookup_Ck_9 = CompressedRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
     intersectk_7 = Intersect2(debug=debug_sim)
-    arrayvals_C_4 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_B_3 = Array(init_arr=B_vals, debug=debug_sim)
+    arrayvals_C_4 = Array(init_arr=C_vals, debug=debug_sim)
     mul_2 = Multiply2(debug=debug_sim)
     reduce_1 = Reduce(debug=debug_sim)
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
-    fiberwrite_X0_6 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
@@ -123,15 +124,15 @@ def test_matmul_ijk(ssname, debug_sim, fill=0):
         fiberwrite_Xvals_0.set_input(reduce_1.out_val())
         fiberwrite_Xvals_0.update()
 
-        done = fiberwrite_X1_5.out_done() and fiberwrite_Xvals_0.out_done() and fiberwrite_X0_6.out_done()
+        done = fiberwrite_X0_6.out_done() and fiberwrite_X1_5.out_done() and fiberwrite_Xvals_0.out_done()
         time += 1
 
+    fiberwrite_X0_6.autosize()
     fiberwrite_X1_5.autosize()
     fiberwrite_Xvals_0.autosize()
-    fiberwrite_X0_6.autosize()
 
-    out_crds = [fiberwrite_X1_5.get_arr(), fiberwrite_X0_6.get_arr()]
-    out_segs = [fiberwrite_X1_5.get_seg_arr(), fiberwrite_X0_6.get_seg_arr()]
+    out_crds = [fiberwrite_X0_6.get_arr(), fiberwrite_X1_5.get_arr()]
+    out_segs = [fiberwrite_X0_6.get_seg_arr(), fiberwrite_X1_5.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
     repsiggen_i_15.print_fifos()
     repeat_Ci_14.print_fifos()
@@ -142,4 +143,4 @@ def test_matmul_ijk(ssname, debug_sim, fill=0):
     mul_2.print_fifos()
     reduce_1.print_fifos()
     arrayvals_C_4.print_fifos()
-    intersectk_7.return_intersection_rate()
+    intersectk_7.print_intersection_rate()
