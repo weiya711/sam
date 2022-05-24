@@ -649,7 +649,7 @@ for apath in file_paths:
                             f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                             done_all[v] = 1
 
-    # f.write(tab(1) + "\n\n")
+    #f.write(tab(1) + "\n\n")
     finish_outputs(f, output_nodes)
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:

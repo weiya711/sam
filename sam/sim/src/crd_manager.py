@@ -27,7 +27,8 @@ class CrdDrop(Primitive):
             return
 
         if len(self.outer_crd) > 0 and self.get_next_ocrd:
-            self.outer_crd_fifo = max(self.outer_crd_fifo, len(self.outer_crd))
+            
+            self.outer_crd_fifo =  max(self.outer_crd_fifo, len(self.outer_crd))
             self.curr_ocrd = self.outer_crd.pop(0)
             if isinstance(self.curr_ocrd, int):
                 self.get_next_icrd = True
@@ -42,8 +43,9 @@ class CrdDrop(Primitive):
         elif self.get_next_ocrd:
             self.curr_crd = ''
 
-        if len(self.inner_crd) > 0 and self.get_next_icrd:
-            self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
+        if len(self.inner_crd) > 0 and self.get_next_icrd: 
+            
+            self.inner_crd_fifo =  max(self.inner_crd_fifo, len(self.inner_crd))
             icrd = self.inner_crd.pop(0)
             self.curr_inner_crd = icrd
             if isinstance(icrd, int):
