@@ -31,7 +31,7 @@ class Array(Primitive):
         else:
             self.curr_load = ''
 
-        if self.store_en and len(self.store_vals) > 0: 
+        if self.store_en and len(self.store_vals) > 0:
             self.store_vals_size = max(self.store_vals_size, len(self.store_vals))
             store_tup = self.store_vals.pop(0)
             self.store(store_tup[0], store_tup[1])
@@ -106,7 +106,6 @@ class Array(Primitive):
         if fill is None:
             fill = self.fill
         self.arr = [fill for _ in range(self.size)]
-
 
     def print_fifos(self):
         print("Arrayvals fifo addresses: ", self.load_addr_size)

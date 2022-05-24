@@ -128,7 +128,8 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
         elif tensor_format_parse.get_format(ten) == "ss10":
             # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + "+
             #   tensor_formats[ten]["information"] + "\" \"" + tensor_formats[ten]["format"] + "\" +  )\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
+            # f.write(tab(scope_lvl) + ten + "_shape_filename = 
+            # os.name.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
             # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
@@ -157,9 +158,11 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             ct = 0
             for i in range(len(tensor_format_parse.get_format(ten))):
                 if tensor_format_parse.get_format(ten)[i] == "s":
-                    f.write(tab(scope_lvl) + ten + str(i) + "_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + str(i) + "_seg.txt\")\n")
+                    f.write(tab(scope_lvl) + ten + str(i) + "_seg_filename = os.path.join(" +
+                            ten + "_dirname, \"" + ten + str(i) + "_seg.txt\")\n")
                     f.write(tab(scope_lvl) + ten + "_seg" + str(i) + " = read_inputs(" + ten + str(i) + "_seg_filename)\n")
-                    f.write(tab(scope_lvl) + ten + str(i) + "_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + str(i) + "_crd.txt\")\n")
+                    f.write(tab(scope_lvl) + ten + str(i) + "_crd_filename = os.path.join(" +
+                            ten + "_dirname, \"" + ten + str(i) + "_crd.txt\")\n")
                     f.write(tab(scope_lvl) + ten + "_crd" + str(i) + " = read_inputs(" + ten + str(i) + "_crd_filename)\n\n")
         f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_vals.txt\")\n")
         f.write(tab(scope_lvl) + ten + "_vals" + " = read_inputs(" + ten + "_vals_filename, float)\n\n")
@@ -425,7 +428,8 @@ for apath in file_paths:
             if node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
                         "_" + str(u) + " = CompressedRdScan(crd_arr=" + node_info["tensor"] +
-                        "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] + "_seg" + node_info["mode"] + ", debug=debug_sim)\n")
+                        "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
+                        "_seg" + node_info["mode"] + ", debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "arrayvals":
@@ -439,7 +443,8 @@ for apath in file_paths:
 
         elif node_info["type"] == "repsiggen":
             print(u, " repeatsiggen in :: ", networkx_graph.nodes[u]['comment'])
-            f.write(tab(1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) + " = RepeatSigGen(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) +
+                    " = RepeatSigGen(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "repeat":
@@ -532,7 +537,8 @@ for apath in file_paths:
                             f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
                                     d[u_]["object"] + ".out_ref" + str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
                         else:
-                            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + d[u_]["object"] + ".out_" +
+                            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
+                                    d[u_]["object"] + ".out_" +
                                     str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                         # f.write(tab(3) + d[v]["object"] + ".set_in_ref(0)\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
@@ -548,10 +554,12 @@ for apath in file_paths:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     if d[v]["root"] == "true":
                         f.write(tab(2) + "if len(in_ref_" + d[v]["tensor"] + ") > 0:\n")
-                        f.write(tab(3) + d[v]["object"] + ".set_in_ref(in_ref_" + d[v]["tensor"] + ".pop(0))\n")
+                        f.write(tab(3) + d[v]["object"] +
+                                ".set_in_ref(in_ref_" + d[v]["tensor"] + ".pop(0))\n")
                     for u_ in stream_join_elements[v]:
                         f.write(tab(2) + d[v]["object"] + ".set_in_" + str(edge_data[v][stream_join_elements[v].index(u_)]) +
-                                "(" + d[u_]["object"] + ".out_" + str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
+                                "(" + d[u_]["object"] + ".out_" +
+                                str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
 
