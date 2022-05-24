@@ -646,8 +646,10 @@ for apath in file_paths:
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        if "inner" in edge_data[v][stream_join_elements[v].index(u_)] or "outer" in edge_data[v][stream_join_elements[v].index(u_)]:
-                            edge_data[v][stream_join_elements[v].index(u_)] = edge_data[v][stream_join_elements[v].index(u_)][:-2]
+                        if "inner" in edge_data[v][stream_join_elements[v].index(u_)] or "outer" in \
+                                edge_data[v][stream_join_elements[v].index(u_)]:
+                            edge_data[v][stream_join_elements[v].index(u_)] = \
+                                edge_data[v][stream_join_elements[v].index(u_)][:-2]
                         if d[v]["mode"] == "vals":
                             f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                     str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
