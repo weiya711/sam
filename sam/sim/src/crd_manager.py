@@ -1,5 +1,6 @@
 from .base import *
 
+from .repeater import RepeatSigGen, Repeat
 
 class CrdDrop(Primitive):
     def __init__(self, **kwargs):
@@ -93,3 +94,104 @@ class CrdDrop(Primitive):
     def print_fifos(self):
         print("Crdrop Inner crd fifos size: ", self.inner_crd_fifo)
         print("CrdDrop Outer crd fifo size: ", self.outer_crd_fifo)
+
+
+
+# Converts coordinate streams to point streams
+class CrdHold(Primitive):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.outer_crd = []
+        self.inner_crd = []
+
+        self.repsig = []
+        self.curr_crd = ''
+
+        self.RSG = RepeatSigGen(debug=self.debug)
+        self.repeat = Repeat(debug=self.debug)
+
+    def update(self):
+        if self.done:
+            self.curr_crd = ''
+            return
+
+        if len(self.inner_crd) > 0:
+            icrd = self.inner_crd.pop(0)
+            self.RSG.set_istream(icrd)
+        self.RSG.update()
+        self.repsig.append(self.RSG.out_repeat())
+
+        if len(self.outer_crd) > 0:
+            ocrd = self.outer_crd.pop(0)
+            self.repeat.set_in_ref(ocrd)
+        if len(self.repsig) > 0:
+            self.repeat.set_in_repeat(self.repsig.pop(0))
+
+        self.repeat.update()
+
+        self.curr_crd = self.repeat.out_ref()
+
+        self.done = self.RSG.done and self.repeat.done
+
+    def set_outer_crd(self, crd):
+        if crd != '':
+            self.outer_crd.append(crd)
+
+    def set_inner_crd(self, crd):
+        if crd != '':
+            self.inner_crd.append(crd)
+
+    def out_crd_outer(self):
+        return self.curr_crd
+
+# Converts point streams back into coordinate streams
+# Helper for the sparse accumulator
+class CrdPtConverter(Primitive):
+    def __init__(self, last_level=False, **kwargs):
+        super().__init__(**kwargs)
+
+        self.outer_crdpt = []
+        self.inner_crdpt = []
+
+        self.curr_ocrd = None
+        self.curr_icrd = None
+
+        self.prev_ocrd = None
+        self.prev_ocrdpt = None
+        self.prev_icrdpt = None
+
+        self.emit_stkn = False
+        self.emit_done = False
+        self.prev_stkn = False
+        self.waiting_next = False
+
+        self.inner_last_level = last_level
+
+    def update(self):
+
+        if self.curr_ocrd != '':
+            self.prev_ocrd = self.curr_ocrd
+
+        if self.done:
+            print("case 1")
+            self.curr_ocrd = ''
+            self.curr_icrd = ''
+        # elif self.emit_stkn and len(self.outer_crdpt) > 0 and is_stkn(self.outer_crdpt[0]):
+        #     # Increment stop token
+        #     curr_ocrdpt = self.outer_crdpt.pop(0)
+        #     self.curr_ocrd = self._next_done(curr_ocrdpt)
+        #     self.curr_icrd = self._next_done(increment_stkn(curr_ocrdpt)) if self.inner_last_level \
+        #         else increment_stkn(curr_ocrdpt)
+        #     self.emit_stkn = False
+        elif self.waiting_next and len(self.outer_crdpt) > 0:
+            print("case 2")
+            print(self.prev_ocrd)
+            stkn = increment_stkn(self.prev_ocrd)
+            self.curr_ocrd = stkn if self.outer_crdpt[0] == 'D' else self.prev_ocrd
+            self.curr_icrd = increment_stkn(stkn) if self.inner_last_level and self.outer_crdpt[0] == 'D' else stkn
+            self.waiting_next = False
+        elif self.emit_stkn:
+            print("case 3")
+
+            # Emit innermost level stop token

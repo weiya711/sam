@@ -12,6 +12,9 @@ class Reduce(Primitive):
         self.sum = 0
         self.emit_stkn = False
         self.curr_in_val = None
+        self.reduction_count = 0
+        self.num_inputs = 0
+        self.num_outputs = 0
 
     def update(self):
         curr_in_val = ""
@@ -33,6 +36,7 @@ class Reduce(Primitive):
                 self.done = True
                 self.curr_out = 'D'
             else:
+                self.reduction_count += 1
                 self.sum += self.curr_in_val
                 self.curr_out = ""
         else:
@@ -44,15 +48,18 @@ class Reduce(Primitive):
 
     def set_in_val(self, val):
         if val != '':
+            self.num_inputs += 1
             self.in_val.append(val)
 
     def out_val(self):
+        self.num_outputs += 1
         return self.curr_out
 
     def compute_fifos(self):
         self.in_val_size = max(self.in_val_size, len(self.in_val))
 
     def print_fifos(self):
+        print("Reduction counts- total inputs ", self.num_inputs, " total outputs ", self.num_outputs, " reduction values ", self.reduction_count)
         print("FiFO Val size for Reduce block: ", self.in_val_size)
 
 
@@ -62,6 +69,11 @@ class SparseCrdPtAccumulator1(Primitive):
         self.outer_crdpt = []
         self.inner_crdpt = []
         self.in_val = []
+
+
+        self.out_crd_fifo = 0
+        self.in_crd_fifo = 0
+        self.in_val_fifo = 0
 
         self.curr_in_val = None
         self.curr_in_inner_crdpt = None
@@ -82,6 +94,9 @@ class SparseCrdPtAccumulator1(Primitive):
         self.valtype = valtype
 
     def update(self):
+        self.out_crd_fifo = max(self.out_crd_fifo, len(self.outer_crdpt))
+        self.in_crd_fifo = max(self.in_crd_fifo, len(self.inner_crdpt))
+        self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
         if self.done:
             self.curr_outer_crd = ''
             self.curr_inner_crd = ''
@@ -255,3 +270,12 @@ class SparseAccumulator1(Primitive):
 
     def out_val(self):
         return self.curr_val
+
+    def out_crd_outer(self):
+        return self.curr_outer_crd
+
+    def out_crd_inner(self):
+        return self.curr_inner_crd
+
+    def print_fifos(self):
+        print("Spaccumulator: None available")

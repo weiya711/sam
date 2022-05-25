@@ -26,6 +26,7 @@ class Array(Primitive):
     def update(self):
         if self.load_en and len(self.load_addrs) > 0:
             self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
+            print(len(self.load_addrs))
             self.curr_load = self.load(self.load_addrs.pop(0))
             self.load_en = False
         else:
@@ -62,6 +63,8 @@ class Array(Primitive):
 
     def load(self, addr):
         # Special handling of loads of stop tokens
+        print(self.size)
+        print(addr)
         if is_stkn(addr):
             val = addr
         elif addr == 'D':
