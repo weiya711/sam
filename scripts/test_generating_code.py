@@ -60,6 +60,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.crd_manager import CrdDrop\n")
     f.write("from sam.sim.src.repeater import Repeat, RepeatSigGen\n")
     f.write("from sam.sim.src.accumulator import Reduce\n")
+    f.write("from sam.sim.src.accumulator import SparseAccumulator1\n")
     f.write("from sam.sim.test.test import *\n")
     f.write("import os\n")
     f.write("cwd = os.getcwd()\n")
@@ -273,7 +274,7 @@ def remove_broadcast_nodes(G):
         if node_i["type"] == "broadcast":
             for preds in g0.predecessors(a):
                 for succs in g0.neighbors(a):
-                    g0.add_edge(preds, succs, **(g0.get_edge_data(preds, a)[0]))
+                    g0.add_edge(preds, succs, **(g0.get_edge_data(a, succs)[0]))
             g0.remove_node(a)
         g = g0
     return g
@@ -410,6 +411,7 @@ for apath in file_paths:
     # tens_fmt["C"]["information"] = data_formats[1]
     generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse)
     node_number = []
+    spaccumulator_data = {}
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         d[u] = node_info
@@ -455,6 +457,10 @@ for apath in file_paths:
         elif node_info["type"] == "intersect":
             f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
+        elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + " = SparseAccumulator1(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
+            spaccumulator_data[u] = {}
         elif node_info["type"] == "crddrop":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
@@ -504,6 +510,8 @@ for apath in file_paths:
             done_all[v] = 0
         if v not in stream_join_elements:
             stream_join_elements[v] = [u]
+            # if "spaccu" in d[v]["object"] and "matmul_jki" in apath:
+            #    print(d[v]["object"], " ", d[u]["object"])
             ready_dataset[v] = [0]
             edge_data[v] = [str((a["label"]).strip('"'))]
         else:
@@ -511,6 +519,8 @@ for apath in file_paths:
                 stream_join_elements[v].append(u)
                 ready_dataset[v].append(0)
                 edge_data[v].append(str((a["label"]).strip('"')))
+                # if "spaccu" in d[v]["object"] and "matmul_jki" in apath:
+                # print(d[v]["object"], " ", d[u]["object"])
     # for u, v, a in networkx_graph.edges():
     #    if u in ready_dataset:
     #        ready_dataset[v][stream_join_elements[v].index(d[u]["object"])] = 1
@@ -526,7 +536,7 @@ for apath in file_paths:
                 f.write(tab(2) + d[u]["object"] + ".update()\n\n")
                 done_all[u] = 1
 
-    for i in range(3):
+    for i in range(10):
         for u, v, a in list(nx.edge_bfs(networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
             a = networkx_graph.get_edge_data(u, v)[0]
             ready_dataset[v][stream_join_elements[v].index(u)] = done_all[u]
@@ -558,9 +568,15 @@ for apath in file_paths:
                         f.write(tab(3) + d[v]["object"] +
                                 ".set_in_ref(in_ref_" + d[v]["tensor"] + ".pop(0))\n")
                     for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_" + str(edge_data[v][stream_join_elements[v].index(u_)]) +
-                                "(" + d[u_]["object"] + ".out_" +
-                                str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
+                        if "intersect" in d[u_]["object"]:
+                            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
+                                    d[u_]["object"] + ".out_ref" +
+                                    str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + ".set_in_" +
+                                    str(edge_data[v][stream_join_elements[v].index(u_)]) +
+                                    "(" + d[u_]["object"] + ".out_" +
+                                    str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
 
@@ -594,6 +610,33 @@ for apath in file_paths:
                         if index_value == d[v]["outer"]:
                             f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     done_all[v] = 1
+
+            if d[v]["type"] == "spaccumulator" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
+                if sum(ready_dataset[v]) == len(ready_dataset[v]):
+                    append = {}
+                    append[0] = "_inner"
+                    append[1] = "_outer"
+                    append_arr = []
+                    for u_ in stream_join_elements[v]:
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                            append_arr.append(int(edge_data[v][stream_join_elements[v].index(u_)][7]))
+                    append_arr.sort()
+                    for u_ in stream_join_elements[v]:
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                            spaccumulator_data[v][int(edge_data[v][stream_join_elements[v].index(u_)][7])] = \
+                                append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+                            edge_data[v][stream_join_elements[v].index(u_)] = edge_data[v][stream_join_elements[v].index(u_)][:6] + \
+                                append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+                        if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                            f.write(tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[u_]["object"] + ".out_crd())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[u_]["object"] + ".out_val())\n")
+                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    done_all[v] = 1
+
+
 #            if d[v]["type"] == "intersect" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
 #                if sum(ready_dataset[v]) == len(ready_dataset[v]):
 #                    for u_ in stream_join_elements[v]:
@@ -646,7 +689,11 @@ for apath in file_paths:
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        if "inner" in edge_data[v][stream_join_elements[v].index(u_)] or "outer" in \
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)] and "spaccumulator" in d[u_]["object"]:
+                            print(edge_data[v][stream_join_elements[v].index(u_)])
+                            edge_data[v][stream_join_elements[v].index(u_)] = \
+                                "crd" + spaccumulator_data[u_][int(edge_data[v][stream_join_elements[v].index(u_)][8])]
+                        elif "inner" in edge_data[v][stream_join_elements[v].index(u_)] or "outer" in \
                                 edge_data[v][stream_join_elements[v].index(u_)]:
                             edge_data[v][stream_join_elements[v].index(u_)] = \
                                 edge_data[v][stream_join_elements[v].index(u_)][:-2]

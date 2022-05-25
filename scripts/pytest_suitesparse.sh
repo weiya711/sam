@@ -37,28 +37,28 @@ for i in ${!DATASET_NAMES[@]}; do
 #      errors+=("${name} matmul_ijk_full")
 #    fi
 
-    pytest -k test_mat_identity_i --ssname $name -s 
-    status=$?
-    if [ $status -gt 0 ]
-    then 
-      errors+=("${name} matmul_ijk")
-    fi
+#    pytest -k test_mat_identity_i --ssname $name -s 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then 
+#      errors+=("${name} matmul_ijk")
+#    fi
  
 
 
-    pytest -k test_matmul_ijk_i --ssname $name -s 
+    pytest -k test_matmul_jki_i --ssname $name -s 
     status=$?
     if [ $status -gt 0 ]
     then 
       errors+=("${name} matmul_ijk")
     fi
    
-    pytest -k test_mat_elemmul_i --ssname $name -s 
-    status=$?
-    if [ $status -gt 0 ]
-    then 
-      errors+=("${name} matmul_ijk")
-    fi
+#    pytest -k test_mat_elemmul_i --ssname $name -s 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then 
+#      errors+=("${name} matmul_ijk")
+#    fi
  
 
 #    pytest -k test_tensor3_elemmul_i --ssname $name -s 
