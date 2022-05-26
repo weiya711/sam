@@ -131,4 +131,4 @@ def test_mat_elemmul_i(ssname, debug_sim, fill=0):
     arrayvals_C_5.print_fifos()
     intersecti_10.print_intersection_rate()
     intersectj_7.print_intersection_rate()
-    test_gold_mat_elemmul(ssname , formats = [orig, shift],  out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()], out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())
+    test_gold_mat(ssname , formats = [orig, shift],  out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()], out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())

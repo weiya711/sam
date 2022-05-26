@@ -741,7 +741,7 @@ for apath in file_paths:
     for u in networkx_graph.nodes():
         if "intersect" in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
-    f.write(tab(1) + "test_gold_" + out_name[num] + "(")
+    f.write(tab(1) + "test_gold_" + out_name[num].split("_")[0] + "(")
     f.write("ssname , formats = [")
     for formats in gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[:-1]:
         f.write(formats + ", ")

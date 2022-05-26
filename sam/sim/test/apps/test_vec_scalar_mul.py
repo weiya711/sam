@@ -97,4 +97,4 @@ def test_vec_scalar_mul_i(ssname, debug_sim, fill=0):
     arrayvals_b_3.print_fifos()
     mul_2.print_fifos()
     arrayvals_c_4.print_fifos()
-    test_gold_vec_scalar_mul(ssname , formats = [dummy, dummy],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())
+    test_gold_vec(ssname , formats = [dummy, dummy],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())

@@ -160,4 +160,4 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
     mul_4.print_fifos()
     arrayvals_B_5.print_fifos()
     intersectk_11.print_intersection_rate()
-    test_gold_matmul_jki(ssname , formats = [orig, shift-trans],  out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()], out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())
+    test_gold_matmul(ssname , formats = [orig, shift-trans],  out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()], out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())

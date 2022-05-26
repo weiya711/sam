@@ -152,4 +152,4 @@ def test_matmul_ijk_i(ssname, debug_sim, fill=0):
     reduce_3.print_fifos()
     arrayvals_C_6.print_fifos()
     intersectk_7.print_intersection_rate()
-    test_gold_matmul_ijk(ssname , formats = [orig, shift-trans],  out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()], out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())
+    test_gold_matmul(ssname , formats = [orig, shift-trans],  out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()], out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())

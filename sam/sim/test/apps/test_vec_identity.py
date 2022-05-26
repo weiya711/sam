@@ -66,4 +66,4 @@ def test_vec_identity_i(ssname, debug_sim, fill=0):
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
     arrayvals_b_2.print_fifos()
-    test_gold_vec_identity(ssname , formats = [orig],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())
+    test_gold_vec(ssname , formats = [orig],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())

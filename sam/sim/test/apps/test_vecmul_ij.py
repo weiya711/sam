@@ -127,4 +127,4 @@ def test_vecmul_ij_i(ssname, debug_sim, fill=0):
     reduce_2.print_fifos()
     arrayvals_c_5.print_fifos()
     intersectj_6.print_intersection_rate()
-    test_gold_vecmul_ij(ssname , formats = [orig, shift],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())
+    test_gold_vecmul(ssname , formats = [orig, shift],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())

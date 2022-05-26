@@ -102,4 +102,4 @@ def test_vec_elemmul_i(ssname, debug_sim, fill=0):
     mul_2.print_fifos()
     arrayvals_c_4.print_fifos()
     intersecti_5.print_intersection_rate()
-    test_gold_vec_elemmul(ssname , formats = [orig, shift],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())
+    test_gold_vec(ssname , formats = [orig, shift],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())
