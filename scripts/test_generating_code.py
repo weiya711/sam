@@ -63,6 +63,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.accumulator import SparseAccumulator1\n")
     f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
+    f.write("from sam.sim.test.test.test_gold import test_gold_" + out_name.split("_")[0] + "\n")
     f.write("import os\n")
     f.write("cwd = os.getcwd()\n")
     f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n\n")
