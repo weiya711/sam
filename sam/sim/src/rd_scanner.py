@@ -89,6 +89,8 @@ class CompressedRdScan(RdScan):
         self.end_fiber = False
         self.curr_ref = None
         self.curr_crd = None
+        self.start = True
+
         self.emit_fiber_stkn = False
 
         self.stop_token_cnt = 0
@@ -103,6 +105,7 @@ class CompressedRdScan(RdScan):
             self.start_addr = 0
             self.curr_crd = ''
             self.curr_ref = ''
+            self.start = False
         elif len(self.in_ref) > 0 and self.emit_fiber_stkn:
             next_in = self.in_ref[0]
             if is_stkn(next_in):
@@ -120,9 +123,11 @@ class CompressedRdScan(RdScan):
             self.stop_addr = 0
             self.start_addr = 0
             self.emit_fiber_stkn = False
+            self.start = False
+
         # There exists another input reference at the segment and
         # either at the start of computation or end of fiber
-        elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_crd is None or self.curr_ref is None)):
+        elif len(self.in_ref) > 0 and (self.end_fiber or self.start):
             if self.curr_crd is None or self.curr_ref is None:
                 assert (self.curr_crd == self.curr_ref)
             self.end_fiber = False
@@ -166,8 +171,10 @@ class CompressedRdScan(RdScan):
                 else:
                     self.curr_crd = self.crd_arr[self.curr_addr]
                     self.curr_ref = self.curr_addr
+            self.start = False
+
         elif (self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1) and \
-                self.curr_crd is not None and self.curr_ref is not None:
+                not self.start:
             # End of fiber, get next input reference
             self.end_fiber = True
 
@@ -187,12 +194,16 @@ class CompressedRdScan(RdScan):
             self.curr_addr = 0
             self.stop_addr = 0
             self.start_addr = 0
-        elif len(self.in_ref) > 0 and self.curr_crd is not None and self.curr_ref is not None:
+            self.start = False
+
+        elif len(self.in_ref) > 0 and not self.start:
             # Base case: increment address and reference by 1 and get next coordinate
             self.curr_addr += 1
             self.curr_ref = self.curr_addr
             self.curr_crd = self.crd_arr[self.curr_addr]
-        elif self.curr_crd is not None and self.curr_ref is not None:
+            self.start = False
+
+        else:
             # Default stall (when done)
             self.curr_ref = ''
             self.curr_crd = ''

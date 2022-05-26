@@ -113,7 +113,7 @@ class Intersect2(Joiner2):
             print("DEBUG: INTERSECT: \t OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
                   "\t Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
                   "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
-                  self.count / self.total_count)
+                  self.count / self.total_count if self.total_count > 1 else 0)
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '':
