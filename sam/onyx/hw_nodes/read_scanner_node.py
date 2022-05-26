@@ -36,9 +36,9 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'rd_scan_to_glb': [
                     # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (other_data, "f2io_16")], 16),
-                    ([(other_ready, "io2f_1"), (rd_scan, "ready_in_0")], 1),
-                    ([(rd_scan, "valid_out_0"), (other_valid, "f2io_1")], 1),
+                    ([(rd_scan, "coord_out"), (other_data, "f2io_16")], 17),
+                    ([(other_ready, "io2f_1"), (rd_scan, "coord_out_ready")], 1),
+                    ([(rd_scan, "coord_out_valid"), (other_valid, "f2io_1")], 1),
                 ]
             }
             return new_conns
@@ -48,22 +48,22 @@ class ReadScannerNode(HWNode):
                 'buffet_to_rd_scan': [
                     # rd rsp
                     ([(buffet, "rd_rsp_data"), (rd_scan, "rd_rsp_data_in")], 16),
-                    ([(rd_scan, "rd_rsp_ready_out"), (buffet, "rd_rsp_ready")], 1),
-                    ([(buffet, "rd_rsp_valid"), (rd_scan, "rd_rsp_valid_in")], 1),
+                    # ([(rd_scan, "rd_rsp_ready_out"), (buffet, "rd_rsp_ready")], 1),
+                    # ([(buffet, "rd_rsp_valid"), (rd_scan, "rd_rsp_valid_in")], 1),
                     # addr
                     ([(rd_scan, "addr_out"), (buffet, "rd_addr")], 16),
-                    ([(buffet, "rd_addr_ready"), (rd_scan, "addr_out_ready_in")], 1),
-                    ([(rd_scan, "addr_out_valid_out"), (buffet, "rd_addr_valid")], 1),
+                    # ([(buffet, "rd_addr_ready"), (rd_scan, "addr_out_ready_in")], 1),
+                    # ([(rd_scan, "addr_out_valid_out"), (buffet, "rd_addr_valid")], 1),
 
                     # op
-                    ([(rd_scan, "op_out"), (buffet, "rd_op_op")], 16),
-                    ([(buffet, "rd_op_ready"), (rd_scan, "op_out_ready_in")], 1),
-                    ([(rd_scan, "op_out_valid_out"), (buffet, "rd_op_valid")], 1),
+                    ([(rd_scan, "op_out"), (buffet, "rd_op")], 16),
+                    # ([(buffet, "rd_op_ready"), (rd_scan, "op_out_ready_in")], 1),
+                    # ([(rd_scan, "op_out_valid_out"), (buffet, "rd_op_valid")], 1),
 
                     # id
                     ([(rd_scan, "ID_out"), (buffet, "rd_ID")], 16),
-                    ([(buffet, "rd_ID_ready"), (rd_scan, "ID_out_ready_in")], 1),
-                    ([(rd_scan, "ID_out_valid_out"), (buffet, "rd_ID_valid")], 1),
+                    # ([(buffet, "rd_ID_ready"), (rd_scan, "ID_out_ready_in")], 1),
+                    # ([(rd_scan, "ID_out_valid_out"), (buffet, "rd_ID_valid")], 1),
                 ]
             }
             return new_conns
@@ -75,10 +75,10 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'rd_scan_to_rd_scan': [
                     # send output to rd scanner
-                    ([(rd_scan, "pos_out"), (other_rd_scan, "us_pos_in")], 16),
-                    ([(rd_scan, "eos_out_1"), (other_rd_scan, "us_eos_in")], 1),
-                    ([(other_rd_scan, "us_ready_out"), (rd_scan, "ready_in_1")], 1),
-                    ([(rd_scan, "valid_out_1"), (other_rd_scan, "us_valid_in")], 1),
+                    ([(rd_scan, "pos_out"), (other_rd_scan, "us_pos_in")], 17),
+                    # ([(rd_scan, "eos_out_1"), (other_rd_scan, "us_eos_in")], 1),
+                    # ([(other_rd_scan, "us_ready_out"), (rd_scan, "pos_out_ready")], 1),
+                    # ([(rd_scan, "pos_out_valid"), (other_rd_scan, "us_valid_in")], 1),
                 ]
             }
             return new_conns
@@ -88,10 +88,10 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'rd_scan_to_wr_scan': [
                     # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (wr_scan, "data_in_0")], 16),
-                    ([(rd_scan, "eos_out_0"), (wr_scan, "eos_in_0")], 1),
-                    ([(wr_scan, "ready_out_0"), (rd_scan, "ready_in_0")], 1),
-                    ([(rd_scan, "valid_out_0"), (wr_scan, "valid_in_0")], 1),
+                    ([(rd_scan, "coord_out"), (wr_scan, "data_in")], 17),
+                    # ([(rd_scan, "eos_out_0"), (wr_scan, "eos_in_0")], 1),
+                    # ([(wr_scan, "data_in_ready"), (rd_scan, "coord_out_ready")], 1),
+                    # ([(rd_scan, "coord_out_valid"), (wr_scan, "data_in_valid")], 1),
                 ]
             }
             return new_conns
@@ -198,8 +198,6 @@ class ReadScannerNode(HWNode):
         max_outer_dim = 0
         strides = [0]
         ranges = [1]
-        print("READ SCANNER")
-        print(attributes)
         if attributes['type'].strip('"') == 'fiberwrite':
             # in fiberwrite case, we are in block mode
             mode = attributes['mode'].strip('"')

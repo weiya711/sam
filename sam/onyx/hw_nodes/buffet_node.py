@@ -48,22 +48,22 @@ class BuffetNode(HWNode):
                 'buffet_to_rd_scan': [
                     # rd rsp
                     ([(buffet, "rd_rsp_data"), (rd_scan, "rd_rsp_data_in")], 16),
-                    ([(rd_scan, "rd_rsp_ready_out"), (buffet, "rd_rsp_ready")], 1),
-                    ([(buffet, "rd_rsp_valid"), (rd_scan, "rd_rsp_valid_in")], 1),
+                    # ([(rd_scan, "rd_rsp_ready_out"), (buffet, "rd_rsp_ready")], 1),
+                    # ([(buffet, "rd_rsp_valid"), (rd_scan, "rd_rsp_valid_in")], 1),
                     # addr
                     ([(rd_scan, "addr_out"), (buffet, "rd_addr")], 16),
-                    ([(buffet, "rd_addr_ready"), (rd_scan, "addr_out_ready_in")], 1),
-                    ([(rd_scan, "addr_out_valid_out"), (buffet, "rd_addr_valid")], 1),
+                    # ([(buffet, "rd_addr_ready"), (rd_scan, "addr_out_ready_in")], 1),
+                    # ([(rd_scan, "addr_out_valid_out"), (buffet, "rd_addr_valid")], 1),
 
                     # op
-                    ([(rd_scan, "op_out"), (buffet, "rd_op_op")], 16),
-                    ([(buffet, "rd_op_ready"), (rd_scan, "op_out_ready_in")], 1),
-                    ([(rd_scan, "op_out_valid_out"), (buffet, "rd_op_valid")], 1),
+                    ([(rd_scan, "op_out"), (buffet, "rd_op")], 16),
+                    # ([(buffet, "rd_op_ready"), (rd_scan, "op_out_ready_in")], 1),
+                    # ([(rd_scan, "op_out_valid_out"), (buffet, "rd_op_valid")], 1),
 
                     # id
                     ([(rd_scan, "ID_out"), (buffet, "rd_ID")], 16),
-                    ([(buffet, "rd_ID_ready"), (rd_scan, "ID_out_ready_in")], 1),
-                    ([(rd_scan, "ID_out_valid_out"), (buffet, "rd_ID_valid")], 1),
+                    # ([(buffet, "rd_ID_ready"), (rd_scan, "ID_out_ready_in")], 1),
+                    # ([(rd_scan, "ID_out_valid_out"), (buffet, "rd_ID_valid")], 1),
                 ]
             }
             return new_conns
@@ -73,19 +73,19 @@ class BuffetNode(HWNode):
             new_conns = {
                 'buffet_to_wr_scan': [
                     # wr op/data
-                    ([(wr_scan, "data_out"), (buffet, "wr_data")], 16),
-                    ([(wr_scan, "op_out"), (buffet, "wr_op")], 1),
-                    ([(buffet, "wr_data_ready"), (wr_scan, "data_out_ready_in")], 1),
-                    ([(wr_scan, "data_out_valid_out"), (buffet, "wr_data_valid")], 1),
+                    ([(wr_scan, "data_out"), (buffet, "wr_data")], 17),
+                    # ([(wr_scan, "op_out"), (buffet, "wr_op")], 1),
+                    # ([(buffet, "wr_data_ready"), (wr_scan, "data_out_ready_in")], 1),
+                    # ([(wr_scan, "data_out_valid_out"), (buffet, "wr_data_valid")], 1),
                     # addr
                     ([(wr_scan, "addr_out"), (buffet, "wr_addr")], 16),
-                    ([(buffet, "wr_addr_ready"), (wr_scan, "addr_out_ready_in")], 1),
-                    ([(wr_scan, "addr_out_valid_out"), (buffet, "wr_addr_valid")], 1),
+                    # ([(buffet, "wr_addr_ready"), (wr_scan, "addr_out_ready_in")], 1),
+                    # ([(wr_scan, "addr_out_valid_out"), (buffet, "wr_addr_valid")], 1),
 
                     # id
                     ([(wr_scan, "ID_out"), (buffet, "wr_ID")], 16),
-                    ([(buffet, "wr_ID_ready"), (wr_scan, "ID_out_ready_in")], 1),
-                    ([(wr_scan, "ID_out_valid_out"), (buffet, "wr_ID_valid")], 1),
+                    # ([(buffet, "wr_ID_ready"), (wr_scan, "ID_out_ready_in")], 1),
+                    # ([(wr_scan, "ID_out_valid_out"), (buffet, "wr_ID_valid")], 1),
                 ]
             }
             return new_conns

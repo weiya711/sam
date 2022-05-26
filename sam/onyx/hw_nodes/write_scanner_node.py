@@ -32,19 +32,19 @@ class WriteScannerNode(HWNode):
             new_conns = {
                 'buffet_to_wr_scan': [
                     # wr op/data
-                    ([(wr_scan, "data_out"), (buffet, "wr_data")], 16),
-                    ([(wr_scan, "op_out"), (buffet, "wr_op")], 1),
-                    ([(buffet, "wr_data_ready"), (wr_scan, "data_out_ready_in")], 1),
-                    ([(wr_scan, "data_out_valid_out"), (buffet, "wr_data_valid")], 1),
+                    ([(wr_scan, "data_out"), (buffet, "wr_data")], 17),
+                    # ([(wr_scan, "op_out"), (buffet, "wr_op")], 1),
+                    # ([(buffet, "wr_data_ready"), (wr_scan, "data_out_ready")], 1),
+                    # ([(wr_scan, "data_out_valid"), (buffet, "wr_data_valid")], 1),
                     # addr
                     ([(wr_scan, "addr_out"), (buffet, "wr_addr")], 16),
-                    ([(buffet, "wr_addr_ready"), (wr_scan, "addr_out_ready_in")], 1),
-                    ([(wr_scan, "addr_out_valid_out"), (buffet, "wr_addr_valid")], 1),
+                    # ([(buffet, "wr_addr_ready"), (wr_scan, "addr_out_ready")], 1),
+                    # ([(wr_scan, "addr_out_valid"), (buffet, "wr_addr_valid")], 1),
 
                     # id
                     ([(wr_scan, "ID_out"), (buffet, "wr_ID")], 16),
-                    ([(buffet, "wr_ID_ready"), (wr_scan, "ID_out_ready_in")], 1),
-                    ([(wr_scan, "ID_out_valid_out"), (buffet, "wr_ID_valid")], 1),
+                    # ([(buffet, "wr_ID_ready"), (wr_scan, "ID_out_ready")], 1),
+                    # ([(wr_scan, "ID_out_valid"), (buffet, "wr_ID_valid")], 1),
                 ]
             }
             return new_conns
