@@ -20,6 +20,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.suitesparse
 def test_vecmul_ji_i(ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -134,3 +135,4 @@ def test_vecmul_ji_i(ssname, debug_sim, fill=0):
     mul_3.print_fifos()
     arrayvals_B_4.print_fifos()
     intersectj_10.print_intersection_rate()
+    test_gold_vecmul_ji(ssname , formats = [orig, shift],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())

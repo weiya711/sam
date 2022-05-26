@@ -72,6 +72,7 @@ def generate_header(f, out_name):
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
     f.write(tab(1) + "reason='CI lacks datasets',\n")
     f.write(")\n")
+    f.write("@pytest.mark.suitesparse\n")
     f.write("def test_" + out_name + "_i(ssname, debug_sim, fill=0):\n")
 
 
@@ -205,6 +206,7 @@ def output_check_nodes(f, root_nodes):
 
 
 def finish_outputs(f, elements):
+    output_list = ""
     f.write(tab(2) + "done = ")
     elements2 = []
     for elem in elements.keys():
@@ -220,30 +222,42 @@ def finish_outputs(f, elements):
         f.write(tab(1) + elem + ".autosize()\n")
     f.write("\n")
     f.write(tab(1) + "out_crds = [")
+    output_list += " out_crds = ["
     count = 0
     for elem in elements.keys():
         if elements[elem] != "vals":
             f.write(elem + ".get_arr()")
+            output_list += elem + ".get_arr()"
             count += 1
             if count < len(elements2) - 1:
                 f.write(", ")
+                output_list += ", "
             else:
                 f.write("]\n")
+                output_list += "]"
     count = 0
     f.write(tab(1) + "out_segs = [")
+    output_list += ", out_segs = ["
     for elem in elements.keys():
         if elements[elem] != "vals":
             f.write(elem + ".get_seg_arr()")
+            output_list += elem + ".get_seg_arr()"
             count += 1
             if count < len(elements2) - 1:
                 f.write(", ")
+                output_list += ", "
             else:
                 f.write("]\n")
+                output_list += "]"
+
     f.write(tab(1) + "out_vals = ")
+    output_string = ", out_vals = "
     for elem in elements.keys():
         if elements[elem] == "vals":
             f.write(elem + ".get_arr()\n")
-
+            output_string += elem + ".get_arr()"
+    output_list += output_string
+    return output_list
 
 def size_computation_write(a):
     ans = " 1 "
@@ -720,13 +734,20 @@ for apath in file_paths:
                             done_all[v] = 1
 
     # f.write(tab(1) + "\n\n")
-    finish_outputs(f, output_nodes)
+    output_list = finish_outputs(f, output_nodes)
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
     for u in networkx_graph.nodes():
         if "intersect" in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
+    f.write(tab(1) + "test_gold_" + out_name[num] + "(")
+    f.write("ssname , formats = [")
+    for formats in gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[:-1]:
+        f.write(formats + ", ")
+    f.write(gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[-1])
+    f.write("], ")
+    f.write(output_list + ")\n")
     f.close()
     if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
         os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")

@@ -20,6 +20,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.suitesparse
 def test_matmul_jki_i(ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -159,3 +160,4 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
     mul_4.print_fifos()
     arrayvals_B_5.print_fifos()
     intersectk_11.print_intersection_rate()
+    test_gold_matmul_jki(ssname , formats = [orig, shift-trans],  out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()], out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())

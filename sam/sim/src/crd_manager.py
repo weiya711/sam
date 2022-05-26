@@ -74,8 +74,8 @@ class CrdDrop(Primitive):
             self.curr_crd = ''
 
         if self.debug:
-            print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd,
-                  "\tHasCrd", self.has_crd,
+            print("DEBUG: CRDDROP: Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd,
+                  "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
                   "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd)
 
     def set_outer_crd(self, crd):
@@ -185,7 +185,7 @@ class CrdPtConverter(Primitive):
         #         else increment_stkn(curr_ocrdpt)
         #     self.emit_stkn = False
         elif self.waiting_next and len(self.outer_crdpt) > 0:
-            print(self.prev_ocrd)
+            #print(self.prev_ocrd)
             stkn = increment_stkn(self.prev_ocrd)
             self.curr_ocrd = stkn if self.outer_crdpt[0] == 'D' else self.prev_ocrd
             self.curr_icrd = increment_stkn(stkn) if self.inner_last_level and self.outer_crdpt[0] == 'D' else stkn
@@ -237,6 +237,9 @@ class CrdPtConverter(Primitive):
                 self.curr_icrd = 'S0'
                 self.emit_stkn = True
             elif self.prev_ocrdpt != curr_ocrdpt:
+                self.curr_icrd = curr_icrdpt
+                self.curr_ocrd = curr_ocrdpt
+            else:
                 self.curr_icrd = curr_icrdpt
                 self.curr_ocrd = curr_ocrdpt
             else:

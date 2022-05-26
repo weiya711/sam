@@ -8,6 +8,7 @@ from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
 cwd = os.getcwd()
@@ -19,6 +20,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.suitesparse
 def test_mat_identity_i(ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -78,3 +80,4 @@ def test_mat_identity_i(ssname, debug_sim, fill=0):
     out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
     arrayvals_B_3.print_fifos()
+    test_gold_mat_identity(ssname , formats = [orig],  out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()], out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())
