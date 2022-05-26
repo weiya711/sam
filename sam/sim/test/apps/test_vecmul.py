@@ -8,6 +8,7 @@ from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
 cwd = os.getcwd()

@@ -256,7 +256,17 @@ class SparseAccumulator1(Primitive):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
             self.in_outer_crdpt.append(crdpt)
+ 
+    def crd_in_inner(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '':
+            self.in_inner_crdpt.append(crdpt)
 
+    def crd_in_outer(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '':
+            self.in_outer_crdpt.append(crdpt)
+    
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
         if val != '':

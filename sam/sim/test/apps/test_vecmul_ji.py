@@ -8,6 +8,7 @@ from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
 cwd = os.getcwd()
@@ -59,6 +60,9 @@ def test_vecmul_ji_i(ssname, debug_sim, fill=0):
     arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim)
     mul_3 = Multiply2(debug=debug_sim)
     spaccumulator1_2 = SparseAccumulator1(debug=debug_sim)
+    spaccumulator1_2_drop_crd_in_inner = StknDrop(debug=debug_sim)
+    spaccumulator1_2_drop_crd_in_outer = StknDrop(debug=debug_sim)
+    spaccumulator1_2_drop_val = StknDrop(debug=debug_sim)
     fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim)
     fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
@@ -99,9 +103,12 @@ def test_vecmul_ji_i(ssname, debug_sim, fill=0):
         mul_3.set_in2(arrayvals_B_4.out_load())
         mul_3.update()
 
-        spaccumulator1_2.crd_in_outer(intersectj_10.out_crd())
-        spaccumulator1_2.crd_in_inner(fiberlookup_Bi_9.out_crd())
-        spaccumulator1_2.val(mul_3.out_val())
+        spaccumulator1_2_drop_crd_in_outer.set_in_stream(intersectj_10.out_crd())
+        spaccumulator1_2_drop_crd_in_inner.set_in_stream(fiberlookup_Bi_9.out_crd())
+        spaccumulator1_2_drop_val.set_in_stream(mul_3.out_val())
+        spaccumulator1_2.crd_in_outer(spaccumulator1_2_drop_crd_in_outer.out_val())
+        spaccumulator1_2.crd_in_inner(spaccumulator1_2_drop_crd_in_inner.out_val())
+        spaccumulator1_2.set_val(spaccumulator1_2_drop_val.out_val())
         spaccumulator1_2.update()
 
         fiberwrite_xvals_0.set_input(spaccumulator1_2.out_val())

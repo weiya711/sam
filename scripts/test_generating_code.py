@@ -61,6 +61,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.repeater import Repeat, RepeatSigGen\n")
     f.write("from sam.sim.src.accumulator import Reduce\n")
     f.write("from sam.sim.src.accumulator import SparseAccumulator1\n")
+    f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
     f.write("import os\n")
     f.write("cwd = os.getcwd()\n")
@@ -460,6 +461,9 @@ for apath in file_paths:
         elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + " = SparseAccumulator1(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_crd_in_inner" + " = StknDrop(debug=debug_sim)\n") 
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_crd_in_outer" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_val" + " = StknDrop(debug=debug_sim)\n")
             spaccumulator_data[u] = {}
         elif node_info["type"] == "crddrop":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim)\n")
@@ -627,15 +631,22 @@ for apath in file_paths:
                                 append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
                             edge_data[v][stream_join_elements[v].index(u_)] = edge_data[v][stream_join_elements[v].index(u_)][:6] + \
                                 append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+                        
                         if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
-                            f.write(tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                            f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)] +  ".set_in_stream(" +
                                     d[u_]["object"] + ".out_crd())\n")
                         else:
-                            f.write(tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                            f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)]  + "." + "set_in_stream(" +
                                     d[u_]["object"] + ".out_val())\n")
+                    for u_ in stream_join_elements[v]:
+                        if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                            f.write(tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)] + ".out_val())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + ".set_" + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)] + ".out_val())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
-
 
 #            if d[v]["type"] == "intersect" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
 #                if sum(ready_dataset[v]) == len(ready_dataset[v]):
