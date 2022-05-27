@@ -1,6 +1,6 @@
 import pytest
 import scipy.sparse
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -10,7 +10,6 @@ from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
-from sam.sim.test.test.test_gold import test_gold_tensor3
 import os
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -67,14 +66,14 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_16 = CompressedRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberlookup_Ci_17 = CompressedRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
+    fiberlookup_Bi_16 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
+    fiberlookup_Ci_17 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
     intersecti_15 = Intersect2(debug=debug_sim)
-    fiberlookup_Bj_13 = CompressedRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberlookup_Cj_14 = CompressedRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
+    fiberlookup_Bj_13 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    fiberlookup_Cj_14 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
     intersectj_12 = Intersect2(debug=debug_sim)
-    fiberlookup_Bk_10 = CompressedRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim)
-    fiberlookup_Ck_11 = CompressedRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim)
+    fiberlookup_Bk_10 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim)
+    fiberlookup_Ck_11 = CompressedCrdRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim)
     intersectk_9 = Intersect2(debug=debug_sim)
     crddrop_8 = CrdDrop(debug=debug_sim)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
@@ -171,4 +170,3 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
     intersecti_15.print_intersection_rate()
     intersectj_12.print_intersection_rate()
     intersectk_9.print_intersection_rate()
-    test_gold_tensor3(ssname , formats = [orig, shift],  out_crds = [fiberwrite_X2_1.get_arr(), fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr()], out_segs = [fiberwrite_X2_1.get_seg_arr(), fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())

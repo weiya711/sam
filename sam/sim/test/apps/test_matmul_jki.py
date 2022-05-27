@@ -1,6 +1,6 @@
 import pytest
 import scipy.sparse
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -10,7 +10,6 @@ from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
-from sam.sim.test.test.test_gold import test_gold_matmul
 import os
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -57,14 +56,14 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Cj_17 = CompressedRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    fiberlookup_Ck_13 = CompressedRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
+    fiberlookup_Cj_17 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
+    fiberlookup_Ck_13 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
     fiberwrite_X1_2 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim)
     repsiggen_j_15 = RepeatSigGen(debug=debug_sim)
     repeat_Bj_14 = Repeat(debug=debug_sim)
-    fiberlookup_Bk_12 = CompressedRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    fiberlookup_Bk_12 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
     intersectk_11 = Intersect2(debug=debug_sim)
-    fiberlookup_Bi_10 = CompressedRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
+    fiberlookup_Bi_10 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
     repsiggen_i_8 = RepeatSigGen(debug=debug_sim)
     repeat_Ci_7 = Repeat(debug=debug_sim)
@@ -161,4 +160,3 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
     mul_4.print_fifos()
     arrayvals_B_5.print_fifos()
     intersectk_11.print_intersection_rate()
-    test_gold_matmul(ssname , formats = [orig, shift-trans],  out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()], out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()], out_vals = fiberwrite_Xvals_0.get_arr())

@@ -53,7 +53,7 @@ def tab(a):
 def generate_header(f, out_name):
     f.write("import pytest\n")
     f.write("import scipy.sparse\n")
-    f.write("from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan\n")
+    f.write("from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan\n")
     f.write("from sam.sim.src.wr_scanner import ValsWrScan\n")
     f.write("from sam.sim.src.joiner import Intersect2\n")
     f.write("from sam.sim.src.compute import Multiply2\n")
@@ -63,7 +63,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.accumulator import SparseAccumulator1\n")
     f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
-    f.write("from sam.sim.test.test.test_gold import test_gold_" + out_name.split("_")[0] + "\n")
+    #f.write("from sam.sim.test.test_gold import test_gold_" + out_name.split("_")[0] + "\n")
     f.write("import os\n")
     f.write("cwd = os.getcwd()\n")
     f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n\n")
@@ -439,13 +439,13 @@ for apath in file_paths:
             # print(u, " fiber lookup in :: ", networkx_graph.nodes[u]['comment'])
             if node_info["format"] == "dense":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] +
-                        node_info["index"] + "_" + str(u) + " = UncompressRdScan(dim=" + node_info["tensor"] +
+                        node_info["index"] + "_" + str(u) + " = UncompressCrdRdScan(dim=" + node_info["tensor"] +
                         "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
             if node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
-                        "_" + str(u) + " = CompressedRdScan(crd_arr=" + node_info["tensor"] +
+                        "_" + str(u) + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
                         "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
                         "_seg" + node_info["mode"] + ", debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
@@ -742,13 +742,13 @@ for apath in file_paths:
     for u in networkx_graph.nodes():
         if "intersect" in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
-    f.write(tab(1) + "test_gold_" + out_name[num].split("_")[0] + "(")
-    f.write("ssname , formats = [")
-    for formats in gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[:-1]:
-        f.write(formats + ", ")
-    f.write(gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[-1])
-    f.write("], ")
-    f.write(output_list + ")\n")
+    #f.write(tab(1) + "test_gold_" + out_name[num].split("_")[0] + "(")
+    #f.write("ssname , formats = [")
+    #for formats in gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[:-1]:
+    #    f.write(formats + ", ")
+    #f.write(gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[-1])
+    #f.write("], ")
+    #f.write(output_list + ")\n")
     f.close()
     if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
         os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")

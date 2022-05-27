@@ -44,14 +44,21 @@ for i in ${!DATASET_NAMES[@]}; do
 #      errors+=("${name} matmul_ijk")
 #    fi
  
-
-
-    pytest -k test_matmul_ijk_i --ssname $name -s #--debug-sim 
+    pytest -k test_matmul_ --ssname $name -s #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 
       errors+=("${name} matmul_ijk")
     fi
+ 
+
+#
+#    pytest -k test_matmul_ijk_i --ssname $name -s #--debug-sim 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then 
+#      errors+=("${name} matmul_ijk")
+#    fi
    
 #    pytest -k test_mat_elemmul_i --ssname $name -s 
 #    status=$?

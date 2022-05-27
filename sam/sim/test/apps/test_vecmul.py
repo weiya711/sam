@@ -1,6 +1,6 @@
 import pytest
 import scipy.sparse
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -10,7 +10,6 @@ from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
-from sam.sim.test.test.test_gold import test_gold_vecmul
 import os
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -47,12 +46,12 @@ def test_vecmul_i(ssname, debug_sim, fill=0):
     c_vals_filename = os.path.join(c_dirname, "c_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
-    fiberlookup_Bi_12 = UncompressRdScan(dim=B_shape[0], debug=debug_sim)
-    fiberlookup_Bj_7 = CompressedRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    fiberlookup_Bi_12 = UncompressCrdRdScan(dim=B_shape[0], debug=debug_sim)
+    fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
     fiberwrite_x0_5 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
     repsiggen_i_10 = RepeatSigGen(debug=debug_sim)
     repeat_ci_9 = Repeat(debug=debug_sim)
-    fiberlookup_cj_8 = CompressedRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
+    fiberlookup_cj_8 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
     intersectj_6 = Intersect2(debug=debug_sim)
     arrayvals_B_3 = Array(init_arr=B_vals, debug=debug_sim)
     arrayvals_c_4 = Array(init_arr=c_vals, debug=debug_sim)
@@ -123,4 +122,3 @@ def test_vecmul_i(ssname, debug_sim, fill=0):
     reduce_1.print_fifos()
     arrayvals_c_4.print_fifos()
     intersectj_6.print_intersection_rate()
-    test_gold_vecmul(ssname , formats = [orig, shift],  out_crds = [fiberwrite_x0_5.get_arr()], out_segs = [fiberwrite_x0_5.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())

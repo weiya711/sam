@@ -1,6 +1,6 @@
 import pytest
 import scipy.sparse
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -10,7 +10,6 @@ from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
-from sam.sim.test.test.test_gold import test_gold_vec
 import os
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -35,7 +34,7 @@ def test_vec_identity_i(ssname, debug_sim, fill=0):
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    fiberlookup_bi_3 = CompressedRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim)
+    fiberlookup_bi_3 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim)
     fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim)
     arrayvals_b_2 = Array(init_arr=b_vals, debug=debug_sim)
     fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim)
@@ -67,4 +66,3 @@ def test_vec_identity_i(ssname, debug_sim, fill=0):
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
     arrayvals_b_2.print_fifos()
-    test_gold_vec(ssname , formats = [orig],  out_crds = [fiberwrite_x0_1.get_arr()], out_segs = [fiberwrite_x0_1.get_seg_arr()], out_vals = fiberwrite_xvals_0.get_arr())

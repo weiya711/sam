@@ -241,9 +241,6 @@ class CrdPtConverter(Primitive):
                 self.curr_ocrd = curr_ocrdpt
             else:
                 self.curr_icrd = curr_icrdpt
-                self.curr_ocrd = curr_ocrdpt
-            else:
-                self.curr_icrd = curr_icrdpt
                 self.curr_ocrd = ''
             self.prev_stkn = False
 
