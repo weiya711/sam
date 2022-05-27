@@ -1,4 +1,4 @@
 [submodule "compiler/taco"]
 	path = compiler/taco
-	url = https://github.com/weiya711/taco/
+	url = git@github.com/weiya711/taco/
 	branch = sam
