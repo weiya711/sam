@@ -29,5 +29,6 @@ for i in ${!DATASET_NAMES[@]}; do
     name=${DATASET_NAMES[$i]} 
     echo "Generating input format files for $name..."
     python $basedir/scripts/datastructure_suitesparse.py -n $name 
-    chmod -R 777 $outdir
+    chgrp -R sparsity $outdir
+    chmod -R 775 $outdir
 done
