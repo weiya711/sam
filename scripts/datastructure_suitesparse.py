@@ -38,9 +38,6 @@ def get_datastructure_string(format, mode):
         return ""
 
 
-inputCache = InputCacheSuiteSparse()
-formatWriter = FormatWriter()
-
 parser = argparse.ArgumentParser(description="Process some suitesparse matrices into per-level datastructures")
 parser.add_argument('-n', '--name', metavar='ssname', type=str, action='store', help='tensor name to run format '
                                                                                      'conversion on one SS tensor')
@@ -49,7 +46,11 @@ parser.add_argument('-f', '--format', metavar='ssformat', type=str, action='stor
 parser.add_argument('-c', '--combined', action='store_true', default=False, help='Whether the formatted datastructures '
                                                                                  'should be in separate files')
 parser.add_argument('-o', '--omit-dense', action='store_true', default=False, help='Do not create fully dense format')
+parser.add_argument('-i', '--integer', action='store_false', default=True, help='Safe sparsity cast to int for values')
 args = parser.parse_args()
+
+inputCache = InputCacheSuiteSparse()
+formatWriter = FormatWriter(args.integer)
 
 
 out_path = Path(out_dirname)

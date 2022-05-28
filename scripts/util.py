@@ -7,15 +7,27 @@ import numpy
 import itertools
 import shutil
 import numpy as np
+import math
+import functools
 
 from pathlib import Path
 from dataclasses import dataclass
 
 
+def round_sparse(x):
+    if 0.0 <= x < 1:
+        return 1
+    elif 0.0 > x > -1:
+        return -1
+    elif x >= 0.0:
+        return math.floor(x + 0.5)
+    else:
+        return math.ceil(x - 0.5)
+
 # TnsFileLoader loads a tensor stored in .tns format.
 class TnsFileLoader:
-    def __init__(self):
-        pass
+    def __init__(self, cast_int=True):
+        self.cast = cast_int
 
     def load(self, path):
         coordinates = []
@@ -24,18 +36,23 @@ class TnsFileLoader:
         first = True
         with open(path, 'r') as f:
             for line in f:
-                data = line.split(' ')
+                data = line[:-1].split(' ')
                 if first:
                     first = False
                     dims = [0] * (len(data) - 1)
                     for i in range(len(data) - 1):
                         coordinates.append([])
+                data = [elem for elem in data if elem != '']
 
                 for i in range(len(data) - 1):
                     coordinates[i].append(int(data[i]) - 1)
                     dims[i] = max(dims[i], coordinates[i][-1] + 1)
                 # TODO (rohany): What if we want this to be an integer?
-                values.append(float(data[-1]))
+                if self.cast:
+                    val = round_sparse(float(data[-1])) 
+                    values.append(val)
+                else:
+                    values.append(float(data[-1]))
         return dims, coordinates, values
 
 
@@ -206,19 +223,20 @@ class InputCacheSuiteSparse:
 
 
 class FormatWriter:
-    def __init__(self):
-        pass
+    def __init__(self, cast_int=True):
+        self.cast = cast_int
 
     def convert_format(self, coo, format_str):
+        if self.cast:
+            cast_data = np.array([round_sparse(elem) for elem in coo.data])
+            coo = scipy.sparse.coo_matrix((cast_data, (coo.row, coo.col)))
 
         if format_str == "csr":
             return scipy.sparse.csr_matrix(coo)
         elif format_str == "csc":
             return scipy.sparse.csc_matrix(coo)
-        elif format_str == "coo":
-            return coo
-        elif format_str == "cooT":
-            # This matrix will get transposed on writeout
+        elif format_str == "coo" or format_str == "cooT":
+            # This matrix will get transposed on writeout for cooT
             return coo
         else:
             if format_str == "dense":
@@ -456,7 +474,7 @@ class FormatWriter:
                 ofile.write(array_newline_str(dense))
                 os.chmod(filename, 0o666)
 
-
+    
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
 class InputCacheTensor:
@@ -528,10 +546,11 @@ def safeCastPydataTensorToInts(tensor):
     for i in range(len(data)):
         # If the cast would turn a value into 0, instead write a 1. This preserves
         # the sparsity pattern of the data.
-        if int(tensor.data[i]) == 0:
-            data[i] = 1
-        else:
-            data[i] = int(tensor.data[i])
+        # if int(tensor.data[i]) == 0:
+        #     data[i] = 1
+        # else:
+        #     data[i] = int(tensor.data[i])
+        data[i] = round_special(tensor.data[i])
     return sparse.COO(tensor.coords, data, tensor.shape)
 
 
