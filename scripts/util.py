@@ -11,8 +11,6 @@ import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
 
-SUITESPARSE_PATH = os.environ['SUITESPARSE_PATH']
-
 
 # TnsFileLoader loads a tensor stored in .tns format.
 class TnsFileLoader:
@@ -508,6 +506,7 @@ class SuiteSparseTensor:
 # SuiteSparse tensors.
 class TensorCollectionSuiteSparse:
     def __init__(self):
+        SUITESPARSE_PATH = os.environ['SUITESPARSE_PATH']
         data = SUITESPARSE_PATH
         sstensors = glob.glob(os.path.join(data, "*.mtx"))
         self.tensors = [SuiteSparseTensor(t) for t in sstensors]
@@ -534,3 +533,56 @@ def safeCastPydataTensorToInts(tensor):
         else:
             data[i] = int(tensor.data[i])
     return sparse.COO(tensor.coords, data, tensor.shape)
+
+
+def parse_taco_format(infilename, outdir, tensorname, format_str):
+    
+    with open(infilename, 'r') as inf:
+        level = -1
+        count = 0
+        seg = True
+        level_done = False
+        for line in inf:
+            if count == 0:
+                dim_start = line.find('(') + 1
+                dim_end = line.find(')')
+                dims = line[dim_start : dim_end]
+                dims = dims.split('x')
+
+                shapefile = os.path.join(outdir, tensorname + '_shape.txt')
+                with open(shapefile, 'w+') as shapef:
+                    shapef.write(array_newline_str(dims))
+            else:
+                if line.find(':') > -1:
+                    level += 1
+                    seg = True
+                    level_done = False
+                else:
+                    start = line.find('[') + 1
+                    end = line.find(']')
+                    line = line[start: end]
+                    line = line.split(', ')
+
+                    if level_done:
+                        # This is a values array
+                        valfile = os.path.join(outdir, tensorname + '_val.txt')
+                        with open(valfile, 'w+') as valf:
+                            valf.write(array_newline_str(line))
+                    else:
+                        level_format = format_str[level]
+                        if level_format == 's':
+                            if seg:
+                                segfile = os.path.join(outdir, tensorname + str(level)
+                                                       + '_seg.txt') 
+                                with open(segfile, 'w+') as segf:
+                                    segf.write(array_newline_str(line))
+                                seg = False
+                            else:
+                                crdfile = os.path.join(outdir, tensorname + str(level)
+                                                       + '_crd.txt')
+                                with open(crdfile, 'w+') as crdf:
+                                    crdf.write(array_newline_str(line)) 
+                                level_done = True
+                    
+            count += 1
+    

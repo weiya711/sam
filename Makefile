@@ -1,6 +1,8 @@
-export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
-export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
+export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
+export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
 export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 
 csv: 
 	scripts/pytest_suitesparse_with_benchmarks.sh
@@ -12,16 +14,22 @@ tests: sam
 run: submodules
 	./scripts/pytest_suitesparse.sh
 
-.PHONY: formats
-formats:
+.PHONY: suitesparse-formats
+suitesparse-formats:
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
 	set -e && ./scripts/generate_suitesparse_formats.sh
+
+.PHONY: frostt-formats
+frostt-formats: env taco/build
+	./scripts/generate_frostt_formats.sh
 
 .PHONY: env
 env:
 	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
 	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
 	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 
 .PHONY: pydepends
 pydepends:
