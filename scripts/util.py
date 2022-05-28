@@ -12,6 +12,8 @@ import math
 from pathlib import Path
 from dataclasses import dataclass
 
+HOSTNAME = os.environ['HOSTNAME']
+
 
 def round_sparse(x):
     if 0.0 <= x < 1:
@@ -258,10 +260,11 @@ class FormatWriter:
                 csc = scipy.sparse.csc_matrix(coo)
                 has_col = [rc > 0 for rc in csc.getnnz(0)]
                 segend = sum(has_col)
-                seg0 = [0, segend]
-                crd0 = [i for i, c in enumerate(has_col) if c]
-                seg1 = [0] + list(itertools.accumulate(map(int, csc.getnnz(0))))
-                crd1 = csc.indices
+                # Transposed since it is DCSC
+                seg1 = [0, segend]
+                crd1 = [i for i, c in enumerate(has_col) if c]
+                seg0 = [0] + list(itertools.accumulate(map(int, csc.getnnz(0))))
+                crd0 = csc.indices
                 data = csc.data
                 dcsc = DoublyCompressedMatrix(csc.shape, seg0, crd0, seg1, crd1, data)
                 return dcsc
@@ -383,7 +386,8 @@ class FormatWriter:
         filename = os.path.join(dir_path, tensorname + "_shape.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.shape))
-            os.chmod(filename, 0o666)
+            if HOSTNAME == 'kiwi':
+                os.chmod(filename, 0o775)
 
             os.symlink(filename, os.path.join(dcsr_dir, tensorname + "_shape.txt"))
             os.symlink(filename, os.path.join(csr_dir, tensorname + "_shape.txt"))
@@ -393,29 +397,24 @@ class FormatWriter:
         filename = os.path.join(dcsr_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.seg0))
-            os.chmod(filename, 0o666)
 
         filename = os.path.join(dcsr_dir, tensorname + "0_crd.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.crd0))
-            os.chmod(filename, 0o666)
 
         filename = os.path.join(dcsr_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.seg1))
-            os.chmod(filename, 0o666)
 
         filename = os.path.join(dir_path, tensorname + "1_crd_s1.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.crd1))
-            os.chmod(filename, 0o666)
             os.symlink(filename, os.path.join(dcsr_dir, tensorname + "1_crd.txt"))
             os.symlink(filename, os.path.join(csr_dir, tensorname + "1_crd.txt"))
 
         filename = os.path.join(dir_path, tensorname + "_vals_s.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.data))
-            os.chmod(filename, 0o666)
             os.symlink(filename, os.path.join(dcsr_dir, tensorname + "_vals.txt"))
             os.symlink(filename, os.path.join(csr_dir, tensorname + "_vals.txt"))
 
@@ -423,36 +422,30 @@ class FormatWriter:
         filename = os.path.join(csr_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(csr.indptr))
-            os.chmod(filename, 0o666)
 
         dcsc = self.convert_format(coo, "dcsc")
 
         filename = os.path.join(dcsc_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.seg0))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.seg1))
 
         filename = os.path.join(dcsc_dir, tensorname + "1_crd.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.crd0))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.crd1))
 
         filename = os.path.join(dcsc_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.seg1))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.seg0))
 
         filename = os.path.join(dir_path, tensorname + "0_crd.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.crd1))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.crd0))
             os.symlink(filename, os.path.join(dcsc_dir, tensorname + "0_crd.txt"))
             os.symlink(filename, os.path.join(csc_dir, tensorname + "0_crd.txt"))
 
         filename = os.path.join(dir_path, tensorname + "_vals_sT.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsc.data))
-            os.chmod(filename, 0o666)
             os.symlink(filename, os.path.join(dcsc_dir, tensorname + "_vals.txt"))
             os.symlink(filename, os.path.join(csc_dir, tensorname + "_vals.txt"))
 
@@ -460,7 +453,6 @@ class FormatWriter:
         filename = os.path.join(csc_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(csc.indptr))
-            os.chmod(filename, 0o666)
 
         if not omit_dense:
             dense = self.convert_format(coo, "dense")
@@ -472,7 +464,17 @@ class FormatWriter:
             filename = os.path.join(dense_dir, tensorname + "_vals.txt")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dense))
-                os.chmod(filename, 0o666)
+
+        if HOSTNAME == 'kiwi':
+            for root, dirs, files in os.walk(dir_path):
+                for d in dirs:
+                    path = os.path.join(root, d)
+                    shutil.chown(path, group='sparsity')
+                    os.chmod(path, 0o775)
+                for f in files:
+                    path = os.path.join(root, f)
+                    shutil.chown(path, group='sparsity')
+                    os.chmod(path, 0o775)
 
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
