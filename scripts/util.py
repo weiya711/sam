@@ -8,7 +8,6 @@ import itertools
 import shutil
 import numpy as np
 import math
-import functools
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -23,6 +22,7 @@ def round_sparse(x):
         return math.floor(x + 0.5)
     else:
         return math.ceil(x - 0.5)
+
 
 # TnsFileLoader loads a tensor stored in .tns format.
 class TnsFileLoader:
@@ -49,7 +49,7 @@ class TnsFileLoader:
                     dims[i] = max(dims[i], coordinates[i][-1] + 1)
                 # TODO (rohany): What if we want this to be an integer?
                 if self.cast:
-                    val = round_sparse(float(data[-1])) 
+                    val = round_sparse(float(data[-1]))
                     values.append(val)
                 else:
                     values.append(float(data[-1]))
@@ -80,9 +80,9 @@ class TnsFileDumper:
 # ScipySparseTensorLoader loads a sparse tensor from a file into a
 # scipy.sparse CSR matrix.
 class ScipySparseTensorLoader:
-    def __init__(self, format):
+    def __init__(self, tformat):
         self.loader = TnsFileLoader()
-        self.format = format
+        self.format = tformat
 
     def load(self, path):
         dims, coords, values = self.loader.load(path)
@@ -91,9 +91,9 @@ class ScipySparseTensorLoader:
         elif self.format == "csc":
             return scipy.sparse.csc_matrix((values, (coords[0], coords[1])), shape=tuple(dims))
         elif self.format == "coo":
-            return scipy.sparse.coo_matrix(values, (coords[0], coords[1]), shape=tuple(dims))
+            return scipy.sparse.coo_matrix(values, (coords[0], coords[1]))
         else:
-            assert (False)
+            assert False
 
 
 # PydataSparseTensorLoader loads a sparse tensor from a file into
@@ -266,7 +266,7 @@ class FormatWriter:
                 dcsc = DoublyCompressedMatrix(csc.shape, seg0, crd0, seg1, crd1, data)
                 return dcsc
             else:
-                assert (False)
+                assert False
 
     def writeout(self, coo, format_str, filename):
         tensor = self.convert_format(coo, format_str)
@@ -351,7 +351,7 @@ class FormatWriter:
                 outfile.write("vals\n")
                 outfile.write(array_str(tensor.data) + '\n')
             else:
-                assert (False)
+                assert False
 
             os.chmod(filename, 0o666)
 
@@ -474,7 +474,7 @@ class FormatWriter:
                 ofile.write(array_newline_str(dense))
                 os.chmod(filename, 0o666)
 
-    
+
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
 class InputCacheTensor:
@@ -550,12 +550,11 @@ def safeCastPydataTensorToInts(tensor):
         #     data[i] = 1
         # else:
         #     data[i] = int(tensor.data[i])
-        data[i] = round_special(tensor.data[i])
+        data[i] = round_sparse(tensor.data[i])
     return sparse.COO(tensor.coords, data, tensor.shape)
 
 
 def parse_taco_format(infilename, outdir, tensorname, format_str):
-    
     with open(infilename, 'r') as inf:
         level = -1
         count = 0
@@ -565,7 +564,7 @@ def parse_taco_format(infilename, outdir, tensorname, format_str):
             if count == 0:
                 dim_start = line.find('(') + 1
                 dim_end = line.find(')')
-                dims = line[dim_start : dim_end]
+                dims = line[dim_start: dim_end]
                 dims = dims.split('x')
 
                 shapefile = os.path.join(outdir, tensorname + '_shape.txt')
@@ -591,17 +590,16 @@ def parse_taco_format(infilename, outdir, tensorname, format_str):
                         level_format = format_str[level]
                         if level_format == 's':
                             if seg:
-                                segfile = os.path.join(outdir, tensorname + str(level)
-                                                       + '_seg.txt') 
+                                segfile = os.path.join(outdir, tensorname + str(level) +
+                                                       '_seg.txt')
                                 with open(segfile, 'w+') as segf:
                                     segf.write(array_newline_str(line))
                                 seg = False
                             else:
-                                crdfile = os.path.join(outdir, tensorname + str(level)
-                                                       + '_crd.txt')
+                                crdfile = os.path.join(outdir, tensorname + str(level) +
+                                                       '_crd.txt')
                                 with open(crdfile, 'w+') as crdf:
-                                    crdf.write(array_newline_str(line)) 
+                                    crdf.write(array_newline_str(line))
                                 level_done = True
-                    
+
             count += 1
-    

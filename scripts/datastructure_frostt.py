@@ -8,7 +8,6 @@ cwd = os.getcwd()
 outdir_name = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 taco_format_dirname = os.getenv('FROSTT_FORMATTED_TACO_PATH')
 
-
 formats = ["sss", "dss", "dds", "ddd", "dsd", "sdd", "sds", "ssd"]
 
 parser = argparse.ArgumentParser(description="Process some Frostt tensors into per-level datastructures")
@@ -33,16 +32,15 @@ if taco_format_dirname is None:
 
 if args.format is not None:
     assert args.format in formats
-    taco_format_orig_filename = os.path.join(taco_format_dirname, args.format, args.name + '.txt') 
-    taco_format_shift_filename = os.path.join(taco_format_dirname, args.format, args.name + '_shift.txt') 
-    
+    taco_format_orig_filename = os.path.join(taco_format_dirname, args.format, args.name + '.txt')
+    taco_format_shift_filename = os.path.join(taco_format_dirname, args.format, args.name + '_shift.txt')
+
     # Original
     outdir_orig_name = os.path.join(outdir_name, args.name, 'orig', args.format)
     outdir_orig_path = Path(outdir_orig_name)
     outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
     parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
-
 
     # Shifted
     if args.shift:
