@@ -83,8 +83,8 @@ class SparseCrdPtAccumulator1(Primitive):
 
     def update(self):
         if self.done:
-            self.curr_outer_crd = ''
-            self.curr_inner_crd = ''
+            self.curr_outer_crdpt = ''
+            self.curr_inner_crdpt = ''
             self.curr_val = ''
             return
 

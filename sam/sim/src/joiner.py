@@ -182,6 +182,7 @@ class Intersect2(CrdJoiner2):
     def print_intersection_rate(self):
         return print("Intersection rate: ", self.count / self.total_count)
 
+
 class IntersectBV2(BVJoiner2):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
