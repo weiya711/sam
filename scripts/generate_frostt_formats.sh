@@ -1,0 +1,44 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH -t 360
+
+DATASET_NAMES=(
+  facebook
+  fb1k
+  fb10k
+  nell-1
+  nell-2
+)
+
+IGNORED_NAMES=(
+  amazon-reviews
+  reddit
+  patents
+)
+
+FORMATS=(
+  sss
+)
+
+export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
+export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
+export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
+
+basedir=$(pwd)
+
+for i in ${!FORMATS[@]}; do
+    format=${FORMATS[@]};
+    echo "Generating files for format $format..."
+    
+    $basedir/compiler/taco/build/bin/taco-test sam.pack_$format
+
+    for j in ${!DATASET_NAMES[@]}; do
+        
+        name=${DATASET_NAMES[$j]} 
+        echo "Generating input format files for $name..."
+        python $basedir/scripts/datastructure_frostt.py -n $name -f $format
+        chmod -R 775 $FROSTT_FORMATTED_PATH
+    done
+done
