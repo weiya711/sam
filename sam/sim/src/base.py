@@ -5,8 +5,12 @@ def gen_stkns(dim=10):
     return ['S' + str(i) for i in range(dim)]
 
 
-valid_tkns = ['', 'D']
+valid_tkns = ['', 'D', 'N']
 valid_tkns += gen_stkns()
+
+
+def is_0tkn(elem):
+    return elem == 'N'
 
 
 def is_stkn(elem):

@@ -1,6 +1,4 @@
-import numpy as np
 import pytest
-import random
 from sam.sim.src.base import remove_emptystr
 from sam.sim.src.joiner import Intersect2
 
