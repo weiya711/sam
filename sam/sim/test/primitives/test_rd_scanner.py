@@ -168,3 +168,47 @@ def test_rd_scan_c_direct_nd(arrs, debug_sim):
 
     assert (out_crd == gold_crd)
     assert (out_ref == gold_ref)
+
+
+arr_dict1 = {"seg": [0, 2, 3, 4], "crd": [0, 1, 2, 3], "in_ref": [0, 1, 'N', 2, 'N', 'S0', 'D'],
+             "out_crd": [0, 1, 'S0', 2, 'S0', 'S0', 3, 'S0', 'S1', 'D'],
+             "out_ref": [0, 1, 'S0', 2, 'S0', 'S0', 3, 'S0', 'S1', 'D']}
+arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 'N', 1, 'N', 2, 'S0', 'D'],
+             "out_crd": [0, 2, 3, 'S0', 'S0', 0, 'S0', 'S0', 2, 3, 'S1', 'D'],
+             "out_ref": [0, 1, 2, 'S0', 'S0', 3, 'S0', 'S0', 4, 5, 'S1', 'D']}
+arr_dict3 = {"seg": [0, 4, 5, 5, 7, 10, 11], "crd": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+             "in_ref": [0, 1, 'N', 'N', 'S0', 2, 3, 'S0', 'N', 'N', 'S0', 4, 5, 'S0', 'N', 'N', 'S1', 'D'],
+             "out_crd": [0, 1, 2, 3, 'S0', 4, 'S0', 'S0', 'S1', 'S0', 5, 6, 'S1', 'S0', 'S1', 7, 8, 9, 'S0', 10,
+                         'S1', 'S0', 'S2', 'D'],
+             "out_ref": [0, 1, 2, 3, 'S0', 4, 'S0', 'S0', 'S1', 'S0', 5, 6, 'S1', 'S0', 'S1', 7, 8, 9, 'S0', 10,
+                         'S1', 'S0', 'S2', 'D']}
+
+
+@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3])
+def test_rd_scan_direct_c_0tkn_nd(arrs, debug_sim):
+    seg_arr = arrs["seg"]
+    crd_arr = arrs["crd"]
+
+    gold_crd = arrs["out_crd"]
+    gold_ref = arrs["out_ref"]
+    assert (len(gold_crd) == len(gold_ref))
+
+    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
+
+    in_ref = copy.deepcopy(arrs["in_ref"])
+    done = False
+    time = 0
+    out_crd = []
+    out_ref = []
+    while not done and time < TIMEOUT:
+        if len(in_ref) > 0:
+            crdscan.set_in_ref(in_ref.pop(0))
+        crdscan.update()
+        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+        out_crd.append(crdscan.out_crd())
+        out_ref.append(crdscan.out_ref())
+        done = crdscan.done
+        time += 1
+
+    assert (out_crd == gold_crd)
+    assert (out_ref == gold_ref)
