@@ -11,6 +11,7 @@ from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
+import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -142,6 +143,8 @@ def test_matmul_jik_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()]
     out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+    f = open("../" + ssname + ".csv", "a")
+    writer = csv.writer(f)
     repsiggen_j_15.print_fifos()
     repeat_Bj_14.print_fifos()
     repsiggen_i_11.print_fifos()
@@ -152,3 +155,6 @@ def test_matmul_jik_i(ssname, debug_sim, fill=0):
     reduce_3.print_fifos()
     arrayvals_C_6.print_fifos()
     intersectk_7.print_intersection_rate()
+    writer.writerow(["matmul_jik","intersectk_7", str(intersectk_7.return_intersection_rate())])
+    f.close()
+    print(ssname)

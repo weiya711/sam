@@ -11,6 +11,7 @@ from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
+import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -119,6 +120,8 @@ def test_vecmul_ij_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
+    f = open("../" + ssname + ".csv", "a")
+    writer = csv.writer(f)
     repsiggen_i_10.print_fifos()
     repeat_ci_9.print_fifos()
     intersectj_6.print_fifos()
@@ -127,3 +130,6 @@ def test_vecmul_ij_i(ssname, debug_sim, fill=0):
     reduce_2.print_fifos()
     arrayvals_c_5.print_fifos()
     intersectj_6.print_intersection_rate()
+    writer.writerow(["vecmul_ij","intersectj_6", str(intersectj_6.return_intersection_rate())])
+    f.close()
+    print(ssname)

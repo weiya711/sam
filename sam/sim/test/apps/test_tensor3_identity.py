@@ -11,6 +11,7 @@ from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
+import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -93,4 +94,8 @@ def test_tensor3_identity_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr(), fiberwrite_X2_1.get_arr()]
     out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr(), fiberwrite_X2_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+    f = open("../" + ssname + ".csv", "a")
+    writer = csv.writer(f)
     arrayvals_B_4.print_fifos()
+    f.close()
+    print(ssname)

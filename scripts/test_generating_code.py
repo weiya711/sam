@@ -65,6 +65,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.test.test import *\n")
     #f.write("from sam.sim.test.test_gold import test_gold_" + out_name.split("_")[0] + "\n")
     f.write("import os\n")
+    f.write("import csv\n")
     f.write("cwd = os.getcwd()\n")
     f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n\n")
     # f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default = './mode-formats')\n\n")
@@ -736,12 +737,21 @@ for apath in file_paths:
 
     # f.write(tab(1) + "\n\n")
     output_list = finish_outputs(f, output_nodes)
+
+    # open the file in the write mode
+    f.write(tab(1) + "f = open(\"" + "../\" + " + "ssname" + " + \".csv\", \"a\")\n")
+    f.write(tab(1) + "writer = csv.writer(f)\n")
+
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
     for u in networkx_graph.nodes():
         if "intersect" in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
+            f.write(tab(1) + "writer.writerow([\"" + out_name[num] + "\",\"" + d[u]["object"] + "\", str(" + d[u]["object"] + ".return_intersection_rate())])\n")
+
+    f.write(tab(1) + "f.close()\n")
+    f.write(tab(1) + "print(ssname)\n") 
     #f.write(tab(1) + "test_gold_" + out_name[num].split("_")[0] + "(")
     #f.write("ssname , formats = [")
     #for formats in gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[:-1]:

@@ -11,6 +11,7 @@ from sam.sim.src.accumulator import SparseAccumulator1
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
+import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -159,6 +160,8 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_X2_1.get_arr(), fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr()]
     out_segs = [fiberwrite_X2_1.get_seg_arr(), fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+    f = open("../" + ssname + ".csv", "a")
+    writer = csv.writer(f)
     intersecti_15.print_fifos()
     crddrop_7.print_fifos()
     intersectj_12.print_fifos()
@@ -168,5 +171,10 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
     mul_4.print_fifos()
     arrayvals_C_6.print_fifos()
     intersecti_15.print_intersection_rate()
+    writer.writerow(["tensor3_elemmul","intersecti_15", str(intersecti_15.return_intersection_rate())])
     intersectj_12.print_intersection_rate()
+    writer.writerow(["tensor3_elemmul","intersectj_12", str(intersectj_12.return_intersection_rate())])
     intersectk_9.print_intersection_rate()
+    writer.writerow(["tensor3_elemmul","intersectk_9", str(intersectk_9.return_intersection_rate())])
+    f.close()
+    print(ssname)
