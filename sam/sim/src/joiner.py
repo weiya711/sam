@@ -116,7 +116,6 @@ class Intersect2(CrdJoiner2):
             elif self.curr_crd2 == self.curr_crd1:
                 # Skip list
                 if is_stkn(self.curr_crd2):
-                    print("SKIP HERE")
                     self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''
                     self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''
 

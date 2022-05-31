@@ -232,8 +232,21 @@ arr_dict4 = {"seg": [0, 5, 10], "crd": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "in_ref":
              "out_crd": [0, 1, 2, 3, 4, 'S0', 5, 9, 'S1', 'D'],
              "out_ref": [0, 1, 2, 3, 4, 'S0', 5, 9, 'S1', 'D']}
 
+arr_dict5 = {"seg": [0, 10], "crd": [54, 71, 323, 537, 549, 558, 683, 787, 860, 929], "in_ref": [0, 'D'],
+             "in_skip": [227, 389, 606, 738, 877, 996, 'S0'],
+             "out_crd": [323, 537, 683, 787, 929, 'S0', 'D'],
+             "out_ref": [2, 3, 6, 7, 9, 'S0', 'D']}
+arr_dict6 = {"seg": [0, 10], "crd": [227, 280, 389, 486, 530, 606, 738, 744, 877, 996], "in_ref": [0, 'D'],
+             "in_skip": [323, 537, 683, 787, 929, 'S0'],
+             "out_crd": [389, 606, 738, 877, 996, 'S0', 'D'],
+             "out_ref": [2, 5, 6, 8, 9, 'S0', 'D']}
+arr_dict7 = {"seg": [0, 10], "crd": [29, 40, 178, 273, 637, 721, 744, 763, 855, 975], "in_ref": [0, 'D'],
+             "in_skip": ['', 112, '', '', 238, '', 338, '', '', '', '', '', '', 852, '', '', '', '', 996, '', '', 'S0'],
+             "out_crd": [29, 178, 273, 637, 721, 744, 763, 855, 975, 'S0', 'D'],
+             "out_ref": [0, 2, 3, 4, 5, 6, 7, 8, 9, 'S0', 'D']}
 
-@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4])
+
+@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5, arr_dict6, arr_dict7])
 def test_rd_scan_direct_c_skip_nd(arrs, debug_sim):
     seg_arr = arrs["seg"]
     crd_arr = arrs["crd"]
