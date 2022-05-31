@@ -1,5 +1,7 @@
 import pytest
 
+pytest.register_assert_rewrite("sam.sim.test.test.check_arr")
+
 
 def pytest_addoption(parser):
     parser.addoption("--debug-sim", action="store_true", default=False,

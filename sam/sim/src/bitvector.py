@@ -147,14 +147,13 @@ class BVDropOnly(BVDropSuper):
             elif is_stkn(ibv) and self.get_ibv_count:
                 self.get_ibv_count -= 1
                 bitn = popcount(self.orig_obv) - self.get_ibv_count - 1
-                print(bitn)
                 self.running_obv &= ~get_nth_bit(self.orig_obv, bitn)
                 self.get_next_obv = self.get_ibv_count == 0
                 self.curr_obv = self.running_obv if self.get_ibv_count == 0 and self.running_obv != 0 else ''
                 self.get_next_ibv = self.get_ibv_count > 0
                 self.has_bv = False
             elif self.done:
-                assert (ibv == 'D')
+                # assert (ibv == 'D'), ibv
                 self.curr_obv = 'D'
                 self.get_next_ibv = False
                 self.get_next_obv = False
@@ -163,7 +162,7 @@ class BVDropOnly(BVDropSuper):
                 self.get_next_ibv = False
                 self.get_next_obv = True
         elif self.get_next_ibv:
-            self.curr_obv = ''
+            self.curr_ibv = ''
 
         if self.debug:
             print("DEBUG: BVDROP: Curr OuterBV:", self.running_obv, "Orig OuterBV:", self.orig_obv,

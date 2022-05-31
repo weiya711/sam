@@ -89,6 +89,8 @@ class EmptyFiberStknDrop(Primitive):
             elif isinstance(ival, int):
                 self.leading_stkn = False
                 self.curr_out = ival
+        else:
+            self.curr_out = ''
 
         if self.debug:
             print("Curr InnerCrd:", ival, "\t Curr OutputCrd:", self.curr_out)

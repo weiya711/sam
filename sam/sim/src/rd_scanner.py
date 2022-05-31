@@ -483,9 +483,10 @@ class BVRdScan(BVRdScanSuper):
         self.curr_addr = 0
 
         self.end_fiber = False
-        self.curr_ref = None
-        self.curr_bv = None
+        self.curr_ref = ''
+        self.curr_bv = ''
         self.emit_fiber_stkn = False
+        self.begin = True
 
         self.meta_blen = len(bv_arr)
         self.meta_nbits = nbits
@@ -518,14 +519,14 @@ class BVRdScan(BVRdScanSuper):
             self.emit_fiber_stkn = False
         # There exists another input reference at the segment and
         # either at the start of computation or end of fiber
-        elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_bv is None or self.curr_ref is None)):
-            if self.curr_bv is None or self.curr_ref is None:
-                assert (self.curr_bv == self.curr_ref)
+        elif len(self.in_ref) > 0 and (self.end_fiber or self.begin):
             self.end_fiber = False
+            self.begin = False
 
             curr_in_ref = self.in_ref.pop(0)
+
             if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_blen:
-                raise Exception('Not enough elements in seg array')
+                raise Exception('Not enough elements in bv array(' + str(self.meta_blen) + ')')
 
             # See 'N' 0-token which immediately emits a stop token and ends the fiber
             # TODO: need to figure out how this will work with bitvectors
@@ -560,9 +561,9 @@ class BVRdScan(BVRdScanSuper):
 
                 self.emit_fiber_stkn = True
                 self.curr_bv = self.bv_arr[self.curr_addr]
-
                 self.curr_ref = self._get_bv_ref(self.curr_addr)
-        elif self.curr_bv is not None and self.curr_ref is not None:
+
+        else:   # elif self.curr_bv is not None and self.curr_ref is not None:
             # Default stall (when done)
             self.curr_ref = ''
             self.curr_bv = ''

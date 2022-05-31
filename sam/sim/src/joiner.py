@@ -335,9 +335,9 @@ class IntersectBV2(BVJoiner2):
         self.size_in_bv1 = 0
         self.size_in_bv2 = 0
 
-        self.obv = None
-        self.oref1 = None
-        self.oref2 = None
+        self.obv = ''
+        self.oref1 = ''
+        self.oref2 = ''
 
         self.curr_bv1 = None
         self.curr_bv2 = None
@@ -353,9 +353,9 @@ class IntersectBV2(BVJoiner2):
 
     def update(self):
         if self.done:
-            self.obv = self.curr_bv1
-            self.oref1 = self.curr_bv1
-            self.oref2 = self.curr_bv2
+            self.obv = ''
+            self.oref1 = ''
+            self.oref2 = ''
             return
 
         if self.emit_refs:
@@ -428,7 +428,7 @@ class IntersectBV2(BVJoiner2):
             print("DEBUG: INTERSECT: \t Outbv:", self.obv, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
                   "\t bv1:", self.curr_bv1, "\t Ref1:", self.curr_ref1,
                   "\t bv2:", self.curr_bv2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
-                  self.count / self.total_count)
+                  self.return_intersection_rate())
 
     def set_in1(self, in_ref1, in_bv1):
         if in_ref1 != '' and in_bv1 != '':
@@ -462,4 +462,4 @@ class IntersectBV2(BVJoiner2):
         return self.oref2
 
     def return_intersection_rate(self):
-        return self.count / self.total_count
+        return self.count / self.total_count if self.total_count > 0 else 0
