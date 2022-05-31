@@ -110,7 +110,7 @@ class CompressedCrdRdScan(CrdRdScan):
             if is_stkn(next_in):
                 self.in_ref.pop(0)
                 stkn = increment_stkn(next_in)
-                self.stop_token_cnt += 1
+                #self.stop_token_cnt += 1
 
             else:
                 stkn = 'S0'
@@ -143,8 +143,7 @@ class CompressedCrdRdScan(CrdRdScan):
                 self.end_fiber = True
                 if curr_in_ref == 'D':
                     self.done = True
-
-                self.stop_token_cnt += 1
+                #self.stop_token_cnt += 1
             else:
 
                 self.start_addr = self.seg_arr[curr_in_ref]

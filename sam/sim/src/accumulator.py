@@ -12,9 +12,13 @@ class Reduce(Primitive):
         self.sum = 0
         self.emit_stkn = False
         self.curr_in_val = None
+
         self.reduction_count = 0
         self.num_inputs = 0
         self.num_outputs = 0
+        self.stop_token_out  = 0
+        self.drop_token_out = 0
+        self.valid_token_out = 0
 
     def update(self):
         curr_in_val = ""
@@ -41,6 +45,13 @@ class Reduce(Primitive):
                 self.curr_out = ""
         else:
             self.curr_out = ""
+        if self.curr_out == "":
+            self.drop_token_out += 1
+        elif is_stkn(self.curr_out):
+            self.stop_token_out += 1
+        else:
+            self.valid_token_out += 1
+        
         self.compute_fifos()
         if self.debug:
             print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
@@ -61,6 +72,17 @@ class Reduce(Primitive):
     def print_fifos(self):
         print("Reduction counts- total inputs ", self.num_inputs, " total outputs ", self.num_outputs, " reduction values ", self.reduction_count)
         print("FiFO Val size for Reduce block: ", self.in_val_size)
+
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["red_count"] = self.reduction_count
+        stats_dict["total_inputs"] = self.num_inputs
+        stats_dict["total_outputs"] = self.num_outputs
+        stats_dict["stpkn_outs"] = self.stop_token_out
+        stats_dict["drop_outs"] = self.drop_token_out
+        stats_dict["valid_outs"] = self.valid_token_out
+        return stats_dict
+
 
 
 class SparseCrdPtAccumulator1(Primitive):
