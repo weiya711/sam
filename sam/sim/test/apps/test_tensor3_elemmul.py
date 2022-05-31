@@ -1,4 +1,5 @@
 import pytest
+import time
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
@@ -22,7 +23,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
+def test_tensor3_elemmul_i(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -88,9 +89,9 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
-    time = 0
+    time_cnt = 0
 
-    while not done and time < TIMEOUT:
+    while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_16.set_in_ref(in_ref_B.pop(0))
         fiberlookup_Bi_16.update()
@@ -150,7 +151,7 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
         fiberwrite_X1_2.update()
 
         done = fiberwrite_X2_1.out_done() and fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done()
-        time += 1
+        time_cnt += 1
 
     fiberwrite_X2_1.autosize()
     fiberwrite_X0_3.autosize()
@@ -160,8 +161,30 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_X2_1.get_arr(), fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr()]
     out_segs = [fiberwrite_X2_1.get_seg_arr(), fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
-    f = open("../" + ssname + ".csv", "a")
-    writer = csv.writer(f)
+    def bench():
+        time.sleep(0.01)
+
+    extra_info = dict()
+    sample_dict = intersecti_15.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersecti_15" + "_" + k] =  sample_dict[k]
+
+    sample_dict = crddrop_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["crddrop_7" + "_" + k] =  sample_dict[k]
+
+    sample_dict = intersectj_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectj_12" + "_" + k] =  sample_dict[k]
+
+    sample_dict = crddrop_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["crddrop_8" + "_" + k] =  sample_dict[k]
+
+    sample_dict = intersectk_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectk_9" + "_" + k] =  sample_dict[k]
+
     intersecti_15.print_fifos()
     crddrop_7.print_fifos()
     intersectj_12.print_fifos()
@@ -170,11 +193,4 @@ def test_tensor3_elemmul_i(ssname, debug_sim, fill=0):
     arrayvals_B_5.print_fifos()
     mul_4.print_fifos()
     arrayvals_C_6.print_fifos()
-    intersecti_15.print_intersection_rate()
-    writer.writerow(["tensor3_elemmul","intersecti_15", str(intersecti_15.return_intersection_rate())])
-    intersectj_12.print_intersection_rate()
-    writer.writerow(["tensor3_elemmul","intersectj_12", str(intersectj_12.return_intersection_rate())])
-    intersectk_9.print_intersection_rate()
-    writer.writerow(["tensor3_elemmul","intersectk_9", str(intersectk_9.return_intersection_rate())])
-    f.close()
-    print(ssname)
+    samBench(bench, extra_info)

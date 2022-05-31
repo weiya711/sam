@@ -12,9 +12,13 @@ class Reduce(Primitive):
         self.sum = 0
         self.emit_stkn = False
         self.curr_in_val = None
+
         self.reduction_count = 0
         self.num_inputs = 0
         self.num_outputs = 0
+        self.stop_token_out  = 0
+        self.drop_token_out = 0
+        self.valid_token_out = 0
 
     def update(self):
         curr_in_val = ""
@@ -41,6 +45,13 @@ class Reduce(Primitive):
                 self.curr_out = ""
         else:
             self.curr_out = ""
+        if self.curr_out == "":
+            self.drop_token_out += 1
+        elif is_stkn(self.curr_out):
+            self.stop_token_out += 1
+        else:
+            self.valid_token_out += 1
+        
         self.compute_fifos()
         if self.debug:
             print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
@@ -61,6 +72,17 @@ class Reduce(Primitive):
     def print_fifos(self):
         print("Reduction counts- total inputs ", self.num_inputs, " total outputs ", self.num_outputs, " reduction values ", self.reduction_count)
         print("FiFO Val size for Reduce block: ", self.in_val_size)
+
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["red_count"] = self.reduction_count
+        stats_dict["total_inputs"] = self.num_inputs
+        stats_dict["total_outputs"] = self.num_outputs
+        stats_dict["stpkn_outs"] = self.stop_token_out
+        stats_dict["drop_outs"] = self.drop_token_out
+        stats_dict["valid_outs"] = self.valid_token_out
+        return stats_dict
+
 
 
 class SparseCrdPtAccumulator1(Primitive):
@@ -193,6 +215,10 @@ class SparseAccumulator1(Primitive):
         self.in_inner_crdpt = []
         self.in_val = []
 
+        self.in_outer_crd_pt_fifo = 0
+        self.in_inner_crd_pt_fifo = 0
+        self.in_val_fifo = 0
+
         self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=maxdim, valtype=valtype, **kwargs)
         self.crdpt_converter = CrdPtConverter(last_level=last_level, **kwargs)
 
@@ -208,6 +234,11 @@ class SparseAccumulator1(Primitive):
         self.val_stkn = val_stkn
 
     def update(self):
+        # What to do for drop tokens?
+        self.in_outer_crd_pt_fifo = max(self.in_outer_crd_pt_fifo, len(self.in_outer_crdpt))
+        self.in_inner_crd_pt_fifo = max(self.in_inner_crd_pt_fifo, len(self.in_inner_crdpt))
+        self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
+
         if len(self.in_outer_crdpt) > 0:
             self.crdpt_spacc.set_outer_crdpt(self.in_outer_crdpt.pop(0))
 
@@ -252,6 +283,7 @@ class SparseAccumulator1(Primitive):
         if crdpt != '':
             self.in_inner_crdpt.append(crdpt)
 
+
     def set_outer_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
@@ -286,6 +318,13 @@ class SparseAccumulator1(Primitive):
 
     def out_crd_inner(self):
         return self.curr_inner_crd
+    
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["in_outer_fifo"] = self.in_outer_crd_pt_fifo
+        stats_dict["in_inner_fifo"] = self.in_inner_crd_pt_fifo
+        stats_dict["in_val_fifo"] = self.in_val_fifo
+        return stats_dict
 
     def print_fifos(self):
         print("Spaccumulator: None available")

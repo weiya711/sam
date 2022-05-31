@@ -1,4 +1,5 @@
 import pytest
+import time
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
@@ -22,7 +23,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_identity_i(ssname, debug_sim, fill=0):
+def test_mat_identity_i(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -48,9 +49,9 @@ def test_mat_identity_i(ssname, debug_sim, fill=0):
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     done = False
-    time = 0
+    time_cnt = 0
 
-    while not done and time < TIMEOUT:
+    while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_5.set_in_ref(in_ref_B.pop(0))
         fiberlookup_Bi_5.update()
@@ -71,7 +72,7 @@ def test_mat_identity_i(ssname, debug_sim, fill=0):
         fiberwrite_Xvals_0.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
-        time += 1
+        time_cnt += 1
 
     fiberwrite_X0_2.autosize()
     fiberwrite_X1_1.autosize()
@@ -80,8 +81,9 @@ def test_mat_identity_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
     out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
-    f = open("../" + ssname + ".csv", "a")
-    writer = csv.writer(f)
+    def bench():
+        time.sleep(0.01)
+
+    extra_info = dict()
     arrayvals_B_3.print_fifos()
-    f.close()
-    print(ssname)
+    samBench(bench, extra_info)

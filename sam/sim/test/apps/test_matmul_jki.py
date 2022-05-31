@@ -1,4 +1,5 @@
 import pytest
+import time
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
@@ -22,7 +23,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_jki_i(ssname, debug_sim, fill=0):
+def test_matmul_jki_i(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -79,9 +80,9 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
     in_ref_C = [0, 'D']
     in_ref_B = [0, 'D']
     done = False
-    time = 0
+    time_cnt = 0
 
-    while not done and time < TIMEOUT:
+    while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Cj_17.set_in_ref(in_ref_C.pop(0))
         fiberlookup_Cj_17.update()
@@ -142,7 +143,7 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
         fiberwrite_X0_1.update()
 
         done = fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done() and fiberwrite_X0_1.out_done()
-        time += 1
+        time_cnt += 1
 
     fiberwrite_X1_2.autosize()
     fiberwrite_Xvals_0.autosize()
@@ -151,8 +152,26 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()]
     out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
-    f = open("../" + ssname + ".csv", "a")
-    writer = csv.writer(f)
+    def bench():
+        time.sleep(0.01)
+
+    extra_info = dict()
+    sample_dict = repeat_Bj_14.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Bj_14" + "_" + k] =  sample_dict[k]
+
+    sample_dict = intersectk_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectk_11" + "_" + k] =  sample_dict[k]
+
+    sample_dict = spaccumulator1_3.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["spaccumulator1_3" + "_" + k] =  sample_dict[k]
+
+    sample_dict = repeat_Ci_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Ci_7" + "_" + k] =  sample_dict[k]
+
     repsiggen_j_15.print_fifos()
     repeat_Bj_14.print_fifos()
     intersectk_11.print_fifos()
@@ -162,7 +181,4 @@ def test_matmul_jki_i(ssname, debug_sim, fill=0):
     arrayvals_C_6.print_fifos()
     mul_4.print_fifos()
     arrayvals_B_5.print_fifos()
-    intersectk_11.print_intersection_rate()
-    writer.writerow(["matmul_jki","intersectk_11", str(intersectk_11.return_intersection_rate())])
-    f.close()
-    print(ssname)
+    samBench(bench, extra_info)

@@ -1,4 +1,5 @@
 import pytest
+import time
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
@@ -22,7 +23,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_vecmul_ji_i(ssname, debug_sim, fill=0):
+def test_vecmul_ji_i(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -70,9 +71,9 @@ def test_vecmul_ji_i(ssname, debug_sim, fill=0):
     in_ref_B = [0, 'D']
     in_ref_c = [0, 'D']
     done = False
-    time = 0
+    time_cnt = 0
 
-    while not done and time < TIMEOUT:
+    while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bj_11.set_in_ref(in_ref_B.pop(0))
         fiberlookup_Bj_11.update()
@@ -120,7 +121,7 @@ def test_vecmul_ji_i(ssname, debug_sim, fill=0):
         fiberwrite_x0_1.update()
 
         done = fiberwrite_xvals_0.out_done() and fiberwrite_x0_1.out_done()
-        time += 1
+        time_cnt += 1
 
     fiberwrite_xvals_0.autosize()
     fiberwrite_x0_1.autosize()
@@ -128,8 +129,22 @@ def test_vecmul_ji_i(ssname, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
-    f = open("../" + ssname + ".csv", "a")
-    writer = csv.writer(f)
+    def bench():
+        time.sleep(0.01)
+
+    extra_info = dict()
+    sample_dict = intersectj_10.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectj_10" + "_" + k] =  sample_dict[k]
+
+    sample_dict = spaccumulator1_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["spaccumulator1_2" + "_" + k] =  sample_dict[k]
+
+    sample_dict = repeat_ci_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_ci_6" + "_" + k] =  sample_dict[k]
+
     intersectj_10.print_fifos()
     spaccumulator1_2.print_fifos()
     repsiggen_i_7.print_fifos()
@@ -137,7 +152,4 @@ def test_vecmul_ji_i(ssname, debug_sim, fill=0):
     arrayvals_c_5.print_fifos()
     mul_3.print_fifos()
     arrayvals_B_4.print_fifos()
-    intersectj_10.print_intersection_rate()
-    writer.writerow(["vecmul_ji","intersectj_10", str(intersectj_10.return_intersection_rate())])
-    f.close()
-    print(ssname)
+    samBench(bench, extra_info)

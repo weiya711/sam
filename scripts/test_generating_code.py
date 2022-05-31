@@ -52,6 +52,7 @@ def tab(a):
 
 def generate_header(f, out_name):
     f.write("import pytest\n")
+    f.write("import time\n")
     f.write("import scipy.sparse\n")
     f.write("from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan\n")
     f.write("from sam.sim.src.wr_scanner import ValsWrScan\n")
@@ -75,7 +76,7 @@ def generate_header(f, out_name):
     f.write(tab(1) + "reason='CI lacks datasets',\n")
     f.write(")\n")
     f.write("@pytest.mark.suitesparse\n")
-    f.write("def test_" + out_name + "_i(ssname, debug_sim, fill=0):\n")
+    f.write("def test_" + out_name + "_i(samBench, ssname, debug_sim, fill=0):\n")
 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
@@ -204,7 +205,7 @@ def output_check_nodes(f, root_nodes):
     for r in root_nodes:
         f.write(tab(1) + "in_ref_" + str(r) + " = [0, 'D']\n")
     f.write(tab(1) + "done = False\n")
-    f.write(tab(1) + "time = 0\n")
+    f.write(tab(1) + "time_cnt = 0\n")
 
 
 def finish_outputs(f, elements):
@@ -219,7 +220,7 @@ def finish_outputs(f, elements):
             f.write(" and ")
         else:
             f.write("\n")
-    f.write(tab(2) + "time += 1\n\n")
+    f.write(tab(2) + "time_cnt += 1\n\n")
     for elem in elements.keys():
         f.write(tab(1) + elem + ".autosize()\n")
     f.write("\n")
@@ -518,7 +519,7 @@ for apath in file_paths:
     output_check_nodes(f, root_nodes)
 # nx.topological_sort(networkx_graph)
     f.write("\n")
-    f.write(tab(1) + "while not done and time < TIMEOUT:\n")
+    f.write(tab(1) + "while not done and time_cnt < TIMEOUT:\n")
     stream_join_elements = {}
     ready_dataset = {}
     edge_data = {}
@@ -738,27 +739,31 @@ for apath in file_paths:
     # f.write(tab(1) + "\n\n")
     output_list = finish_outputs(f, output_nodes)
 
+    f.write(tab(1) + "def bench():\n")
+    f.write(tab(2) + "time.sleep(0.01)\n\n")
+    f.write(tab(1) + "extra_info = dict()\n")
+    statistic_available = ["reduce", "spaccumulator", "crddrop", "repeat", "repeatsiggen", "intersect"]
+    for u in networkx_graph.nodes():
+        if d[u]["type"] in statistic_available:
+            f.write(tab(1) + "sample_dict = " + d[u]["object"] + ".return_statistics()\n")
+            f.write(tab(1) + "for k in sample_dict.keys():\n")
+            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
+
     # open the file in the write mode
-    f.write(tab(1) + "f = open(\"" + "../\" + " + "ssname" + " + \".csv\", \"a\")\n")
-    f.write(tab(1) + "writer = csv.writer(f)\n")
+    # f.write(tab(1) + "f = open(\"" + "../\" + " + "ssname" + " + \".csv\", \"a\")\n")
+    # f.write(tab(1) + "writer = csv.writer(f)\n")
 
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
             f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
-    for u in networkx_graph.nodes():
-        if "intersect" in d[u]["object"]:
-            f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
-            f.write(tab(1) + "writer.writerow([\"" + out_name[num] + "\",\"" + d[u]["object"] + "\", str(" + d[u]["object"] + ".return_intersection_rate())])\n")
+    # for u in networkx_graph.nodes():
+    #    if "intersect" in d[u]["object"]:
+    #        f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
+    #        f.write(tab(1) + "writer.writerow([\"" + out_name[num] + "\",\"" + d[u]["object"] + "\", str(" + d[u]["object"] + ".return_intersection_rate())])\n")
 
-    f.write(tab(1) + "f.close()\n")
-    f.write(tab(1) + "print(ssname)\n") 
-    #f.write(tab(1) + "test_gold_" + out_name[num].split("_")[0] + "(")
-    #f.write("ssname , formats = [")
-    #for formats in gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[:-1]:
-    #    f.write(formats + ", ")
-    #f.write(gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)[-1])
-    #f.write("], ")
-    #f.write(output_list + ")\n")
+    # f.write(tab(1) + "f.close()\n")
+    # f.write(tab(1) + "print(ssname)\n")
+    f.write(tab(1) + "samBench(bench, extra_info)")
     f.close()
     if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
         os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")

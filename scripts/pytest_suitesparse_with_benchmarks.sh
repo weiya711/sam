@@ -20,6 +20,8 @@ errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+json = '.json'
+
 export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
 export SUITESPARSE_FORMATTED_PATH=$outdir
 
@@ -44,7 +46,7 @@ for i in ${!DATASET_NAMES[@]}; do
 #      errors+=("${name} matmul_ijk")
 #    fi
  
-    pytest -k test_matmul_ --ssname $name -s  #--debug-sim 
+    pytest -k test_mat_mul_full --ssname $name -s --benchmark-json=$name+$json #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 

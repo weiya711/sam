@@ -62,6 +62,11 @@ class Intersect2(CrdJoiner2):
         self.size_in_crd1 = 0
         self.size_in_crd2 = 0
 
+
+        self.difference_in_ref = 0
+        self.max_diff_in_ref = 0
+        self.drop_token_output = 0
+
         self.ocrd = 0
         self.oref1 = 0
         self.oref2 = 0
@@ -129,6 +134,8 @@ class Intersect2(CrdJoiner2):
                 self.total_count += 1
             else:
                 raise Exception('Intersect2: should not enter this case')
+            if self.ocrd == '':
+                self.drop_token_output += 1
         else:
             # Do Nothing if no inputs are detected
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
@@ -158,11 +165,15 @@ class Intersect2(CrdJoiner2):
         if in_ref1 != '' and in_crd1 != '':
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
+            self.difference_in_ref += 1
+            self.max_diff_in_ref = max(self.max_diff_in_ref, abs(self.difference_in_ref))
 
     def set_in2(self, in_ref2, in_crd2):
         if in_ref2 != '' and in_crd2 != '':
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
+            self.difference_in_ref -= 1
+            self.max_diff_in_ref = max(self.max_diff_in_ref, abs(self.difference_in_ref))
 
     def compute_fifos(self):
         self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
@@ -187,6 +198,18 @@ class Intersect2(CrdJoiner2):
 
     def return_intersection_rate(self):
         return self.count / self.total_count
+    
+    def return_statistics(self):
+        stat_dict = {}
+        stat_dict["fifos_ref_1"] = self.size_in_ref1
+        stat_dict["fifos_ref_2"] = self.size_in_ref2
+        stat_dict["fifos_crd_1"] = self.size_in_crd1
+        stat_dict["fifos_crd_2"] = self.size_in_crd2
+        stat_dict["fifo_difference"] = self.max_diff_in_ref
+        stat_dict["intersection_rate"] = self.count / self.total_count
+        stat_dict["drop_count"] = self.drop_token_output 
+        stat_dict["valid_output"] = self.total_count - self.drop_token_output
+        return stat_dict
 
     def print_intersection_rate(self):
         print("Total operations for intersection: ", self.total_count)
