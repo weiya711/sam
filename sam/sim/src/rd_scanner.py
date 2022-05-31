@@ -73,8 +73,18 @@ class UncompressCrdRdScan(CrdRdScan):
 
 
 class CompressedCrdRdScan(CrdRdScan):
-    def __init__(self, crd_arr=[], seg_arr=[], **kwargs):
+    def __init__(self, crd_arr=[], seg_arr=[], skip=True, **kwargs):
         super().__init__(**kwargs)
+
+        # Used for skip list
+        self.skip = skip
+        self.in_crd_skip = []
+        self.curr_skip = None
+        self.skip_processed = True
+        self.prev_crd = 0
+        # [Olivia]: I think this is needed to make sure we are looking at the correct fiber
+        self.skip_stkn_cnt = 0
+        self.out_stkn_cnt = 0
 
         self.crd_arr = crd_arr
         self.seg_arr = seg_arr
@@ -92,7 +102,187 @@ class CompressedCrdRdScan(CrdRdScan):
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
 
+    def _emit_stkn_code(self):
+        self.end_fiber = True
+
+        if len(self.in_ref) > 0:
+            next_in = self.in_ref[0]
+            if is_stkn(next_in):
+                self.in_ref.pop(0)
+                stkn = increment_stkn(next_in)
+            else:
+                stkn = 'S0'
+        else:
+            self.emit_fiber_stkn = True
+            stkn = ''
+        self.curr_crd = stkn
+        self.curr_ref = stkn
+        self.curr_addr = 0
+        self.stop_addr = 0
+        self.start_addr = 0
+
     def update(self):
+        # Process skip token first and save
+        if len(self.in_crd_skip) > 0 and self.skip_processed:
+            self.curr_skip = self.in_crd_skip.pop(0)
+            print("skip tkns", self.skip_stkn_cnt, self.out_stkn_cnt)
+            if self.skip_stkn_cnt == self.out_stkn_cnt and isinstance(self.curr_skip, int) \
+                    and self.curr_skip < self.prev_crd:
+                # ignore the skip if it's too small
+                self.skip_processed = True
+            elif self.skip_stkn_cnt < self.out_stkn_cnt:
+                # ignore the skip if it's a fiber behind
+                self.skip_processed = True
+            else:
+                self.skip_processed = False
+
+            if is_stkn(self.curr_skip):
+                self.skip_stkn_cnt += 1
+
+        curr_in_ref = None
+        # After Done token has been seen and outputted, do nothing
+        if self.curr_crd == 'D' or self.curr_ref == 'D' or self.done:
+            self.curr_addr = 0
+            self.stop_addr = 0
+            self.start_addr = 0
+            self.curr_crd = ''
+            self.curr_ref = ''
+
+        # Scanner needs to emit stop token and the next element has finally arrived.
+        # Previously set emit_fiber_stkn to True but wait on next in_ref
+        elif len(self.in_ref) > 0 and self.emit_fiber_stkn:
+            next_in = self.in_ref[0]
+            if is_stkn(next_in):
+                self.in_ref.pop(0)
+                stkn = increment_stkn(next_in)
+            else:
+                stkn = 'S0'
+            self.curr_crd = stkn
+            self.curr_ref = stkn
+
+            self.curr_addr = 0
+            self.stop_addr = 0
+            self.start_addr = 0
+            self.emit_fiber_stkn = False
+
+        # There exists another input reference at the segment and
+        # either at the start of computation or end of fiber
+        elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_crd is None or self.curr_ref is None)):
+            if self.curr_crd is None or self.curr_ref is None:
+                assert (self.curr_crd == self.curr_ref)
+            self.end_fiber = False
+
+            curr_in_ref = self.in_ref.pop(0)
+
+            # Input reference is out of bounds
+            if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_slen:
+                raise Exception('Not enough elements in seg array')
+
+            # Input reference is a stop or done token, so forward that token (and set done if done token)
+            elif is_stkn(curr_in_ref) or curr_in_ref == 'D':
+                self.curr_addr = 0
+                self.stop_addr = 0
+                self.start_addr = 0
+                self.curr_crd = curr_in_ref
+                self.curr_ref = curr_in_ref
+                self.end_fiber = True
+                if curr_in_ref == 'D':
+                    self.done = True
+
+            # See 'N' 0-token which immediately emits a stop token and ends the fiber
+            elif is_0tkn(curr_in_ref):
+                self._emit_stkn_code()
+
+            # Default case where input reference is an integer value
+            # which means to get the segment
+            else:
+                print("HELLO", curr_in_ref)
+                self.start_addr = self.seg_arr[curr_in_ref]
+                self.stop_addr = self.seg_arr[curr_in_ref + 1]
+                self.curr_addr = self.start_addr
+
+                # This case is if the segment has no coordinates (i.e. 5, 5)
+                if self.curr_addr >= self.stop_addr:
+                    # End of fiber, get next input reference
+                    self._emit_stkn_code()
+
+                # Default behave normally and emit the coordinates in the segment
+                else:
+                    print("THIS", self.skip_processed)
+                    if self.skip and not self.skip_processed:
+                        # assert self.out_stkn_cnt == self.skip_stkn_cnt
+                        curr_range = self.crd_arr[self.start_addr: self.stop_addr]
+                        # Skip to next coordinate
+                        if self.curr_skip in curr_range and isinstance(self.curr_skip, int) \
+                                and self.curr_skip > self.prev_crd:
+                            self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
+                            self.curr_crd = self.crd_arr[self.curr_addr]
+                            self.curr_ref = self.curr_addr
+                        # Early exit from skip
+                        elif is_stkn(self.curr_skip):
+                            self._emit_stkn_code()
+                        self.skip_processed = True
+                    # Else behave normally
+                    else:
+                        self.curr_crd = self.crd_arr[self.curr_addr]
+                        self.curr_ref = self.curr_addr
+
+        # Finished emitting coordinates and have reached the end of the fiber for this level
+        elif (self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1) and \
+                self.curr_crd is not None and self.curr_ref is not None:
+            # End of fiber, get next input reference
+            self._emit_stkn_code()
+
+        # Base case: increment address and reference by 1 and get next coordinate
+        elif len(self.in_ref) > 0 and self.curr_crd is not None and self.curr_ref is not None:
+            print("HELLO")
+            default_behavior = True
+            if self.skip and not self.skip_processed:
+                # assert self.out_stkn_cnt == self.skip_stkn_cnt
+                curr_range = self.crd_arr[self.start_addr: self.stop_addr]
+                if self.curr_skip in curr_range and isinstance(self.curr_skip, int) \
+                        and self.curr_skip > self.prev_crd:
+                    self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
+                    self.curr_ref = self.curr_addr
+                    self.curr_crd = self.crd_arr[self.curr_addr]
+                    default_behavior = False
+                elif is_stkn(self.curr_skip):
+                    self._emit_stkn_code()
+                    default_behavior = False
+                self.skip_processed = True
+
+            if default_behavior:
+                self.curr_addr += 1
+                self.curr_ref = self.curr_addr
+                self.curr_crd = self.crd_arr[self.curr_addr]
+
+        # Default stall (when done)
+        elif self.curr_crd is not None and self.curr_ref is not None:
+            self.curr_ref = ''
+            self.curr_crd = ''
+
+        # Needed for skip lists
+        if is_stkn(self.curr_crd):
+            self.out_stkn_cnt += 1
+        # Needed for skip lists
+        if self.skip_stkn_cnt < self.out_stkn_cnt:
+            # ignore the skip if it's a fiber behind
+            self.skip_processed = True
+        # Needed for skip lists
+        if isinstance(self.curr_crd, int):
+            self.prev_crd = self.curr_crd
+
+        # Debugging print statements
+        if self.debug:
+            print("DEBUG: C RD SCAN: \t "
+                  "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref,
+                  "\n curr addr:", self.curr_addr, "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
+                  "\n end fiber:", self.end_fiber, "\t curr input:", curr_in_ref,
+                  "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
+                  self.prev_crd,
+                  "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt)
+
+    def update_noskip(self):
         curr_in_ref = None
         # After Done token has been seen and outputted, do nothing
         if self.curr_crd == 'D' or self.curr_ref == 'D' or self.done:
@@ -231,6 +421,11 @@ class CompressedCrdRdScan(CrdRdScan):
                   "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
                   "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
                   "\t end fiber:", self.end_fiber, "\t curr input:", curr_in_ref)
+
+    def set_crd_skip(self, in_crd):
+        assert is_valid_crd(in_crd)
+        if in_crd != '':
+            self.in_crd_skip.append(in_crd)
 
 
 # ---------------- BV --------------#

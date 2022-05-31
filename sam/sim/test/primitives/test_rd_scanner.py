@@ -3,6 +3,7 @@ import pytest
 
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.test.test import TIMEOUT
+from sam.sim.src.base import remove_emptystr
 
 
 ########################################
@@ -210,5 +211,63 @@ def test_rd_scan_direct_c_0tkn_nd(arrs, debug_sim):
         done = crdscan.done
         time += 1
 
+    assert (out_crd == gold_crd)
+    assert (out_ref == gold_ref)
+
+
+arr_dict1 = {"seg": [0, 10], "crd": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "in_ref": [0, 'D'],
+             "in_skip": [2, 7, 'S0'],
+             "out_crd": [2, 7, 'S0', 'D'],
+             "out_ref": [2, 7, 'S0', 'D']}
+arr_dict2 = {"seg": [0, 10], "crd": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "in_ref": [0, 'D'],
+             "in_skip": ['', '', '', 0, 7, 'S0'],
+             "out_crd": [0, 1, 2, 3, 7, 'S0', 'D'],
+             "out_ref": [0, 1, 2, 3, 7, 'S0', 'D']}
+arr_dict3 = {"seg": [0, 5, 10], "crd": [0, 1, 2, 3, 4, 0, 1, 2, 3, 4], "in_ref": [0, 1, 'S0', 'D'],
+             "in_skip": [2, 'S0', 3, 'S1'],
+             "out_crd": [2, 'S0', 3, 'S1', 'D'],
+             "out_ref": [2, 'S0', 8, 'S1', 'D']}
+arr_dict4 = {"seg": [0, 5, 10], "crd": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], "in_ref": [0, 1, 'S0', 'D'],
+             "in_skip": ['', '', '', '', '', 2, 'S0', 9, 'S1'],
+             "out_crd": [0, 1, 2, 3, 4, 'S0', 5, 9, 'S1', 'D'],
+             "out_ref": [0, 1, 2, 3, 4, 'S0', 5, 9, 'S1', 'D']}
+
+
+@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4])
+def test_rd_scan_direct_c_skip_nd(arrs, debug_sim):
+    seg_arr = arrs["seg"]
+    crd_arr = arrs["crd"]
+
+    gold_crd = arrs["out_crd"]
+    gold_ref = arrs["out_ref"]
+    assert (len(gold_crd) == len(gold_ref))
+
+    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
+
+    in_ref = copy.deepcopy(arrs["in_ref"])
+    in_skip = copy.deepcopy(arrs["in_skip"])
+    done = False
+    time = 0
+    out_crd = []
+    out_ref = []
+    while not done and time < TIMEOUT:
+        if len(in_ref) > 0:
+            crdscan.set_in_ref(in_ref.pop(0))
+        if len(in_skip) > 0:
+            crdscan.set_crd_skip(in_skip.pop(0))
+        crdscan.update()
+
+        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+        out_crd.append(crdscan.out_crd())
+        out_ref.append(crdscan.out_ref())
+        done = crdscan.done
+        time += 1
+
+    print(out_crd)
+    print(out_ref)
+    out_crd = remove_emptystr(out_crd)
+    out_ref = remove_emptystr(out_ref)
+    print(out_crd)
+    print(out_ref)
     assert (out_crd == gold_crd)
     assert (out_ref == gold_ref)

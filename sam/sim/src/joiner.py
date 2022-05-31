@@ -56,7 +56,7 @@ class BVJoiner2(Joiner2):
 
 
 class Intersect2(CrdJoiner2):
-    def __init__(self, **kwargs):
+    def __init__(self, skip=True, **kwargs):
         super().__init__(**kwargs)
 
         self.size_in_ref1 = 0
@@ -72,15 +72,54 @@ class Intersect2(CrdJoiner2):
         self.total_count = 0
         self.count = 0
 
+        self.skip = skip
+        self.curr_skip1 = ''
+        self.curr_skip2 = ''
+        self.change_crd1 = True
+        self.change_crd2 = True
+
+    def _inc2(self):
+        self.ocrd = ''
+        self.oref1 = ''
+        self.oref2 = ''
+        self.curr_crd2 = self.in_crd2.pop(0)
+        self.curr_ref2 = self.in_ref2.pop(0)
+        self.change_crd2 = True
+        self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''  # Skip list
+        self.change_crd1 = False
+        self.total_count += 1
+
+    def _inc1(self):
+        self.ocrd = ''
+        self.oref1 = ''
+        self.oref2 = ''
+        self.curr_crd1 = self.in_crd1.pop(0)
+        self.curr_ref1 = self.in_ref1.pop(0)
+        self.change_crd1 = True
+        self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''  # Skip list
+        self.change_crd2 = False
+        self.total_count += 1
+
     def update(self):
+        # Skip list
+        self.curr_skip1 = ''
+        self.curr_skip2 = ''
+
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
             # FIXME: See when only one 'D' signal is present
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
+                assert self.curr_crd1 == self.curr_crd2, "Both coordinates need to be done tokens"
                 self.done = True
                 self.ocrd = 'D'
                 self.oref1 = 'D'
                 self.oref2 = 'D'
             elif self.curr_crd2 == self.curr_crd1:
+                # Skip list
+                if is_stkn(self.curr_crd2):
+                    print("SKIP HERE")
+                    self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''
+                    self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''
+
                 self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
                 self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
                 self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
@@ -88,36 +127,19 @@ class Intersect2(CrdJoiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
+                self.change_crd1 = True
+                self.change_crd2 = True
+
                 self.total_count += 1
                 self.count += 1
             elif is_stkn(self.curr_crd1):
-                self.ocrd = ''
-                self.oref1 = ''
-                self.oref2 = ''
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count += 1
+                self._inc2()
             elif is_stkn(self.curr_crd2):
-                self.ocrd = ''
-                self.oref1 = ''
-                self.oref2 = ''
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count += 1
+                self._inc1()
             elif self.curr_crd1 < self.curr_crd2:
-                self.ocrd = ''
-                self.oref1 = ''
-                self.oref2 = ''
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count += 1
+                self._inc1()
             elif self.curr_crd1 > self.curr_crd2:
-                self.ocrd = ''
-                self.oref1 = ''
-                self.oref2 = ''
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count += 1
+                self._inc2()
             else:
                 raise Exception('Intersect2: should not enter this case')
         else:
@@ -138,10 +160,20 @@ class Intersect2(CrdJoiner2):
         self.compute_fifos()
 
         if self.debug:
-            print("DEBUG: INTERSECT: \t OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                  "\t Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
-                  "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
-                  self.count / self.total_count)
+            print("DEBUG: INTERSECT: ",
+                  "\n OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
+                  "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
+                  "\n Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
+                  "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
+                  "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
+                  "\n Intersection rate: ",
+                  self.return_intersection_rate())
+
+    def out_crd_skip1(self):
+        return self.curr_skip1 if self.skip else ''
+
+    def out_crd_skip2(self):
+        return self.curr_skip2 if self.skip else ''
 
     def compute_fifos(self):
         self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
@@ -247,7 +279,7 @@ class Union2(CrdJoiner2):
 
         if self.debug:
             print("DEBUG: INTERSECT: \t OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                  "\t Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
+                  "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
                   "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
                   "\n Union rate: ",
                   self.return_union_rate())
