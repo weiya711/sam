@@ -36,9 +36,10 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'rd_scan_to_glb': [
                     # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (other_data, "f2io_16")], 17),
-                    ([(other_ready, "io2f_1"), (rd_scan, "coord_out_ready")], 1),
-                    ([(rd_scan, "coord_out_valid"), (other_valid, "f2io_1")], 1),
+                    # ([(rd_scan, "coord_out"), (other_data, "f2io_16")], 17),
+                    ([(rd_scan, "coord_out"), (other_data, "f2io_17")], 17),
+                    # ([(other_ready, "io2f_1"), (rd_scan, "coord_out_ready")], 1),
+                    # ([(rd_scan, "coord_out_valid"), (other_valid, "f2io_1")], 1),
                 ]
             }
             return new_conns

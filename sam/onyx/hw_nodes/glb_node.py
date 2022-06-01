@@ -74,9 +74,10 @@ class GLBNode(HWNode):
             new_conns = {
                 'glb_to_wr_scan': [
                     # send output to rd scanner
-                    ([(self.data, "io2f_16"), (wr_scan, "data_in")], 16),
-                    ([(wr_scan, "data_in_ready"), (self.ready, "f2io_1")], 1),
-                    ([(self.valid, "io2f_1"), (wr_scan, "data_in_valid")], 1),
+                    # ([(self.data, "io2f_16"), (wr_scan, "data_in")], 16),
+                    ([(self.data, "io2f_17"), (wr_scan, "data_in")], 17),
+                    # ([(wr_scan, "data_in_ready"), (self.ready, "f2io_1")], 1),
+                    # ([(self.valid, "io2f_1"), (wr_scan, "data_in_valid")], 1),
                 ]
             }
             return new_conns
