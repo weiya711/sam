@@ -23,7 +23,7 @@ NC='\033[0m' # No Color
 export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
 
 cwd=$(pwd)
-resultdir=results/
+resultdir=results
 
 mkdir -p $cwd/$resultdir
 
