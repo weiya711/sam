@@ -9,5 +9,6 @@ __pycache__/
 *.pdf
 
 build/
-
+logs/
+results/
 sam-outputs/

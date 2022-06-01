@@ -1,7 +1,6 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -t 360
-outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 
 DATASET_NAMES=(
   bcsstm04
@@ -22,11 +21,12 @@ NC='\033[0m' # No Color
 
 
 export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-export SUITESPARSE_FORMATTED_PATH=$outdir
 
 cwd=$(pwd)
+resultdir=results/
 
-mkdir -p $outdir
+mkdir -p $cwd/$resultdir
+
 cd ./sam/sim
 
 for i in ${!DATASET_NAMES[@]}; do
@@ -34,13 +34,13 @@ for i in ${!DATASET_NAMES[@]}; do
 
     echo "Testing $name..."
 
-    pytest test/apps/  --ssname $name -s --benchmark-json=$name.json #--debug-sim 
-    $cwd/scripts/converter.py --json_name $name.json	
+    pytest test/apps/  --ssname $name -s --benchmark-json=$resultdir/$name.json #--debug-sim 
+    python $cwd/scripts/converter.py --json_name $resultdir/$name.json	
 	    
     status=$?
     if [ $status -gt 0 ]
     then 
-      errors+=("${name} matmul_ijk")
+      errors+=("${name}")
     fi
 
 

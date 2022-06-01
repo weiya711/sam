@@ -5,7 +5,7 @@ import os
 
 UNWANTED_KEYS = ['group', 'params', 'options']
 FLATTEN_KEYS = ['extra_info', 'stats']
-RESULTS_DIR = 'results/numpy/'
+RESULTS_DIR = 'results/'
 
 def convert(json_names, csv_names):
     for json_name, csv_name in zip(json_names, csv_names):
