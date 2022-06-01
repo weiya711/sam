@@ -21,7 +21,7 @@ NC='\033[0m' # No Color
 
 
 export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-
+export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 cwd=$(pwd)
 resultdir=results
 

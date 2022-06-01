@@ -22,8 +22,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_tensor3_identity_i(samBench, ssname, debug_sim, fill=0):
+@pytest.mark.frosst
+def test_tensor3_identity(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -99,5 +99,6 @@ def test_tensor3_identity_i(samBench, ssname, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
+    extra_info["dataset"] = ssname
     arrayvals_B_4.print_fifos()
     samBench(bench, extra_info)

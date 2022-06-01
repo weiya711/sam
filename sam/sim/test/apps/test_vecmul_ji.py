@@ -22,8 +22,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_vecmul_ji_i(samBench, ssname, debug_sim, fill=0):
+@pytest.mark.generated
+def test_vecmul_ji(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -133,6 +133,7 @@ def test_vecmul_ji_i(samBench, ssname, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
+    extra_info["dataset"] = ssname
     sample_dict = intersectj_10.return_statistics()
     for k in sample_dict.keys():
         extra_info["intersectj_10" + "_" + k] =  sample_dict[k]

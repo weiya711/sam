@@ -78,6 +78,8 @@ class Intersect2(CrdJoiner2):
 
         self.total_count = 0
         self.count = 0
+        self.run_count = 0
+        self.max_run_count = 0
 
     def update(self):
         flag = 0
@@ -100,6 +102,8 @@ class Intersect2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.total_count += 1
                 self.count += 1
+                self.run_count = 0
+                self.max_run_count = max(self.max_run_count, abs(self.run_count))
             elif is_stkn(self.curr_crd1):
                 flag = 3
                 self.ocrd = ''
@@ -124,6 +128,11 @@ class Intersect2(CrdJoiner2):
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.total_count += 1
+                if self.run_count >= 0:
+                    self.run_count += 1;
+                    self.max_run_count = max(self.max_run_count, abs(self.run_count))
+                else:
+                    self.run_count = 0
             elif self.curr_crd1 > self.curr_crd2:
                 flag = 6
                 self.ocrd = ''
@@ -132,6 +141,11 @@ class Intersect2(CrdJoiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.total_count += 1
+                if self.run_count < 0:
+                    self.run_count -= 1;
+                    self.max_run_count = max(self.max_run_count, abs(self.run_count))
+                else:
+                    self.run_count = 0 
             else:
                 raise Exception('Intersect2: should not enter this case')
             if self.ocrd == '':
@@ -209,6 +223,7 @@ class Intersect2(CrdJoiner2):
         stat_dict["intersection_rate"] = self.count / self.total_count
         stat_dict["drop_count"] = self.drop_token_output 
         stat_dict["valid_output"] = self.total_count - self.drop_token_output
+        stat_dict["run_count"] = self.max_run_count
         return stat_dict
 
     def print_intersection_rate(self):
