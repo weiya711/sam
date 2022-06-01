@@ -9,17 +9,28 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "suitesparse: mark test as needing suitesparse dataset to run")
+    config.addinivalue_line("markers", "frostt: mark test as needing suitesparse dataset to run")
+    config.addinivalue_line("markers", "vec: mark test as needing suitesparse dataset to run")
 
 
 def pytest_collection_modifyitems(config, items):
-    if config.getoption("--ssname"):
-        # --ssname given in cli: do not skip apps/ tests
-        return
     skip_ss = pytest.mark.skip(reason="Need --ssname option to run")
-    for item in items:
-        if "suitesparse" in item.keywords:
-            item.add_marker(skip_ss)
-
+    skip_frostt = pytest.mark.skip(reason="Need --frosttname option to run")
+    skip_vec = pytest.mark.skip(reason="Need --vecname option to run")
+    if not config.getoption("--ssname"):
+        # --ssname given in cli: do not skip apps/ tests
+        for item in items:
+            if "suitesparse" in item.keywords:
+                item.add_marker(skip_ss)
+    if not config.getoption("--frosttname"):
+        for item in items:
+            if "frostt" in item.keywords:
+                item.add_marker(skip_frostt)
+    
+    if not config.getoption("vecname"):
+        for item in items:
+            if "vec" in item.keywords:
+                item.add_marker(skip_vec)
 
 @pytest.fixture
 def debug_sim(request):
@@ -30,6 +41,13 @@ def debug_sim(request):
 def ssname(request):
     return request.config.getoption("--ssname")
 
+@pytest.fixture
+def frosttname(request):
+    return request.config.getoption("--frosttname")
+
+@pytest.fixture
+def vecname(request):
+    return request.config.getoption("--vecname")
 
 @pytest.fixture
 def samBench(benchmark):
