@@ -76,7 +76,7 @@ def generate_header(f, out_name):
     f.write(tab(1) + "reason='CI lacks datasets',\n")
     f.write(")\n")
     f.write("@pytest.mark.suitesparse\n")
-    f.write("def test_" + out_name + "_i(samBench, ssname, debug_sim, fill=0):\n")
+    f.write("def test_" + out_name + "(samBench, ssname, debug_sim, fill=0):\n")
 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
