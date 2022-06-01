@@ -11,7 +11,7 @@ from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
+def test_unit_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
     in_vec1 = [random.randint(0, max_val) for _ in range(dim1)]
     in_vec2 = [random.randint(0, max_val) for _ in range(dim1)]
 
@@ -55,7 +55,7 @@ def test_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
+def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     assert(size > max_val)
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
@@ -133,7 +133,7 @@ def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
+def test_unit_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     assert(size > max_val)
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
@@ -210,7 +210,7 @@ def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
+def test_unit_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
     assert(size >= dim)
 
     crd_arr1 = [random.randint(0, dim - 1) for _ in range(nnz)]

@@ -12,7 +12,7 @@ from sam.sim.test.test import *
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
 @pytest.mark.parametrize("dim2", [4, 16, 32, 64])
-def test_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
     size = dim1 * dim2 + 1
     in_mat1 = [random.randint(0, max_val) for _ in range(dim1 * dim2)]
     in_mat2 = [random.randint(0, max_val) for _ in range(dim1 * dim2)]
@@ -111,7 +111,7 @@ arrs_dict3 = {
 
 
 @pytest.mark.parametrize("arrs", [arrs_dict0, arrs_dict1, arrs_dict2, arrs_dict3])
-def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
+def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
     in_mat_crds1 = copy.deepcopy(arrs['crd_arrs1'])
     in_mat_segs1 = copy.deepcopy(arrs['seg_arrs1'])
     in_mat_vals1 = copy.deepcopy(arrs['val_arr1'])
@@ -249,7 +249,7 @@ def test_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
-def test_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
     in_mat_vals1 = gen_val_arr(len(in_mat_crds1[-1]), max_val, -max_val)
     in_mat_crds2, in_mat_segs2 = gen_n_comp_arrs(2, dim)

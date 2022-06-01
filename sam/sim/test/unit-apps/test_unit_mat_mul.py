@@ -14,7 +14,7 @@ from sam.sim.test.test import *
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
-def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
     in_mat_vals1 = gen_val_arr(len(in_mat_crds1[-1]), max_val, -max_val)
     in_mat_crds2, in_mat_segs2 = gen_n_comp_arrs(2, dim)
@@ -166,7 +166,7 @@ def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
-def test_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
     in_mat_vals1 = gen_val_arr(len(in_mat_crds1[-1]), max_val, -max_val)
     in_mat_crds2, in_mat_segs2 = gen_n_comp_arrs(2, dim)
@@ -354,7 +354,7 @@ arr_dict = {'in1': {'shape': (4, 4), 'seg': [0, 0, 2, 3, 3], 'crd': [2, 3, 3], '
 
 
 @pytest.mark.parametrize("arrs", [arr_dict])
-def test_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
+def test_unit_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
     temp1 = arrs['in1']
     temp2 = arrs['in2']
     csr1 = scipy.sparse.csr_matrix((temp1['data'], temp1['crd'], temp1['seg']), shape=temp1['shape'])
