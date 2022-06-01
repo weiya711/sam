@@ -5,6 +5,8 @@ def pytest_addoption(parser):
     parser.addoption("--debug-sim", action="store_true", default=False,
                      help="Emit debug print statements. Use with `-s`")
     parser.addoption("--ssname", action="store", help="Suitesparse name for the end-to-end test")
+    parser.addoption("--frosttname", action="store", help="Frostt name for the end-to-end test")
+    parser.addoption("--vecname", action="store", help="Vector name for the end-to-end test")
 
 
 def pytest_configure(config):

@@ -34,8 +34,8 @@ for i in ${!DATASET_NAMES[@]}; do
 
     echo "Testing $name..."
 
-    pytest test/apps/  --ssname $name -s --benchmark-json=$resultdir/$name.json #--debug-sim 
-    python $cwd/scripts/converter.py --json_name $resultdir/$name.json	
+    pytest test/apps/  --ssname $name -s --benchmark-json=$cwd/$resultdir/$name.json #--debug-sim 
+    python $cwd/scripts/converter.py --json_name $cwd/$resultdir/$name.json	
 	    
     status=$?
     if [ $status -gt 0 ]
