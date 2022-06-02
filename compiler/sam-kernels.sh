@@ -30,7 +30,13 @@ KERNEL_NAMES=(
   tensor3_innerprod
   tensor3_ttv
   tensor3_ttm
+  mat_sddmm
+  mat_mattransmul
+  mat_residual
+  mat_elemadd3
+  tensor3_mttkrp
 )
+
 
 TACO_ARGS=(
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"
@@ -54,6 +60,11 @@ TACO_ARGS=(
   "x=B(i,j,k)*C(i,j,k) -f=B:sss -f=C:sss"
   "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"
   "X(i,j,k)=B(i,j,l)*C(k,l) -f=X:sss -f=B:sss -f=C:ss"
+  "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:dd -f=D:dd:1,0 -s=reorder(i,j,k)"
+  "x(i)=b*C(j,i)*d(j)+e*f(i) -f=C:ds:1,0"
+  "x(i)=b(i)-C(i,j)*d(j) -f=C:ds"
+  "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss"
+  "X(i,j)=B(i,k,l)*C(j,k)*D(j,l) -f=X:ss -f=B:sss -f=C:ss -f=D:ss" 
 )
 
 mkdir -p $dir
