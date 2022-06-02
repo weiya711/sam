@@ -39,9 +39,9 @@ class ComputeNode(HWNode):
                 'pe_to_rd_scan': [
                     # send output to rd scanner
                     ([(pe, "data_out"), (rd_scan, "us_pos_in")], 16),
-                    ([(pe, "eos_out"), (rd_scan, "us_eos_in")], 1),
-                    ([(rd_scan, "us_ready_out"), (pe, "ready_in")], 1),
-                    ([(pe, "valid_out"), (rd_scan, "us_valid_in")], 1),
+                    # ([(pe, "eos_out"), (rd_scan, "us_eos_in")], 1),
+                    # ([(rd_scan, "us_ready_out"), (pe, "ready_in")], 1),
+                    # ([(pe, "valid_out"), (rd_scan, "us_valid_in")], 1),
                 ]
             }
             return new_conns
@@ -52,9 +52,9 @@ class ComputeNode(HWNode):
                 'pe_to_wr_scan': [
                     # send output to rd scanner
                     ([(pe, "data_out"), (wr_scan, "data_in_0")], 16),
-                    ([(pe, "eos_out"), (wr_scan, "eos_in_0")], 1),
-                    ([(wr_scan, "ready_out_0"), (pe, "ready_in")], 1),
-                    ([(pe, "valid_out"), (wr_scan, "valid_in_0")], 1),
+                    # ([(pe, "eos_out"), (wr_scan, "eos_in_0")], 1),
+                    # ([(wr_scan, "ready_out_0"), (pe, "ready_in")], 1),
+                    # ([(pe, "valid_out"), (wr_scan, "valid_in_0")], 1),
                 ]
             }
             return new_conns
@@ -74,9 +74,9 @@ class ComputeNode(HWNode):
                 f'pe_to_isect_{in_str}_{isect_conn}': [
                     # send output to rd scanner
                     ([(pe, "data_out"), (isect, f"{in_str}_{isect_conn}")], 16),
-                    ([(pe, "eos_out"), (isect, f"eos_in_{isect_conn * 2 + offset}")], 1),
-                    ([(isect, f"ready_out_{isect_conn * 2 + offset}"), (pe, "ready_in")], 1),
-                    ([(pe, "valid_out"), (isect, f"valid_in_{isect_conn * 2 + offset}")], 1),
+                    # ([(pe, "eos_out"), (isect, f"eos_in_{isect_conn * 2 + offset}")], 1),
+                    # ([(isect, f"ready_out_{isect_conn * 2 + offset}"), (pe, "ready_in")], 1),
+                    # ([(pe, "valid_out"), (isect, f"valid_in_{isect_conn * 2 + offset}")], 1),
                 ]
             }
             other.update_input_connections()
@@ -88,9 +88,9 @@ class ComputeNode(HWNode):
                 f'pe_to_reduce': [
                     # send output to rd scanner
                     ([(pe, "data_out"), (other_red, f"data_in")], 16),
-                    ([(pe, "eos_out"), (other_red, f"eos_in")], 1),
-                    ([(other_red, f"ready_out"), (pe, "ready_in")], 1),
-                    ([(pe, "valid_out"), (other_red, f"valid_in")], 1),
+                    # ([(pe, "eos_out"), (other_red, f"eos_in")], 1),
+                    # ([(other_red, f"ready_out"), (pe, "ready_in")], 1),
+                    # ([(pe, "valid_out"), (other_red, f"valid_in")], 1),
                 ]
             }
             return new_conns
@@ -111,9 +111,9 @@ class ComputeNode(HWNode):
                 f'pe_to_pe_{other_conn}': [
                     # send output to rd scanner
                     ([(pe, "data_out"), (other_pe, f"data_in_{other_conn}")], 16),
-                    ([(pe, "eos_out"), (other_pe, f"eos_in_{other_conn}")], 1),
-                    ([(other_pe, f"ready_out_{other_conn}"), (pe, "ready_in")], 1),
-                    ([(pe, "valid_out"), (other_pe, f"valid_in_{other_conn}")], 1),
+                    # ([(pe, "eos_out"), (other_pe, f"eos_in_{other_conn}")], 1),
+                    # ([(other_pe, f"ready_out_{other_conn}"), (pe, "ready_in")], 1),
+                    # ([(pe, "valid_out"), (other_pe, f"valid_in_{other_conn}")], 1),
                 ]
             }
             other.update_input_connections()

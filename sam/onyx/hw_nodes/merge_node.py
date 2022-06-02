@@ -52,9 +52,9 @@ class MergeNode(HWNode):
             new_conns = {
                 f'merge_{conn}_to_wr_scan': [
                     ([(merge, f"cmrg_coord_out_{conn}"), (wr_scan, f"data_in_0")], 16),
-                    ([(merge, f"cmrg_eos_out_{conn}"), (wr_scan, f"eos_in_0")], 1),
-                    ([(wr_scan, f"ready_out_0"), (merge, f"cmrg_ready_in_{conn}")], 1),
-                    ([(merge, f"cmrg_valid_out_{conn}"), (wr_scan, f"valid_in_0")], 1),
+                    # ([(merge, f"cmrg_eos_out_{conn}"), (wr_scan, f"eos_in_0")], 1),
+                    # ([(wr_scan, f"ready_out_0"), (merge, f"cmrg_ready_in_{conn}")], 1),
+                    # ([(merge, f"cmrg_valid_out_{conn}"), (wr_scan, f"valid_in_0")], 1),
                 ]
             }
 
