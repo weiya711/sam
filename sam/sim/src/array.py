@@ -107,6 +107,13 @@ class Array(Primitive):
             fill = self.fill
         self.arr = [fill for _ in range(self.size)]
 
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["array_size"] = self.size
+        stats_dict["fifo_addr"] = self.load_addr_size
+        stats_dict["fifo_vals"] = self.store_vals_size
+        return stats_dict
+
     def print_fifos(self):
         print("Arrayvals fifo addresses: ", self.load_addr_size)
         print("Arrayvals fifo vals: ", self.store_vals_size)
