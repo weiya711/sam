@@ -95,12 +95,14 @@ class CompressedCrdRdScan(CrdRdScan):
         self.curr_addr = 0
 
         self.end_fiber = False
-        self.curr_ref = None
-        self.curr_crd = None
+        self.curr_ref = ''
+        self.curr_crd = ''
         self.emit_fiber_stkn = False
 
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
+
+        self.begin = True
 
     def _emit_stkn_code(self):
         self.end_fiber = True
@@ -170,9 +172,8 @@ class CompressedCrdRdScan(CrdRdScan):
 
         # There exists another input reference at the segment and
         # either at the start of computation or end of fiber
-        elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_crd is None or self.curr_ref is None)):
-            if self.curr_crd is None or self.curr_ref is None:
-                assert (self.curr_crd == self.curr_ref)
+        elif len(self.in_ref) > 0 and (self.end_fiber or self.begin):
+            self.begin = False
             self.end_fiber = False
 
             curr_in_ref = self.in_ref.pop(0)
@@ -242,12 +243,12 @@ class CompressedCrdRdScan(CrdRdScan):
 
         # Finished emitting coordinates and have reached the end of the fiber for this level
         elif (self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1) and \
-                self.curr_crd is not None and self.curr_ref is not None:
+                not self.begin:
             # End of fiber, get next input reference
             self._emit_stkn_code()
 
         # Base case: increment address and reference by 1 and get next coordinate
-        elif len(self.in_ref) > 0 and self.curr_crd is not None and self.curr_ref is not None:
+        elif len(self.in_ref) > 0 and not self.begin:
             default_behavior = True
             if self.skip and not self.skip_processed:
                 # assert self.out_stkn_cnt == self.skip_stkn_cnt
@@ -281,7 +282,7 @@ class CompressedCrdRdScan(CrdRdScan):
                 self._set_curr()
 
         # Default stall (when done)
-        elif self.curr_crd is not None and self.curr_ref is not None:
+        elif not self.begin:
             self.curr_ref = ''
             self.curr_crd = ''
 
