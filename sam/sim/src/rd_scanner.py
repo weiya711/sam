@@ -431,16 +431,7 @@ class CompressedCrdRdScan(CrdRdScan):
             self.start_addr = 0
             self.start = False
 
-        elif len(self.in_ref) > 0 and not self.start:
-            # Base case: increment address and reference by 1 and get next coordinate
-            self.curr_addr += 1
-            self.curr_ref = self.curr_addr
-            self.curr_crd = self.crd_arr[self.curr_addr]
-            self.start = False
 
-        else:
-            # Default stall (when done)
-        # Base case: increment address and reference by 1 and get next coordinate
         elif len(self.in_ref) > 0 and self.curr_crd is not None and self.curr_ref is not None:
             self.curr_addr += 1
             self.curr_ref = self.curr_addr
