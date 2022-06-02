@@ -7,58 +7,22 @@ class Joiner2(Primitive, ABC):
         self.oref1 = 0
         self.oref2 = 0
     
-    @abstractmethod
     def out_ref1(self):
-        pass
+        return self.oref1
 
-    @abstractmethod
     def out_ref2(self):
-        pass
+        return self.oref1
 
 
 class CrdJoiner2(Joiner2):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-    @abstractmethod
-    def set_in1(self, in_ref1, in_crd1):
-        pass
-
-    @abstractmethod
-    def set_in2(self, in_ref2, in_crd2):
-        pass
-
-    @abstractmethod
-    def out_crd(self):
-        pass
-
-
-class BVJoiner2(Joiner2):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    @abstractmethod
-    def set_in1(self, in_ref1, in_bv1):
-        pass
-
-    @abstractmethod
-    def set_in2(self, in_ref2, in_bv2):
-        pass
-
-    @abstractmethod
-    def out_bv(self):
-        pass
-
-
-class Intersect2(CrdJoiner2):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         self.ocrd = 0
-
         self.in_ref1 = []
         self.in_ref2 = []
         self.in_crd1 = []
         self.in_crd2 = []
+
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '':
@@ -89,6 +53,7 @@ class BVJoiner2(Joiner2):
     @abstractmethod
     def out_bv(self):
         pass
+
 
 
 class Intersect2(CrdJoiner2):
@@ -183,8 +148,19 @@ class Intersect2(CrdJoiner2):
                 self._inc1()
             elif self.curr_crd1 < self.curr_crd2:
                 self._inc1()
+                if self.run_count >= 0:
+                    self.run_count += 1;
+                    self.max_run_count = max(self.max_run_count, abs(self.run_count))
+                else:
+                    self.run_count = 0
+ 
             elif self.curr_crd1 > self.curr_crd2:
                 self._inc2()
+                if self.run_count < 0:
+                    self.run_count -= 1;
+                    self.max_run_count = max(self.max_run_count, abs(self.run_count))
+                else:
+                    self.run_count = 0 
             else:
                 raise Exception('Intersect2: should not enter this case')
         else:
@@ -316,12 +292,6 @@ class Union2(CrdJoiner2):
                 self.oref2 = 'N'
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count += 1
-                if self.run_count >= 0:
-                    self.run_count += 1;
-                    self.max_run_count = max(self.max_run_count, abs(self.run_count))
-                else:
-                    self.run_count = 0
             elif self.curr_crd1 > self.curr_crd2:
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
@@ -329,11 +299,6 @@ class Union2(CrdJoiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.total_count += 1
-                if self.run_count < 0:
-                    self.run_count -= 1;
-                    self.max_run_count = max(self.max_run_count, abs(self.run_count))
-                else:
-                    self.run_count = 0 
             else:
                 raise Exception('Intersect2: should not enter this case')
             if self.ocrd == '':
@@ -554,146 +519,3 @@ class IntersectBV2(BVJoiner2):
         print("Total operations for intersection: ", self.total_count)
         return print("Intersection rate: ", self.count / self.total_count)
 
-
-class IntersectBV2(BVJoiner2):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-        self.in_ref1 = []
-        self.in_ref2 = []
-        self.in_bv1 = []
-        self.in_bv2 = []
-
-        self.size_in_ref1 = 0
-        self.size_in_ref2 = 0
-        self.size_in_bv1 = 0
-        self.size_in_bv2 = 0
-
-        self.obv = ''
-        self.oref1 = ''
-        self.oref2 = ''
-
-        self.curr_bv1 = None
-        self.curr_bv2 = None
-        self.curr_ref1 = None
-        self.curr_ref2 = None
-
-        self.reflist1 = []
-        self.reflist2 = []
-        self.emit_refs = False
-
-        self.total_count = 0
-        self.count = 0
-
-    def update(self):
-        if self.done:
-            self.obv = ''
-            self.oref1 = ''
-            self.oref2 = ''
-            return
-
-        if self.emit_refs:
-            assert len(self.reflist1) == len(self.reflist2), "Lengths of refs must match"
-            self.obv = ''
-            self.oref1 = self.reflist1.pop(0)
-            self.oref2 = self.reflist2.pop(0)
-
-            self.emit_refs = len(self.reflist1) > 0
-            return
-        if len(self.in_bv1) > 0 and len(self.in_bv2) > 0:
-            self.curr_bv1 = self.in_bv1.pop(0)
-            self.curr_bv2 = self.in_bv2.pop(0)
-            self.curr_ref1 = self.in_ref1.pop(0)
-            self.curr_ref2 = self.in_ref2.pop(0)
-
-            # FIXME: See when only one 'D' signal is present
-            if self.curr_bv1 == 'D' or self.curr_bv2 == 'D':
-                assert self.curr_bv1 == self.curr_bv2 == self.curr_ref1 == self.curr_ref2
-                self.done = True
-                self.obv = 'D'
-                self.oref1 = 'D'
-                self.oref2 = 'D'
-            elif is_stkn(self.curr_bv1) and is_stkn(self.curr_bv2):
-                assert self.curr_bv1 == self.curr_bv2 == self.curr_ref1 == self.curr_ref2
-
-                self.obv = self.curr_bv1
-                self.oref1 = self.curr_bv1
-                self.oref2 = self.curr_bv2
-                self.total_count += 1
-            elif self.curr_bv1 & self.curr_bv2:
-                obv = self.curr_bv1 & self.curr_bv2
-
-                reflist1 = []
-                reflist2 = []
-                self.obv = obv
-                while obv:
-                    rbit = right_bit_set(obv)
-                    refbits1 = bin(self.curr_bv1 & (rbit - 1)).count('1') + self.curr_ref1
-                    refbits2 = bin(self.curr_bv2 & (rbit - 1)).count('1') + self.curr_ref2
-
-                    reflist1.append(refbits1)
-                    reflist2.append(refbits2)
-                    obv = ~rbit & obv
-
-                self.reflist1 = reflist1
-                self.reflist2 = reflist2
-
-                self.oref1 = self.reflist1.pop(0)
-                self.oref2 = self.reflist2.pop(0)
-
-                self.emit_refs = len(self.reflist1) > 0
-
-                self.total_count += 1
-                self.count += 1
-            elif not self.curr_bv1 & self.curr_bv2:
-                self.obv = ''
-                self.oref1 = ''
-                self.oref2 = ''
-            else:
-                raise Exception('Intersect2: should not enter this case')
-        else:
-            # Do Nothing if no inputs are detected
-            self.obv = ''
-            self.oref1 = ''
-            self.oref2 = ''
-        self.compute_fifos()
-
-        if self.debug:
-            print("DEBUG: INTERSECT: \t Outbv:", self.obv, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                  "\t bv1:", self.curr_bv1, "\t Ref1:", self.curr_ref1,
-                  "\t bv2:", self.curr_bv2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
-                  self.return_intersection_rate())
-
-    def set_in1(self, in_ref1, in_bv1):
-        if in_ref1 != '' and in_bv1 != '':
-            self.in_ref1.append(in_ref1)
-            self.in_bv1.append(in_bv1)
-
-    def set_in2(self, in_ref2, in_bv2):
-        if in_ref2 != '' and in_bv2 != '':
-            self.in_ref2.append(in_ref2)
-            self.in_bv2.append(in_bv2)
-
-    def compute_fifos(self):
-        self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
-        self.size_in_ref2 = max(self.size_in_ref2, len(self.in_ref2))
-        self.size_in_bv1 = max(self.size_in_bv1, len(self.in_bv1))
-        self.size_in_bv2 = max(self.size_in_bv2, len(self.in_bv2))
-
-    def print_fifos(self):
-        print("FIFO in ref 1: ", self.size_in_ref1)
-        print("FIFO in ref 2: ", self.size_in_ref2)
-        print("FIFO in bv 1: ", self.size_in_bv1)
-        print("FIFO in bv 2: ", self.size_in_bv2)
-
-    def out_bv(self):
-        return self.obv
-
-    def out_ref1(self):
-        return self.oref1
-
-    def out_ref2(self):
-        return self.oref2
-
-    def return_intersection_rate(self):
-        return self.count / self.total_count if self.total_count > 0 else 0

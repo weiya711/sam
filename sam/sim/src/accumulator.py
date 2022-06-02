@@ -146,7 +146,6 @@ class SparseCrdPtAccumulator1(Primitive):
             # If a done token is seen, cannot emit done until all coordinates have been written out
             elif self.curr_in_outer_crdpt == 'D':
                 assert self.curr_in_inner_crdpt == 'D' and self.curr_in_val, \
-                assert self.curr_in_inner_crdpt == 'D' and self.curr_in_val == 'D', \
                     "If one item is a 'D' token, then all inputs must be"
                 self.seen_done = True
             else:
