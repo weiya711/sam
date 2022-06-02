@@ -52,7 +52,7 @@ parser.add_argument('-o', '--omit-dense', action='store_true', default=False, he
 args = parser.parse_args()
 
 
-out_path = Path(out_dirname)  
+out_path = Path(out_dirname)
 out_path.mkdir(parents=True, exist_ok=True, mode=0o777)
 
 if args.name is None:

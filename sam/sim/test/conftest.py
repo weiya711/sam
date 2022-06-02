@@ -1,5 +1,7 @@
 import pytest
 
+pytest.register_assert_rewrite("sam.sim.test.test.check_arr")
+
 
 def pytest_addoption(parser):
     parser.addoption("--debug-sim", action="store_true", default=False,
@@ -33,6 +35,8 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "vec" in item.keywords:
                 item.add_marker(skip_vec)
+
+
 
 @pytest.fixture
 def debug_sim(request):

@@ -5,8 +5,32 @@ def gen_stkns(dim=10):
     return ['S' + str(i) for i in range(dim)]
 
 
-valid_tkns = ['', 'D']
+valid_tkns = ['', 'D', 'N']
 valid_tkns += gen_stkns()
+
+
+def is_valid_crd(elem, dim=10):
+    valid_tkns = ['', 'D'] + gen_stkns(dim)
+    return isinstance(elem, int) or elem in valid_tkns
+
+
+def is_valid_ref(elem, dim=10):
+    valid_tkns = ['', 'D', 'N'] + gen_stkns(dim)
+    return isinstance(elem, int) or elem in valid_tkns
+
+
+def is_valid_crdpt(elem):
+    valid_tkns = ['', 'D']
+    return isinstance(elem, int) or elem in valid_tkns
+
+
+def is_valid_val(elem, dim=10):
+    valid_tkns = ['', 'D'] + gen_stkns(dim)
+    return isinstance(elem, int) or isinstance(elem, float) or elem in valid_tkns
+
+
+def is_0tkn(elem):
+    return elem == 'N'
 
 
 def is_stkn(elem):

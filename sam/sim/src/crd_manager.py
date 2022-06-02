@@ -190,7 +190,6 @@ class CrdPtConverter(Primitive):
         #         else increment_stkn(curr_ocrdpt)
         #     self.emit_stkn = False
         elif self.waiting_next and len(self.outer_crdpt) > 0:
-            #print(self.prev_ocrd)
             stkn = increment_stkn(self.prev_ocrd)
             self.curr_ocrd = stkn if self.outer_crdpt[0] == 'D' else self.prev_ocrd
             self.curr_icrd = increment_stkn(stkn) if self.inner_last_level and self.outer_crdpt[0] == 'D' else stkn
@@ -256,7 +255,7 @@ class CrdPtConverter(Primitive):
 
         elif len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0 and \
                 self.outer_crdpt[0] == 'D' and self.inner_crdpt[0] == 'D':
-
+            
             if isinstance(self.prev_ocrd, int):
                 self.curr_ocrd = 'S0'
                 self.curr_icrd = increment_stkn('S0') if self.inner_last_level else 'S0'

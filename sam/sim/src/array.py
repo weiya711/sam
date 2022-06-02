@@ -64,6 +64,9 @@ class Array(Primitive):
         # Special handling of loads of stop tokens
         if is_stkn(addr):
             val = addr
+        # Special handling of loads of 'N' tokens
+        elif is_0tkn(addr):
+            val = 0
         elif addr == 'D':
             self.done = True
             val = 'D'
@@ -80,6 +83,9 @@ class Array(Primitive):
     def store(self, addr, val):
         # Special handling of stores of stop tokens
         if is_stkn(addr) or is_stkn(val):
+            return
+        # Special handling of stores of 'N' tokens
+        elif is_0tkn(addr) or is_0tkn(val):
             return
         elif addr == 'D' or val == 'D':
             self.done = True

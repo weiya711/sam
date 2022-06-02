@@ -1,7 +1,7 @@
 import copy
 import pytest
 
-from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.base import remove_emptystr
 from sam.sim.test.test import TIMEOUT
 
@@ -14,7 +14,7 @@ arrs_dict1 = {'ocrd_in': [0, 0, 0, 2, 2, 2, 2, 2, 2, 'D'],
 
 
 @pytest.mark.parametrize("arrs", [arrs_dict1])
-def test_spacc_direct(arrs, debug_sim):
+def test_spacc1_direct(arrs, debug_sim):
     icrd = copy.deepcopy(arrs['icrd_in'])
     ocrd = copy.deepcopy(arrs['ocrd_in'])
     val = copy.deepcopy(arrs['val_in'])
@@ -57,4 +57,71 @@ def test_spacc_direct(arrs, debug_sim):
 
     assert (out_ocrd == gold_ocrd)
     assert (out_icrd == gold_icrd)
+    assert (out_val == gold_val)
+
+
+arrs_dict1 = {'crd2_in': [0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 'D'],
+              'crd1_in': [0, 2, 3, 0, 0, 2, 2, 2, 3, 3, 3, 3, 3, 0, 'D'],
+              'crd0_in': [0, 2, 3, 0, 2, 0, 0, 3, 0, 2, 3, 0, 2, 0, 'D'],
+              'val_in': [50, 5, 10, 40, 4, 8, -40, 33, 36, 1, 2, 3, 4, 5, 'D'],
+              'crd2_gold': [0, 2, 3, 'S0', 'D'],
+              'crd1_gold': [0, 2, 3, 'S0', 0, 2, 3, 'S0', 0, 'S1', 'D'],
+              'crd0_gold': [0, 'S0', 2, 'S0', 3, 'S1', 0, 2, 'S0', 0, 3, 'S0', 0, 2, 3, 'S1', 0, 'S2', 'D'],
+              'val_gold': [50.0, 'S0', 5.0, 'S0', 10.0, 'S1', 40.0, 4.0, 'S0', -32.0, 33.0, 'S0', 39.0, 5.0, 2.0,
+                           'S1', 5.0, 'S2', 'D']}
+
+
+@pytest.mark.parametrize("arrs", [arrs_dict1])
+def test_spacc2_direct(arrs, debug_sim):
+    crd2 = copy.deepcopy(arrs['crd2_in'])
+    crd1 = copy.deepcopy(arrs['crd1_in'])
+    crd0 = copy.deepcopy(arrs['crd0_in'])
+    val = copy.deepcopy(arrs['val_in'])
+
+    gold_crd2 = copy.deepcopy(arrs['crd2_gold'])
+    gold_crd1 = copy.deepcopy(arrs['crd1_gold'])
+    gold_crd0 = copy.deepcopy(arrs['crd0_gold'])
+    gold_val = copy.deepcopy(arrs['val_gold'])
+
+    sa = SparseAccumulator2(val_stkn=True, debug=debug_sim)
+
+    done = False
+    time = 0
+    out_crd2 = []
+    out_crd1 = []
+    out_crd0 = []
+    out_val = []
+    while not done and time < TIMEOUT:
+        if len(crd0) > 0:
+            sa.set_0_crdpt(crd0.pop(0))
+        if len(crd1) > 0:
+            sa.set_1_crdpt(crd1.pop(0))
+        if len(crd2) > 0:
+            sa.set_2_crdpt(crd2.pop(0))
+        if len(val) > 0:
+            sa.set_val(val.pop(0))
+        sa.update()
+        print("Timestep", time, "\t Done:", sa.out_done())
+
+        out_crd2.append(sa.out_2_crd())
+        out_crd1.append(sa.out_1_crd())
+        out_crd0.append(sa.out_0_crd())
+        out_val.append(sa.out_val())
+        done = sa.out_done()
+        time += 1
+
+    out_crd2 = remove_emptystr(out_crd2)
+    out_crd1 = remove_emptystr(out_crd1)
+    out_crd0 = remove_emptystr(out_crd0)
+    out_val = remove_emptystr(out_val)
+
+    if debug_sim:
+        print("Crd2: ", out_crd2)
+        print("Crd1: ", out_crd1)
+        print("Crd0: ", out_crd0)
+        print("Vals: ", out_val)
+
+    assert (out_crd2 == gold_crd2)
+    assert (out_crd1 == gold_crd1)
+    assert (out_crd0 == gold_crd0)
     assert (out_val == gold_val)
