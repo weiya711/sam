@@ -122,6 +122,12 @@ class CompressWrScan(WrScan):
         self.resize_seg_arr(self.curr_seg_addr)
         self.resize_arr(self.curr_crd_cnt)
 
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["seg_size"] = self.seg_size
+        stats_dict["arr_size"] = self.size
+        return stats_dict
+
 
 # Unique compressed (not from points)
 class UncompressWrScan(WrScan):
