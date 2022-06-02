@@ -16,6 +16,7 @@ KERNEL_NAMES=(
   matmul_ijk
   matmul_jik
   mat_elemmul
+  mat_elemadd
   mat_identity
   vecmul_ij
   vecmul_ji
@@ -25,6 +26,10 @@ KERNEL_NAMES=(
   vec_scalar_mul
   tensor3_elemmul
   tensor3_identity
+  tensor3_elemadd
+  tensor3_innerprod
+  tensor3_ttv
+  tensor3_ttm
 )
 
 TACO_ARGS=(
@@ -34,7 +39,8 @@ TACO_ARGS=(
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss:1,0 -f=C:ss:1,0 -s=reorder(j,k,i)"
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)"
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss:1,0 -f=B:ss -f=C:ss:1,0  -s=reorder(j,i,k)"
-  "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ds"
+  "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss"
+  "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss"
   "X(i,j)=B(i,j) -f=X:ss -f=B:ss"
   "x(i)=B(i,j)*c(j) -f=x:s -f=B:ss -f=c:s"
   "x(i)=B(i,j)*c(j) -f=x:s -f=B:ss:1,0 -f=c:s -s=reorder(j,i)"
@@ -44,6 +50,10 @@ TACO_ARGS=(
   "x(i)=b*c(i) -f=x:s -f=c:s"
   "X(i,j,k)=B(i,j,k)*C(i,j,k) -f=X:sss -f=B:sss -f=C:sss"
   "X(i,j,k)=B(i,j,k) -f=X:sss -f=B:sss"
+  "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss"
+  "x=B(i,j,k)*C(i,j,k) -f=B:sss -f=C:sss"
+  "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"
+  "X(i,j,k)=B(i,j,l)*C(k,l) -f=X:sss -f=B:sss -f=C:ss"
 )
 
 mkdir -p $dir
