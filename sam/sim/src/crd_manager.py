@@ -97,10 +97,9 @@ class CrdDrop(Primitive):
         print("CrdDrop Outer crd fifo size: ", self.outer_crd_fifo)
 
     def return_statistics(self):
-       stats_dict = {}
-       stats_dict["inner_crd_fifo"] = self.inner_crd_fifo
-       stats_dict["outer_crd_fifo"] = self.outer_crd_fifo
-       return stats_dict
+        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo": self.outer_crd_fifo}
+        return stats_dict
+
 
 # Converts coordinate streams to point streams
 class CrdHold(Primitive):
@@ -255,7 +254,7 @@ class CrdPtConverter(Primitive):
 
         elif len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0 and \
                 self.outer_crdpt[0] == 'D' and self.inner_crdpt[0] == 'D':
-            
+
             if isinstance(self.prev_ocrd, int):
                 self.curr_ocrd = 'S0'
                 self.curr_icrd = increment_stkn('S0') if self.inner_last_level else 'S0'

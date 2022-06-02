@@ -72,6 +72,14 @@ class UncompressCrdRdScan(CrdRdScan):
                   "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
 
 
+def last_stkn(skiplist):
+    max_ref = None
+    for i, item in enumerate(skiplist):
+        if is_stkn(item):
+            max_ref = i
+    return max_ref
+
+
 class CompressedCrdRdScan(CrdRdScan):
     def __init__(self, crd_arr=[], seg_arr=[], skip=True, **kwargs):
         super().__init__(**kwargs)
@@ -450,6 +458,11 @@ class CompressedCrdRdScan(CrdRdScan):
     def set_crd_skip(self, in_crd):
         assert is_valid_crd(in_crd)
         if in_crd != '':
+            if is_stkn(in_crd):
+                idx = last_stkn(self.in_crd_skip)
+                if idx is not None:
+                    # Flush coordinates
+                    self.in_crd_skip = self.in_crd_skip[:idx + 1]
             self.in_crd_skip.append(in_crd)
 
 

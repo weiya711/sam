@@ -87,7 +87,6 @@ class Intersect2(CrdJoiner2):
         self.change_crd1 = True
         self.change_crd2 = True
 
-
     def _inc2(self):
         self.ocrd = ''
         self.oref1 = ''
@@ -149,14 +148,14 @@ class Intersect2(CrdJoiner2):
             elif self.curr_crd1 < self.curr_crd2:
                 self._inc1()
                 if self.run_count >= 0:
-                    self.run_count += 1;
+                    self.run_count += 1
                     self.max_run_count = max(self.max_run_count, abs(self.run_count))
                 else:
-                    self.run_count = 0 
+                    self.run_count = 0
             elif self.curr_crd1 > self.curr_crd2:
                 self._inc2()
                 if self.run_count < 0:
-                    self.run_count -= 1;
+                    self.run_count -= 1
                     self.max_run_count = max(self.max_run_count, abs(self.run_count))
                 else:
                     self.run_count = 0
@@ -212,18 +211,13 @@ class Intersect2(CrdJoiner2):
 
     def print_intersection_rate(self):
         return print("Intersection rate: ", self.return_intersection_rate())
-    
+
     def return_statistics(self):
-        stat_dict = {}
-        stat_dict["fifos_ref_1"] = self.size_in_ref1
-        stat_dict["fifos_ref_2"] = self.size_in_ref2
-        stat_dict["fifos_crd_1"] = self.size_in_crd1
-        stat_dict["fifos_crd_2"] = self.size_in_crd2
-        stat_dict["fifo_difference"] = self.max_diff_in_ref
-        stat_dict["intersection_rate"] = self.count / self.total_count
-        stat_dict["drop_count"] = self.drop_token_output 
-        stat_dict["valid_output"] = self.total_count - self.drop_token_output
-        stat_dict["run_count"] = self.max_run_count
+        stat_dict = {"fifos_ref_1": self.size_in_ref1, "fifos_ref_2": self.size_in_ref2,
+                     "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
+                     "fifo_difference": self.max_diff_in_ref, "intersection_rate": self.count / self.total_count,
+                     "drop_count": self.drop_token_output, "valid_output": self.total_count - self.drop_token_output,
+                     "run_count": self.max_run_count}
         return stat_dict
 
 
