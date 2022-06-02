@@ -30,12 +30,11 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "frostt" in item.keywords:
                 item.add_marker(skip_frostt)
-    
+
     if not config.getoption("vecname"):
         for item in items:
             if "vec" in item.keywords:
                 item.add_marker(skip_vec)
-
 
 
 @pytest.fixture
@@ -47,22 +46,26 @@ def debug_sim(request):
 def ssname(request):
     return request.config.getoption("--ssname")
 
+
 @pytest.fixture
 def frosttname(request):
     return request.config.getoption("--frosttname")
+
 
 @pytest.fixture
 def vecname(request):
     return request.config.getoption("--vecname")
 
+
 @pytest.fixture
 def samBench(benchmark):
-    def f(func, extra_info = None, save_ret_val = False):
+    def f(func, extra_info=None, save_ret_val=False):
         # Take statistics based on 10 rounds.
         if extra_info is not None:
             for k, v in extra_info.items():
                 benchmark.extra_info[k] = v
         if save_ret_val:
             benchmark.extra_info["return"] = func()
-        benchmark.pedantic(func, rounds=1, iterations=1, warmup_rounds=0)                           
+        benchmark.pedantic(func, rounds=1, iterations=1, warmup_rounds=0)
+
     return f
