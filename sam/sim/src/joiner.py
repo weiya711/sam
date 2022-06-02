@@ -6,23 +6,23 @@ class Joiner2(Primitive, ABC):
         super().__init__(**kwargs)
         self.oref1 = 0
         self.oref2 = 0
-    
+
     def out_ref1(self):
         return self.oref1
 
     def out_ref2(self):
-        return self.oref1
+        return self.oref2
 
 
-class CrdJoiner2(Joiner2):
+class CrdJoiner2(Joiner2, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.ocrd = 0
+
         self.in_ref1 = []
         self.in_ref2 = []
         self.in_crd1 = []
         self.in_crd2 = []
-
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '':
@@ -53,7 +53,6 @@ class BVJoiner2(Joiner2):
     @abstractmethod
     def out_bv(self):
         pass
-
 
 
 class Intersect2(CrdJoiner2):
@@ -87,6 +86,7 @@ class Intersect2(CrdJoiner2):
         self.curr_skip2 = ''
         self.change_crd1 = True
         self.change_crd2 = True
+
 
     def _inc2(self):
         self.ocrd = ''
@@ -128,6 +128,7 @@ class Intersect2(CrdJoiner2):
                 if is_stkn(self.curr_crd2):
                     self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''
                     self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''
+
                 self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
                 self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
                 self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
@@ -137,7 +138,6 @@ class Intersect2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.change_crd1 = True
                 self.change_crd2 = True
-
                 self.total_count += 1
                 self.count += 1
                 self.run_count = 0
@@ -152,15 +152,14 @@ class Intersect2(CrdJoiner2):
                     self.run_count += 1;
                     self.max_run_count = max(self.max_run_count, abs(self.run_count))
                 else:
-                    self.run_count = 0
- 
+                    self.run_count = 0 
             elif self.curr_crd1 > self.curr_crd2:
                 self._inc2()
                 if self.run_count < 0:
                     self.run_count -= 1;
                     self.max_run_count = max(self.max_run_count, abs(self.run_count))
                 else:
-                    self.run_count = 0 
+                    self.run_count = 0
             else:
                 raise Exception('Intersect2: should not enter this case')
         else:
@@ -213,9 +212,6 @@ class Intersect2(CrdJoiner2):
 
     def print_intersection_rate(self):
         return print("Intersection rate: ", self.return_intersection_rate())
-
-    def return_intersection_rate(self):
-        return self.count / self.total_count
     
     def return_statistics(self):
         stat_dict = {}
@@ -229,12 +225,6 @@ class Intersect2(CrdJoiner2):
         stat_dict["valid_output"] = self.total_count - self.drop_token_output
         stat_dict["run_count"] = self.max_run_count
         return stat_dict
-
-    def print_intersection_rate(self):
-        print("Total operations for intersection: ", self.total_count)
-        return print("Intersection rate: ", self.count / self.total_count)
-
-
 
 
 class Union2(CrdJoiner2):
@@ -292,6 +282,7 @@ class Union2(CrdJoiner2):
                 self.oref2 = 'N'
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
+                self.total_count += 1
             elif self.curr_crd1 > self.curr_crd2:
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
@@ -301,8 +292,6 @@ class Union2(CrdJoiner2):
                 self.total_count += 1
             else:
                 raise Exception('Intersect2: should not enter this case')
-            if self.ocrd == '':
-                self.drop_token_output += 1
         else:
             # Do Nothing if no inputs are detected
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
@@ -316,7 +305,6 @@ class Union2(CrdJoiner2):
                 self.curr_ref1 = ''
                 self.curr_ref2 = ''
             else:
-                flag = 8
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
@@ -333,15 +321,11 @@ class Union2(CrdJoiner2):
         if in_ref1 != '' and in_crd1 != '':
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
-            self.difference_in_ref += 1
-            self.max_diff_in_ref = max(self.max_diff_in_ref, abs(self.difference_in_ref))
 
     def set_in2(self, in_ref2, in_crd2):
         if in_ref2 != '' and in_crd2 != '':
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
-            self.difference_in_ref -= 1
-            self.max_diff_in_ref = max(self.max_diff_in_ref, abs(self.difference_in_ref))
 
     def compute_fifos(self):
         self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
@@ -363,13 +347,12 @@ class Union2(CrdJoiner2):
 
     def out_ref2(self):
         return self.oref2
-    
+
     def return_union_rate(self):
         return self.count / self.total_count if self.total_count != 0 else 0
 
     def print_union_rate(self):
         return print("Intersection rate: ", self.return_union_rate())
-
 
 
 class IntersectBV2(BVJoiner2):
@@ -386,9 +369,9 @@ class IntersectBV2(BVJoiner2):
         self.size_in_bv1 = 0
         self.size_in_bv2 = 0
 
-        self.obv = None
-        self.oref1 = None
-        self.oref2 = None
+        self.obv = ''
+        self.oref1 = ''
+        self.oref2 = ''
 
         self.curr_bv1 = None
         self.curr_bv2 = None
@@ -404,9 +387,9 @@ class IntersectBV2(BVJoiner2):
 
     def update(self):
         if self.done:
-            self.obv = self.curr_bv1
-            self.oref1 = self.curr_bv1
-            self.oref2 = self.curr_bv2
+            self.obv = ''
+            self.oref1 = ''
+            self.oref2 = ''
             return
 
         if self.emit_refs:
@@ -479,7 +462,7 @@ class IntersectBV2(BVJoiner2):
             print("DEBUG: INTERSECT: \t Outbv:", self.obv, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
                   "\t bv1:", self.curr_bv1, "\t Ref1:", self.curr_ref1,
                   "\t bv2:", self.curr_bv2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
-                  self.count / self.total_count if self.total_count > 1 else 0  )
+                  self.return_intersection_rate())
 
     def set_in1(self, in_ref1, in_bv1):
         if in_ref1 != '' and in_bv1 != '':
@@ -513,9 +496,4 @@ class IntersectBV2(BVJoiner2):
         return self.oref2
 
     def return_intersection_rate(self):
-        return self.count / self.total_count
-
-    def print_intersection_rate(self):
-        print("Total operations for intersection: ", self.total_count)
-        return print("Intersection rate: ", self.count / self.total_count)
-
+        return self.count / self.total_count if self.total_count > 0 else 0

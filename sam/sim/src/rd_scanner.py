@@ -26,6 +26,7 @@ class CrdRdScan(Primitive, ABC):
         return self.curr_crd
 
 
+# TODO: figure out how uncompressed read scans work with 'N' tokens
 class UncompressCrdRdScan(CrdRdScan):
     def __init__(self, dim=0, **kwargs):
         super().__init__(**kwargs)
@@ -96,8 +97,6 @@ class CompressedCrdRdScan(CrdRdScan):
         self.end_fiber = False
         self.curr_ref = None
         self.curr_crd = None
-        self.start = True
-
         self.emit_fiber_stkn = False
 
         self.meta_clen = len(crd_arr)
@@ -151,14 +150,14 @@ class CompressedCrdRdScan(CrdRdScan):
             self.start_addr = 0
             self.curr_crd = ''
             self.curr_ref = ''
-            self.start = False
+
+        # Scanner needs to emit stop token and the next element has finally arrived.
+        # Previously set emit_fiber_stkn to True but wait on next in_ref
         elif len(self.in_ref) > 0 and self.emit_fiber_stkn:
             next_in = self.in_ref[0]
             if is_stkn(next_in):
                 self.in_ref.pop(0)
                 stkn = increment_stkn(next_in)
-                #self.stop_token_cnt += 1
-
             else:
                 stkn = 'S0'
             self.curr_crd = stkn
@@ -168,11 +167,10 @@ class CompressedCrdRdScan(CrdRdScan):
             self.stop_addr = 0
             self.start_addr = 0
             self.emit_fiber_stkn = False
-            self.start = False
 
         # There exists another input reference at the segment and
         # either at the start of computation or end of fiber
-        elif len(self.in_ref) > 0 and (self.end_fiber or self.start):
+        elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_crd is None or self.curr_ref is None)):
             if self.curr_crd is None or self.curr_ref is None:
                 assert (self.curr_crd == self.curr_ref)
             self.end_fiber = False
@@ -408,9 +406,10 @@ class CompressedCrdRdScan(CrdRdScan):
                 else:
                     self.curr_crd = self.crd_arr[self.curr_addr]
                     self.curr_ref = self.curr_addr
-            self.start = False
+
+        # Finished emitting coordinates and have reached the end of the fiber for this level
         elif (self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1) and \
-                not self.start:
+                self.curr_crd is not None and self.curr_ref is not None:
             # End of fiber, get next input reference
             self.end_fiber = True
 
@@ -429,9 +428,8 @@ class CompressedCrdRdScan(CrdRdScan):
             self.curr_addr = 0
             self.stop_addr = 0
             self.start_addr = 0
-            self.start = False
 
-
+        # Base case: increment address and reference by 1 and get next coordinate
         elif len(self.in_ref) > 0 and self.curr_crd is not None and self.curr_ref is not None:
             self.curr_addr += 1
             self.curr_ref = self.curr_addr
@@ -452,6 +450,7 @@ class CompressedCrdRdScan(CrdRdScan):
         assert is_valid_crd(in_crd)
         if in_crd != '':
             self.in_crd_skip.append(in_crd)
+
 
 # ---------------- BV --------------#
 
@@ -484,11 +483,10 @@ class BVRdScan(BVRdScanSuper):
         self.curr_addr = 0
 
         self.end_fiber = False
-        self.curr_ref = None
-        self.curr_bv = None
+        self.curr_ref = ''
+        self.curr_bv = ''
         self.emit_fiber_stkn = False
-
-        self.stop_token_cnt = 0
+        self.begin = True
 
         self.meta_blen = len(bv_arr)
         self.meta_nbits = nbits
@@ -512,12 +510,11 @@ class BVRdScan(BVRdScanSuper):
             if is_stkn(next_in):
                 self.in_ref.pop(0)
                 stkn = increment_stkn(next_in)
-                self.stop_token_cnt += 1
             else:
                 stkn = 'S0'
             self.curr_bv = stkn
             self.curr_ref = stkn
-            self.stop_token_cnt += 1
+
             self.curr_addr = 0
             self.emit_fiber_stkn = False
         # There exists another input reference at the segment and
@@ -557,7 +554,6 @@ class BVRdScan(BVRdScanSuper):
                 self.end_fiber = True
                 if curr_in_ref == 'D':
                     self.done = True
-                self.stop_token_cnt += 1
             else:
                 self.curr_addr = curr_in_ref
                 # End of fiber, get next input reference
@@ -566,8 +562,8 @@ class BVRdScan(BVRdScanSuper):
                 self.emit_fiber_stkn = True
                 self.curr_bv = self.bv_arr[self.curr_addr]
                 self.curr_ref = self._get_bv_ref(self.curr_addr)
-                self.stop_token_cnt += 1
-        elif self.curr_bv is not None and self.curr_ref is not None:
+
+        else:   # elif self.curr_bv is not None and self.curr_ref is not None:
             # Default stall (when done)
             self.curr_ref = ''
             self.curr_bv = ''

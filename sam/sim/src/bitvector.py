@@ -153,7 +153,7 @@ class BVDropOnly(BVDropSuper):
                 self.get_next_ibv = self.get_ibv_count > 0
                 self.has_bv = False
             elif self.done:
-                assert (ibv == 'D')
+                # assert (ibv == 'D'), ibv
                 self.curr_obv = 'D'
                 self.get_next_ibv = False
                 self.get_next_obv = False
