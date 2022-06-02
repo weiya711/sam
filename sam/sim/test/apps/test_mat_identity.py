@@ -22,7 +22,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
 def test_mat_identity(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -86,5 +85,23 @@ def test_mat_identity(samBench, ssname, debug_sim, fill=0):
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_B_shape"] = B_shape
+    sample_dict = fiberwrite_X0_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_X1_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_B_3.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_B_3" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_Xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
+
     arrayvals_B_3.print_fifos()
     samBench(bench, extra_info)

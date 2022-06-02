@@ -157,6 +157,13 @@ def test_matmul_ikj(samBench, ssname, debug_sim, fill=0):
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_B_shape"] = B_shape
+    extra_info["tensor_C_shape"] = C_shape
+    sample_dict = fiberwrite_X0_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
+
     sample_dict = repeat_Ci_14.return_statistics()
     for k in sample_dict.keys():
         extra_info["repeat_Ci_14" + "_" + k] =  sample_dict[k]
@@ -169,9 +176,25 @@ def test_matmul_ikj(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["spaccumulator1_3" + "_" + k] =  sample_dict[k]
 
+    sample_dict = fiberwrite_Xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_X1_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
+
     sample_dict = repeat_Bj_7.return_statistics()
     for k in sample_dict.keys():
         extra_info["repeat_Bj_7" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_B_5.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_B_5" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_C_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_C_6" + "_" + k] =  sample_dict[k]
 
     repsiggen_i_15.print_fifos()
     repeat_Ci_14.print_fifos()

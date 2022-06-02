@@ -22,7 +22,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.generated
+@pytest.mark.vec
 def test_vec_scalar_mul(samBench, ssname, debug_sim, fill=0):
     b_dirname = os.path.join(formatted_dir, ssname, "dummy", "none")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
@@ -99,9 +99,28 @@ def test_vec_scalar_mul(samBench, ssname, debug_sim, fill=0):
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_b_shape"] = b_shape
+    extra_info["tensor_c_shape"] = c_shape
+    sample_dict = fiberwrite_x0_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
+
     sample_dict = repeat_bi_5.return_statistics()
     for k in sample_dict.keys():
         extra_info["repeat_bi_5" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_b_3.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_b_3" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_c_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_c_4" + "_" + k] =  sample_dict[k]
 
     repsiggen_i_6.print_fifos()
     repeat_bi_5.print_fifos()

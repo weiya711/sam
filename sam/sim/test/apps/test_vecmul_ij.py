@@ -22,7 +22,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.generated
+@pytest.mark.suitesparse
+@pytest.mark.vec
 def test_vecmul_ij(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -126,6 +127,13 @@ def test_vecmul_ij(samBench, ssname, debug_sim, fill=0):
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_B_shape"] = B_shape
+    extra_info["tensor_c_shape"] = c_shape
+    sample_dict = fiberwrite_x0_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
+
     sample_dict = repeat_ci_9.return_statistics()
     for k in sample_dict.keys():
         extra_info["repeat_ci_9" + "_" + k] =  sample_dict[k]
@@ -134,9 +142,21 @@ def test_vecmul_ij(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["intersectj_6" + "_" + k] =  sample_dict[k]
 
+    sample_dict = arrayvals_B_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_B_4" + "_" + k] =  sample_dict[k]
+
     sample_dict = reduce_2.return_statistics()
     for k in sample_dict.keys():
         extra_info["reduce_2" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_c_5.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_c_5" + "_" + k] =  sample_dict[k]
 
     repsiggen_i_10.print_fifos()
     repeat_ci_9.print_fifos()

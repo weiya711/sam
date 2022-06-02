@@ -22,7 +22,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.generated
 def test_vec_identity(samBench, ssname, debug_sim, fill=0):
     b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
@@ -72,5 +71,19 @@ def test_vec_identity(samBench, ssname, debug_sim, fill=0):
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_b_shape"] = b_shape
+    sample_dict = fiberwrite_x0_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_b_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_b_2" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+
     arrayvals_b_2.print_fifos()
     samBench(bench, extra_info)
