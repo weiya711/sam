@@ -2,6 +2,26 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+BENCHMARKS=(
+#  matmul_kij
+#  matmul_kji
+#  matmul_ikj
+#  matmul_jki
+  matmul_ijk
+#  matmul_jik
+#  mat_elemmul
+  mat_identity
+#  vecmul_ij
+#  vecmul_ji
+#  vec_elemmul
+#  vec_identity
+#  vec_elemadd
+#  vec_scalar_mul
+#  tensor3_elemmul
+#  tensor3_identity
+)
+
+
 DATASET_NAMES=(
   bcsstm04
 #  bcsstm02
@@ -25,24 +45,32 @@ export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 cwd=$(pwd)
 resultdir=results
 
-mkdir -p $cwd/$resultdir
 
 cd ./sam/sim
 
-for i in ${!DATASET_NAMES[@]}; do
-    name=${DATASET_NAMES[$i]} 
+for b in ${!BENCHMARKS[@]}; do
+    bench=${BENCHMARKS[$b]}
+    path=$cwd/$resultdir/$bench
 
-    echo "Testing $name..."
+    mkdir -p $cwd/$resultdir/$bench
+    echo "Testing $bench..."
 
-    pytest test/apps/  --ssname $name -s --benchmark-json=$cwd/$resultdir/$name.json #--debug-sim 
-    python $cwd/scripts/converter.py --json_name $cwd/$resultdir/$name.json	
-	    
-    status=$?
-    if [ $status -gt 0 ]
-    then 
-      errors+=("${name}")
-    fi
+    for i in ${!DATASET_NAMES[@]}; do
+        name=${DATASET_NAMES[$i]} 
 
+        echo "Testing $name..."
+
+        pytest test/apps/test_$bench.py --ssname $name -s --benchmark-json=$path/$name.json 
+        python $cwd/scripts/converter.py --json_name $path/$name.json	
+            
+        status=$?
+        if [ $status -gt 0 ]
+        then 
+          errors+=("${name}, ${bench}")
+        fi
+    done
+    
+    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/suitesparse_$bench.csv
 
 done
 
