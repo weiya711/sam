@@ -130,6 +130,9 @@ def test_mat_elemmul(samBench, ssname, debug_sim, fill=0):
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_B_shape"] = B_shape
+    extra_info["tensor_C_shape"] = C_shape
     sample_dict = intersecti_10.return_statistics()
     for k in sample_dict.keys():
         extra_info["intersecti_10" + "_" + k] =  sample_dict[k]
@@ -138,9 +141,29 @@ def test_mat_elemmul(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["crddrop_6" + "_" + k] =  sample_dict[k]
 
+    sample_dict = fiberwrite_X0_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_X1_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
+
     sample_dict = intersectj_7.return_statistics()
     for k in sample_dict.keys():
         extra_info["intersectj_7" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_B_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_B_4" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_Xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_C_5.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_C_5" + "_" + k] =  sample_dict[k]
 
     intersecti_10.print_fifos()
     crddrop_6.print_fifos()

@@ -270,6 +270,7 @@ def finish_outputs(f, elements):
     output_list += output_string
     return output_list
 
+
 def size_computation_write(a):
     ans = " 1 "
     a = int(a)
@@ -723,21 +724,22 @@ for apath in file_paths:
 
     # f.write(tab(1) + "\n\n")
     output_list = finish_outputs(f, output_nodes)
-
     f.write(tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
     f.write(tab(1) + "extra_info = dict()\n")
     f.write(tab(1) + "extra_info[\"dataset\"] = ssname\n")
-    statistic_available = ["reduce", "spaccumulator", "crddrop", "repeat", "repeatsiggen", "intersect"]
+    f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
+    ct = 0
+    for k in tensor_format_parse.return_all_tensors():
+        if ct != 0:
+            f.write(tab(1) + "extra_info[\"tensor_" + k + "_shape\"] = " + k + "_shape\n")
+        ct += 1
+    statistic_available = ["reduce", "spaccumulator", "crddrop", "repeat", "repeatsiggen", "intersect", "fiberwrite", "arrayvals"]
     for u in networkx_graph.nodes():
         if d[u]["type"] in statistic_available:
             f.write(tab(1) + "sample_dict = " + d[u]["object"] + ".return_statistics()\n")
             f.write(tab(1) + "for k in sample_dict.keys():\n")
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
-
-    # open the file in the write mode
-    # f.write(tab(1) + "f = open(\"" + "../\" + " + "ssname" + " + \".csv\", \"a\")\n")
-    # f.write(tab(1) + "writer = csv.writer(f)\n")
 
     for u in networkx_graph.nodes():
         if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
