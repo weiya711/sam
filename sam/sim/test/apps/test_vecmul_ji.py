@@ -8,7 +8,7 @@ from sam.sim.src.compute import Multiply2
 from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
@@ -18,10 +18,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 
 # FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
 def test_vecmul_ji(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
@@ -106,20 +102,6 @@ def test_vecmul_ji(samBench, ssname, debug_sim, fill=0):
         mul_3.set_in2(arrayvals_B_4.out_load())
         mul_3.update()
 
-        spaccumulator1_2_drop_crd_in_outer.set_in_stream(intersectj_10.out_crd())
-        spaccumulator1_2_drop_crd_in_inner.set_in_stream(fiberlookup_Bi_9.out_crd())
-        spaccumulator1_2_drop_val.set_in_stream(mul_3.out_val())
-        spaccumulator1_2.crd_in_outer(spaccumulator1_2_drop_crd_in_outer.out_val())
-        spaccumulator1_2.crd_in_inner(spaccumulator1_2_drop_crd_in_inner.out_val())
-        spaccumulator1_2.set_val(spaccumulator1_2_drop_val.out_val())
-        spaccumulator1_2.update()
-
-        fiberwrite_xvals_0.set_input(spaccumulator1_2.out_val())
-        fiberwrite_xvals_0.update()
-
-        fiberwrite_x0_1.set_input(spaccumulator1_2.out_crd_inner())
-        fiberwrite_x0_1.update()
-
         done = fiberwrite_xvals_0.out_done() and fiberwrite_x0_1.out_done()
         time_cnt += 1
 
@@ -165,11 +147,4 @@ def test_vecmul_ji(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["arrayvals_B_4" + "_" + k] =  sample_dict[k]
 
-    intersectj_10.print_fifos()
-    spaccumulator1_2.print_fifos()
-    repsiggen_i_7.print_fifos()
-    repeat_ci_6.print_fifos()
-    arrayvals_c_5.print_fifos()
-    mul_3.print_fifos()
-    arrayvals_B_4.print_fifos()
     samBench(bench, extra_info)

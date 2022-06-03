@@ -8,7 +8,7 @@ from sam.sim.src.compute import Multiply2
 from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
@@ -18,10 +18,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 
 # FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
 def test_matmul_jik(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
@@ -188,13 +184,4 @@ def test_matmul_jik(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["arrayvals_C_6" + "_" + k] =  sample_dict[k]
 
-    repsiggen_j_15.print_fifos()
-    repeat_Bj_14.print_fifos()
-    repsiggen_i_11.print_fifos()
-    repeat_Ci_10.print_fifos()
-    intersectk_7.print_fifos()
-    arrayvals_B_5.print_fifos()
-    mul_4.print_fifos()
-    reduce_3.print_fifos()
-    arrayvals_C_6.print_fifos()
     samBench(bench, extra_info)

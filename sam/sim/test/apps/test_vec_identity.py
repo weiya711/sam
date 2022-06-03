@@ -8,7 +8,7 @@ from sam.sim.src.compute import Multiply2
 from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
@@ -18,10 +18,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 
 # FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 def test_vec_identity(samBench, ssname, debug_sim, fill=0):
     b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
@@ -85,5 +81,4 @@ def test_vec_identity(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
 
-    arrayvals_b_2.print_fifos()
     samBench(bench, extra_info)

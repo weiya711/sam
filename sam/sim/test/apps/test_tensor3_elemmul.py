@@ -8,7 +8,7 @@ from sam.sim.src.compute import Multiply2
 from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.accumulator import SparseAccumulator1
+from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
@@ -18,11 +18,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 
 # FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
-@pytest.mark.frosst
+@pytest.mark.frostt
 def test_tensor3_elemmul(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -213,12 +209,4 @@ def test_tensor3_elemmul(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["arrayvals_C_6" + "_" + k] =  sample_dict[k]
 
-    intersecti_15.print_fifos()
-    crddrop_7.print_fifos()
-    intersectj_12.print_fifos()
-    crddrop_8.print_fifos()
-    intersectk_9.print_fifos()
-    arrayvals_B_5.print_fifos()
-    mul_4.print_fifos()
-    arrayvals_C_6.print_fifos()
     samBench(bench, extra_info)

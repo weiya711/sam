@@ -468,6 +468,11 @@ class SparseAccumulator2(Primitive):
         self.in0_crdpt = []
         self.in_val = []
 
+        self.in1_fifo = 0
+        self.in2_fifo = 0
+        self.in0_fifo = 0
+        self.inval_fifo = 0
+
         self.crdpt_spacc = SparseCrdPtAccumulator2(maxdim=maxdim, valtype=valtype, **kwargs)
         self.crdpt_converter01 = CrdPtConverter(last_level=True, **kwargs)
         self.crdpt_converter12 = CrdPtConverter(last_level=False, **kwargs)
@@ -485,6 +490,7 @@ class SparseAccumulator2(Primitive):
         self.val_stkn = val_stkn
 
     def update(self):
+        self.compute_fifo()
         if len(self.in2_crdpt) > 0:
             self.crdpt_spacc.set_2_crdpt(self.in2_crdpt.pop(0))
 
@@ -533,6 +539,12 @@ class SparseAccumulator2(Primitive):
                   "\t CrdPtConv 12 Done:", self.crdpt_converter01.out_done()
                   )
 
+    def compute_fifo(self):
+        self.in1_fifo = max(self.in1_fifo, len(self.in1_crdpt))
+        self.in2_fifo = max(self.in2_fifo, len(self.in2_crdpt))
+        self.in0_fifo = max(self.in0_fifo, len(self.in0_crdpt))
+        self.inval_fifo = max(self.inval_fifo, len(self.in_val))
+
     def set_0_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
@@ -544,6 +556,21 @@ class SparseAccumulator2(Primitive):
             self.in1_crdpt.append(crdpt)
 
     def set_2_crdpt(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '':
+            self.in2_crdpt.append(crdpt)
+
+    def crd_in_0(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '':
+            self.in0_crdpt.append(crdpt)
+
+    def crd_in_1(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '':
+            self.in1_crdpt.append(crdpt)
+
+    def crd_in_2(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '':
             self.in2_crdpt.append(crdpt)
@@ -562,5 +589,24 @@ class SparseAccumulator2(Primitive):
     def out_0_crd(self):
         return self.curr_0_crd
 
+    def out_crd_2(self):
+        return self.curr_2_crd
+
+    def out_crd_1(self):
+        return self.curr_1_crd
+
+    def out_crd_0(self):
+        return self.curr_0_crd
+
     def out_val(self):
         return self.curr_val
+
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["in1_fifo"] = self.in1_fifo
+        stats_dict["in2_fifo"] = self.in2_fifo
+        stats_dict["in0_fifo"] = self.in0_fifo
+        stats_dict["inval_fifo"] = self.inval_fifo
+        return stats_dict
+
+

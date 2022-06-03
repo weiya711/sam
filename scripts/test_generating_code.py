@@ -64,7 +64,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.crd_manager import CrdDrop\n")
     f.write("from sam.sim.src.repeater import Repeat, RepeatSigGen\n")
     f.write("from sam.sim.src.accumulator import Reduce\n")
-    f.write("from sam.sim.src.accumulator import SparseAccumulator1\n")
+    f.write("from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2\n")
     f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
     #f.write("from sam.sim.test.test_gold import test_gold_" + out_name.split("_")[0] + "\n")
@@ -488,6 +488,14 @@ for apath in file_paths:
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_crd_in_outer" + " = StknDrop(debug=debug_sim)\n")
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_val" + " = StknDrop(debug=debug_sim)\n")
             spaccumulator_data[u] = {}
+        elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + " = SparseAccumulator2(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_crd_in_0" + " = StknDrop(debug=debug_sim)\n") 
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_crd_in_1" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_crd_in_2" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(u) + "_drop_val" + " = StknDrop(debug=debug_sim)\n")
+            spaccumulator_data[u] = {}
         elif node_info["type"] == "crddrop":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
@@ -522,6 +530,7 @@ for apath in file_paths:
             print("Error invalid node detected", node_info["type"], "\n")
     if invalid_flag == 1:
         os.system("rm " + out_name[num] + ".py")
+        print(out_name[num] + " failed\n")
         num += 1
         continue
     output_check_nodes(f, root_nodes)
@@ -640,7 +649,7 @@ for apath in file_paths:
                             f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     done_all[v] = 1
 
-            if d[v]["type"] == "spaccumulator" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
+            if d[v]["type"] == "spaccumulator" and d[v]["order"] == 1 and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     append = {}
                     append[0] = "_inner"
@@ -672,6 +681,42 @@ for apath in file_paths:
                                     d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)] + ".out_val())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
+
+            if d[v]["type"] == "spaccumulator" and d[v]["order"] == "2" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
+                # if sum(ready_dataset[v]) == len(ready_dataset[v]):
+                    append = {}
+                    append[0] = "_0"
+                    append[1] = "_1"
+                    append[2] = "_2"
+                    append_arr = []
+                    for u_ in stream_join_elements[v]:
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                            append_arr.append(int(edge_data[v][stream_join_elements[v].index(u_)][7]))
+                    append_arr.sort()
+                    for u_ in stream_join_elements[v]:
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                            spaccumulator_data[v][int(edge_data[v][stream_join_elements[v].index(u_)][7])] = \
+                                append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+                            edge_data[v][stream_join_elements[v].index(u_)] = edge_data[v][stream_join_elements[v].index(u_)][:6] + \
+                                append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+                        
+                        if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                            f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)] +  ".set_in_stream(" +
+                                    d[u_]["object"] + ".out_crd())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)]  + "." + "set_in_stream(" +
+                                    d[u_]["object"] + ".out_val())\n")
+                    for u_ in stream_join_elements[v]:
+                        if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                            f.write(tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)] + ".out_val())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + ".set_" + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[v]["object"] + "_drop_" + edge_data[v][stream_join_elements[v].index(u_)] + ".out_val())\n")
+                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    done_all[v] = 1
+
+
 
             if d[v]["type"] == "mul" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
@@ -741,9 +786,9 @@ for apath in file_paths:
             f.write(tab(1) + "for k in sample_dict.keys():\n")
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
 
-    for u in networkx_graph.nodes():
-        if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
-            f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
+    #for u in networkx_graph.nodes():
+    #    if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
+    #        f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
     f.write(tab(1) + "samBench(bench, extra_info)")
     f.close()
     os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
