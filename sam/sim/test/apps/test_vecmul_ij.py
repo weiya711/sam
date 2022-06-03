@@ -18,6 +18,10 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 
 # FIXME: Figureout formats
+@pytest.mark.skipif(
+    os.getenv('CI', 'false') == 'true',
+    reason='CI lacks datasets',
+)
 @pytest.mark.suitesparse
 @pytest.mark.vec
 def test_vecmul_ij(samBench, ssname, debug_sim, fill=0):

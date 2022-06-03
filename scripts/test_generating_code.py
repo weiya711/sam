@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 
 frostt_list = ["tensor3_elemmul", "tensor3_identity"]
-suitesparse_list = ["mat_elemmul", "mul_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
+suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
                     "matmul_jki", "vecmul_ij", "vecmul_ji"]
-vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vecmul_ij", "vectmul_ji"]
+vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vecmul_ij", "vectmul_ji", "vec_identity"]
 
 
 class TensorFormat:
@@ -76,10 +76,10 @@ def generate_header(f, out_name):
     f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n\n")
     # f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default = './mode-formats')\n\n")
     f.write("# FIXME: Figureout formats\n")
-    # f.write("@pytest.mark.skipif(\n")
-    # f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
-    # f.write(tab(1) + "reason='CI lacks datasets',\n")
-    # f.write(")\n")
+    f.write("@pytest.mark.skipif(\n")
+    f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
+    f.write(tab(1) + "reason='CI lacks datasets',\n")
+    f.write(")\n")
     if out_name in suitesparse_list:
         f.write("@pytest.mark.suitesparse\n")
     if out_name in frostt_list:
