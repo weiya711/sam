@@ -45,7 +45,7 @@ class IntersectNode(HWNode):
             new_conns = {
                 f'isect_to_rd_scan': [
                     # send output to rd scanner
-                    ([(isect, f"pos_out_{out_conn}"), (rd_scan, f"us_pos_in")], 16),
+                    ([(isect, f"pos_out_{out_conn}"), (rd_scan, f"us_pos_in")], 17),
                     # ([(isect, f"eos_out_{1 + out_conn}"), (rd_scan, f"us_eos_in")], 1),
                     # ([(rd_scan, f"us_ready_out"), (isect, f"ready_in_{1 + out_conn}")], 1),
                     # ([(isect, f"valid_out_{1 + out_conn}"), (rd_scan, f"us_valid_in")], 1),
@@ -59,7 +59,7 @@ class IntersectNode(HWNode):
             new_conns = {
                 f'isect_to_wr_scan': [
                     # send output to rd scanner
-                    ([(isect, f"coord_out"), (wr_scan, f"data_in_0")], 16),
+                    ([(isect, f"coord_out"), (wr_scan, f"data_in")], 17),
                     # ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
                     # ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
                     # ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
@@ -90,7 +90,7 @@ class IntersectNode(HWNode):
             new_conns = {
                 f'isect_to_merger_{conn}': [
                     # Send isect row and isect col to merger inside isect_col
-                    ([(isect, "coord_out"), (merge, f"cmrg_coord_in_{conn}")], 16),
+                    ([(isect, "coord_out"), (merge, f"cmrg_coord_in_{conn}")], 17),
                     # ([(isect, "eos_out_0"), (merge, f"cmrg_eos_in_{conn}")], 1),
                     # ([(merge, f"cmrg_ready_out_{conn}"), (isect, "ready_in_0")], 1),
                     # ([(isect, "valid_out_0"), (merge, f"cmrg_valid_in_{conn}")], 1),

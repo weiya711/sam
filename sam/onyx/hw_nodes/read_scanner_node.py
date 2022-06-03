@@ -115,7 +115,7 @@ class ReadScannerNode(HWNode):
                         # ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn * 2}")], 1),
                         # ([(isect, f"ready_out_{isect_conn * 2}"), (rd_scan, "ready_in_0")], 1),
                         # ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn * 2}")], 1),
-                        ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 16),
+                        ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 17),
                         # ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn}")], 1),
                         # ([(isect, f"ready_out_{isect_conn}"), (rd_scan, "ready_in_0")], 1),
                         # ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn}")], 1),
@@ -125,7 +125,7 @@ class ReadScannerNode(HWNode):
                 new_conns = {
                     f'rd_scan_to_isect_{isect_conn}_pos': [
                         # send output to rd scanner
-                        ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 16),
+                        ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 17),
                         # ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn + 2}")], 1),
                         # ([(isect, f"ready_out_{isect_conn + 2}"), (rd_scan, "ready_in_1")], 1),
                         # ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn + 2}")], 1),
@@ -150,7 +150,7 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'rd_scan_to_repeat': [
                     # send output to rd scanner
-                    ([(rd_scan, "pos_out"), (repeat, "proc_data_in")], 16),
+                    ([(rd_scan, "pos_out"), (repeat, "proc_data_in")], 17),
                     # ([(rd_scan, "eos_out_1"), (repeat, "proc_eos_in")], 1),
                     # ([(repeat, "proc_ready_out"), (rd_scan, "ready_in_1")], 1),
                     # ([(rd_scan, "valid_out_1"), (repeat, "proc_valid_in")], 1),
@@ -168,7 +168,7 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [
                     # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (compute, f"data_in_{compute_conn}")], 16),
+                    ([(rd_scan, "coord_out"), (compute, f"data_in_{compute_conn}")], 17),
                     # ([(rd_scan, "eos_out_0"), (compute, f"eos_in_{compute_conn}")], 1),
                     # ([(compute, f"ready_out_{compute_conn}"), (rd_scan, "ready_in_0")], 1),
                     # ([(rd_scan, "valid_out_0"), (compute, f"valid_in_{compute_conn}")], 1),
@@ -182,7 +182,7 @@ class ReadScannerNode(HWNode):
             rsg = other.get_name()
             new_conns = {
                 f'rd_scan_to_rsg': [
-                    ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 16),
+                    ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 17),
                     # ([(rd_scan, "eos_out_0"), (rsg, f"base_eos_in")], 1),
                     # ([(rsg, f"base_ready_out"), (rd_scan, "ready_in_0")], 1),
                     # ([(rd_scan, "valid_out_0"), (rsg, f"base_valid_in")], 1),

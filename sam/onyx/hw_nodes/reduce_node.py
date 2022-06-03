@@ -37,10 +37,10 @@ class ReduceNode(HWNode):
             new_conns = {
                 'reduce_to_wr_scan': [
                     # send output to rd scanner
-                    ([(red, "data_out"), (wr_scan, "data_in_0")], 16),
-                    ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
-                    ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
-                    ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
+                    ([(red, "data_out"), (wr_scan, "data_in_0")], 17),
+                    # ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
+                    # ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
+                    # ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
                 ]
             }
             return new_conns
