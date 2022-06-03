@@ -1,0 +1,365 @@
+// TACO code for CPU benchmarking SAM
+
+#include <fstream>
+// We're using c++14, so wer're stuck with experimental filesystem.
+#include <experimental/filesystem>
+#include <tuple>
+
+#include "bench.h"
+#include "benchmark/benchmark.h"
+
+#include "taco/tensor.h"
+#include "taco/format.h"
+#include "taco/index_notation/index_notation.h"
+#include "taco/index_notation/tensor_operator.h"
+
+using namespace taco;
+
+
+template<int I, class...Ts>
+decltype(auto) get(Ts &&... ts) {
+    return std::get<I>(std::forward_as_tuple(ts...));
+}
+
+template<class ...ExtraArgs>
+void printTensor(TensorBase tensor, std::string location, std::string benchName, int dim, ExtraArgs &&... extra_args) {
+    auto &sparsity = get<0>(extra_args...);
+    auto opType = get<1>(extra_args...);
+
+    std::string sparseStr = std::to_string(sparsity);
+    sparseStr = sparseStr.substr(2, sparseStr.size());
+    std::string filename = location + "/" + benchName + "_" + opType + "_" + \
+                          std::to_string(dim) + "_" + sparseStr + "_" + tensor.getName() + ".txt";
+    std::ofstream outfile(filename, std::ofstream::out);
+    outfile << util::toString(tensor);
+    outfile.close();
+}
+
+static void applyBenchSizes(benchmark::internal::Benchmark *b) {
+    // b->ArgsProduct({{250, 500, 750, 1000, 2500, 5000, 7500, 8000}});
+    b->ArgsProduct({{10}});
+}
+
+// UfuncInputCache is a cache for the input to ufunc benchmarks. These benchmarks
+// operate on a tensor loaded from disk and the same tensor shifted slightly. Since
+// these operations are run multiple times, we can save alot in benchmark startup
+// time from caching these inputs.
+struct UfuncInputCache {
+    template<typename U>
+    std::pair<taco::Tensor<int64_t>, taco::Tensor<int64_t>>
+    getUfuncInput(std::string path, U format, bool countNNZ = false, bool includeThird = false) {
+        // See if the paths match.
+        if (this->lastPath == path) {
+            // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
+            return std::make_pair(this->inputTensor, this->otherTensor);
+        }
+
+        // Otherwise, we missed the cache. Load in the target tensor and process it.
+        this->lastLoaded = taco::read(path, format);
+        // We assign lastPath after lastLoaded so that if taco::read throws an exception
+        // then lastPath isn't updated to the new path.
+        this->lastPath = path;
+        this->inputTensor = castToType<int64_t>("A", this->lastLoaded);
+        this->otherTensor = shiftLastMode<int64_t, int64_t>("B", this->inputTensor);
+        if (countNNZ) {
+            this->nnz = 0;
+            for (auto &it: iterate<int64_t>(this->inputTensor)) {
+                this->nnz++;
+            }
+        }
+        if (includeThird) {
+            this->thirdTensor = shiftLastMode<int64_t, int64_t>("C", this->otherTensor);
+        }
+        return std::make_pair(this->inputTensor, this->otherTensor);
+    }
+
+    taco::Tensor<double> lastLoaded;
+    std::string lastPath;
+
+    taco::Tensor<int64_t> inputTensor;
+    taco::Tensor<int64_t> otherTensor;
+    taco::Tensor<int64_t> thirdTensor;
+    int64_t nnz;
+};
+
+UfuncInputCache inputCache;
+
+std::string cpuBenchKey(std::string tensorName, std::string funcName) {
+    return tensorName + "-" + funcName + "-taco";
+}
+
+enum FrosttOp {
+    TTV = 1,
+    TTM = 2,
+    MTTKRP = 3,
+    INNERPROD = 4,
+    PLUS2 = 5
+};
+
+std::string opName(FrosttOp op) {
+    switch (op) {
+        case TTV: {
+            return "ttv";
+        }
+        case TTM: {
+            return "ttm";
+        }
+        case MTTKRP: {
+            return "mttkrp";
+        }
+        case INNERPROD: {
+            return "innerprod";
+        }
+        case PLUS2: {
+            return "plus2";
+        }
+        default:
+            return "";
+        }
+}
+
+static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp op, int fill_value = 0) {
+    auto frosttTensorPath = getTacoTensorPath();
+    frosttTensorPath += "FROSTT/";
+    frosttTensorPath += tnsPath;
+
+    auto pathSplit = taco::util::split(tnsPath, "/");
+    auto filename = pathSplit[pathSplit.size() - 1];
+    auto tensorName = taco::util::split(filename, ".")[0];
+    state.SetLabel(tensorName);
+
+    // TODO (rohany): What format do we want to do here?
+    Tensor<int64_t> frosttTensor, other;
+    std::tie(frosttTensor, other) = inputCache.getUfuncInput(frosttTensorPath, Sparse);
+
+    for (auto _: state) {
+        state.PauseTiming();
+        Tensor<int64_t> result("result", frosttTensor.getDimensions(), frosttTensor.getFormat(), fill_value);
+        result.setAssembleWhileCompute(true);
+        switch (op) {
+            case TTV: {
+                IndexVar i, j, k;
+                result(i, j) = frosttTensor(i, j, k) * otherVec(k);
+                break;
+            }
+            case TTM: {
+                IndexVar i, j, k, l;
+                result(i, j, k) = frosttTensor(i, j, l) * otherMat(k, l);
+                break;
+            }
+            case MTTKRP: {
+                IndexVar i, j, k, l;
+                result(i, j) = frosttTensor(i, k, l) * otherMat(j, k) * otherMat1(j, l);
+                break;
+            }
+            case INNERPROD: {
+                IndexVar i, j, k;
+                result() = frosttTensor(i, j, k) * other(i, j, k);
+                break;
+            }
+            case PLUS2: {
+                IndexVar i, j, k;
+                result(i, j, k) = frosttTensor(i, j, k) + other(i, j, k);
+                break;
+            }
+            default:
+                state.SkipWithError("invalid expression");
+                return;
+        }
+        result.compile();
+        state.ResumeTiming();
+
+        result.compute();
+
+        state.PauseTiming();
+
+        if (auto validationPath = getValidationOutputPath(); validationPath != "") {
+            auto key = cpuBenchKey(tensorName, opName(op));
+            auto outpath = validationPath + key + ".tns";
+            taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
+        }
+    }
+}
+
+#define FOREACH_FROSTT_TENSOR(__func__) \
+  __func__(facebook, "faceboook.tns") \
+  __func__(fb1k, "fb1k.tns") \
+  __func__(fb10k, "fb10k.tns") \
+  __func__(nell-1, "nell-1.tns") \
+  __func__(nell-2, "nell-2.tns")
+
+// Other FROSTT tensors that may or may not be too large to load.
+// __func__(delicious, "delicious.tns") \
+  // __func__(flickr, "flickr.tns") \
+  // __func__(nell-1, "nell-1.tns") \
+  // __func__(patents, "patents.tns") \
+  // __func__(reddit, "reddit.tns") \
+  // __func__(amazon-reviews, "amazon-reviews.tns") \
+  // lbnl-network is fine, but python can't load it.
+// __func__(lbnl-network, "lbnl-network.tns") \
+ 
+
+#define DECLARE_FROSTT_BENCH(name, path) \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttv, path, TTV); \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttm, path, TTM); \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_mttkrp, path, MTTKRP); \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_innerprod, path, INNERPROD); \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_elemadd_plus2, path, PLUS2);\
+
+
+FOREACH_FROSTT_TENSOR(DECLARE_FROSTT_BENCH)
+
+struct SuiteSparseTensors {
+    SuiteSparseTensors() {
+        auto ssTensorPath = getTacoTensorPath();
+        ssTensorPath += "suitesparse/";
+        if (std::experimental::filesystem::exists(ssTensorPath)) {
+            for (auto &entry: std::experimental::filesystem::directory_iterator(ssTensorPath)) {
+                std::string f(entry.path());
+                // Check that the filename ends with .mtx.
+                if (f.compare(f.size() - 4, 4, ".mtx") == 0) {
+                    this->tensors.push_back(entry.path());
+                }
+            }
+        }
+    }
+
+    std::vector<std::string> tensors;
+};
+
+SuiteSparseTensors ssTensors;
+
+enum SuiteSparseOp {
+    SPMV = 1,
+    SPMM = 2,
+    PLUS3 = 3,
+    SDDMM = 4,
+    MATTRANSMUL = 5,
+    RESIDUAL = 6,
+    MMADD = 7
+};
+
+std::string opName(SuiteSparseOp op) {
+    switch (op) {
+        case SPMV: {
+            return "spmv";
+        }
+        case SPMM: {
+            return "spmm";
+        }
+        case PLUS3: {
+            return "plus3";
+        }
+        case SDDMM: {
+            return "sddmm";
+        }
+        case MATTRANSMUL: {
+            return "mattransmul";
+        }
+        case RESIDUAL: {
+            return "residual";
+        }
+        case MMADD: {
+            return "mmadd";
+        }
+        default:
+            return "";
+    }
+}
+
+static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fill_value = 0) {
+    // Counters must be present in every run to get reported to the CSV.
+    state.counters["dimx"] = 0;
+    state.counters["dimy"] = 0;
+    state.counters["nnz"] = 0;
+
+    auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
+    if (tensorPath == "") {
+        state.error_occurred();
+        return;
+    }
+
+    auto pathSplit = taco::util::split(tensorPath, "/");
+    auto filename = pathSplit[pathSplit.size() - 1];
+    auto tensorName = taco::util::split(filename, ".")[0];
+    state.SetLabel(tensorName);
+
+    taco::Tensor<int64_t> ssTensor, other;
+    try {
+        std::tie(ssTensor, other) = inputCache.getUfuncInput(tensorPath, CSR, true /* countNNZ */);
+    } catch (TacoException &e) {
+        // Counters don't show up in the generated CSV if we used SkipWithError, so
+        // just add in the label that this run is skipped.
+        state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
+        return;
+    }
+
+    state.counters["dimx"] = ssTensor.getDimension(0);
+    state.counters["dimy"] = ssTensor.getDimension(1);
+    state.counters["nnz"] = inputCache.nnz;
+
+    for (auto _: state) {
+        state.PauseTiming();
+        Tensor<int64_t> result("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+        result.setAssembleWhileCompute(true);
+        switch (op) {
+            case SPMV: {
+                IndexVar i, j, k;
+                result(i, j) = ssTensor(i, j) * otherVec(j);
+                break;
+            }
+            case SPMM: {
+                IndexVar i, j, k;
+                result(i, j) = ssTensor(i, k) * otherMat(k, j);
+                break;
+            }
+            case PLUS3: {
+                IndexVar i, j, k, l;
+                result(i, j) = ssTensor(i, j) + otherMat(i, j) * otherMat1(i, j);
+                break;
+            }
+            case SDDMM: {
+                IndexVar i, j, k;
+                result(i, j) = ssTensor(i, j) * otherMat(i, k) * otherMat1(k, j);
+                break;
+            }
+            case MATTRANSMUL: {
+                IndexVar i, j;
+                result(i) = otherScalar1() * ssTensor(j, i) * otherVec(j) + otherScalar2() * otherVec1(i);
+                break;
+            }
+            case RESIDUAL: {
+                IndexVar i, j, k;
+                result(i) = otherVec(i) - ssTensor(i, j) + otherVec(j);
+                break;
+            }
+            case MMADD: {
+                IndexVar i, j, k;
+                result(i, j) = ssTensor(i, j) + otherMat(i, j);
+                break;
+            }
+            default:
+                state.SkipWithError("invalid expression");
+                return;
+        }
+        result.compile();
+        state.ResumeTiming();
+
+        result.compute();
+
+        state.PauseTiming();
+        if (auto validationPath = getValidationOutputPath(); validationPath != "") {
+            auto key = cpuBenchKey(tensorName, opName(op));
+            auto outpath = validationPath + key + ".tns";
+            taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
+        }
+    }
+}
+
+TACO_BENCH_ARGS(bench_suitesparse, vecmul_spmv, SPMV);
+TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM);
+TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3);
+TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
+TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
+TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
+TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
