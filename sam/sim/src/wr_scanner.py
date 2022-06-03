@@ -59,6 +59,11 @@ class ValsWrScan(WrScan):
     def autosize(self):
         self.resize_arr(self.curr_addr)
 
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["size"] = self.curr_addr
+        return stats_dict
+
 
 # Unique compressed (not from points)
 class CompressWrScan(WrScan):

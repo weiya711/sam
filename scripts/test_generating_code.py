@@ -74,14 +74,14 @@ def generate_header(f, out_name):
     f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n\n")
     # f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default = './mode-formats')\n\n")
     f.write("# FIXME: Figureout formats\n")
-    f.write("@pytest.mark.skipif(\n")
-    f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
-    f.write(tab(1) + "reason='CI lacks datasets',\n")
-    f.write(")\n")
+    #f.write("@pytest.mark.skipif(\n")
+    #f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
+    #f.write(tab(1) + "reason='CI lacks datasets',\n")
+    #f.write(")\n")
     if out_name in suitesparse_list:
         f.write("@pytest.mark.suitesparse\n")
     if out_name in frostt_list:
-        f.write("@pytest.mark.frosst\n")
+        f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
     f.write("def test_" + out_name + "(samBench, ssname, debug_sim, fill=0):\n")
