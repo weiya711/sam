@@ -5,7 +5,7 @@ export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-fo
 csv: 
 	scripts/pytest_suitesparse_with_benchmarks.sh
 
-tests: formats sam 
+tests: sam 
 	python scripts/test_generating_code.py
 	make run
 
