@@ -5,6 +5,7 @@ import sys
 import tqdm
 import argparse
 
+
 def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
     first = True
     outputFile = open(outfile, 'w+')
@@ -47,9 +48,10 @@ def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
     # Write out the set of valid labels.
     if labelSet is not None:
         with open(labelSet, 'w+') as validSet:
-            for l in validLabels:
-                validSet.write(l)
+            for ll in validLabels:
+                validSet.write(ll)
                 validSet.write("\n")
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('target_directory', type=str, help="Directory containing CSV's to aggregate")

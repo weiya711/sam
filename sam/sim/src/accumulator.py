@@ -602,11 +602,6 @@ class SparseAccumulator2(Primitive):
         return self.curr_val
 
     def return_statistics(self):
-        stats_dict = {}
-        stats_dict["in1_fifo"] = self.in1_fifo
-        stats_dict["in2_fifo"] = self.in2_fifo
-        stats_dict["in0_fifo"] = self.in0_fifo
-        stats_dict["inval_fifo"] = self.inval_fifo
+        stats_dict = {"in1_fifo": self.in1_fifo, "in2_fifo": self.in2_fifo, "in0_fifo": self.in0_fifo,
+                      "inval_fifo": self.inval_fifo}
         return stats_dict
-
-
