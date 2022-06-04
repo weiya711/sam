@@ -145,12 +145,20 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
     Tensor<int64_t> frosttTensor, otherShifted;
     std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, Sparse);
 
+    int DIM0 = frosttTensor.getDimension(0);
+    int DIM1 = frosttTensor.getDimension(1);
+    int DIM2 = frosttTensor.getDimension(2);
+
+    int DIM_EXTRA = 256;
+
     for (auto _: state) {
         state.PauseTiming();
-        Tensor<int64_t> result("result", frosttTensor.getDimensions(), frosttTensor.getFormat(), fill_value);
-        result.setAssembleWhileCompute(true);
+        Tensor<int64_t> result;
         switch (op) {
             case TTV: {
+                result = Tensor<int64_t>("result", {DIM0, DIM1}, Format(Sparse), fill_value);
+                result.setAssembleWhileCompute(true);
+
                 Tensor<int64_t> otherVec = inputCache.otherVecLastMode;
 
                 IndexVar i, j, k;
@@ -158,22 +166,31 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 break;
             }
             case TTM: {
+                result = Tensor<int64_t>("result", {DIM0, DIM1, DIM_EXTRA}, Format(Sparse), fill_value);
+
+
                 IndexVar i, j, k, l;
                 // TODO: (owhsu) need to pick things for this and MTTKRP...
                 //result(i, j, k) = frosttTensor(i, j, l) * otherMat(k, l);
                 break;
             }
             case MTTKRP: {
+                Tensor<int64_t> result("result", {DIM0, DIM_EXTRA}, Format(Sparse), fill_value);
+
                 IndexVar i, j, k, l;
                 //result(i, j) = frosttTensor(i, k, l) * otherMat(j, k) * otherMat1(j, l);
                 break;
             }
             case INNERPROD: {
+                Tensor<int64_t> result("result");
+
                 IndexVar i, j, k;
                 result() = frosttTensor(i, j, k) * otherShifted(i, j, k);
                 break;
             }
             case PLUS2: {
+                Tensor<int64_t> result("result", frosttTensor.getDimensions(), frosttTensor.getFormat(), fill_value);
+
                 IndexVar i, j, k;
                 result(i, j, k) = frosttTensor(i, j, k) + otherShifted(i, j, k);
                 break;
@@ -182,6 +199,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 state.SkipWithError("invalid expression");
                 return;
         }
+        result.setAssembleWhileCompute(true);
         result.compile();
         state.ResumeTiming();
 
@@ -217,10 +235,11 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 
 #define DECLARE_FROSTT_BENCH(name, path) \
   TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttv, path, TTV); \
-  TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttm, path, TTM); \
-  TACO_BENCH_ARGS(bench_frostt, name/tensor3_mttkrp, path, MTTKRP); \
   TACO_BENCH_ARGS(bench_frostt, name/tensor3_innerprod, path, INNERPROD); \
-  TACO_BENCH_ARGS(bench_frostt, name/tensor3_elemadd_plus2, path, PLUS2);\
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_elemadd_plus2, path, PLUS2);
+  // TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttm, path, TTM); \
+  // TACO_BENCH_ARGS(bench_frostt, name/tensor3_mttkrp, path, MTTKRP); \
+
 
 
 FOREACH_FROSTT_TENSOR(DECLARE_FROSTT_BENCH)
