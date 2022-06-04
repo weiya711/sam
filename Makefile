@@ -4,13 +4,15 @@ BENCHES := ""
 ifeq ($(OPENMP),)
 OPENMP := "OFF"
 endif
-# Set LANKA=ON if compiling on the MIT Lanka cluster.
+# Set NEVA=ON if compiling on the Stanford cluster (Neva or Kiwi).
 ifeq ($(NEVA),)
+NEVA := "OFF"
+else ifeq ($(KIWI),)
 NEVA := "OFF"
 endif
 
 ifeq ("$(NEVA)","ON")
-CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,24,26,28,30,32,34 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
+CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,12 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
 else
 CMD := LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
 endif

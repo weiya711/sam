@@ -216,7 +216,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 }
 
 #define FOREACH_FROSTT_TENSOR(__func__) \
-  __func__(facebook, "faceboook.tns") \
+  __func__(facebook, "facebook.tns") \
   __func__(fb1k, "fb1k.tns") \
   __func__(fb10k, "fb10k.tns") \
   __func__(nell-1, "nell-1.tns") \
