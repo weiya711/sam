@@ -37,10 +37,10 @@ class RepSigGenNode(HWNode):
             new_conns = {
                 'rsg_to_wr_scan': [
                     # send output to rd scanner
-                    ([(rsg, "passthru_data_out"), (wr_scan, "data_in_0")], 16),
-                    ([(rsg, "passthru_eos_out"), (wr_scan, "eos_in_0")], 1),
-                    ([(wr_scan, "ready_out_0"), (rsg, "passthru_ready_in")], 1),
-                    ([(rsg, "passthru_valid_out"), (wr_scan, "valid_in_0")], 1),
+                    ([(rsg, "passthru_data_out"), (wr_scan, "data_in")], 17),
+                    # ([(rsg, "passthru_eos_out"), (wr_scan, "eos_in_0")], 1),
+                    # ([(wr_scan, "ready_out_0"), (rsg, "passthru_ready_in")], 1),
+                    # ([(rsg, "passthru_valid_out"), (wr_scan, "valid_in_0")], 1),
                 ]
             }
             return new_conns
@@ -57,10 +57,10 @@ class RepSigGenNode(HWNode):
             repeat = other.get_name()
             new_conns = {
                 'rsg_to_repeat': [
-                    ([(rsg, "repsig_data_out"), (repeat, "repsig_data_in")], 16),
-                    ([(rsg, "repsig_eos_out"), (repeat, "repsig_eos_in")], 1),
-                    ([(repeat, "repsig_ready_out"), (rsg, "repsig_ready_in")], 1),
-                    ([(rsg, "repsig_valid_out"), (repeat, "repsig_valid_in")], 1),
+                    ([(rsg, "repsig_data_out"), (repeat, "repsig_data_in")], 17),
+                    # ([(rsg, "repsig_eos_out"), (repeat, "repsig_eos_in")], 1),
+                    # ([(repeat, "repsig_ready_out"), (rsg, "repsig_ready_in")], 1),
+                    # ([(rsg, "repsig_valid_out"), (repeat, "repsig_valid_in")], 1),
                 ]
             }
             return new_conns

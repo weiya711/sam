@@ -35,10 +35,10 @@ class RepeatNode(HWNode):
             new_conns = {
                 f'repeat_to_read_scan': [
                     # send output to rd scanner
-                    ([(repeat, f"ref_data_out"), (rd_scan, f"us_pos_in")], 16),
-                    ([(repeat, f"ref_eos_out"), (rd_scan, f"us_eos_in")], 1),
-                    ([(rd_scan, f"us_ready_out"), (repeat, f"ref_ready_in")], 1),
-                    ([(repeat, f"ref_valid_out"), (rd_scan, f"us_valid_in")], 1),
+                    ([(repeat, f"ref_data_out"), (rd_scan, f"us_pos_in")], 17),
+                    # ([(repeat, f"ref_eos_out"), (rd_scan, f"us_eos_in")], 1),
+                    # ([(rd_scan, f"us_ready_out"), (repeat, f"ref_ready_in")], 1),
+                    # ([(repeat, f"ref_valid_out"), (rd_scan, f"us_valid_in")], 1),
                 ]
             }
 
