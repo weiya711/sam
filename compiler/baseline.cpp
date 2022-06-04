@@ -329,23 +329,28 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
         return;
     }
 
-    state.counters["dimx"] = ssTensor.getDimension(0);
-    state.counters["dimy"] = ssTensor.getDimension(1);
+    int DIM0 = ssTensor.getDimension(0);
+    int DIM1 = ssTensor.getDimension(1);
+    int DIM_EXTRA = 256;
+    
+    state.counters["dimx"] = DIM0;
+    state.counters["dimy"] = DIM1;
     state.counters["nnz"] = inputCache.nnz;
 
     for (auto _: state) {
         state.PauseTiming();
-        Tensor<int64_t> result("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-        result.setAssembleWhileCompute(true);
+        Tensor<int64_t> result;
         switch (op) {
             case SPMV: {
+                result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
                 Tensor<int64_t> otherVec = inputCache.otherVecLastMode;
 
                 IndexVar i, j, k;
-                result(i, j) = ssTensor(i, j) * otherVec(j);
+                result(i) = ssTensor(i, j) * otherVec(j);
                 break;
             }
             case SPMM: {
+                result = Tensor<int64_t>("result", {DIM0, DIM0}, Format(Sparse), fill_value);
                 Tensor<int64_t> otherShiftedTrans = otherShifted.transpose({1, 0});
 
                 IndexVar i, j, k;
@@ -353,6 +358,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 break;
             }
             case PLUS3: {
+                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
                 otherShifted2 = inputCache.thirdTensor;
 
                 IndexVar i, j, k, l;
@@ -360,20 +366,17 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 break;
             }
             case SDDMM: {
-                int NUM_I = ssTensor.getDimension(0);
-                int NUM_J = ssTensor.getDimension(1);
-                // (owhsu) what should this be set to
-                int NUM_K = 246;
+                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
 
-                taco::Tensor<int64_t> denseMat1("denseMat1", {NUM_I, NUM_K}, Format({Dense}));
-                taco::Tensor<int64_t> denseMat2("denseMat2", {NUM_K, NUM_J}, Format({Dense}));
+                taco::Tensor<int64_t> denseMat1("denseMat1", {DIM0, DIM_EXTRA}, Format({Dense}));
+                taco::Tensor<int64_t> denseMat2("denseMat2", {DIM_EXTRA, DIM1}, Format({Dense}));
 
                 // (owhsu) Making this dense matrices of all 1's
-                for (int kk = 0; kk < NUM_K; kk++) {
-                    for (int ii = 0; ii < NUM_I; ii++) {
+                for (int kk = 0; kk < DIM_EXTRA; kk++) {
+                    for (int ii = 0; ii < DIM0; ii++) {
                         denseMat1.insert({ii, kk}, 1);
                     }
-                    for (int jj = 0; jj < NUM_J; jj++) {
+                    for (int jj = 0; jj < DIM1; jj++) {
                         denseMat2.insert({kk, jj}, 1);
                     }
                 }
@@ -383,6 +386,8 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 break;
             }
             case MATTRANSMUL: {
+                result = Tensor<int64_t>("result", {DIM1}, Format(Sparse), fill_value);
+
                 taco::Tensor<int64_t> s1("s1"), s2("s2");
                 s1.insert({0}, 2);
                 s2.insert({0}, 2);
@@ -395,6 +400,8 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 break;
             }
             case RESIDUAL: {
+                result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
+
                 Tensor<int64_t> otherVeci = inputCache.otherVecFirstMode;
                 Tensor<int64_t> otherVecj = inputCache.otherVecLastMode;
 
@@ -403,6 +410,8 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 break;
             }
             case MMADD: {
+                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+
                 IndexVar i, j, k;
                 result(i, j) = ssTensor(i, j) + otherShifted(i, j);
                 break;
@@ -411,6 +420,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 state.SkipWithError("invalid expression");
                 return;
         }
+        result.setAssembleWhileCompute(true);
         result.compile();
         state.ResumeTiming();
 
