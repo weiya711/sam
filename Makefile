@@ -68,7 +68,7 @@ taco/build/taco-bench: submodules taco/benchmark/googletest
 	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DGRAPHBLAS=$(GRAPHBLAS) -DLANKA=$(LANKA) ../ && $(MAKE) taco-bench
 
 taco/benchmark/googletest: submodules
-	if [ ! -d "taco/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
+	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
 	
 .PHONY: submodules
 submodules:
