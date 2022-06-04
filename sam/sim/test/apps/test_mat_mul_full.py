@@ -183,6 +183,7 @@ def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
     out_val = vals_X.get_arr()
 
     if check_gold:
+        print("Checking gold...")
         check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val)
 
     if debug_sim:
