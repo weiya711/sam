@@ -204,6 +204,7 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
 
 
 def gen_data_formats(size, app_name, path):
+    ans_list = []
     if size - 1 == 1:
         ans_list = ["orig"]
         return ans_list
@@ -681,8 +682,8 @@ for apath in file_paths:
                                 tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     done_all[v] = 1
 
-            if d[v]["type"] == "spaccumulator" and d[v]["order"] == 1 and parents_done(networkx_graph, done_all, v) and \
-                    done_all[v] == 0:
+            if d[v]["type"] == "spaccumulator" and d[v]["order"] == 1 and parents_done(networkx_graph, done_all, v) \
+                    and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     append = {}
                     append[0] = "_inner"
@@ -696,23 +697,19 @@ for apath in file_paths:
                         if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
                             spaccumulator_data[v][int(edge_data[v][stream_join_elements[v].index(u_)][7])] = \
                                 append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
-                            edge_data[v][stream_join_elements[v].index(u_)] = edge_data[v][
-                                                                                  stream_join_elements[v].index(u_)][
-                                                                              :6] + \
-                                                                              append[append_arr.index(int(edge_data[v][
-                                                                                                              stream_join_elements[
-                                                                                                                  v].index(
-                                                                                                                  u_)][
-                                                                                                              7]))]
+                            edge_data[v][stream_join_elements[v].index(u_)] = \
+                                edge_data[v][stream_join_elements[v].index(u_)][:6] \
+                                + append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
 
                         if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
-                            f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][
-                                stream_join_elements[v].index(u_)] + ".set_in_stream(" +
+                            f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] +
+                                    ".set_in_stream(" +
                                     d[u_]["object"] + ".out_crd())\n")
                         else:
-                            f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][
-                                stream_join_elements[v].index(u_)] + "." + "set_in_stream(" +
-                                    d[u_]["object"] + ".out_val())\n")
+                            f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] + "." +
+                                    "set_in_stream(" + d[u_]["object"] + ".out_val())\n")
                     for u_ in stream_join_elements[v]:
                         if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
                             f.write(
@@ -720,10 +717,10 @@ for apath in file_paths:
                                 d[v]["object"] + "_drop_" + edge_data[v][
                                     stream_join_elements[v].index(u_)] + ".out_val())\n")
                         else:
-                            f.write(tab(2) + d[v]["object"] + ".set_" + edge_data[v][
-                                stream_join_elements[v].index(u_)] + "(" +
-                                    d[v]["object"] + "_drop_" + edge_data[v][
-                                        stream_join_elements[v].index(u_)] + ".out_val())\n")
+                            f.write(tab(2) + d[v]["object"] + ".set_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[v]["object"] + "_drop_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] + ".out_val())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
 
@@ -743,20 +740,17 @@ for apath in file_paths:
                     if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
                         spaccumulator_data[v][int(edge_data[v][stream_join_elements[v].index(u_)][7])] = \
                             append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
-                        edge_data[v][stream_join_elements[v].index(u_)] = edge_data[v][
-                                                                              stream_join_elements[v].index(u_)][:6] + \
-                                                                          append[append_arr.index(int(edge_data[v][
-                                                                                                          stream_join_elements[
-                                                                                                              v].index(
-                                                                                                              u_)][7]))]
+                        edge_data[v][stream_join_elements[v].index(u_)] = \
+                            edge_data[v][stream_join_elements[v].index(u_)][:6] + \
+                            append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
 
                     if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
-                        f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][
-                            stream_join_elements[v].index(u_)] + ".set_in_stream(" +
-                                d[u_]["object"] + ".out_crd())\n")
+                        f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                edge_data[v][stream_join_elements[v].index(u_)] +
+                                ".set_in_stream(" + d[u_]["object"] + ".out_crd())\n")
                     else:
-                        f.write(tab(2) + d[v]["object"] + "_drop_" + edge_data[v][
-                            stream_join_elements[v].index(u_)] + "." + "set_in_stream(" +
+                        f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                edge_data[v][stream_join_elements[v].index(u_)] + "." + "set_in_stream(" +
                                 d[u_]["object"] + ".out_val())\n")
                 for u_ in stream_join_elements[v]:
                     if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
@@ -801,8 +795,8 @@ for apath in file_paths:
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)] and "spaccumulator" in d[u_][
-                            "object"]:
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)] and "spaccumulator" \
+                                in d[u_]["object"]:
                             print(edge_data[v][stream_join_elements[v].index(u_)])
                             edge_data[v][stream_join_elements[v].index(u_)] = \
                                 "crd" + spaccumulator_data[u_][int(edge_data[v][stream_join_elements[v].index(u_)][8])]

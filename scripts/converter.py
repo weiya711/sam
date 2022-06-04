@@ -63,7 +63,7 @@ if args.all:
     csv_files = [os.path.splitext(json_file)[0] + '.csv' for json_file in json_files]
 
 else:
-    if args.json_name == None:
+    if args.json_name is None:
         raise ValueError('Set --json_name or pass --all.')
     else:
         json_files = [args.json_name]
