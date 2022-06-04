@@ -79,7 +79,6 @@ class CompressWrScan(WrScan):
         self.end_fiber = True
 
         self.seg_size = seg_size
-        print("Seg Size: ", self.seg_size)
         self.seg_arr = Array(size=self.seg_size, fill=0, debug=self.debug)
 
     def update(self):

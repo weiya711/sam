@@ -134,7 +134,7 @@ class RepeatSigGen(Primitive):
         self.istream_size = max(self.istream_size, len(self.istream))
 
     def print_fifos(self):
-        print("Repeat sig gen size;:", self.istream_size)
+        print("Repeat sig gen size:", self.istream_size)
 
     def return_statistics(self):
         stats_dict = {"in_repeat_size": self.istream_size}
