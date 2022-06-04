@@ -9,6 +9,8 @@ def pytest_addoption(parser):
     parser.addoption("--ssname", action="store", help="Suitesparse name for the end-to-end test")
     parser.addoption("--frosttname", action="store", help="Frostt name for the end-to-end test")
     parser.addoption("--vecname", action="store", help="Vector name for the end-to-end test")
+    parser.addoption("--check-gold", action="store_true", default=False,
+                     help="Flag that enables functional output checking")
 
 
 def pytest_configure(config):
@@ -40,6 +42,11 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture
 def debug_sim(request):
     return request.config.getoption("--debug-sim")
+
+
+@pytest.fixture
+def check_gold(request):
+    return request.config.getoption("--check-gold")
 
 
 @pytest.fixture

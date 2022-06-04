@@ -10,7 +10,7 @@ from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 
 from sam.sim.test.test import *
-from sam.sim.test.check_gold import *
+from sam.sim.test.gold import *
 
 import os
 
@@ -182,7 +182,8 @@ def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
     out_segs = [wrscan_Xi.get_seg_arr(), wrscan_Xj.get_seg_arr()]
     out_val = vals_X.get_arr()
 
-    check_gold_matmul_ds01_ds10(ssname, debug_sim, out_crds, out_segs, out_val)
+    if check_gold:
+        check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val)
 
     if debug_sim:
         print(out_segs)
