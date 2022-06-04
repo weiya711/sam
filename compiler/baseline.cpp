@@ -15,8 +15,6 @@
 
 using namespace taco;
 
-bool genOther = true;
-
 template<int I, class...Ts>
 decltype(auto) get(Ts &&... ts) {
     return std::get<I>(std::forward_as_tuple(ts...));
@@ -143,7 +141,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 
     // TODO (rohany): What format do we want to do here?
     Tensor<int64_t> frosttTensor, otherShifted;
-    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, Sparse);
+    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, Sparse, false, false, true, GEN_OTHER);
 
     int DIM0 = frosttTensor.getDimension(0);
     int DIM1 = frosttTensor.getDimension(1);
@@ -321,7 +319,8 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
 
     taco::Tensor<int64_t> ssTensor, otherShifted, otherShifted2;
     try {
-        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, CSR, true /* countNNZ */, op == PLUS3 /* includeThird */);
+        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, CSR, true /* countNNZ */,
+                                                                     op == PLUS3 /* includeThird */, true,GEN_OTHER);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
         // just add in the label that this run is skipped.

@@ -7,9 +7,12 @@ endif
 # Set NEVA=ON if compiling on the Stanford cluster (Neva or Kiwi).
 ifeq ($(NEVA),)
 NEVA := "OFF"
-else ifeq ($(KIWI),)
-NEVA := "OFF"
 endif
+# Set GEN=ON if you would like to generate "other" tensors for performance into a file
+ifeq ($(GEN),)
+GEN := "OFF"
+endif
+
 
 ifeq ("$(NEVA)","ON")
 CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,12 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
@@ -68,7 +71,7 @@ else
 endif
 
 compiler/build/taco-bench: submodules compiler/benchmark/googletest
-	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) ../ && $(MAKE) taco-bench
+	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) -DGEN=$(GEN) ../ && $(MAKE) taco-bench
 
 compiler/benchmark/googletest: submodules
 	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
