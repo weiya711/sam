@@ -10,14 +10,15 @@ NEVA := "OFF"
 endif
 
 ifeq ("$(NEVA)","ON")
-CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=taco/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,24,26,28,30,32,34 -m 0 taco/build/taco-bench $(BENCHFLAGS)
+CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,24,26,28,30,32,34 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
 else
-CMD := LD_LIBRARY_PATH=taco/build/lib/:$(LD_LIBRARY_PATH) taco/build/taco-bench $(BENCHFLAGS)
+CMD := LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
 endif
 
 export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
 export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
 export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets/
 
 csv: 
 	scripts/pytest_suitesparse_with_benchmarks.sh
@@ -57,17 +58,17 @@ taco/build: submodules
 #	 mkdir -p $
 #	 mkdir -p results/numpy
 
-taco-bench: taco/build/taco-bench
+taco-bench: compiler/build/taco-bench
 ifeq ($(BENCHES),"")
 	$(CMD) --benchmark_out_format="csv" --benchmark_out="$(TACO_OUT)" --benchmark_repetitions=10 --benchmark_counters_tabular=true
 else
 	$(CMD) --benchmark_filter="$(BENCHES)" --benchmark_out_format="csv" --benchmark_out="$(TACO_OUT)" --benchmark_repetitions=10 --benchmark_counters_tabular=true
 endif
 
-taco/build/taco-bench: submodules taco/benchmark/googletest
-	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DGRAPHBLAS=$(GRAPHBLAS) -DLANKA=$(LANKA) ../ && $(MAKE) taco-bench
+compiler/build/taco-bench: submodules compiler/benchmark/googletest
+	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) ../ && $(MAKE) taco-bench
 
-taco/benchmark/googletest: submodules
+compiler/benchmark/googletest: submodules
 	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
 	
 .PHONY: submodules

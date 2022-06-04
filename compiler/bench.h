@@ -60,6 +60,8 @@ taco::TensorBase loadImageTensor(std::string name, int num, taco::Format format,
 
 taco::TensorBase loadMinMaxTensor(std::string name, int order, taco::Format format, int variant = 0);
 
+std::string constructOtherTensorKey(std::string tensorName, std::string variant);
+
 template<typename T>
 taco::Tensor<T> castToType(std::string name, taco::Tensor<double> tensor) {
     taco::Tensor<T> result(name, tensor.getDimensions(), tensor.getFormat());
@@ -121,5 +123,36 @@ taco::Tensor<T> shiftLastMode(std::string name, taco::Tensor<T2> original) {
     result.pack();
     return result;
 }
+
+
+
+template<typename T, typename T2>
+taco::Tensor<T> genOtherVec(std::string name, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
+    int dimension = original.getDimensions().at(mode);
+    taco::Tensor<T> result(name, {dimension}, taco::Format(taco::sparse));
+
+    for (int ii = 0; ii < dimension; ii++) {
+        float rand_float = (float) rand() / (float) (RAND_MAX);
+        if (rand_float < SPARSITY) {
+            // (owhsu) Setting this number to 1 for now
+            result.insert({ii}, 1);
+        }
+    }
+    result.pack();
+    taco::write(constructOtherTensorKey(original.getName(), "vec_mode"+std::to_string(mode)), result);
+
+    return result;
+}
+
+template<typename T, typename T2>
+taco::Tensor<T> getOtherVec(std::string name, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
+    taco::Tensor<T> result;
+    result = taco::read(constructOtherTensorKey(original.getName(),
+                                                    "vec_mode" + std::to_string(mode)), taco::Sparse, true);
+    result.setName(name);
+    return result;
+}
+
+
 
 #endif //TACO_BENCH_BENCH_H

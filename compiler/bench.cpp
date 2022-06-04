@@ -14,6 +14,38 @@ std::string getEnvVar(std::string varname) {
     return std::string(path);
 }
 
+std::string getSSTensorPATH() {
+    std::string result = getEnvVar("SUITESPARSE_PATH");
+    if (result == "") {
+        assert(false && "SUITESPARSE_PATH is unset");
+    }
+    return cleanPath(result);
+}
+
+std::string getFrosttTensorPATH() {
+    std::string result = getEnvVar("FROSTT_PATH");
+    if (result == "") {
+        assert(false && "FROSTT_PATH is unset");
+    }
+    return cleanPath(result);
+}
+
+std::string getSSOtherTensorPATH() {
+    std::string result = getEnvVar("SUITESPARSE_OTHER_PATH");
+    if (result == "") {
+        assert(false && "FROSTT_PATH is unset");
+    }
+    return cleanPath(result);
+}
+
+std::string getFrosttOtherTensorPATH() {
+    std::string result = getEnvVar("FROSTT_OTHER_PATH");
+    if (result == "") {
+        assert(false && "FROSTT_PATH is unset");
+    }
+    return cleanPath(result);
+}
+
 std::string getTacoTensorPath() {
     std::string result = getEnvVar("TACO_TENSOR_PATH");
     if (result == "") {
@@ -37,6 +69,7 @@ std::string cleanPath(std::string path) {
     }
     return result;
 }
+
 
 std::string constructRandomTensorKey(std::vector<int> dims, float sparsity, int variant) {
     auto path = getTacoTensorPath();
@@ -110,4 +143,16 @@ taco::TensorBase loadMinMaxTensor(std::string name, int order, taco::Format form
     auto tensor = taco::read(constructMinMaxTensorKey(order, variant), format, true);
     tensor.setName(name);
     return tensor;
+}
+
+std::string constructOtherTensorKey(std::string tensorName, std::string variant) {
+    auto path = getTacoTensorPath();
+    std::stringstream result;
+    result << path;
+    if (path[path.size() - 1] != '/') {
+        result << "/";
+    }
+    result << "other/";
+    result << tensorName << "_" << variant << ".mtx";
+    return result.str();
 }
