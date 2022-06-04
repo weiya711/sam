@@ -1,0 +1,160 @@
+{
+    "machine_info": {
+        "node": "kiwi",
+        "processor": "x86_64",
+        "machine": "x86_64",
+        "python_compiler": "GCC 8.4.0",
+        "python_implementation": "CPython",
+        "python_implementation_version": "3.8.0",
+        "python_version": "3.8.0",
+        "python_build": [
+            "default",
+            "Dec  9 2021 17:53:27"
+        ],
+        "release": "4.15.0-177-generic",
+        "system": "Linux",
+        "cpu": {
+            "python_version": "3.8.0.final.0 (64 bit)",
+            "cpuinfo_version": [
+                8,
+                0,
+                0
+            ],
+            "cpuinfo_version_string": "8.0.0",
+            "arch": "X86_64",
+            "bits": 64,
+            "count": 24,
+            "arch_string_raw": "x86_64",
+            "vendor_id_raw": "GenuineIntel",
+            "brand_raw": "Common KVM processor",
+            "hz_advertised_friendly": "2.2000 GHz",
+            "hz_actual_friendly": "2.2000 GHz",
+            "hz_advertised": [
+                2200004000,
+                0
+            ],
+            "hz_actual": [
+                2200004000,
+                0
+            ],
+            "stepping": 1,
+            "model": 6,
+            "family": 15,
+            "flags": [
+                "apic",
+                "clflush",
+                "cmov",
+                "constant_tsc",
+                "cpuid",
+                "cpuid_fault",
+                "cx16",
+                "cx8",
+                "de",
+                "fpu",
+                "fxsr",
+                "ht",
+                "hypervisor",
+                "lahf_lm",
+                "lm",
+                "mca",
+                "mce",
+                "mmx",
+                "msr",
+                "mtrr",
+                "nopl",
+                "nx",
+                "pae",
+                "pat",
+                "pge",
+                "pni",
+                "pse",
+                "pse36",
+                "pti",
+                "sep",
+                "sse",
+                "sse2",
+                "syscall",
+                "tsc",
+                "tsc_known_freq",
+                "vme",
+                "x2apic",
+                "xtopology"
+            ],
+            "l3_cache_size": 16777216,
+            "l2_cache_size": 4194304,
+            "l1_data_cache_size": 32768,
+            "l1_instruction_cache_size": 32768,
+            "l2_cache_line_size": 512,
+            "l2_cache_associativity": 8
+        }
+    },
+    "commit_info": {
+        "id": "98bf4033864741a9679339efd337943cf3ed4439",
+        "time": "2022-05-30T12:48:24-07:00",
+        "author_time": "2022-05-30T12:48:24-07:00",
+        "dirty": true,
+        "project": "sam",
+        "branch": "benchmarking_tests"
+    },
+    "benchmarks": [
+        {
+            "group": null,
+            "name": "test_matmul_ijk_i",
+            "fullname": "sam/sim/test/apps/test_matmul_ijk.py::test_matmul_ijk_i",
+            "params": null,
+            "param": null,
+            "extra_info": {
+                "repeat_Ci_14_in_ref_size": 1,
+                "repeat_Ci_14_in_repeat_size": 0,
+                "repeat_Bj_10_in_ref_size": 30,
+                "repeat_Bj_10_in_repeat_size": 0,
+                "intersectk_7_fifos_ref_1": 947,
+                "intersectk_7_fifos_ref_2": 947,
+                "intersectk_7_fifos_crd_1": 947,
+                "intersectk_7_fifos_crd_2": 947,
+                "intersectk_7_fifo_difference": 1,
+                "intersectk_7_intersection_rate": 0.30262840607668196,
+                "intersectk_7_drop_count": 2893,
+                "intersectk_7_valid_output": 1254,
+                "reduce_3_red_count": 354,
+                "reduce_3_total_inputs": 1255,
+                "reduce_3_total_outputs": 4149,
+                "reduce_3_stpkn_outs": 30,
+                "reduce_3_drop_outs": 3218,
+                "reduce_3_valid_outs": 901
+            },
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.010091108968481421,
+                "max": 0.010091108968481421,
+                "mean": 0.010091108968481421,
+                "stddev": 0,
+                "rounds": 1,
+                "median": 0.010091108968481421,
+                "iqr": 0.0,
+                "q1": 0.010091108968481421,
+                "q3": 0.010091108968481421,
+                "iqr_outliers": 0,
+                "stddev_outliers": 0,
+                "outliers": "0;0",
+                "ld15iqr": 0.010091108968481421,
+                "hd15iqr": 0.010091108968481421,
+                "ops": 99.09713621400789,
+                "total": 0.010091108968481421,
+                "data": [
+                    0.010091108968481421
+                ],
+                "iterations": 1
+            }
+        }
+    ],
+    "datetime": "2022-05-31T21:10:19.737662",
+    "version": "3.4.1"
+}

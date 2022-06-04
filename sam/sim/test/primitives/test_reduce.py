@@ -2,7 +2,7 @@ import pytest
 import copy
 import random
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.rd_scanner import CompressedRdScan
+from sam.sim.src.rd_scanner import CompressedCrdRdScan
 from sam.sim.src.wr_scanner import CompressWrScan, ValsWrScan
 from sam.sim.src.base import remove_emptystr
 from sam.sim.test.test import *
@@ -60,8 +60,8 @@ def test_reduce_random_2d(dim, debug_sim, max_val=1000, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_B1 = CompressedRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
-    rdscan_B2 = CompressedRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
+    rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
+    rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
 
     val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
     red = Reduce(debug=debug_sim)

@@ -34,6 +34,7 @@ for i in ${!DATASET_NAMES[@]}; do
     cd $outdir
     echo "Generating input format files for $name..."
     python $basedir/scripts/datastructure_suitesparse.py -n $name 
+    chmod -R 777 $outdir
 
     cd $basedir/sam/sim/test/apps
     echo "Testing $name..."

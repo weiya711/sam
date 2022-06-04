@@ -1,7 +1,7 @@
 from .base import *
 
 
-class Compute2(Primitive):
+class Compute2(Primitive, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -10,10 +10,6 @@ class Compute2(Primitive):
         self.in1_size = 0
         self.in2_size = 0
         self.curr_out = None
-
-    @abstractmethod
-    def out_val(self):
-        pass
 
     def set_in1(self, in1):
         if in1 != '':
@@ -36,8 +32,10 @@ class Compute2(Primitive):
 
 
 class Add2(Compute2):
-    def __init__(self, **kwargs):
+    def __init__(self, neg1=False, neg2=False, **kwargs):
         super().__init__(**kwargs)
+        self.neg1 = neg1
+        self.neg2 = neg2
 
     def update(self):
         if len(self.in1) > 0 and len(self.in2) > 0:
@@ -54,7 +52,7 @@ class Add2(Compute2):
                 self.curr_out = curr_in1
             else:
                 # Both inputs are values
-                self.curr_out = curr_in1 + curr_in2
+                self.curr_out = (-1) ** self.neg1 * curr_in1 + (-1) ** self.neg2 * curr_in2
             self.compute_fifos()
             if self.debug:
                 print("DEBUG: Curr Out:", self.curr_out, "\t Curr In1:", curr_in1, "\t Curr In2:", curr_in2)

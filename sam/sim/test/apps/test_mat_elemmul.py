@@ -1,14 +1,18 @@
 import pytest
+import time
 import scipy.sparse
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
 from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
+from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
+from sam.sim.src.token import *
 from sam.sim.test.test import *
 import os
+import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -18,7 +22,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-def test_mat_elemmul_i(ssname, debug_sim, fill=0):
+@pytest.mark.suitesparse
+def test_mat_elemmul(samBench, ssname, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -48,25 +53,25 @@ def test_mat_elemmul_i(ssname, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_11 = CompressedRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberlookup_Ci_12 = UncompressRdScan(dim=C_shape[0], debug=debug_sim)
+    fiberlookup_Bi_11 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
+    fiberlookup_Ci_12 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
     intersecti_10 = Intersect2(debug=debug_sim)
-    fiberlookup_Bj_8 = CompressedRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberlookup_Cj_9 = CompressedRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
+    fiberlookup_Bj_8 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    fiberlookup_Cj_9 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
     intersectj_7 = Intersect2(debug=debug_sim)
     crddrop_6 = CrdDrop(debug=debug_sim)
-    arrayvals_B_2 = Array(init_arr=B_vals, debug=debug_sim)
-    arrayvals_C_3 = Array(init_arr=C_vals, debug=debug_sim)
-    fiberwrite_X0_5 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
-    fiberwrite_X1_4 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
-    mul_1 = Multiply2(debug=debug_sim)
+    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim)
+    arrayvals_C_5 = Array(init_arr=C_vals, debug=debug_sim)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    mul_3 = Multiply2(debug=debug_sim)
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
-    time = 0
+    time_cnt = 0
 
-    while not done and time < TIMEOUT:
+    while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_11.set_in_ref(in_ref_B.pop(0))
         fiberlookup_Bi_11.update()
@@ -91,31 +96,73 @@ def test_mat_elemmul_i(ssname, debug_sim, fill=0):
 
         crddrop_6.set_outer_crd(intersecti_10.out_crd())
         crddrop_6.set_inner_crd(intersectj_7.out_crd())
-        arrayvals_B_2.set_load(intersectj_7.out_ref1())
-        arrayvals_B_2.update()
+        arrayvals_B_4.set_load(intersectj_7.out_ref1())
+        arrayvals_B_4.update()
 
-        arrayvals_C_3.set_load(intersectj_7.out_ref2())
-        arrayvals_C_3.update()
+        arrayvals_C_5.set_load(intersectj_7.out_ref2())
+        arrayvals_C_5.update()
 
-        mul_1.set_in1(arrayvals_B_2.out_load())
-        mul_1.set_in2(arrayvals_C_3.out_load())
-        mul_1.update()
+        mul_3.set_in1(arrayvals_B_4.out_load())
+        mul_3.set_in2(arrayvals_C_5.out_load())
+        mul_3.update()
 
-        done = fiberwrite_X0_5.out_done() and fiberwrite_X1_4.out_done() and fiberwrite_Xvals_0.out_done()
-        time += 1
+        fiberwrite_X0_2.set_input(crddrop_6.out_crd_outer())
+        fiberwrite_X0_2.update()
 
-    fiberwrite_X0_5.autosize()
-    fiberwrite_X1_4.autosize()
+        fiberwrite_X1_1.set_input(crddrop_6.out_crd_inner())
+        fiberwrite_X1_1.update()
+
+        fiberwrite_Xvals_0.set_input(mul_3.out_val())
+        fiberwrite_Xvals_0.update()
+
+        done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
+        time_cnt += 1
+
+    fiberwrite_X0_2.autosize()
+    fiberwrite_X1_1.autosize()
     fiberwrite_Xvals_0.autosize()
 
-    out_crds = [fiberwrite_X0_5.get_arr(), fiberwrite_X1_4.get_arr()]
-    out_segs = [fiberwrite_X0_5.get_seg_arr(), fiberwrite_X1_4.get_seg_arr()]
+    out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
+    out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
-    intersecti_10.print_fifos()
-    crddrop_6.print_fifos()
-    intersectj_7.print_fifos()
-    arrayvals_B_2.print_fifos()
-    mul_1.print_fifos()
-    arrayvals_C_3.print_fifos()
-    intersecti_10.print_intersection_rate()
-    intersectj_7.print_intersection_rate()
+    def bench():
+        time.sleep(0.01)
+
+    extra_info = dict()
+    extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_B_shape"] = B_shape
+    extra_info["tensor_C_shape"] = C_shape
+    sample_dict = intersecti_10.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersecti_10" + "_" + k] =  sample_dict[k]
+
+    sample_dict = crddrop_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["crddrop_6" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_X0_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_X1_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
+
+    sample_dict = intersectj_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectj_7" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_B_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_B_4" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberwrite_Xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
+
+    sample_dict = arrayvals_C_5.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_C_5" + "_" + k] =  sample_dict[k]
+
+    samBench(bench, extra_info)

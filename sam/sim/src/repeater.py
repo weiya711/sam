@@ -84,6 +84,10 @@ class Repeat(Primitive):
         print("FIFOs size in the ref for repeat block: ", self.in_ref_size)
         print("Repeat size for repeat block: ", self.in_repeat_size)
 
+    def return_statistics(self):
+        stats_dict = {"in_ref_size": self.in_ref_size, "in_repeat_size": self.in_repeat_size}
+        return stats_dict
+
 
 # Repeat signal generator will take a crd stream and generate repeat, 'R',
 # or next coordinate, 'S', signals for broadcasting along a non-existent dimension.
@@ -130,4 +134,8 @@ class RepeatSigGen(Primitive):
         self.istream_size = max(self.istream_size, len(self.istream))
 
     def print_fifos(self):
-        print("Repeat sig gen size;:", self.istream_size)
+        print("Repeat sig gen size:", self.istream_size)
+
+    def return_statistics(self):
+        stats_dict = {"in_repeat_size": self.istream_size}
+        return stats_dict

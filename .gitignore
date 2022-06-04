@@ -8,6 +8,10 @@ __pycache__/
 *.png
 *.pdf
 
-build/
+*.csv
+*.json
 
+build/
+logs/
+results/
 sam-outputs/
