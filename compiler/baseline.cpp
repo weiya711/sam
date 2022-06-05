@@ -143,6 +143,8 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
     Tensor<int64_t> frosttTensor, otherShifted;
     std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, Sparse, false, false, true, GEN_OTHER);
 
+    std::cout << "TENSOR FORMAT:" << frosttTensor.getFormat() << std::endl;
+
     int DIM0 = frosttTensor.getDimension(0);
     int DIM1 = frosttTensor.getDimension(1);
     int DIM2 = frosttTensor.getDimension(2);
@@ -154,7 +156,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
         Tensor<int64_t> result;
         switch (op) {
             case TTV: {
-                result = Tensor<int64_t>("result", {DIM0, DIM1}, Format(Sparse), fill_value);
+                result = Tensor<int64_t>("result", {DIM0, DIM1}, DCSR, fill_value);
                 result.setAssembleWhileCompute(true);
 
                 Tensor<int64_t> otherVec = inputCache.otherVecLastMode;
@@ -319,7 +321,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
 
     taco::Tensor<int64_t> ssTensor, otherShifted, otherShifted2;
     try {
-        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, CSR, true /* countNNZ */,
+        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, DCSR, true /* countNNZ */,
                                                                      op == PLUS3 /* includeThird */, true,GEN_OTHER);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
@@ -349,7 +351,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 break;
             }
             case SPMM: {
-                result = Tensor<int64_t>("result", {DIM0, DIM0}, Format(Sparse), fill_value);
+                result = Tensor<int64_t>("result", {DIM0, DIM0}, DCSR, fill_value);
                 Tensor<int64_t> otherShiftedTrans = otherShifted.transpose({1, 0});
 
                 IndexVar i, j, k;
@@ -439,6 +441,7 @@ TACO_BENCH_ARGS(bench_suitesparse, vecmul_spmv, SPMV);
 TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM);
 TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3);
 TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
-TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
 TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
 TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
+// TODO: need to fix for DCSC for this 
+//TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
