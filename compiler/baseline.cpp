@@ -141,7 +141,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 
     // TODO (rohany): What format do we want to do here?
     Tensor<int64_t> frosttTensor, otherShifted;
-    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, tnsPath, Sparse,
+    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, tensorName, Sparse,
                                                                      false, false, true, GEN_OTHER);
 
     std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
