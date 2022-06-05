@@ -139,7 +139,7 @@ taco::Tensor<T> genOtherVec(std::string name, taco::Tensor<T2> original, int mod
         float rand_float = (float) rand() / (float) (RAND_MAX);
         if (rand_float < SPARSITY) {
             // (owhsu) Setting this number to 1 for now
-            result.insert({ii}, 1);
+            result.insert({ii}, T(1));
         }
     }
     result.pack();

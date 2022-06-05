@@ -373,10 +373,10 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 // (owhsu) Making this dense matrices of all 1's
                 for (int kk = 0; kk < DIM_EXTRA; kk++) {
                     for (int ii = 0; ii < DIM0; ii++) {
-                        denseMat1.insert({ii, kk}, 1);
+                        denseMat1.insert({ii, kk}, int64_t(1));
                     }
                     for (int jj = 0; jj < DIM1; jj++) {
-                        denseMat2.insert({kk, jj}, 1);
+                        denseMat2.insert({kk, jj}, int64_t(1));
                     }
                 }
 
@@ -388,8 +388,8 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 result = Tensor<int64_t>("result", {DIM1}, Format(Sparse), fill_value);
 
                 taco::Tensor<int64_t> s1("s1"), s2("s2");
-                s1.insert({0}, 2);
-                s2.insert({0}, 2);
+                s1.insert({}, int64_t(2));
+                s2.insert({}, int64_t(2));
 
                 Tensor<int64_t> otherVeci = inputCache.otherVecLastMode;
                 Tensor<int64_t> otherVecj = inputCache.otherVecFirstMode;
