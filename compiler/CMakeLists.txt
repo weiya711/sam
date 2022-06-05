@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 project(taco-bench)
 set(CMAKE_BUILD_TYPE "release")
-option(NEVA "Build benchmarks for the neva cluster." OFF)
+option(NEVA "Build benchmarks for the neva or kiwi clusters." OFF)
+option(GEN "Build benchmarks that generate 'other' tensors." OFF)
 
 if(GEN)
   message("-- Generating files for 'other' input tensors")

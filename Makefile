@@ -1,4 +1,4 @@
-BENCHES := ""
+BENCHES := nell-1
 
 # Set OPENMP=ON if compiling TACO with OpenMP support.
 ifeq ($(OPENMP),)
@@ -13,6 +13,13 @@ ifeq ($(GEN),)
 GEN := "OFF"
 endif
 
+benches_name := $(patsubst %.py,%,$(BENCHES))
+benches_name := $(subst /,_,$(benches_name))
+benches_name := $(subst *,_,$(benches_name))
+# Taco Specific Flags
+ifeq ($(TACO_OUT),)
+TACO_OUT := results-cpu/$(benches_name)benches_$(shell date +%Y_%m_%d_%H%M%S).csv
+endif
 
 ifeq ("$(NEVA)","ON")
 CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,12 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
@@ -64,6 +71,8 @@ taco/build: submodules
 #	 mkdir -p results/numpy
 
 taco-bench: compiler/build/taco-bench
+	mkdir -p $(TACO_TENSOR_PATH)/other
+	mkdir -p results-cpu 
 ifeq ($(BENCHES),"")
 	$(CMD) --benchmark_out_format="csv" --benchmark_out="$(TACO_OUT)" --benchmark_repetitions=10 --benchmark_counters_tabular=true
 else
