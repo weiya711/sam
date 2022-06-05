@@ -151,9 +151,9 @@ taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Ten
 template<typename T, typename T2>
 taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
     taco::Tensor<T> result;
-    result = taco::read(constructOtherTensorKey(datasetName,
+    taco::Tensor<double> tensor = taco::read(constructOtherTensorKey(datasetName,
                                                     "vec_mode" + std::to_string(mode)), taco::Sparse, true);
-    result.setName(name);
+    result = castToType<T>(name, tensor);
     return result;
 }
 
