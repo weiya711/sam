@@ -46,7 +46,7 @@ static void applyBenchSizes(benchmark::internal::Benchmark *b) {
 struct TensorInputCache {
     template<typename U>
     std::pair<taco::Tensor<int64_t>, taco::Tensor<int64_t>>
-    getTensorInput(std::string path, U format, bool countNNZ = false, bool includeThird = false,
+    getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
                    bool includeVec = false, bool genOther = false) {
         // See if the paths match.
         if (this->lastPath == path) {
@@ -71,13 +71,13 @@ struct TensorInputCache {
             this->thirdTensor = shiftLastMode<int64_t, int64_t>("C", this->otherTensor);
         }
         if (includeVec and genOther) {
-            this->otherVecFirstMode = genOtherVec<int64_t, int64_t>("C", this->inputTensor);
+            this->otherVecFirstMode = genOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", this->inputTensor, lastMode);
+            this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
         } else if (includeVec) {
-            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", this->inputTensor);
+            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", this->inputTensor, lastMode);
+            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
         }
         return std::make_pair(this->inputTensor, this->otherTensor);
     }
@@ -141,9 +141,10 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 
     // TODO (rohany): What format do we want to do here?
     Tensor<int64_t> frosttTensor, otherShifted;
-    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, Sparse, false, false, true, GEN_OTHER);
+    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, tnsPath, Sparse,
+                                                                     false, false, true, GEN_OTHER);
 
-    std::cout << "TENSOR FORMAT:" << frosttTensor.getFormat() << std::endl;
+    std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
 
     int DIM0 = frosttTensor.getDimension(0);
     int DIM1 = frosttTensor.getDimension(1);
@@ -182,14 +183,14 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 break;
             }
             case INNERPROD: {
-                Tensor<int64_t> result("result");
+                result = Tensor<int64_t>("result");
 
                 IndexVar i, j, k;
                 result() = frosttTensor(i, j, k) * otherShifted(i, j, k);
                 break;
             }
             case PLUS2: {
-                Tensor<int64_t> result("result", frosttTensor.getDimensions(), frosttTensor.getFormat(), fill_value);
+                result = Tensor<int64_t>("result", frosttTensor.getDimensions(), frosttTensor.getFormat(), fill_value);
 
                 IndexVar i, j, k;
                 result(i, j, k) = frosttTensor(i, j, k) + otherShifted(i, j, k);
@@ -321,7 +322,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
 
     taco::Tensor<int64_t> ssTensor, otherShifted, otherShifted2;
     try {
-        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, DCSR, true /* countNNZ */,
+        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, tensorName, DCSR, true /* countNNZ */,
                                                                      op == PLUS3 /* includeThird */, true,GEN_OTHER);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
@@ -443,5 +444,5 @@ TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3);
 TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
 TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
 TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
-// TODO: need to fix for DCSC for this 
+// TODO: need to fix for DCSC for this
 //TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);

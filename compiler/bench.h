@@ -131,7 +131,7 @@ taco::Tensor<T> shiftLastMode(std::string name, taco::Tensor<T2> original) {
 
 
 template<typename T, typename T2>
-taco::Tensor<T> genOtherVec(std::string name, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
+taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
     int dimension = original.getDimensions().at(mode);
     taco::Tensor<T> result(name, {dimension}, taco::Format(taco::sparse));
 
@@ -143,15 +143,15 @@ taco::Tensor<T> genOtherVec(std::string name, taco::Tensor<T2> original, int mod
         }
     }
     result.pack();
-    taco::write(constructOtherTensorKey(original.getName(), "vec_mode"+std::to_string(mode)), result);
+    taco::write(constructOtherTensorKey(datasetName, "vec_mode"+std::to_string(mode)), result);
 
     return result;
 }
 
 template<typename T, typename T2>
-taco::Tensor<T> getOtherVec(std::string name, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
+taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
     taco::Tensor<T> result;
-    result = taco::read(constructOtherTensorKey(original.getName(),
+    result = taco::read(constructOtherTensorKey(datasetName,
                                                     "vec_mode" + std::to_string(mode)), taco::Sparse, true);
     result.setName(name);
     return result;
