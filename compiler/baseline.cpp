@@ -130,6 +130,7 @@ std::string opName(FrosttOp op) {
 }
 
 static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp op, int fill_value = 0) {
+    bool GEN_OTHER = stoi(getEnvVar("GEN"));
     auto frosttTensorPath = getTacoTensorPath();
     frosttTensorPath += "frostt/";
     frosttTensorPath += tnsPath;
@@ -303,6 +304,8 @@ std::string opName(SuiteSparseOp op) {
 }
 
 static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fill_value = 0) {
+    bool GEN_OTHER = stoi(getEnvVar("GEN"));
+
     // Counters must be present in every run to get reported to the CSV.
     state.counters["dimx"] = 0;
     state.counters["dimy"] = 0;

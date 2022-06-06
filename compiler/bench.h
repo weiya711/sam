@@ -4,10 +4,6 @@
 #include "benchmark/benchmark.h"
 #include "taco/tensor.h"
 
-#ifndef GEN_OTHER
-    #define GEN_OTHER false
-#endif
-
 // Register a benchmark with the following options:
 // * Millisecond output display
 // * 10 data points
