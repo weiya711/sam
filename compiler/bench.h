@@ -60,10 +60,9 @@ taco::TensorBase loadImageTensor(std::string name, int num, taco::Format format,
 
 taco::TensorBase loadMinMaxTensor(std::string name, int order, taco::Format format, int variant = 0);
 
-std::string constructOtherVecKey(std::string tensorName, std::string variant);
+std::string constructOtherVecKey(std::string tensorName, std::string variant, float sparsity);
 
-std::string constructOtherMatKey(std::string tensorName, std::string variant, std::vector<int> dims);
-
+std::string constructOtherMatKey(std::string tensorName, std::string variant, std::vector<int> dims, float sparsity);
 
 template<typename T>
 taco::Tensor<T> castToType(std::string name, taco::Tensor<double> tensor) {
@@ -131,7 +130,7 @@ taco::Tensor<T> shiftLastMode(std::string name, taco::Tensor<T2> original) {
 
 template<typename T, typename T2>
 taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0,
-                         float SPARSITY=0.5, taco::Format format =taco::sparse) {
+                         float SPARSITY=0.001, taco::Format format =taco::sparse) {
     int dimension = original.getDimensions().at(mode);
     taco::Tensor<T> result(name, {dimension}, format);
 
@@ -143,16 +142,16 @@ taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Ten
         }
     }
     result.pack();
-    taco::write(constructOtherVecKey(datasetName, "vec_mode"+std::to_string(mode)), result);
+    taco::write(constructOtherTensorKey(datasetName, "vec_mode"+std::to_string(mode), sparsity), result);
 
     return result;
 }
 
 template<typename T, typename T2>
-taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.5) {
+taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.001) {
     taco::Tensor<T> result;
-    taco::Tensor<double> tensor = taco::read(constructOtherVecKey(datasetName,
-                                                                  "vec_mode" + std::to_string(mode)), taco::Sparse, true);
+    taco::Tensor<double> tensor = taco::read(constructOtherTensorKey(datasetName,
+                                                    "vec_mode" + std::to_string(mode), sparsity), taco::Sparse, true);
     result = castToType<T>(name, tensor);
     return result;
 }

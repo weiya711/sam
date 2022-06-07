@@ -22,7 +22,7 @@ TACO_OUT := results-cpu/$(benches_name)_benches_$(shell date +%Y_%m_%d_%H%M%S).c
 endif
 
 ifeq ("$(NEVA)","ON")
-CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,12 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
+CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
 else
 CMD := LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
 endif
