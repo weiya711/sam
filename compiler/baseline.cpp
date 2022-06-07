@@ -168,10 +168,9 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 
     // TODO (rohany): What format do we want to do here?
     Tensor<int64_t> frosttTensor, otherShifted;
-    bool includeMat = op == MTTKRP || op == TTM;
 
     std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, tensorName, Sparse,
-                                                                     false, false, true, includeMat, GEN_OTHER);
+                                                                     false, false, true, true, GEN_OTHER);
 
     std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
 
@@ -217,7 +216,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 break;
             }
             case MTTKRP: {
-                Tensor<int64_t> result("result", {DIM0, DIM_EXTRA}, DCSR, fill_value);
+                result = Tensor<int64_t>("result", {DIM0, DIM_EXTRA}, DCSR, fill_value);
 
                 Tensor<int64_t> otherMat = inputCache.otherMatMode1MTTKRP;
                 Tensor<int64_t> otherMat1 = inputCache.otherMatMode2MTTKRP;

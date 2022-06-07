@@ -18,7 +18,7 @@ benches_name := $(subst /,_,$(benches_name))
 benches_name := $(subst *,_,$(benches_name))
 # Taco Specific Flags
 ifeq ($(TACO_OUT),)
-TACO_OUT := results-cpu/$(benches_name)benches_$(shell date +%Y_%m_%d_%H%M%S).csv
+TACO_OUT := results-cpu/$(benches_name)_benches_$(shell date +%Y_%m_%d_%H%M%S).csv
 endif
 
 ifeq ("$(NEVA)","ON")
