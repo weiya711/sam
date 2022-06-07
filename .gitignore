@@ -14,5 +14,7 @@ __pycache__/
 build/
 logs/
 results/
+results-cpu/
+suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
