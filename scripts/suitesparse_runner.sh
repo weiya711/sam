@@ -15,7 +15,7 @@ mkdir -p "$out"
 while read line; do
 	matrix="$sspath/$line.mtx"
 	csvout="$out/result-$line.csv"
-    GEN=ON SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse"
+    SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse" NEVA=ON
 	# jsonout="$out/result-$line.json"
 	# LANKA=ON SUITESPARSE_TENSOR_PATH="$matrix" NUMPY_JSON="$jsonout" make python-bench BENCHES="numpy/ufuncs.py::bench_pydata_suitesparse_ufunc_sparse"
 done <$1

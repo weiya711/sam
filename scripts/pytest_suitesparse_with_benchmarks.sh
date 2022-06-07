@@ -22,6 +22,7 @@ BENCHMARKS=(
 )
 
 
+# FIXME: Need to change this to take in an input file as in taco side
 DATASET_NAMES=(
   bcsstm04
 #  bcsstm02
