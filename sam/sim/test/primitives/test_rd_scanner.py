@@ -6,10 +6,10 @@ from sam.sim.test.test import TIMEOUT
 from sam.sim.src.base import remove_emptystr
 
 
-
 ########################################
 # Uncompressed Read Scanner Unit Tests #
 ########################################
+
 @pytest.mark.parametrize("dim", [1, 2, 4, 16, 32, 100])
 def test_rd_scan_u_direct_1d(dim, debug_sim):
     gold_crd = [x for x in range(dim)]

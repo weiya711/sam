@@ -63,8 +63,6 @@ def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-
-    
     if debug_sim:
         print("Mat B:", B_shape, B0_dim, B1_seg, B1_crd, B_vals)
         print("Mat C:", C_shape, C1_dim, C0_seg, C0_crd, C_vals)
@@ -130,7 +128,7 @@ def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
         inter1.set_in1(rdscan_Bk.out_ref(), rdscan_Bk.out_crd())
         inter1.set_in2(rdscan_Ck.out_ref(), rdscan_Ck.out_crd())
         inter1.update()
-        
+
         # Computation
 
         val_B.set_load(inter1.out_ref1())
@@ -195,4 +193,3 @@ def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.001)
 
     samBench(bench, extra_info)
-

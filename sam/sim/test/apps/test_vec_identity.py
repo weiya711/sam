@@ -68,6 +68,7 @@ def test_vec_identity(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
+
     def bench():
         time.sleep(0.01)
 
@@ -77,15 +78,15 @@ def test_vec_identity(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_b_shape"] = b_shape
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_b_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_b_2" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_b_2" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

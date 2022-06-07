@@ -50,7 +50,6 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_synth)
 
 
-
 @pytest.fixture
 def debug_sim(request):
     return request.config.getoption("--debug-sim")
