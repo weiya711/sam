@@ -1,4 +1,4 @@
-BENCHES := nell-1
+BENCHES := "" 
 
 # Set OPENMP=ON if compiling TACO with OpenMP support.
 ifeq ($(OPENMP),)

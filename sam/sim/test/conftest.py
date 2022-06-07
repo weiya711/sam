@@ -55,9 +55,11 @@ def check_gold(request):
 def ssname(request):
     return request.config.getoption("--ssname")
 
+
 @pytest.fixture
 def result_out(request):
     return request.config.getoption("--result-out")
+
 
 @pytest.fixture
 def frosttname(request):
