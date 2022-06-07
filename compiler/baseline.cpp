@@ -212,6 +212,8 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 result = Tensor<int64_t>("result", {DIM0, DIM1, DIM_EXTRA}, frosttTensor.getFormat(), fill_value);
                 Tensor<int64_t> otherMat = inputCache.otherMatTTM;
 
+                std::cout << "TTM Other Mat order: " << otherMat.getOrder() << std::endl;
+
                 IndexVar i, j, k, l;
                 // TODO: (owhsu) need to pick things for this and MTTKRP...
                 result(i, j, k) = frosttTensor(i, j, l) * otherMat(k, l);
