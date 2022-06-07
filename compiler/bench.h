@@ -161,8 +161,7 @@ template<typename T, typename T2>
 taco::Tensor<T> genOtherMat(std::string name, std::string datasetName, taco::Tensor<T2> original,
                             std::vector<int> dimensions, int mode = 0, float SPARSITY=0.1,
                             taco::Format format = taco::DCSR) {
-    std::cout << taco::util::join(dimensions) << std::endl;
-    
+
     taco::Tensor<T> result(name, dimensions, format);
 
     for (int ii = 0; ii < dimensions[0]; ii++) {

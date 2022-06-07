@@ -88,8 +88,8 @@ struct TensorInputCache {
             int DIM2 = this->inputTensor.getDimension(2);
 
             this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
-            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM1, DIM_EXTRA}, 1);
-            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM2, DIM_EXTRA}, 2);
+            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
+            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
         } else if (this->inputTensor.getOrder() > 2 and includeMat) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
@@ -169,7 +169,6 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
     // TODO (rohany): What format do we want to do here?
     Tensor<int64_t> frosttTensor, otherShifted;
     bool includeMat = op == MTTKRP || op == TTM;
-    std::cout << "include mat other: " << includeMat << std::endl;
 
     std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, tensorName, Sparse,
                                                                      false, false, true, includeMat, GEN_OTHER);
@@ -211,8 +210,6 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 // Assume otherMat(0) format is the same as frosttTensor(2)
                 result = Tensor<int64_t>("result", {DIM0, DIM1, DIM_EXTRA}, frosttTensor.getFormat(), fill_value);
                 Tensor<int64_t> otherMat = inputCache.otherMatTTM;
-
-                std::cout << "TTM Other Mat order: " << otherMat.getOrder() << std::endl;
 
                 IndexVar i, j, k, l;
                 // TODO: (owhsu) need to pick things for this and MTTKRP...
