@@ -479,4 +479,4 @@ TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
 TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
 TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
 // TODO: need to fix for DCSC for this
-//TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
+TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
