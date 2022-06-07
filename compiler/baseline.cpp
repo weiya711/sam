@@ -206,7 +206,8 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 break;
             }
             case TTM: {
-                result = Tensor<int64_t>("result", {DIM0, DIM1, DIM_EXTRA}, Format(Sparse), fill_value);
+                // Assume otherMat(0) format is the same as frosttTensor(2)
+                result = Tensor<int64_t>("result", {DIM0, DIM1, DIM_EXTRA}, frosttTensor.getFormat(), fill_value);
                 Tensor<int64_t> otherMat = inputCache.otherMatTTM;
 
                 IndexVar i, j, k, l;
@@ -215,7 +216,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
                 break;
             }
             case MTTKRP: {
-                Tensor<int64_t> result("result", {DIM0, DIM_EXTRA}, Format(Sparse), fill_value);
+                Tensor<int64_t> result("result", {DIM0, DIM_EXTRA}, DCSR, fill_value);
 
                 Tensor<int64_t> otherMat = inputCache.otherMatMode1MTTKRP;
                 Tensor<int64_t> otherMat1 = inputCache.otherMatMode2MTTKRP;
@@ -254,7 +255,6 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 // Other FROSTT tensors that may or may not be too large to load.
 // __func__(delicious, "delicious.tns") \
   // __func__(flickr, "flickr.tns") \
-  // __func__(nell-1, "nell-1.tns") \
   // __func__(patents, "patents.tns") \
   // __func__(reddit, "reddit.tns") \
   // __func__(amazon-reviews, "amazon-reviews.tns") \
