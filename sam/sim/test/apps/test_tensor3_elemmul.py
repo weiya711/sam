@@ -82,7 +82,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
     arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
     crddrop_7 = CrdDrop(debug=debug_sim)
-    fiberwrite_X2_1 = CompressWrScan(seg_size=B_shape[0] * B_shape[1] + 1, size=B_shape[0] * B_shape[1] * B_shape[2], fill=fill, debug=debug_sim)
+    fiberwrite_X2_1 = CompressWrScan(seg_size=B_shape[0] * B_shape[1] + 1,
+                                     size=B_shape[0] * B_shape[1] * B_shape[2], fill=fill, debug=debug_sim)
     mul_4 = Multiply2(debug=debug_sim)
     fiberwrite_X0_3 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
     fiberwrite_X1_2 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
@@ -151,7 +152,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_X2_1.set_input(crddrop_8.out_crd_inner())
         fiberwrite_X2_1.update()
 
-        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_X2_1.out_done() and fiberwrite_X0_3.out_done() and \
+            fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 
     fiberwrite_X0_3.autosize()

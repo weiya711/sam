@@ -9,17 +9,22 @@ class SAMDotGraphLoweringError(Exception):
 
 class SAMDotGraph():
 
-    def __init__(self, filename=None, local_mems=True) -> None:
+    def __init__(self, filename=None, local_mems=True, use_fork=False) -> None:
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]
         self.mapped_graph = {}
         self.seq = 0
         self.local_mems = local_mems
+        self.use_fork = use_fork
         # Passes to lower to CGRA
         self.rewrite_lookup()
         self.rewrite_arrays()
-        self.rewrite_rsg_broadcast()
+        # If using real fork, we don't rewrite the rsg broadcast in the same way
+        if self.use_fork:
+            self.rewrite_broadcast()
+        else:
+            self.rewrite_rsg_broadcast()
         self.map_nodes()
 
     def map_nodes(self):
@@ -62,6 +67,63 @@ class SAMDotGraph():
         self.seq += 1
         return ret
 
+    def rewrite_broadcast(self):
+        '''
+        Rewrites the broadcast going into an RSG and makes it two separate connections
+        '''
+        nodes_to_proc = []
+        for node in self.graph.get_nodes():
+            # print(node)
+            if 'repsiggen' in node.get_attributes()['type'].strip('"'):
+                nodes_to_proc.append(node)
+        # Now we have the rep sig gen - want to find the incoming edge from the broadcast node
+        # then rip that out and wire the original edge to the rsg and the edge to the other guy from rsg to it
+        for rsg_node in nodes_to_proc:
+            attrs = node.get_attributes()
+            og_label = attrs['label']
+            # del attrs['label']
+            # Find the upstream broadcast node
+            broadcast_nodes = []
+            for edge in self.graph.get_edges():
+                # print(edge)
+                source_node = edge.get_source()
+                source_node = self.graph.get_node(source_node)[0]
+                # print(source_node)
+                if "broadcast" in source_node.get_attributes()['type'].strip('"') and \
+                        edge.get_destination() == rsg_node.get_name():
+                    broadcast_nodes.append(source_node)
+
+            # Leave early.
+            if len(broadcast_nodes) == 0:
+                # print(f"NO BROADCAST NODES?")
+                return
+            bc_node = broadcast_nodes[0]
+            # Now that we have the broadcast node, get the incoming edge and other outgoing edge
+            incoming_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == bc_node.get_name()][0]
+            outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
+                             edge.get_destination() == rsg_node.get_name()][0]
+            other_outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
+                                   edge.get_destination() != rsg_node.get_name()][0]
+            # Now, connect the original source to the rsg and the rsg to the original other branch
+            og_to_rsg = pydot.Edge(src=incoming_edge.get_source(), dst=rsg_node, **incoming_edge.get_attributes())
+            rsg_to_branch = pydot.Edge(src=rsg_node, dst=other_outgoing_edge.get_destination(),
+                                       **other_outgoing_edge.get_attributes())
+
+            # Now delete the broadcast and all original edge
+            ret = self.graph.del_edge(incoming_edge.get_source(), incoming_edge.get_destination())
+            # print(f"DELETED EDGE0? : {ret}")
+            ret = self.graph.del_edge(outgoing_edge.get_source(), outgoing_edge.get_destination())
+            # print(f"DELETED EDGE1? : {ret}")
+            ret = self.graph.del_edge(other_outgoing_edge.get_source(), other_outgoing_edge.get_destination())
+            # print(f"DELETED EDGE2? : {ret}")
+            ret = self.graph.del_node(bc_node)
+
+            # print(f"DELETED NODE? : {ret}")
+
+            # ...and add in the new edges
+            self.graph.add_edge(og_to_rsg)
+            self.graph.add_edge(rsg_to_branch)
+
     def rewrite_rsg_broadcast(self):
         '''
         Rewrites the broadcast going into an RSG and uses it with passthru
@@ -84,10 +146,10 @@ class SAMDotGraph():
                 source_node = edge.get_source()
                 source_node = self.graph.get_node(source_node)[0]
                 # print(source_node)
-                if "broadcast" in source_node.get_attributes()['type'].strip('"') and edge.get_destination() == rsg_node.get_name():
+                if "broadcast" in source_node.get_attributes()['type'].strip('"') and \
+                        edge.get_destination() == rsg_node.get_name():
                     broadcast_nodes.append(source_node)
 
-            # broadcast_nodes = [edge.get_source() for edge in self.graph.get_edges() if "broadcast" in self.graph.get_node(edge.get_source())[0].get_attributes()['type'].strip('"') and edge.get_destination() == node.get_name()]
             # Leave early.
             if len(broadcast_nodes) == 0:
                 # print(f"NO BROADCAST NODES?")
@@ -95,11 +157,14 @@ class SAMDotGraph():
             bc_node = broadcast_nodes[0]
             # Now that we have the broadcast node, get the incoming edge and other outgoing edge
             incoming_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == bc_node.get_name()][0]
-            outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and edge.get_destination() == rsg_node.get_name()][0]
-            other_outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and edge.get_destination() != rsg_node.get_name()][0]
+            outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
+                             edge.get_destination() == rsg_node.get_name()][0]
+            other_outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
+                                   edge.get_destination() != rsg_node.get_name()][0]
             # Now, connect the original source to the rsg and the rsg to the original other branch
             og_to_rsg = pydot.Edge(src=incoming_edge.get_source(), dst=rsg_node, **incoming_edge.get_attributes())
-            rsg_to_branch = pydot.Edge(src=rsg_node, dst=other_outgoing_edge.get_destination(), **other_outgoing_edge.get_attributes())
+            rsg_to_branch = pydot.Edge(src=rsg_node, dst=other_outgoing_edge.get_destination(),
+                                       **other_outgoing_edge.get_attributes())
 
             # Now delete the broadcast and all original edge
             ret = self.graph.del_edge(incoming_edge.get_source(), incoming_edge.get_destination())
@@ -120,13 +185,9 @@ class SAMDotGraph():
         '''
         Rewrites the lookup nodes to become (wr_scan, rd_scan, buffet) triples
         '''
-        nodes_to_proc = [node for node in self.graph.get_nodes() if 'fiberlookup' in node.get_comment() or 'fiberwrite' in node.get_comment()]
-        # nodes_to_proc = []
-        # for node in self.graph.get_nodes():
-        #     print(node)
-        #     if 'fiberlookup' in node.get_attributes()['type'].strip('"') or 'fiberwrite' in node.get_attributes()['type'].strip('"'):
-        #         nodes_to_proc.append(node)
-        # nodes_to_proc = [node for node in self.graph.get_nodes() if 'fiberlookup' in node.get_attributes()['type'].strip('"') or 'fiberwrite' in node.get_attributes()['type'].strip('"')]
+        nodes_to_proc = [node for node in self.graph.get_nodes() if 'fiberlookup' in node.get_comment() or
+                         'fiberwrite' in node.get_comment()]
+
         for node in nodes_to_proc:
             if 'fiberlookup' in node.get_comment():
                 # Rewrite this node to a read
@@ -137,18 +198,26 @@ class SAMDotGraph():
                 attrs = node.get_attributes()
                 og_label = attrs['label']
                 del attrs['label']
-                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
-                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
-                buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
-                glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
+                                     **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
+                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}",
+                                     **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
+                buffet = pydot.Node(f"buffet_{self.get_next_seq()}",
+                                    **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
+                glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
+                                       **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
                 if self.local_mems is False:
-                    memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
-                crd_out_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_source() == node.get_name()][0]
-                ref_out_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_source() == node.get_name()][0]
+                    memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs,
+                                        label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
+                crd_out_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and
+                                edge.get_source() == node.get_name()][0]
+                ref_out_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and
+                                edge.get_source() == node.get_name()][0]
                 ref_in_edge = None
                 if not root:
                     # Then we have ref in edge...
-                    ref_in_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_destination() == node.get_name()][0]
+                    ref_in_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and
+                                   edge.get_destination() == node.get_name()][0]
                 # Now add the nodes and move the edges...
                 self.graph.add_node(rd_scan)
                 self.graph.add_node(wr_scan)
@@ -192,18 +261,25 @@ class SAMDotGraph():
                 node.create_attribute_methods(attrs)
                 og_label = attrs['label']
                 del attrs['label']
-                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
-                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
-                buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
-                glb_read = pydot.Node(f"glb_read_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_read", hwnode=f"{HWNodeType.GLB}")
+                rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs,
+                                     label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
+                wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs,
+                                     label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
+                buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs,
+                                    label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
+                glb_read = pydot.Node(f"glb_read_{self.get_next_seq()}", **attrs,
+                                      label=f"{og_label}_glb_read", hwnode=f"{HWNodeType.GLB}")
                 if self.local_mems is False:
-                    memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
+                    memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs,
+                                        label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
                 vals = 'vals' in node.get_mode()
                 in_edge = None
                 if vals:
-                    in_edge = [edge for edge in self.graph.get_edges() if "val" in edge.get_label() and edge.get_destination() == node.get_name()][0]
+                    in_edge = [edge for edge in self.graph.get_edges() if "val" in edge.get_label() and
+                               edge.get_destination() == node.get_name()][0]
                 else:
-                    in_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_destination() == node.get_name()][0]
+                    in_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and
+                               edge.get_destination() == node.get_name()][0]
 
                 # Now add the nodes and move the edges...
                 self.graph.add_node(rd_scan)
@@ -243,17 +319,22 @@ class SAMDotGraph():
             attrs = node.get_attributes()
             og_label = attrs['label']
             del attrs['label']
-            rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
-            wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
-            buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
-            glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}", **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+            rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
+                                 **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
+            wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}",
+                                 **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
+            buffet = pydot.Node(f"buffet_{self.get_next_seq()}",
+                                **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
+            glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
+                                   **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
             if self.local_mems is False:
-                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs, label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
-            # crd_out_edge = [edge for edge in self.graph.get_edges() if "crd" in edge.get_label() and edge.get_source() == node.get_name()][0]
-            # ref_out_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_source() == node.get_name()][0]
-            val_out_edge = [edge for edge in self.graph.get_edges() if "val" in edge.get_label() and edge.get_source() == node.get_name()][0]
+                memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs,
+                                    label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
+            val_out_edge = [edge for edge in self.graph.get_edges() if "val" in edge.get_label() and
+                            edge.get_source() == node.get_name()][0]
             # Then we have ref in edge...
-            ref_in_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and edge.get_destination() == node.get_name()][0]
+            ref_in_edge = [edge for edge in self.graph.get_edges() if "ref" in edge.get_label() and
+                           edge.get_destination() == node.get_name()][0]
             # Now add the nodes and move the edges...
             self.graph.add_node(rd_scan)
             self.graph.add_node(wr_scan)
