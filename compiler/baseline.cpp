@@ -357,7 +357,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
     try {
         taco::Format format = op == MATTRANSMUL ? DCSC : DCSR;
         std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
-                                                                     true /* includeThird */, true,GEN_OTHER);
+                                                                     true /* includeThird */, true, false, GEN_OTHER);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
         // just add in the label that this run is skipped.
@@ -446,37 +446,37 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 s2.insert({}, int64_t(2));
 
                 Tensor<int64_t> otherVeci = inputCache.otherVecLastMode;
-                Tensor<int64_t> otherVecj = inputCache.otherVecFirstMode;
+                    Tensor<int64_t> otherVecj = inputCache.otherVecFirstMode;
 
-                IndexVar i, j;
-                result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
-                break;
+                    IndexVar i, j;
+                    result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
+                    break;
+                }
+                default:
+                    state.SkipWithError("invalid expression");
+                    return;
             }
-            default:
-                state.SkipWithError("invalid expression");
-                return;
+            result.setAssembleWhileCompute(true);
+            result.compile();
+            state.ResumeTiming();
+
+            result.compute();
+
+            state.PauseTiming();
+            if (auto validationPath = getValidationOutputPath(); validationPath != "") {
+                auto key = cpuBenchKey(tensorName, opName(op));
+                auto outpath = validationPath + key + ".tns";
+                taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
+            }
+
         }
-        result.setAssembleWhileCompute(true);
-        result.compile();
-        state.ResumeTiming();
-
-        result.compute();
-
-        state.PauseTiming();
-        if (auto validationPath = getValidationOutputPath(); validationPath != "") {
-            auto key = cpuBenchKey(tensorName, opName(op));
-            auto outpath = validationPath + key + ".tns";
-            taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
-        }
-
     }
-}
 
-TACO_BENCH_ARGS(bench_suitesparse, vecmul_spmv, SPMV);
-TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM);
-TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3);
-TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
-TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
-TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
-// TODO: need to fix for DCSC for this
+    TACO_BENCH_ARGS(bench_suitesparse, vecmul_spmv, SPMV);
+    TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
+    // TODO: need to fix for DCSC for this
 TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);

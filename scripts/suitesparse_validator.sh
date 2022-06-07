@@ -25,6 +25,7 @@ TACONAME=(
 
 set -u
 
+sspath=/nobackup/owhsu/sparse-datasets/suitesparse
 vout=/nobackup/owhsu/validate
 
 mkdir -p "$vout"
@@ -35,6 +36,7 @@ while read line; do
     # TACO
     GEN=ON SUITESPARSE_TENSOR_PATH="$matrix" make -j8 validate-bench BENCHES="bench_suitesparse" VALIDATION_OUTPUT_PATH="$vout" NEVA=ON 
 
+    cd sam/sim
     # SAM
     for b in ${!SAMNAME[@]}; do
         sambench=${SAMNAME[$b]}

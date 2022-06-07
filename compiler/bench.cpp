@@ -153,7 +153,7 @@ std::string constructOtherVecKey(std::string tensorName, std::string variant, fl
         result << "/";
     }
     result << "other/";
-    result << tensorName << "_" << variant << "_" << sparsity << ".tns";
+    result << tensorName << "-" << variant << "-" << sparsity << ".tns";
     return result.str();
 }
 
@@ -165,6 +165,6 @@ std::string constructOtherMatKey(std::string tensorName, std::string variant, st
         result << "/";
     }
     result << "other/";
-    result << tensorName << "_" << variant <<  taco::util::join(dims, "x") << "_" << sparsity << ".tns";
+    result << tensorName << "-" << variant << "-" << taco::util::join(dims, "x") << "-" << sparsity << ".tns";
     return result.str();
 }

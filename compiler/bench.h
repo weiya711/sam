@@ -130,27 +130,27 @@ taco::Tensor<T> shiftLastMode(std::string name, taco::Tensor<T2> original) {
 
 template<typename T, typename T2>
 taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0,
-                         float SPARSITY=0.001, taco::Format format =taco::sparse) {
+                         float sparsity=0.001, taco::Format format=taco::sparse) {
     int dimension = original.getDimensions().at(mode);
     taco::Tensor<T> result(name, {dimension}, format);
 
     for (int ii = 0; ii < dimension; ii++) {
         float rand_float = (float) rand() / (float) (RAND_MAX);
-        if (rand_float < SPARSITY) {
+        if (rand_float < sparsity) {
             // (owhsu) Setting this number to 1 for now
             result.insert({ii}, T(1));
         }
     }
     result.pack();
-    taco::write(constructOtherTensorKey(datasetName, "vec_mode"+std::to_string(mode), sparsity), result);
+    taco::write(constructOtherVecKey(datasetName, "vec_mode"+std::to_string(mode), sparsity), result);
 
     return result;
 }
 
 template<typename T, typename T2>
-taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0, float SPARSITY=0.001) {
+taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0, float sparsity=0.001) {
     taco::Tensor<T> result;
-    taco::Tensor<double> tensor = taco::read(constructOtherTensorKey(datasetName,
+    taco::Tensor<double> tensor = taco::read(constructOtherVecKey(datasetName,
                                                     "vec_mode" + std::to_string(mode), sparsity), taco::Sparse, true);
     result = castToType<T>(name, tensor);
     return result;
@@ -158,7 +158,7 @@ taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Ten
 
 template<typename T, typename T2>
 taco::Tensor<T> genOtherMat(std::string name, std::string datasetName, taco::Tensor<T2> original,
-                            std::vector<int> dimensions, int mode = 0, float SPARSITY=0.1,
+                            std::vector<int> dimensions, int mode = 0, float sparsity=0.1,
                             taco::Format format = taco::DCSR) {
 
     taco::Tensor<T> result(name, dimensions, format);
@@ -166,14 +166,14 @@ taco::Tensor<T> genOtherMat(std::string name, std::string datasetName, taco::Ten
     for (int ii = 0; ii < dimensions[0]; ii++) {
         for (int jj = 0; jj < dimensions[1]; jj++) {
             float rand_float = (float) rand() / (float) (RAND_MAX);
-            if (rand_float < SPARSITY) {
+            if (rand_float < sparsity) {
                 // (owhsu) Setting this number to 1 for now
                 result.insert({ii, jj}, T(1));
             }
         }
     }
     result.pack();
-    taco::write(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode), dimensions), result);
+    taco::write(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode), dimensions, sparsity), result);
 
     return result;
 }
@@ -181,9 +181,9 @@ taco::Tensor<T> genOtherMat(std::string name, std::string datasetName, taco::Ten
 
 template<typename T, typename T2>
 taco::Tensor<T> getOtherMat(std::string name, std::string datasetName, taco::Tensor<T2> original, std::vector<int> dimensions,
-                            int mode = 0, float SPARSITY=0.5,  taco::Format format = taco::DCSR) {
+                            int mode = 0, float sparsity=0.5, taco::Format format = taco::DCSR) {
     taco::Tensor<T> result;
-    taco::Tensor<double> tensor = taco::read(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode), dimensions),
+    taco::Tensor<double> tensor = taco::read(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode), dimensions, sparsity),
                                              format, true);
     result = castToType<T>(name, tensor);
     return result;
