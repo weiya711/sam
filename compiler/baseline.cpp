@@ -15,6 +15,8 @@
 
 using namespace taco;
 
+#define DIM_EXTRA 256
+
 template<int I, class...Ts>
 decltype(auto) get(Ts &&... ts) {
     return std::get<I>(std::forward_as_tuple(ts...));
@@ -47,15 +49,16 @@ struct TensorInputCache {
     template<typename U>
     std::pair<taco::Tensor<int64_t>, taco::Tensor<int64_t>>
     getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
-                   bool includeVec = false, bool genOther = false) {
+                   bool includeVec = false, bool includeMat = false, bool genOther = false) {
         // See if the paths match.
-        if (this->lastPath == path) {
+        if (this->lastPath == path and this->lastFormat == format) {
             // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
             return std::make_pair(this->inputTensor, this->otherTensor);
         }
 
         // Otherwise, we missed the cache. Load in the target tensor and process it.
         this->lastLoaded = taco::read(path, format);
+        this->lastFormat = format;
         // We assign lastPath after lastLoaded so that if taco::read throws an exception
         // then lastPath isn't updated to the new path.
         this->lastPath = path;
@@ -79,17 +82,40 @@ struct TensorInputCache {
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
             this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
         }
+
+        if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
+            int DIM1 = this->inputTensor.getDimension(1);
+            int DIM2 = this->inputTensor.getDimension(2);
+
+            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM1, DIM_EXTRA}, 1);
+            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM2, DIM_EXTRA}, 2);
+        } else if (this->inputTensor.getOrder() > 2 and includeMat) {
+            int DIM1 = this->inputTensor.getDimension(1);
+            int DIM2 = this->inputTensor.getDimension(2);
+
+            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+            this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
+            this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+        }
         return std::make_pair(this->inputTensor, this->otherTensor);
     }
 
     taco::Tensor<double> lastLoaded;
     std::string lastPath;
+    taco::Format lastFormat;
 
     taco::Tensor<int64_t> inputTensor;
     taco::Tensor<int64_t> otherTensor;
     taco::Tensor<int64_t> thirdTensor;
     taco::Tensor<int64_t> otherVecFirstMode;
     taco::Tensor<int64_t> otherVecLastMode;
+
+    // FROSTT only
+    taco::Tensor<int64_t> otherMatTTM;
+    taco::Tensor<int64_t> otherMatMode1MTTKRP;
+    taco::Tensor<int64_t> otherMatMode2MTTKRP;
+
     int64_t nnz;
 };
 
@@ -142,8 +168,9 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 
     // TODO (rohany): What format do we want to do here?
     Tensor<int64_t> frosttTensor, otherShifted;
+    bool includeMat = op == MTTKRP || op == TTM;
     std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, tensorName, Sparse,
-                                                                     false, false, true, GEN_OTHER);
+                                                                     false, false, true, includeMat,GEN_OTHER);
 
     std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
 
@@ -151,36 +178,17 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
     int DIM1 = frosttTensor.getDimension(1);
     int DIM2 = frosttTensor.getDimension(2);
 
-    int DIM_EXTRA = 256;
-
     for (auto _: state) {
         state.PauseTiming();
         Tensor<int64_t> result;
         switch (op) {
             case TTV: {
                 result = Tensor<int64_t>("result", {DIM0, DIM1}, DCSR, fill_value);
-                result.setAssembleWhileCompute(true);
 
                 Tensor<int64_t> otherVec = inputCache.otherVecLastMode;
 
                 IndexVar i, j, k;
                 result(i, j) = frosttTensor(i, j, k) * otherVec(k);
-                break;
-            }
-            case TTM: {
-                result = Tensor<int64_t>("result", {DIM0, DIM1, DIM_EXTRA}, Format(Sparse), fill_value);
-
-
-                IndexVar i, j, k, l;
-                // TODO: (owhsu) need to pick things for this and MTTKRP...
-                //result(i, j, k) = frosttTensor(i, j, l) * otherMat(k, l);
-                break;
-            }
-            case MTTKRP: {
-                Tensor<int64_t> result("result", {DIM0, DIM_EXTRA}, Format(Sparse), fill_value);
-
-                IndexVar i, j, k, l;
-                //result(i, j) = frosttTensor(i, k, l) * otherMat(j, k) * otherMat1(j, l);
                 break;
             }
             case INNERPROD: {
@@ -195,6 +203,25 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 
                 IndexVar i, j, k;
                 result(i, j, k) = frosttTensor(i, j, k) + otherShifted(i, j, k);
+                break;
+            }
+            case TTM: {
+                result = Tensor<int64_t>("result", {DIM0, DIM1, DIM_EXTRA}, Format(Sparse), fill_value);
+                Tensor<int64_t> otherMat = inputCache.otherMatTTM;
+
+                IndexVar i, j, k, l;
+                // TODO: (owhsu) need to pick things for this and MTTKRP...
+                result(i, j, k) = frosttTensor(i, j, l) * otherMat(k, l);
+                break;
+            }
+            case MTTKRP: {
+                Tensor<int64_t> result("result", {DIM0, DIM_EXTRA}, Format(Sparse), fill_value);
+
+                Tensor<int64_t> otherMat = inputCache.otherMatMode1MTTKRP;
+                Tensor<int64_t> otherMat1 = inputCache.otherMatMode2MTTKRP;
+
+                IndexVar i, j, k, l;
+                result(i, j) = frosttTensor(i, k, l) * otherMat(j, k) * otherMat1(j, l);
                 break;
             }
             default:
@@ -238,9 +265,9 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 #define DECLARE_FROSTT_BENCH(name, path) \
   TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttv, path, TTV); \
   TACO_BENCH_ARGS(bench_frostt, name/tensor3_innerprod, path, INNERPROD); \
-  TACO_BENCH_ARGS(bench_frostt, name/tensor3_elemadd_plus2, path, PLUS2);
-  // TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttm, path, TTM); \
-  // TACO_BENCH_ARGS(bench_frostt, name/tensor3_mttkrp, path, MTTKRP); \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_elemadd_plus2, path, PLUS2); \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_ttm, path, TTM); \
+  TACO_BENCH_ARGS(bench_frostt, name/tensor3_mttkrp, path, MTTKRP);
 
 
 FOREACH_FROSTT_TENSOR(DECLARE_FROSTT_BENCH)
@@ -311,6 +338,8 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
     state.counters["dimx"] = 0;
     state.counters["dimy"] = 0;
     state.counters["nnz"] = 0;
+    state.counters["other_sparsity1"] = 0;
+    state.counters["other_sparsity1"] = 0;
 
     auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
     std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
@@ -326,7 +355,8 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
 
     taco::Tensor<int64_t> ssTensor, otherShifted;
     try {
-        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, tensorName, DCSR, true /* countNNZ */,
+        taco::Format format = op == MATTRANSMUL ? DCSC : DCSR;
+        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
                                                                      true /* includeThird */, true,GEN_OTHER);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
@@ -337,7 +367,6 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
 
     int DIM0 = ssTensor.getDimension(0);
     int DIM1 = ssTensor.getDimension(1);
-    int DIM_EXTRA = 256;
     
     state.counters["dimx"] = DIM0;
     state.counters["dimy"] = DIM1;
@@ -351,7 +380,6 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
             case SPMV: {
                 result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
                 Tensor<int64_t> otherVec = inputCache.otherVecLastMode;
-                result.setAssembleWhileCompute(true);
 
                 IndexVar i, j, k;
                 result(i) = ssTensor(i, j) * otherVec(j);
@@ -359,7 +387,6 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
             }
             case SPMM: {
                 result = Tensor<int64_t>("result", {DIM0, DIM0}, DCSR, fill_value);
-                result.setAssembleWhileCompute(true);
                 Tensor<int64_t> otherShiftedTrans = otherShifted.transpose("C", {1, 0}, DCSC);
 
                 IndexVar i, j, k;
@@ -368,7 +395,6 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
             }
             case PLUS3: {
                 result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-                result.setAssembleWhileCompute(true);
                 Tensor<int64_t> otherShifted2 = inputCache.thirdTensor;
 
                 IndexVar i, j, k, l;
@@ -377,7 +403,6 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
             }
             case SDDMM: {
                 result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-                result.setAssembleWhileCompute(true);
 
                 taco::Tensor<int64_t> denseMat1("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
                 taco::Tensor<int64_t> denseMat2("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1,0}));
@@ -396,9 +421,25 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 result(i, j) = ssTensor(i, j) * denseMat1(i, k) * denseMat2(k, j);
                 break;
             }
+            case RESIDUAL: {
+                result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
+
+                Tensor<int64_t> otherVeci = inputCache.otherVecFirstMode;
+                Tensor<int64_t> otherVecj = inputCache.otherVecLastMode;
+
+                IndexVar i, j, k;
+                result(i) = otherVeci(i) - ssTensor(i, j) * otherVecj(j);
+                break;
+            }
+            case MMADD: {
+                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+
+                IndexVar i, j, k;
+                result(i, j) = ssTensor(i, j) + otherShifted(i, j);
+                break;
+            }
             case MATTRANSMUL: {
                 result = Tensor<int64_t>("result", {DIM1}, Format(Sparse), fill_value);
-                result.setAssembleWhileCompute(true);
 
                 taco::Tensor<int64_t> s1("s1"), s2("s2");
                 s1.insert({}, int64_t(2));
@@ -411,29 +452,11 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
                 break;
             }
-            case RESIDUAL: {
-                result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
-                result.setAssembleWhileCompute(true);
-
-                Tensor<int64_t> otherVeci = inputCache.otherVecFirstMode;
-                Tensor<int64_t> otherVecj = inputCache.otherVecLastMode;
-
-                IndexVar i, j, k;
-                result(i) = otherVeci(i) - ssTensor(i, j) * otherVecj(j);
-                break;
-            }
-            case MMADD: {
-                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-                result.setAssembleWhileCompute(true);
-
-                IndexVar i, j, k;
-                result(i, j) = ssTensor(i, j) + otherShifted(i, j);
-                break;
-            }
             default:
                 state.SkipWithError("invalid expression");
                 return;
         }
+        result.setAssembleWhileCompute(true);
         result.compile();
         state.ResumeTiming();
 

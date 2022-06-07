@@ -145,7 +145,7 @@ taco::TensorBase loadMinMaxTensor(std::string name, int order, taco::Format form
     return tensor;
 }
 
-std::string constructOtherTensorKey(std::string tensorName, std::string variant) {
+std::string constructOtherVecKey(std::string tensorName, std::string variant) {
     auto path = getTacoTensorPath();
     std::stringstream result;
     result << path;
@@ -154,5 +154,17 @@ std::string constructOtherTensorKey(std::string tensorName, std::string variant)
     }
     result << "other/";
     result << tensorName << "_" << variant << ".mtx";
+    return result.str();
+}
+
+std::string constructOtherMatKey(std::string tensorName, std::string variant, std::vector<int> dims) {
+    auto path = getTacoTensorPath();
+    std::stringstream result;
+    result << path;
+    if (path[path.size() - 1] != '/') {
+        result << "/";
+    }
+    result << "other/";
+    result << tensorName << "_" << variant <<  taco::util::join(dims, "x") << ".mtx";
     return result.str();
 }
