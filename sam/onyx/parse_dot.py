@@ -1,3 +1,4 @@
+from numpy import broadcast
 import pydot
 from sam.onyx.hw_nodes.hw_node import HWNodeType
 
@@ -69,60 +70,48 @@ class SAMDotGraph():
 
     def rewrite_broadcast(self):
         '''
-        Rewrites the broadcast going into an RSG and makes it two separate connections
+        Rewrites the broadcast going into an RSG and makes it n or more separate connections
         '''
         nodes_to_proc = []
         for node in self.graph.get_nodes():
             # print(node)
-            if 'repsiggen' in node.get_attributes()['type'].strip('"'):
-                nodes_to_proc.append(node)
-        # Now we have the rep sig gen - want to find the incoming edge from the broadcast node
-        # then rip that out and wire the original edge to the rsg and the edge to the other guy from rsg to it
-        for rsg_node in nodes_to_proc:
+            if 'broadcast' in node.get_attributes()['type'].strip('"'):
+                nodes_to_proc.append(node.get_name())
+        # Now we have the broadcast node - want to find the incoming edge and redirect to the destinations
+        for broadcast_node in nodes_to_proc:
+            # broadcast_node = self.graph.get_node(broadcast_node)
             attrs = node.get_attributes()
             og_label = attrs['label']
             # del attrs['label']
             # Find the upstream broadcast node
-            broadcast_nodes = []
+            in_src = None
+            in_edge = None
+            out_dsts = []
+            out_edges = []
             for edge in self.graph.get_edges():
-                # print(edge)
                 source_node = edge.get_source()
-                source_node = self.graph.get_node(source_node)[0]
-                # print(source_node)
-                if "broadcast" in source_node.get_attributes()['type'].strip('"') and \
-                        edge.get_destination() == rsg_node.get_name():
-                    broadcast_nodes.append(source_node)
+                # source_node = self.graph.get_node(source_node)[0]
+                # If this is the destination, mark the src node
+                # if broadcast_node == self.graph.get_node(edge.get_destination())[0]:
+                if broadcast_node == edge.get_destination():
+                    in_src = source_node
+                    in_edge = edge
+                # If this is the src, mark the destination node
+                elif broadcast_node == source_node:
+                    out_dsts.append(self.graph.get_node(edge.get_destination())[0])
+                    out_edges.append(edge)
 
-            # Leave early.
-            if len(broadcast_nodes) == 0:
-                # print(f"NO BROADCAST NODES?")
-                return
-            bc_node = broadcast_nodes[0]
-            # Now that we have the broadcast node, get the incoming edge and other outgoing edge
-            incoming_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == bc_node.get_name()][0]
-            outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
-                             edge.get_destination() == rsg_node.get_name()][0]
-            other_outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
-                                   edge.get_destination() != rsg_node.get_name()][0]
-            # Now, connect the original source to the rsg and the rsg to the original other branch
-            og_to_rsg = pydot.Edge(src=incoming_edge.get_source(), dst=rsg_node, **incoming_edge.get_attributes())
-            rsg_to_branch = pydot.Edge(src=rsg_node, dst=other_outgoing_edge.get_destination(),
-                                       **other_outgoing_edge.get_attributes())
+            # Replace the edges
+            for i in range(len(out_edges)):
+                # Here we need to copy and replace the edges
+                tmp_edge = out_edges[i]
+                fork_edge_tmp = pydot.Edge(src=in_src, dst=tmp_edge.get_destination(), **tmp_edge.get_attributes())
+                self.graph.del_edge(tmp_edge.get_source(), tmp_edge.get_destination())
+                self.graph.add_edge(fork_edge_tmp)
 
             # Now delete the broadcast and all original edge
-            ret = self.graph.del_edge(incoming_edge.get_source(), incoming_edge.get_destination())
-            # print(f"DELETED EDGE0? : {ret}")
-            ret = self.graph.del_edge(outgoing_edge.get_source(), outgoing_edge.get_destination())
-            # print(f"DELETED EDGE1? : {ret}")
-            ret = self.graph.del_edge(other_outgoing_edge.get_source(), other_outgoing_edge.get_destination())
-            # print(f"DELETED EDGE2? : {ret}")
-            ret = self.graph.del_node(bc_node)
-
-            # print(f"DELETED NODE? : {ret}")
-
-            # ...and add in the new edges
-            self.graph.add_edge(og_to_rsg)
-            self.graph.add_edge(rsg_to_branch)
+            ret = self.graph.del_edge(in_edge.get_source(), in_edge.get_destination())
+            ret = self.graph.del_node(broadcast_node)
 
     def rewrite_rsg_broadcast(self):
         '''
@@ -372,11 +361,11 @@ class SAMDotGraph():
 
 
 if __name__ == "__main__":
-    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
-    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
+    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
+    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
     # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_elemmul.gv"
     temp_out = "/home/max/Documents/SPARSE/sam/mek.gv"
-    sdg = SAMDotGraph(filename=matmul_dot)
+    sdg = SAMDotGraph(filename=matmul_dot, use_fork=True)
     graph = sdg.get_graph()
     print(graph)
     graph.write_png('output.png')
