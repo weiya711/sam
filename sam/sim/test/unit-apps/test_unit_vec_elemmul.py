@@ -1,7 +1,7 @@
 import pytest
 import random
 
-from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan, CompressWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -11,7 +11,7 @@ from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr
 
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
-def test_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
+def test_unit_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
     in_vec1 = [random.randint(0, max_val) for _ in range(dim1)]
     in_vec2 = [random.randint(0, max_val) for _ in range(dim1)]
 
@@ -23,7 +23,7 @@ def test_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
 
     gold_vec = [in_vec1[i] * in_vec2[i] for i in range(len(in_vec1))]
 
-    rdscan = UncompressRdScan(dim=dim1, debug=debug_sim)
+    rdscan = UncompressCrdRdScan(dim=dim1, debug=debug_sim)
     val1 = Array(init_arr=in_vec1, debug=debug_sim)
     val2 = Array(init_arr=in_vec2, debug=debug_sim)
     mul = Multiply2(debug=debug_sim)
@@ -55,7 +55,7 @@ def test_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0):
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
+def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     assert(size > max_val)
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
@@ -83,8 +83,8 @@ def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     if debug_sim:
         print("Compressed RESULT  :\n", out_crd, "\n", out_val, "\n", gold_vec)
 
-    crdscan1 = CompressedRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
+    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
     inter = Intersect2(debug=debug_sim)
     val1 = Array(init_arr=vals_arr1, debug=debug_sim)
     val2 = Array(init_arr=vals_arr2, debug=debug_sim)
@@ -133,7 +133,7 @@ def test_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
+def test_unit_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     assert(size > max_val)
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
@@ -159,8 +159,8 @@ def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
 
-    crdscan1 = CompressedRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
+    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
     inter = Intersect2(debug=debug_sim)
     val1 = Array(init_arr=vals_arr1, debug=debug_sim)
     val2 = Array(init_arr=vals_arr2, debug=debug_sim)
@@ -210,7 +210,7 @@ def test_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
+def test_unit_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
     assert(size >= dim)
 
     crd_arr1 = [random.randint(0, dim - 1) for _ in range(nnz)]
@@ -233,8 +233,8 @@ def test_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
     if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
 
-    crdscan1 = CompressedRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = UncompressRdScan(dim=dim, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
+    crdscan2 = UncompressCrdRdScan(dim=dim, debug=debug_sim)
     inter = Intersect2(debug=debug_sim)
     val1 = Array(init_arr=vals_arr1, debug=debug_sim)
     val2 = Array(init_arr=vals_arr2, debug=debug_sim)

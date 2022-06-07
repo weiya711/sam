@@ -1,7 +1,7 @@
 import scipy.sparse
 import pytest
 
-from sam.sim.src.rd_scanner import CompressedRdScan, UncompressRdScan
+from sam.sim.src.rd_scanner import CompressedCrdRdScan, UncompressCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -14,7 +14,7 @@ from sam.sim.test.test import *
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
-def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
     in_mat_vals1 = gen_val_arr(len(in_mat_crds1[-1]), max_val, -max_val)
     in_mat_crds2, in_mat_segs2 = gen_n_comp_arrs(2, dim)
@@ -40,12 +40,12 @@ def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_Bi = CompressedRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
-    rdscan_Bk = CompressedRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
+    rdscan_Bi = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
+    rdscan_Bk = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
     val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
 
-    rdscan_Cj = CompressedRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
-    rdscan_Ck = CompressedRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
+    rdscan_Cj = CompressedCrdRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
+    rdscan_Ck = CompressedCrdRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
     val_C = Array(init_arr=in_mat_vals2, debug=debug_sim)
 
     repsiggen_Bi = RepeatSigGen(debug=debug_sim)
@@ -166,7 +166,7 @@ def test_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
-def test_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
     in_mat_vals1 = gen_val_arr(len(in_mat_crds1[-1]), max_val, -max_val)
     in_mat_crds2, in_mat_segs2 = gen_n_comp_arrs(2, dim)
@@ -194,12 +194,12 @@ def test_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_Bi = UncompressRdScan(dim=csr1.shape[0], debug=debug_sim)
-    rdscan_Bk = CompressedRdScan(crd_arr=csr1.indices.tolist(), seg_arr=csr1.indptr.tolist(), debug=debug_sim)
+    rdscan_Bi = UncompressCrdRdScan(dim=csr1.shape[0], debug=debug_sim)
+    rdscan_Bk = CompressedCrdRdScan(crd_arr=csr1.indices.tolist(), seg_arr=csr1.indptr.tolist(), debug=debug_sim)
     val_B = Array(init_arr=csr1.data.tolist(), debug=debug_sim)
 
-    rdscan_Cj = UncompressRdScan(dim=csc2.shape[1], debug=debug_sim)
-    rdscan_Ck = CompressedRdScan(crd_arr=csc2.indices.tolist(), seg_arr=csc2.indptr.tolist(), debug=debug_sim)
+    rdscan_Cj = UncompressCrdRdScan(dim=csc2.shape[1], debug=debug_sim)
+    rdscan_Ck = CompressedCrdRdScan(crd_arr=csc2.indices.tolist(), seg_arr=csc2.indptr.tolist(), debug=debug_sim)
     val_C = Array(init_arr=csc2.data.tolist(), debug=debug_sim)
 
     repsiggen_Bi = RepeatSigGen(debug=debug_sim)
@@ -354,7 +354,7 @@ arr_dict = {'in1': {'shape': (4, 4), 'seg': [0, 0, 2, 3, 3], 'crd': [2, 3, 3], '
 
 
 @pytest.mark.parametrize("arrs", [arr_dict])
-def test_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
+def test_unit_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
     temp1 = arrs['in1']
     temp2 = arrs['in2']
     csr1 = scipy.sparse.csr_matrix((temp1['data'], temp1['crd'], temp1['seg']), shape=temp1['shape'])
@@ -377,12 +377,12 @@ def test_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_Bi = UncompressRdScan(dim=csr1.shape[0], debug=debug_sim)
-    rdscan_Bk = CompressedRdScan(crd_arr=csr1.indices.tolist(), seg_arr=csr1.indptr.tolist(), debug=debug_sim)
+    rdscan_Bi = UncompressCrdRdScan(dim=csr1.shape[0], debug=debug_sim)
+    rdscan_Bk = CompressedCrdRdScan(crd_arr=csr1.indices.tolist(), seg_arr=csr1.indptr.tolist(), debug=debug_sim)
     val_B = Array(init_arr=csr1.data.tolist(), debug=debug_sim)
 
-    rdscan_Cj = UncompressRdScan(dim=csc2.shape[1], debug=debug_sim)
-    rdscan_Ck = CompressedRdScan(crd_arr=csc2.indices.tolist(), seg_arr=csc2.indptr.tolist(), debug=debug_sim)
+    rdscan_Cj = UncompressCrdRdScan(dim=csc2.shape[1], debug=debug_sim)
+    rdscan_Ck = CompressedCrdRdScan(crd_arr=csc2.indices.tolist(), seg_arr=csc2.indptr.tolist(), debug=debug_sim)
     val_C = Array(init_arr=csc2.data.tolist(), debug=debug_sim)
 
     repsiggen_Bi = RepeatSigGen(debug=debug_sim)

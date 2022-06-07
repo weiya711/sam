@@ -9,11 +9,11 @@ DATASET_NAMES=(
   bcsstm03
   lpi_bgprtr
   cage4
-  klein-b1
-  GD02_a
-  GD95_b
-  Hamrle1
-  LF10
+#  klein-b1
+#  GD02_a
+#  GD95_b
+#  Hamrle1
+#  LF10
 )
 
 errors=()
@@ -37,7 +37,14 @@ for i in ${!DATASET_NAMES[@]}; do
 #      errors+=("${name} matmul_ijk_full")
 #    fi
 
-    pytest -k test_mat_identity_i --ssname $name -s 
+#    pytest -k test_mat_identity_i --ssname $name -s 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then 
+#      errors+=("${name} matmul_ijk")
+#    fi
+ 
+    pytest -k test_matmul_ --ssname $name -s  #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 
@@ -45,20 +52,20 @@ for i in ${!DATASET_NAMES[@]}; do
     fi
  
 
-
-    pytest -k test_matmul_ijk_i --ssname $name -s 
-    status=$?
-    if [ $status -gt 0 ]
-    then 
-      errors+=("${name} matmul_ijk")
-    fi
+#
+#    pytest -k test_matmul_ijk_i --ssname $name -s #--debug-sim 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then 
+#      errors+=("${name} matmul_ijk")
+#    fi
    
-    pytest -k test_mat_elemmul_i --ssname $name -s 
-    status=$?
-    if [ $status -gt 0 ]
-    then 
-      errors+=("${name} matmul_ijk")
-    fi
+#    pytest -k test_mat_elemmul_i --ssname $name -s 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then 
+#      errors+=("${name} matmul_ijk")
+#    fi
  
 
 #    pytest -k test_tensor3_elemmul_i --ssname $name -s 

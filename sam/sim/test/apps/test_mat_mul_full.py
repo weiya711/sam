@@ -1,7 +1,7 @@
 import pytest
-import scipy.sparse
+import time
 
-from sam.sim.src.rd_scanner import CompressedRdScan, UncompressRdScan
+from sam.sim.src.rd_scanner import CompressedCrdRdScan, UncompressCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
@@ -10,6 +10,7 @@ from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 
 from sam.sim.test.test import *
+from sam.sim.test.gold import *
 
 import os
 
@@ -22,7 +23,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
+@pytest.mark.suitesparse
+def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
     # filename = os.path.join(formatted_dir, ssname+"_"+"csr.txt")
     # formats = ['d', 's']
     # [B_shape, B0_dim, (B1_seg, B1_crd), B_vals] = read_combined_inputs(filename, formats)
@@ -61,30 +63,18 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
+
+    
     if debug_sim:
         print("Mat B:", B_shape, B0_dim, B1_seg, B1_crd, B_vals)
         print("Mat C:", C_shape, C1_dim, C0_seg, C0_crd, C_vals)
 
-    B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
-    C_scipy = scipy.sparse.csc_matrix((C_vals, C0_crd, C0_seg), shape=C_shape)
-
-    B_nd = B_scipy.toarray()
-    C_nd = C_scipy.toarray()
-    gold_nd = B_nd @ C_nd
-    gold_tup = convert_ndarr_point_tuple(gold_nd)
-
-    if debug_sim:
-        print("Dense Mat1:\n", B_nd)
-        print("Dense Mat2:\n", C_nd)
-        print("Dense Gold:", gold_nd)
-        print("Gold:", gold_tup)
-
-    rdscan_Bi = UncompressRdScan(dim=B0_dim, debug=debug_sim)
-    rdscan_Bk = CompressedRdScan(crd_arr=B1_crd, seg_arr=B1_seg, debug=debug_sim)
+    rdscan_Bi = UncompressCrdRdScan(dim=B0_dim, debug=debug_sim)
+    rdscan_Bk = CompressedCrdRdScan(crd_arr=B1_crd, seg_arr=B1_seg, debug=debug_sim)
     val_B = Array(init_arr=B_vals, debug=debug_sim)
 
-    rdscan_Cj = UncompressRdScan(dim=C1_dim, debug=debug_sim)
-    rdscan_Ck = CompressedRdScan(crd_arr=C0_crd, seg_arr=C0_seg, debug=debug_sim)
+    rdscan_Cj = UncompressCrdRdScan(dim=C1_dim, debug=debug_sim)
+    rdscan_Ck = CompressedCrdRdScan(crd_arr=C0_crd, seg_arr=C0_seg, debug=debug_sim)
     val_C = Array(init_arr=C_vals, debug=debug_sim)
 
     repsiggen_Bi = RepeatSigGen(debug=debug_sim)
@@ -100,11 +90,12 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     wrscan_Xi = CompressWrScan(seg_size=2, size=B0_dim, fill=fill)
     wrscan_Xj = CompressWrScan(seg_size=B0_dim + 1, size=B0_dim * B0_dim, fill=fill)
 
+    extra_info = dict()
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
-    time = 0
-    while not done and time < TIMEOUT:
+    time_cnt = 0
+    while not done and time_cnt < TIMEOUT:
         # Input iteration for i
         if len(in_ref_B) > 0:
             rdscan_Bi.set_in_ref(in_ref_B.pop(0))
@@ -139,7 +130,7 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
         inter1.set_in1(rdscan_Bk.out_ref(), rdscan_Bk.out_crd())
         inter1.set_in2(rdscan_Ck.out_ref(), rdscan_Ck.out_crd())
         inter1.update()
-
+        
         # Computation
 
         val_B.set_load(inter1.out_ref1())
@@ -163,8 +154,8 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
         wrscan_Xj.set_input(rdscan_Cj.out_crd())
         wrscan_Xj.update()
 
-        if time % 100 == 0:
-            print("Timestep", time, "\t Done --",
+        if time_cnt % 100 == 0:
+            print("Timestep", time_cnt, "\t Done --",
                   "\nRdScan Bi:", rdscan_Bi.out_done(), "\tRepeat Ci:", repeat_Ci.out_done(),
                   "\tRepSigGen Bi:", repsiggen_Bi.out_done(),
                   "\nRepeat Bj:", repeat_Bj.out_done(), "\tRdScan Cj:", rdscan_Cj.out_done(),
@@ -179,7 +170,9 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
                   )
 
         done = wrscan_Xj.out_done() and wrscan_Xi.out_done() and vals_X.out_done()
-        time += 1
+        time_cnt += 1
+
+    extra_info["intersection_rate"] = inter1.return_intersection_rate()
 
     wrscan_Xi.autosize()
     wrscan_Xj.autosize()
@@ -189,16 +182,17 @@ def test_mat_mul_ijk_csr_full(ssname, debug_sim, fill=0):
     out_segs = [wrscan_Xi.get_seg_arr(), wrscan_Xj.get_seg_arr()]
     out_val = vals_X.get_arr()
 
+    if check_gold:
+        print("Checking gold...")
+        check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val)
+
     if debug_sim:
         print(out_segs)
         print(out_crds)
         print(out_val)
 
-    if not out_val:
-        assert out_val == gold_tup
-    elif not gold_tup:
-        assert all([v == 0 for v in out_val])
-    else:
-        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
-        out_tup = remove_zeros(out_tup)
-        assert (check_point_tuple(out_tup, gold_tup))
+    def bench():
+        time.sleep(0.001)
+
+    samBench(bench, extra_info)
+

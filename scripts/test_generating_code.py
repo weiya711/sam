@@ -4,6 +4,11 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
+frostt_list = ["tensor3_elemmul", "tensor3_identity"]
+suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
+                    "matmul_jki", "vecmul_ij", "vecmul_ji"]
+vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vecmul_ij", "vectmul_ji", "vec_identity"]
+
 
 class TensorFormat:
     def __init__(self):
@@ -52,16 +57,21 @@ def tab(a):
 
 def generate_header(f, out_name):
     f.write("import pytest\n")
+    f.write("import time\n")
     f.write("import scipy.sparse\n")
-    f.write("from sam.sim.src.rd_scanner import UncompressRdScan, CompressedRdScan\n")
+    f.write("from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan\n")
     f.write("from sam.sim.src.wr_scanner import ValsWrScan\n")
     f.write("from sam.sim.src.joiner import Intersect2\n")
     f.write("from sam.sim.src.compute import Multiply2\n")
     f.write("from sam.sim.src.crd_manager import CrdDrop\n")
     f.write("from sam.sim.src.repeater import Repeat, RepeatSigGen\n")
     f.write("from sam.sim.src.accumulator import Reduce\n")
+    f.write("from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2\n")
+    f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
+    # f.write("from sam.sim.test.test_gold import test_gold_" + out_name.split("_")[0] + "\n")
     f.write("import os\n")
+    f.write("import csv\n")
     f.write("cwd = os.getcwd()\n")
     f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n\n")
     # f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default = './mode-formats')\n\n")
@@ -70,7 +80,13 @@ def generate_header(f, out_name):
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
     f.write(tab(1) + "reason='CI lacks datasets',\n")
     f.write(")\n")
-    f.write("def test_" + out_name + "_i(ssname, debug_sim, fill=0):\n")
+    if out_name in suitesparse_list:
+        f.write("@pytest.mark.suitesparse\n")
+    if out_name in frostt_list:
+        f.write("@pytest.mark.frostt\n")
+    if out_name in vec_list:
+        f.write("@pytest.mark.vec\n")
+    f.write("def test_" + out_name + "(samBench, ssname, debug_sim, fill=0):\n")
 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
@@ -80,7 +96,8 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             continue
         f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname, \"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
-        f.write(tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
+        f.write(
+            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
         f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
         # if tensor_formats.get_format(ten) == "dense":
         #    f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \"" +
@@ -94,9 +111,11 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
             #   ten + "_shape.txt\")\n")
             # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
-            f.write(tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
             # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ds10":
@@ -106,9 +125,11 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
             # ten + "_shape.txt\")\n")
             # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
-            f.write(tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ss01":
@@ -117,13 +138,17 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" + ten
             #   + "_shape.txt\")\n")
             # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n"
-            f.write(tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
-            f.write(tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ss10":
             # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + "+
@@ -131,13 +156,17 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             # f.write(tab(scope_lvl) + ten + "_shape_filename =
             # os.name.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
             # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
-            f.write(tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
-            f.write(tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
 
         elif tensor_format_parse.get_format(ten) == "dss012":
@@ -146,13 +175,17 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" + ten +
             #   "_shape.txt\")\n")
             # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
-            f.write(tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
-            f.write(tab(scope_lvl) + ten + "2_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "2_seg.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "2_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "2_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg2" + " = read_inputs(" + ten + "2_seg_filename)\n")
-            f.write(tab(scope_lvl) + ten + "2_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "2_crd.txt\")\n")
+            f.write(
+                tab(scope_lvl) + ten + "2_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "2_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd2" + " = read_inputs(" + ten + "2_crd_filename)\n\n")
         else:
             ct = 0
@@ -160,15 +193,18 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
                 if tensor_format_parse.get_format(ten)[i] == "s":
                     f.write(tab(scope_lvl) + ten + str(i) + "_seg_filename = os.path.join(" +
                             ten + "_dirname, \"" + ten + str(i) + "_seg.txt\")\n")
-                    f.write(tab(scope_lvl) + ten + "_seg" + str(i) + " = read_inputs(" + ten + str(i) + "_seg_filename)\n")
+                    f.write(
+                        tab(scope_lvl) + ten + "_seg" + str(i) + " = read_inputs(" + ten + str(i) + "_seg_filename)\n")
                     f.write(tab(scope_lvl) + ten + str(i) + "_crd_filename = os.path.join(" +
                             ten + "_dirname, \"" + ten + str(i) + "_crd.txt\")\n")
-                    f.write(tab(scope_lvl) + ten + "_crd" + str(i) + " = read_inputs(" + ten + str(i) + "_crd_filename)\n\n")
+                    f.write(tab(scope_lvl) + ten + "_crd" + str(i) + " = read_inputs(" + ten + str(
+                        i) + "_crd_filename)\n\n")
         f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_vals.txt\")\n")
         f.write(tab(scope_lvl) + ten + "_vals" + " = read_inputs(" + ten + "_vals_filename, float)\n\n")
 
 
 def gen_data_formats(size, app_name, path):
+    ans_list = []
     if size - 1 == 1:
         ans_list = ["orig"]
         return ans_list
@@ -199,10 +235,11 @@ def output_check_nodes(f, root_nodes):
     for r in root_nodes:
         f.write(tab(1) + "in_ref_" + str(r) + " = [0, 'D']\n")
     f.write(tab(1) + "done = False\n")
-    f.write(tab(1) + "time = 0\n")
+    f.write(tab(1) + "time_cnt = 0\n")
 
 
 def finish_outputs(f, elements):
+    output_list = ""
     f.write(tab(2) + "done = ")
     elements2 = []
     for elem in elements.keys():
@@ -213,34 +250,47 @@ def finish_outputs(f, elements):
             f.write(" and ")
         else:
             f.write("\n")
-    f.write(tab(2) + "time += 1\n\n")
+    f.write(tab(2) + "time_cnt += 1\n\n")
     for elem in elements.keys():
         f.write(tab(1) + elem + ".autosize()\n")
     f.write("\n")
     f.write(tab(1) + "out_crds = [")
+    output_list += " out_crds = ["
     count = 0
     for elem in elements.keys():
         if elements[elem] != "vals":
             f.write(elem + ".get_arr()")
+            output_list += elem + ".get_arr()"
             count += 1
             if count < len(elements2) - 1:
                 f.write(", ")
+                output_list += ", "
             else:
                 f.write("]\n")
+                output_list += "]"
     count = 0
     f.write(tab(1) + "out_segs = [")
+    output_list += ", out_segs = ["
     for elem in elements.keys():
         if elements[elem] != "vals":
             f.write(elem + ".get_seg_arr()")
+            output_list += elem + ".get_seg_arr()"
             count += 1
             if count < len(elements2) - 1:
                 f.write(", ")
+                output_list += ", "
             else:
                 f.write("]\n")
+                output_list += "]"
+
     f.write(tab(1) + "out_vals = ")
+    output_string = ", out_vals = "
     for elem in elements.keys():
         if elements[elem] == "vals":
             f.write(elem + ".get_arr()\n")
+            output_string += elem + ".get_arr()"
+    output_list += output_string
+    return output_list
 
 
 def size_computation_write(a):
@@ -273,7 +323,7 @@ def remove_broadcast_nodes(G):
         if node_i["type"] == "broadcast":
             for preds in g0.predecessors(a):
                 for succs in g0.neighbors(a):
-                    g0.add_edge(preds, succs, **(g0.get_edge_data(preds, a)[0]))
+                    g0.add_edge(preds, succs, **(g0.get_edge_data(a, succs)[0]))
             g0.remove_node(a)
         g = g0
     return g
@@ -410,6 +460,7 @@ for apath in file_paths:
     # tens_fmt["C"]["information"] = data_formats[1]
     generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse)
     node_number = []
+    spaccumulator_data = {}
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         d[u] = node_info
@@ -421,51 +472,74 @@ for apath in file_paths:
             # print(u, " fiber lookup in :: ", networkx_graph.nodes[u]['comment'])
             if node_info["format"] == "dense":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] +
-                        node_info["index"] + "_" + str(u) + " = UncompressRdScan(dim=" + node_info["tensor"] +
+                        node_info["index"] + "_" + str(u) + " = UncompressCrdRdScan(dim=" + node_info["tensor"] +
                         "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
             if node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
-                        "_" + str(u) + " = CompressedRdScan(crd_arr=" + node_info["tensor"] +
+                        "_" + str(u) + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
                         "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
                         "_seg" + node_info["mode"] + ", debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "arrayvals":
-            print(u, " arrayvals in ", networkx_graph.nodes[u]['comment'])
             f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + " = Array(init_arr=" +
                     node_info["tensor"] + "_vals, " + "debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u)
 
         elif "broadcast" in networkx_graph.nodes[u]['comment']:
-            print(u, "broadcast in :: ", networkx_graph.nodes[u]['comment'])
+            continue
 
         elif node_info["type"] == "repsiggen":
-            print(u, " repeatsiggen in :: ", networkx_graph.nodes[u]['comment'])
             f.write(tab(1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) +
                     " = RepeatSigGen(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "repeat":
-            print(u, " repeat in :: ", networkx_graph.nodes[u]['comment'])
             f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) +
                     " = Repeat(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "intersect":
             f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
+        elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + " = SparseAccumulator1(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + "_drop_crd_in_inner" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + "_drop_crd_in_outer" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + "_drop_val" + " = StknDrop(debug=debug_sim)\n")
+            spaccumulator_data[u] = {}
+        elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + " = SparseAccumulator2(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + "_drop_crd_in_0" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + "_drop_crd_in_1" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + "_drop_crd_in_2" + " = StknDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                u) + "_drop_val" + " = StknDrop(debug=debug_sim)\n")
+            spaccumulator_data[u] = {}
         elif node_info["type"] == "crddrop":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "mul":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
+        elif node_info["type"] == "add":
+            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Add2(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "reduce":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Reduce(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "fiberwrite":
-            print(node_info)
             if node_info["mode"] == "vals":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                         " = ValsWrScan(size=" + array_size_computation(node_info["size"]) +
@@ -478,7 +552,6 @@ for apath in file_paths:
                         array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
-                print("uncompressed_node write" + apath + "  \n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
                 continue
             if node_info["sink"] == "true":
@@ -487,12 +560,14 @@ for apath in file_paths:
             invalid_flag = 1
             print("Error invalid node detected", node_info["type"], "\n")
     if invalid_flag == 1:
+        os.system("rm " + out_name[num] + ".py")
+        print(out_name[num] + " failed\n")
         num += 1
         continue
     output_check_nodes(f, root_nodes)
-# nx.topological_sort(networkx_graph)
+    # nx.topological_sort(networkx_graph)
     f.write("\n")
-    f.write(tab(1) + "while not done and time < TIMEOUT:\n")
+    f.write(tab(1) + "while not done and time_cnt < TIMEOUT:\n")
     stream_join_elements = {}
     ready_dataset = {}
     edge_data = {}
@@ -504,6 +579,8 @@ for apath in file_paths:
             done_all[v] = 0
         if v not in stream_join_elements:
             stream_join_elements[v] = [u]
+            # if "spaccu" in d[v]["object"] and "matmul_jki" in apath:
+            #    print(d[v]["object"], " ", d[u]["object"])
             ready_dataset[v] = [0]
             edge_data[v] = [str((a["label"]).strip('"'))]
         else:
@@ -511,6 +588,8 @@ for apath in file_paths:
                 stream_join_elements[v].append(u)
                 ready_dataset[v].append(0)
                 edge_data[v].append(str((a["label"]).strip('"')))
+                # if "spaccu" in d[v]["object"] and "matmul_jki" in apath:
+                # print(d[v]["object"], " ", d[u]["object"])
     # for u, v, a in networkx_graph.edges():
     #    if u in ready_dataset:
     #        ready_dataset[v][stream_join_elements[v].index(d[u]["object"])] = 1
@@ -526,7 +605,7 @@ for apath in file_paths:
                 f.write(tab(2) + d[u]["object"] + ".update()\n\n")
                 done_all[u] = 1
 
-    for i in range(3):
+    for i in range(10):
         for u, v, a in list(nx.edge_bfs(networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
             a = networkx_graph.get_edge_data(u, v)[0]
             ready_dataset[v][stream_join_elements[v].index(u)] = done_all[u]
@@ -558,9 +637,15 @@ for apath in file_paths:
                         f.write(tab(3) + d[v]["object"] +
                                 ".set_in_ref(in_ref_" + d[v]["tensor"] + ".pop(0))\n")
                     for u_ in stream_join_elements[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_" + str(edge_data[v][stream_join_elements[v].index(u_)]) +
-                                "(" + d[u_]["object"] + ".out_" +
-                                str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
+                        if "intersect" in d[u_]["object"]:
+                            f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
+                                    d[u_]["object"] + ".out_ref" +
+                                    str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + ".set_in_" +
+                                    str(edge_data[v][stream_join_elements[v].index(u_)]) +
+                                    "(" + d[u_]["object"] + ".out_" +
+                                    str(edge_data[v][stream_join_elements[v].index(u_)]) + "())\n")
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
 
@@ -590,49 +675,113 @@ for apath in file_paths:
                         index_value = edge_data[v][stream_join_elements[v].index(u_)][-1]
                         print(d[v])
                         if index_value == d[v]["inner"]:
-                            f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                            f.write(
+                                tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                         if index_value == d[v]["outer"]:
-                            f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                            f.write(
+                                tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     done_all[v] = 1
-#            if d[v]["type"] == "intersect" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
-#                if sum(ready_dataset[v]) == len(ready_dataset[v]):
-#                    for u_ in stream_join_elements[v]:
-#                        f.write(tab(2) + d[v]["object"] + ".set_in" + str(stream_join_elements[v].index(u_)+ 1) + "(" +
-#                                d[u_]["object"] + ".out_ref(), " + d[u_]["object"]+ ".out_crd())\n")
-#                        intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = stream_join_elements[v].index(u_) + 1
-#                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-#                    done_all[v] = 1
 
-            # if d[v]["object"] not in intersect_dataset:
-            #    intersect_dataset[d[v]["object"]] = [d[u]["object"]]
-            #    f.write(tab(2) + d[v]["object"] + ".set_in" + "1" + "(" + d[u]["object"] + ".out_ref(), " +
-            #            d[u]["object"]+ ".out_crd()))\n")
-            # else:
-            #    if d[u]["object"] not in intersect_dataset[d[v]["object"]]:
-            #        intersect_dataset[d[v]["object"]].append(d[u]["object"])
-            #        f.write(tab(2) + d[v]["object"] + ".set_in" + str(len(intersect_dataset[d[v]["object"]])) +
-            #                "(" + d[u]["object"] + ".out_ref(), " +  d[u]["object"]+ ".out_crd()))\n\n")
-            #        f.write(tab(2) +  d[v]["object"]  +  ".update()\n\n")
+            if d[v]["type"] == "spaccumulator" and d[v]["order"] == 1 and parents_done(networkx_graph, done_all, v) \
+                    and done_all[v] == 0:
+                if sum(ready_dataset[v]) == len(ready_dataset[v]):
+                    append = {}
+                    append[0] = "_inner"
+                    append[1] = "_outer"
+                    append_arr = []
+                    for u_ in stream_join_elements[v]:
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                            append_arr.append(int(edge_data[v][stream_join_elements[v].index(u_)][7]))
+                    append_arr.sort()
+                    for u_ in stream_join_elements[v]:
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                            spaccumulator_data[v][int(edge_data[v][stream_join_elements[v].index(u_)][7])] = \
+                                append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+                            edge_data[v][stream_join_elements[v].index(u_)] = \
+                                edge_data[v][stream_join_elements[v].index(u_)][:6] \
+                                + append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+
+                        if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                            f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] +
+                                    ".set_in_stream(" +
+                                    d[u_]["object"] + ".out_crd())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] + "." +
+                                    "set_in_stream(" + d[u_]["object"] + ".out_val())\n")
+                    for u_ in stream_join_elements[v]:
+                        if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                            f.write(
+                                tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                d[v]["object"] + "_drop_" + edge_data[v][
+                                    stream_join_elements[v].index(u_)] + ".out_val())\n")
+                        else:
+                            f.write(tab(2) + d[v]["object"] + ".set_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                    d[v]["object"] + "_drop_" +
+                                    edge_data[v][stream_join_elements[v].index(u_)] + ".out_val())\n")
+                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    done_all[v] = 1
+
+            if d[v]["type"] == "spaccumulator" and d[v]["order"] == "2" and parents_done(networkx_graph, done_all,
+                                                                                         v) and done_all[v] == 0:
+                # if sum(ready_dataset[v]) == len(ready_dataset[v]):
+                append = {}
+                append[0] = "_0"
+                append[1] = "_1"
+                append[2] = "_2"
+                append_arr = []
+                for u_ in stream_join_elements[v]:
+                    if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                        append_arr.append(int(edge_data[v][stream_join_elements[v].index(u_)][7]))
+                append_arr.sort()
+                for u_ in stream_join_elements[v]:
+                    if "val" not in edge_data[v][stream_join_elements[v].index(u_)]:
+                        spaccumulator_data[v][int(edge_data[v][stream_join_elements[v].index(u_)][7])] = \
+                            append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+                        edge_data[v][stream_join_elements[v].index(u_)] = \
+                            edge_data[v][stream_join_elements[v].index(u_)][:6] + \
+                            append[append_arr.index(int(edge_data[v][stream_join_elements[v].index(u_)][7]))]
+
+                    if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                        f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                edge_data[v][stream_join_elements[v].index(u_)] +
+                                ".set_in_stream(" + d[u_]["object"] + ".out_crd())\n")
+                    else:
+                        f.write(tab(2) + d[v]["object"] + "_drop_" +
+                                edge_data[v][stream_join_elements[v].index(u_)] + "." + "set_in_stream(" +
+                                d[u_]["object"] + ".out_val())\n")
+                for u_ in stream_join_elements[v]:
+                    if "crd" in edge_data[v][stream_join_elements[v].index(u_)]:
+                        f.write(tab(2) + d[v]["object"] + "." + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                                d[v]["object"] + "_drop_" + edge_data[v][
+                                    stream_join_elements[v].index(u_)] + ".out_val())\n")
+                    else:
+                        f.write(
+                            tab(2) + d[v]["object"] + ".set_" + edge_data[v][stream_join_elements[v].index(u_)] + "(" +
+                            d[v]["object"] + "_drop_" + edge_data[v][
+                                stream_join_elements[v].index(u_)] + ".out_val())\n")
+                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                done_all[v] = 1
 
             if d[v]["type"] == "mul" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
                         f.write(tab(2) + d[v]["object"] + ".set_in" + str(stream_join_elements[v].index(u_) + 1) + "(" +
                                 d[u_]["object"] + ".out_load())\n")
-                        # f.write(tab(2) + d[v]["object"] + ".set_in" + stream_join_elements[v].index(u_) +
-                        # "(" + d[u_]["object"] + ".out_ref(), " +  d[u_]["object"]+ ".out_crd()))\n")
 
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
-            # if d[v]["object"] not in mul_dataset:
-            #    mul_dataset[d[v]["object"]] = [d[u]["object"]]
-            # else:
-            #    mul_dataset[d[v]["object"]].append(d[u]["object"])
-            #    #if len(d[v]["object"]) == 2:
-            #    for i in range(mul_dataset(d[v]["object"])):
-            #        f.write(tab(2) + d[v]["object"] + ".set_in" + str(i) + "(" +
-            #                mul_dataset[d[v]["object"]][i] + ".out_load())\n")
-            #    f.write(tab(2) +  d[v]["object"] + ".update()\n\n")
+
+            if d[v]["type"] == "add" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
+                if sum(ready_dataset[v]) == len(ready_dataset[v]):
+                    for u_ in stream_join_elements[v]:
+                        f.write(tab(2) + d[v]["object"] + ".set_in" + str(stream_join_elements[v].index(u_) + 1) + "(" +
+                                d[u_]["object"] + ".out_load())\n")
+
+                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    done_all[v] = 1
 
             if d[v]["type"] == "reduce" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
@@ -646,7 +795,12 @@ for apath in file_paths:
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        if "inner" in edge_data[v][stream_join_elements[v].index(u_)] or "outer" in \
+                        if "val" not in edge_data[v][stream_join_elements[v].index(u_)] and "spaccumulator" \
+                                in d[u_]["object"]:
+                            print(edge_data[v][stream_join_elements[v].index(u_)])
+                            edge_data[v][stream_join_elements[v].index(u_)] = \
+                                "crd" + spaccumulator_data[u_][int(edge_data[v][stream_join_elements[v].index(u_)][8])]
+                        elif "inner" in edge_data[v][stream_join_elements[v].index(u_)] or "outer" in \
                                 edge_data[v][stream_join_elements[v].index(u_)]:
                             edge_data[v][stream_join_elements[v].index(u_)] = \
                                 edge_data[v][stream_join_elements[v].index(u_)][:-2]
@@ -662,18 +816,30 @@ for apath in file_paths:
                             done_all[v] = 1
 
     # f.write(tab(1) + "\n\n")
-    finish_outputs(f, output_nodes)
+    output_list = finish_outputs(f, output_nodes)
+    f.write(tab(1) + "def bench():\n")
+    f.write(tab(2) + "time.sleep(0.01)\n\n")
+    f.write(tab(1) + "extra_info = dict()\n")
+    f.write(tab(1) + "extra_info[\"dataset\"] = ssname\n")
+    f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
+    ct = 0
+    for k in tensor_format_parse.return_all_tensors():
+        if ct != 0:
+            f.write(tab(1) + "extra_info[\"tensor_" + k + "_shape\"] = " + k + "_shape\n")
+        ct += 1
+    statistic_available = ["reduce", "spaccumulator", "crddrop", "repeat", "repeatsiggen", "intersect", "fiberwrite",
+                           "arrayvals"]
     for u in networkx_graph.nodes():
-        if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
-            f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
-    for u in networkx_graph.nodes():
-        if "intersect" in d[u]["object"]:
-            f.write(tab(1) + d[u]["object"] + ".print_intersection_rate()\n")
+        if d[u]["type"] in statistic_available:
+            f.write(tab(1) + "sample_dict = " + d[u]["object"] + ".return_statistics()\n")
+            f.write(tab(1) + "for k in sample_dict.keys():\n")
+            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
+
+    # for u in networkx_graph.nodes():
+    #    if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
+    #        f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")
+    f.write(tab(1) + "samBench(bench, extra_info)")
     f.close()
-    if "matmul_ijk" in out_name[num] or "mat_elemmul" in out_name[num] or "mat_identity" in out_name[num]:
-        os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
-        os.system("rm " + out_name[num] + ".py")
-    else:
-        os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
-        os.system("rm " + out_name[num] + ".py")
+    os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
+    os.system("rm " + out_name[num] + ".py")
     num += 1

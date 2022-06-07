@@ -64,6 +64,9 @@ class Array(Primitive):
         # Special handling of loads of stop tokens
         if is_stkn(addr):
             val = addr
+        # Special handling of loads of 'N' tokens
+        elif is_0tkn(addr):
+            val = 0
         elif addr == 'D':
             self.done = True
             val = 'D'
@@ -80,6 +83,9 @@ class Array(Primitive):
     def store(self, addr, val):
         # Special handling of stores of stop tokens
         if is_stkn(addr) or is_stkn(val):
+            return
+        # Special handling of stores of 'N' tokens
+        elif is_0tkn(addr) or is_0tkn(val):
             return
         elif addr == 'D' or val == 'D':
             self.done = True
@@ -106,6 +112,13 @@ class Array(Primitive):
         if fill is None:
             fill = self.fill
         self.arr = [fill for _ in range(self.size)]
+
+    def return_statistics(self):
+        stats_dict = {}
+        stats_dict["array_size"] = self.size
+        stats_dict["fifo_addr"] = self.load_addr_size
+        stats_dict["fifo_vals"] = self.store_vals_size
+        return stats_dict
 
     def print_fifos(self):
         print("Arrayvals fifo addresses: ", self.load_addr_size)
