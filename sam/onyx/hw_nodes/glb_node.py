@@ -3,8 +3,10 @@ from sam.onyx.hw_nodes.hw_node import *
 
 class GLBNode(HWNode):
     def __init__(self, name=None, data=None, valid=None, ready=None,
-                 direction=None, num_blocks=None, file_number=None, tx_size=None, IO_id=0, bespoke=False) -> None:
+                 direction=None, num_blocks=None, file_number=None, tx_size=None, IO_id=0,
+                 bespoke=False, tensor=None, mode=None) -> None:
         super().__init__(name=name)
+
         self.data = data
         self.valid = valid
         self.ready = ready
@@ -13,6 +15,8 @@ class GLBNode(HWNode):
         self.file_number = file_number
         self.tx_size = tx_size
         self.IO_id = IO_id
+        self.tensor = tensor
+        self.mode = mode
         # If bespoke is set, the data/ready/valid are now ports of a kratos gen
         # instead of string names
         self.bespoke = bespoke
@@ -43,6 +47,12 @@ class GLBNode(HWNode):
 
     def get_direction(self):
         return self.direction
+
+    def get_tensor(self):
+        return self.tensor
+
+    def get_mode(self):
+        return self.mode
 
     def connect(self, other, edge):
 

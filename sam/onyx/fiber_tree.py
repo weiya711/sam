@@ -1,5 +1,5 @@
 import numpy
-from generate_matrices import *
+from sam.onyx.generate_matrices import *
 
 
 class FiberTreeFiber():

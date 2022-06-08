@@ -3,7 +3,7 @@ import numpy
 import random
 import scipy.sparse as ss
 import tempfile
-from fiber_tree import *
+from sam.onyx.fiber_tree import *
 import argparse
 
 
