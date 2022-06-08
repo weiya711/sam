@@ -3,7 +3,7 @@ import time
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
-from sam.sim.src.joiner import Intersect2
+from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2
 from sam.sim.src.crd_manager import CrdDrop
 from sam.sim.src.repeater import Repeat, RepeatSigGen
@@ -11,6 +11,7 @@ from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
+from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
@@ -23,7 +24,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_jki(samBench, ssname, debug_sim, fill=0):
+def test_matmul_jki(samBench, ssname, check_gold, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -128,6 +129,20 @@ def test_matmul_jki(samBench, ssname, debug_sim, fill=0):
         mul_4.set_in2(arrayvals_B_5.out_load())
         mul_4.update()
 
+        spaccumulator1_3_drop_crd_in_outer.set_in_stream(intersectk_11.out_crd())
+        spaccumulator1_3_drop_crd_in_inner.set_in_stream(fiberlookup_Bi_10.out_crd())
+        spaccumulator1_3_drop_val.set_in_stream(mul_4.out_val())
+        spaccumulator1_3.crd_in_outer(spaccumulator1_3_drop_crd_in_outer.out_val())
+        spaccumulator1_3.crd_in_inner(spaccumulator1_3_drop_crd_in_inner.out_val())
+        spaccumulator1_3.set_val(spaccumulator1_3_drop_val.out_val())
+        spaccumulator1_3.update()
+
+        fiberwrite_Xvals_0.set_input(spaccumulator1_3.out_val())
+        fiberwrite_Xvals_0.update()
+
+        fiberwrite_X0_1.set_input(spaccumulator1_3.out_crd_inner())
+        fiberwrite_X0_1.update()
+
         done = fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done() and fiberwrite_X0_1.out_done()
         time_cnt += 1
 
@@ -182,4 +197,7 @@ def test_matmul_jki(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["arrayvals_B_5" + "_" + k] =  sample_dict[k]
 
+    if check_gold:
+        print("Checking gold...")
+        check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals)
     samBench(bench, extra_info)

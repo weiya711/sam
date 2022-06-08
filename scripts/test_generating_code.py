@@ -6,7 +6,7 @@ from collections import defaultdict
 
 frostt_list = ["tensor3_elemmul", "tensor3_identity"]
 suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
-                    "matmul_jki", "vecmul_ij", "vecmul_ji"]
+        "matmul_jki", "vecmul_ij", "vecmul_ji", "matmul_kji"]
 vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vecmul_ij", "vectmul_ji", "vec_identity"]
 
 
@@ -61,7 +61,7 @@ def generate_header(f, out_name):
     f.write("import scipy.sparse\n")
     f.write("from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan\n")
     f.write("from sam.sim.src.wr_scanner import ValsWrScan\n")
-    f.write("from sam.sim.src.joiner import Intersect2\n")
+    f.write("from sam.sim.src.joiner import Intersect2, Union2\n")
     f.write("from sam.sim.src.compute import Multiply2\n")
     f.write("from sam.sim.src.crd_manager import CrdDrop\n")
     f.write("from sam.sim.src.repeater import Repeat, RepeatSigGen\n")
@@ -69,7 +69,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2\n")
     f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
-    # f.write("from sam.sim.test.test_gold import test_gold_" + out_name.split("_")[0] + "\n")
+    f.write("from sam.sim.test.gold import *\n")
     f.write("import os\n")
     f.write("import csv\n")
     f.write("cwd = os.getcwd()\n")
@@ -86,8 +86,8 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-    f.write("def test_" + out_name + "(samBench, ssname, debug_sim, fill=0):\n")
-
+    f.write("def test_" + out_name + "(samBench, ssname, check_gold, debug_sim, fill=0):\n")
+ 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
     # Assuming tje format is csr and csc:
@@ -503,10 +503,14 @@ for apath in file_paths:
         elif node_info["type"] == "intersect":
             f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
+        elif node_info["type"] == "union":
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim)\n")
+            d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u) 
         elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
                 u) + " = SparseAccumulator1(debug=debug_sim)\n")
             d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
+            print("Spaccumulator here ", apath)
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
                 u) + "_drop_crd_in_inner" + " = StknDrop(debug=debug_sim)\n")
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
@@ -597,6 +601,12 @@ for apath in file_paths:
     #            stack.push([u, v])
     #        else:
     #            print("")
+
+    
+    for u in networkx_graph.nodes():
+        if "matmul_ikj" in apath:
+            print(d[u])
+
     for u in networkx_graph.nodes():
         if d[u]["type"] == "fiberlookup" and u not in done_all:
             if d[u]["root"] == "true":
@@ -609,10 +619,26 @@ for apath in file_paths:
         for u, v, a in list(nx.edge_bfs(networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
             a = networkx_graph.get_edge_data(u, v)[0]
             ready_dataset[v][stream_join_elements[v].index(u)] = done_all[u]
+            if "matmul_ikj" in apath and d[v]["type"] == "spaccumulator":
+                print("Matmul_ikj :", d[v])
+                print(parents_done(networkx_graph, done_all, v))
+                print(done_all[v])
+                if d[v]["type"] == "spaccumulator":
+                    print("h1")
+                    if d[v]['order'] == 1:
+                       print("h2")
+                       if parents_done(networkx_graph, done_all, v):
+                           print("h3")
+                           if done_all[v] == 0:
+                               print("hellow_world")
+                
+
+
             if d[v]["type"] == "fiberlookup" and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        if "intersect" in d[u_]["object"]:
+                        if "intersect" in d[u_]["object"] or "union" in d[u_]["object"]: 
+                        #if "intersect" in d[u_]["object"]:
                             f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
                                     d[u_]["object"] + ".out_ref" +
                                     str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
@@ -637,7 +663,8 @@ for apath in file_paths:
                         f.write(tab(3) + d[v]["object"] +
                                 ".set_in_ref(in_ref_" + d[v]["tensor"] + ".pop(0))\n")
                     for u_ in stream_join_elements[v]:
-                        if "intersect" in d[u_]["object"]:
+                        if "intersect" in d[u_]["object"] or "union" in d[u_]["object"]:
+                        #if "intersect" in d[u_]["object"]:
                             f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
                                     d[u_]["object"] + ".out_ref" +
                                     str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
@@ -652,7 +679,8 @@ for apath in file_paths:
             if d[v]["type"] == "arrayvals" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     for u_ in stream_join_elements[v]:
-                        if "intersect" in d[u_]["object"]:
+                        if "intersect" in d[u_]["object"] or "union" in d[u_]["object"]:
+                        #if "intersect" in d[u_]["object"]:
                             f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"] + ".out_ref" +
                                     str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
                         else:
@@ -668,6 +696,15 @@ for apath in file_paths:
                         intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = stream_join_elements[v].index(u_) + 1
                     f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     done_all[v] = 1
+ 
+            if d[v]["type"] == "union" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
+                if sum(ready_dataset[v]) == len(ready_dataset[v]):
+                    for u_ in stream_join_elements[v]:
+                        f.write(tab(2) + d[v]["object"] + ".set_in" + str(stream_join_elements[v].index(u_) + 1) + "(" +
+                                d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
+                        intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = stream_join_elements[v].index(u_) + 1
+                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    done_all[v] = 1 
 
             if d[v]["type"] == "crddrop" and parents_done(networkx_graph, done_all, v) and done_all[v] == 0:
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
@@ -682,8 +719,12 @@ for apath in file_paths:
                                 tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     done_all[v] = 1
 
-            if d[v]["type"] == "spaccumulator" and d[v]["order"] == 1 and parents_done(networkx_graph, done_all, v) \
+            if d[v]["type"] == "spaccumulator" and d[v]["order"] == "1" and parents_done(networkx_graph, done_all, v) \
                     and done_all[v] == 0:
+                
+                print("Sparse accumulator block here ", apath)
+                if "matmul_ikj" in apath:
+                    print("Sparse accumulator block here \n")
                 if sum(ready_dataset[v]) == len(ready_dataset[v]):
                     append = {}
                     append[0] = "_inner"
@@ -835,6 +876,13 @@ for apath in file_paths:
             f.write(tab(1) + "for k in sample_dict.keys():\n")
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
 
+    f.write(tab(1) + "if check_gold:\n")
+    f.write(tab(2) + "print(\"Checking gold...\")\n")
+    f.write(tab(2) + "check_gold_")
+    check = out_name[num]
+    if "matmul" in check:
+        check = check[:-4]
+    f.write(check + "(ssname, debug_sim, out_crds, out_segs, out_vals)\n")
     # for u in networkx_graph.nodes():
     #    if "fiberlookup" not in d[u]["object"] and "fiberwrite" not in d[u]["object"]:
     #        f.write(tab(1) + d[u]["object"] + ".print_fifos()\n")

@@ -24,15 +24,20 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_scalar_mul(samBench, ssname, check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ssname, "dummy", "none")
+def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
+    b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
+
+    b0_seg_filename = os.path.join(b_dirname, "b0_seg.txt")
+    b_seg0 = read_inputs(b0_seg_filename)
+    b0_crd_filename = os.path.join(b_dirname, "b0_crd.txt")
+    b_crd0 = read_inputs(b0_crd_filename)
 
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
+    c_dirname = os.path.join(formatted_dir, ssname, "shift", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -44,46 +49,46 @@ def test_vec_scalar_mul(samBench, ssname, check_gold, debug_sim, fill=0):
     c_vals_filename = os.path.join(c_dirname, "c_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
-    fiberlookup_ci_8 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
-    arrayvals_c_4 = Array(init_arr=c_vals, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=c_shape[0], fill=fill, debug=debug_sim)
-    repsiggen_i_6 = RepeatSigGen(debug=debug_sim)
-    repeat_bi_5 = Repeat(debug=debug_sim)
+    fiberlookup_bi_6 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim)
+    fiberlookup_ci_7 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
+    unioni_5 = Union2(debug=debug_sim)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim)
     arrayvals_b_3 = Array(init_arr=b_vals, debug=debug_sim)
-    mul_2 = Multiply2(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * c_shape[0], fill=fill, debug=debug_sim)
-    in_ref_c = [0, 'D']
+    arrayvals_c_4 = Array(init_arr=c_vals, debug=debug_sim)
+    add_2 = Add2(debug=debug_sim)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim)
     in_ref_b = [0, 'D']
+    in_ref_c = [0, 'D']
     done = False
     time_cnt = 0
 
     while not done and time_cnt < TIMEOUT:
+        if len(in_ref_b) > 0:
+            fiberlookup_bi_6.set_in_ref(in_ref_b.pop(0))
+        fiberlookup_bi_6.update()
+
         if len(in_ref_c) > 0:
-            fiberlookup_ci_8.set_in_ref(in_ref_c.pop(0))
-        fiberlookup_ci_8.update()
+            fiberlookup_ci_7.set_in_ref(in_ref_c.pop(0))
+        fiberlookup_ci_7.update()
 
-        arrayvals_c_4.set_load(fiberlookup_ci_8.out_ref())
-        arrayvals_c_4.update()
+        unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
+        unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
+        unioni_5.update()
 
-        fiberwrite_x0_1.set_input(fiberlookup_ci_8.out_crd())
+        fiberwrite_x0_1.set_input(unioni_5.out_crd())
         fiberwrite_x0_1.update()
 
-        repsiggen_i_6.set_istream(fiberlookup_ci_8.out_crd())
-        repsiggen_i_6.update()
-
-        if len(in_ref_b) > 0:
-            repeat_bi_5.set_in_ref(in_ref_b.pop(0))
-        repeat_bi_5.set_in_repsig(repsiggen_i_6.out_repsig())
-        repeat_bi_5.update()
-
-        arrayvals_b_3.set_load(repeat_bi_5.out_ref())
+        arrayvals_b_3.set_load(unioni_5.out_ref1())
         arrayvals_b_3.update()
 
-        mul_2.set_in1(arrayvals_b_3.out_load())
-        mul_2.set_in2(arrayvals_c_4.out_load())
-        mul_2.update()
+        arrayvals_c_4.set_load(unioni_5.out_ref2())
+        arrayvals_c_4.update()
 
-        fiberwrite_xvals_0.set_input(mul_2.out_val())
+        add_2.set_in1(arrayvals_b_3.out_load())
+        add_2.set_in2(arrayvals_c_4.out_load())
+        add_2.update()
+
+        fiberwrite_xvals_0.set_input(add_2.out_val())
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
@@ -107,10 +112,6 @@ def test_vec_scalar_mul(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
 
-    sample_dict = repeat_bi_5.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_bi_5" + "_" + k] =  sample_dict[k]
-
     sample_dict = arrayvals_b_3.return_statistics()
     for k in sample_dict.keys():
         extra_info["arrayvals_b_3" + "_" + k] =  sample_dict[k]
@@ -125,5 +126,5 @@ def test_vec_scalar_mul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_vec_scalar_mul(ssname, debug_sim, out_crds, out_segs, out_vals)
+        check_gold_vec_elemadd(ssname, debug_sim, out_crds, out_segs, out_vals)
     samBench(bench, extra_info)
