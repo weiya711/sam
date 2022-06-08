@@ -34,9 +34,11 @@ class FiberTree():
         self.populate_fiber(self.root_fiber, sub_tensor=sub_tensor)
         self.clean_fiber_tree()
 
+    def get_root(self):
+        return self.root_fiber
+
     def populate_fiber(self, fiber, sub_tensor):
 
-        print(sub_tensor)
         # Last level detection
         if len(sub_tensor.shape) == 1:
             # Finally have just a row, this is the base case...(could be a scalar)
@@ -44,10 +46,7 @@ class FiberTree():
                 # This is vals...(can check type of payloads)
                 fiber.add_coord_payload_tuple((crd, sub_sub_tensor))
                 # self.populate_fiber(tmp_fiber, sub_sub_tensor)
-
         else:
-
-            print(f"DIM: {sub_tensor.shape[0]}")
             for crd, sub_sub_tensor in enumerate(sub_tensor):
                 tmp_fiber = FiberTreeFiber(parent=fiber)
                 fiber.add_coord_payload_tuple((crd, tmp_fiber))
@@ -62,7 +61,7 @@ class FiberTree():
     def _clean_fiber_tree_helper(self, fiber):
 
         self.clean_marks = []
-        for crd, payload in fiber.get_coord_payloads():
+        for crd, payload in fiber.get_coord_payloads().copy():
             # Base case...
             if type(payload) is not FiberTreeFiber:
                 # If it's a 0, we want to clear it from the original list
@@ -91,8 +90,10 @@ class FiberTree():
 
 
 if __name__ == "__main__":
-
-    mg = MatrixGenerator(name='B', shape=[10, 10], dump_dir='/home/max/Documents/SPARSE/sam/OUTPUTS_DUMP')
+    random.seed(10)
+    numpy.random.seed(10)
+    mg = MatrixGenerator(name='B', shape=[10, 10], dump_dir='/home/max/Documents/SPARSE/sam/OUTPUTS_DUMP', sparsity=0.8)
     array = mg.get_matrix()
+    print(array)
     ft = FiberTree(tensor=array)
     print(ft)
