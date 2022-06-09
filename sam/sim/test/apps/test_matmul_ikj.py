@@ -5,7 +5,7 @@ from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2
-from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
@@ -75,6 +75,10 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, fill=0):
     spaccumulator1_3 = SparseAccumulator1(debug=debug_sim)
     spaccumulator1_3_drop_crd_in_inner = StknDrop(debug=debug_sim)
     spaccumulator1_3_drop_crd_in_outer = StknDrop(debug=debug_sim)
+
+    spaccumulator1_3_crd_hold_in_ik = CrdHold(debug=debug_sim)
+    spaccumulator1_3_crd_hold_in_ij = CrdHold(debug=debug_sim)
+
     spaccumulator1_3_drop_val = StknDrop(debug=debug_sim)
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
@@ -129,9 +133,22 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, fill=0):
         mul_4.set_in2(arrayvals_C_6.out_load())
         mul_4.update()
 
-        spaccumulator1_3_drop_crd_in_outer.set_in_stream(intersectk_11.out_crd())
+        spaccumulator1_3_crd_hold_in_ik.set_outer_crd(fiberlookup_Bi_17.out_crd())
+        spaccumulator1_3_crd_hold_in_ik.set_inner_crd(intersectk_11.out_crd())
+        spaccumulator1_3_crd_hold_in_ik.update()
+
+        spaccumulator1_3_crd_hold_in_ij.set_outer_crd(spaccumulator1_3_crd_hold_in_ik.out_crd_outer())
+        spaccumulator1_3_crd_hold_in_ij.set_inner_crd(fiberlookup_Cj_10.out_crd())
+        spaccumulator1_3_crd_hold_in_ij.update()
+
+        spaccumulator1_3_drop_crd_in_outer.set_in_stream(spaccumulator1_3_crd_hold_in_ij.out_crd_outer())
         spaccumulator1_3_drop_val.set_in_stream(mul_4.out_val())
         spaccumulator1_3_drop_crd_in_inner.set_in_stream(fiberlookup_Cj_10.out_crd())
+
+        spaccumulator1_3_drop_crd_in_outer.update()
+        spaccumulator1_3_drop_val.update()
+        spaccumulator1_3_drop_crd_in_inner.update()
+
         spaccumulator1_3.crd_in_outer(spaccumulator1_3_drop_crd_in_outer.out_val())
         spaccumulator1_3.set_val(spaccumulator1_3_drop_val.out_val())
         spaccumulator1_3.crd_in_inner(spaccumulator1_3_drop_crd_in_inner.out_val())
