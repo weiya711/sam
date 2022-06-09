@@ -111,6 +111,7 @@ class CrdHold(Primitive):
 
         self.repsig = []
         self.curr_crd = ''
+        self.curr_inner_crd = ''
 
         self.RSG = RepeatSigGen(debug=self.debug)
         self.repeat = Repeat(debug=self.debug)
@@ -123,6 +124,9 @@ class CrdHold(Primitive):
         if len(self.inner_crd) > 0:
             icrd = self.inner_crd.pop(0)
             self.RSG.set_istream(icrd)
+            self.curr_inner_crd = icrd
+        else:
+            self.curr_inner_crd = ''
         self.RSG.update()
         self.repsig.append(self.RSG.out_repeat())
 
@@ -148,6 +152,9 @@ class CrdHold(Primitive):
 
     def out_crd_outer(self):
         return self.curr_crd
+
+    def out_crd_inner(self):
+        return self.curr_inner_crd
 
 
 # Converts point streams back into coordinate streams
