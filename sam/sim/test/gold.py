@@ -8,7 +8,7 @@ cwd = os.getcwd()
 ss_formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
-def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val):
+def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format="ss01"):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -39,6 +39,10 @@ def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val):
     C_scipy = scipy.sparse.csc_matrix((C_vals, C0_crd, C0_seg), shape=C_shape)
 
     gold_nd = (B_scipy * C_scipy).toarray()
+    transpose = out_format[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
