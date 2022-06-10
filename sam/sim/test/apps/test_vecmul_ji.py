@@ -5,7 +5,7 @@ from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2
-from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
@@ -64,8 +64,8 @@ def test_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
     arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim)
     mul_3 = Multiply2(debug=debug_sim)
     spaccumulator1_2 = SparseAccumulator1(debug=debug_sim)
-    spaccumulator1_2_drop_crd_in_inner = StknDrop(debug=debug_sim)
-    spaccumulator1_2_drop_crd_in_outer = StknDrop(debug=debug_sim)
+    spaccumulator1_2_drop_crd_inner = StknDrop(debug=debug_sim)
+    spaccumulator1_2_drop_crd_outer = StknDrop(debug=debug_sim)
     spaccumulator1_2_drop_val = StknDrop(debug=debug_sim)
     fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim)
     fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
@@ -107,11 +107,11 @@ def test_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
         mul_3.set_in2(arrayvals_B_4.out_load())
         mul_3.update()
 
-        spaccumulator1_2_drop_crd_in_outer.set_in_stream(intersectj_10.out_crd())
-        spaccumulator1_2_drop_crd_in_inner.set_in_stream(fiberlookup_Bi_9.out_crd())
+        spaccumulator1_2_drop_crd.set_in_stream(fiberlookup_Bi_9.out_crd())
+        spaccumulator1_2_drop_crd.update()
         spaccumulator1_2_drop_val.set_in_stream(mul_3.out_val())
-        spaccumulator1_2.crd_in_outer(spaccumulator1_2_drop_crd_in_outer.out_val())
-        spaccumulator1_2.crd_in_inner(spaccumulator1_2_drop_crd_in_inner.out_val())
+        spaccumulator1_2_drop_val.update()
+        spaccumulator1_2.set_crd(spaccumulator1_2_drop_crd.out_val())
         spaccumulator1_2.set_val(spaccumulator1_2_drop_val.out_val())
         spaccumulator1_2.update()
 
@@ -121,11 +121,11 @@ def test_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_x0_1.set_input(spaccumulator1_2.out_crd_inner())
         fiberwrite_x0_1.update()
 
-        done = fiberwrite_xvals_0.out_done() and fiberwrite_x0_1.out_done()
+        done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1
 
-    fiberwrite_xvals_0.autosize()
     fiberwrite_x0_1.autosize()
+    fiberwrite_xvals_0.autosize()
 
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
@@ -168,5 +168,5 @@ def test_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_vecmul_ji(ssname, debug_sim, out_crds, out_segs, out_vals)
+        check_gold_vecmul_ji(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

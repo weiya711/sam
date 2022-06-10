@@ -5,7 +5,7 @@ from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2
-from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
@@ -72,6 +72,8 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_ci_7.update()
 
         unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
+        unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
+        unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.update()
 
@@ -126,5 +128,5 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_vec_elemadd(ssname, debug_sim, out_crds, out_segs, out_vals)
+        check_gold_vec_elemadd(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

@@ -5,7 +5,7 @@ from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2
-from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
@@ -42,9 +42,14 @@ def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "shift", "ds01")
+    C_dirname = os.path.join(formatted_dir, ssname, "shift", "ss01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
+
+    C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
+    C_seg0 = read_inputs(C0_seg_filename)
+    C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
+    C_crd0 = read_inputs(C0_crd_filename)
 
     C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
     C_seg1 = read_inputs(C1_seg_filename)
@@ -55,7 +60,7 @@ def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     C_vals = read_inputs(C_vals_filename, float)
 
     fiberlookup_Bi_11 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberlookup_Ci_12 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
+    fiberlookup_Ci_12 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
     intersecti_10 = Intersect2(debug=debug_sim)
     fiberlookup_Bj_8 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
     fiberlookup_Cj_9 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
@@ -107,14 +112,14 @@ def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
         mul_3.set_in2(arrayvals_C_5.out_load())
         mul_3.update()
 
-        fiberwrite_X0_2.set_input(crddrop_6.out_crd_outer())
-        fiberwrite_X0_2.update()
-
-        fiberwrite_X1_1.set_input(crddrop_6.out_crd_inner())
-        fiberwrite_X1_1.update()
-
         fiberwrite_Xvals_0.set_input(mul_3.out_val())
         fiberwrite_Xvals_0.update()
+
+        fiberwrite_X0_2.set_input(crddrop_6.out_crd_outer-i())
+        fiberwrite_X0_2.update()
+
+        fiberwrite_X1_1.set_input(crddrop_6.out_crd_inner-j())
+        fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
@@ -168,5 +173,5 @@ def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_vals)
+        check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

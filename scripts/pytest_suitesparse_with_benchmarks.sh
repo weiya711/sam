@@ -3,13 +3,13 @@
 #SBATCH -t 360
 
 BENCHMARKS=(
-#  matmul_kij
-#  matmul_kji
-#  matmul_ikj
-#  matmul_jki
+  matmul_kij
+  matmul_kji
+  matmul_ikj
+  matmul_jki
   matmul_ijk
-#  matmul_jik
-#  mat_elemmul
+  matmul_jik
+  mat_elemmul
   mat_identity
 #  vecmul_ij
 #  vecmul_ji
@@ -24,15 +24,15 @@ BENCHMARKS=(
 
 DATASET_NAMES=(
   bcsstm04
-#  bcsstm02
-#  bcsstm03
-#  lpi_bgprtr
-#  cage4
-#  klein-b1
-#  GD02_a
-#  GD95_b
-#  Hamrle1
-#  LF10
+  bcsstm02
+  bcsstm03
+  lpi_bgprtr
+  cage4
+  klein-b1
+  GD02_a
+  GD95_b
+  Hamrle1
+  LF10
 )
 
 errors=()

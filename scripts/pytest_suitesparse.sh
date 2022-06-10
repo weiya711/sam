@@ -5,15 +5,15 @@ outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 
 DATASET_NAMES=(
   bcsstm04
-#  bcsstm02
-#  bcsstm03
-#  lpi_bgprtr
-#  cage4
-#  klein-b1
-#  GD02_a
-#  GD95_b
-#  Hamrle1
-#  LF10
+  bcsstm02
+  bcsstm03
+  lpi_bgprtr
+  cage4
+  klein-b1
+  GD02_a
+  GD95_b
+  Hamrle1
+  LF10
 )
 
 errors=()
@@ -43,7 +43,7 @@ for i in ${!DATASET_NAMES[@]}; do
 #    then
 #      errors+=("${name} matmul_ijk")
 #    fi
-    pytest -k test_matmul_ --ssname $name --check-gold -s -vv # --debug-sim 
+    pytest -k test_matmul_ --ssname $name -s -vv # --debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 
