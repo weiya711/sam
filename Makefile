@@ -23,7 +23,7 @@ run: submodules
 	./scripts/pytest_suitesparse.sh
 
 .PHONY: suitesparse-formats
-suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH
+suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
 	set -e && ./scripts/generate_suitesparse_formats.sh
 

@@ -3,7 +3,7 @@
 #SBATCH -t 360
 
 # THIS FILE MUST BE RUN FROM sam/ location
-outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+outdir=${SUITESPARSE_FORMATTED_PATH} 
 basedir=$(pwd)
 
 DATASET_NAMES=(
@@ -18,9 +18,6 @@ DATASET_NAMES=(
   Hamrle1
   LF10
 )
-
-export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-export SUITESPARSE_FORMATTED_PATH=$outdir
 
 mkdir -p $outdir
 cd $outdir

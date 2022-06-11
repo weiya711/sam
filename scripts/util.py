@@ -245,7 +245,9 @@ class FormatWriter:
                 segend = sum(has_row)
                 seg0 = [0, segend]
                 crd0 = [i for i, r in enumerate(has_row) if r]
-                seg1 = [0] + list(itertools.accumulate(map(int, csr.getnnz(1))))
+                seg1 = list(set(list(itertools.accumulate(map(int, csr.getnnz(1))))))
+                if seg1[0] != 0:
+                    seg1 = [0] + seg1
                 crd1 = csr.indices
                 data = csr.data
                 dcsr = DoublyCompressedMatrix(csr.shape, seg0, crd0, seg1, crd1, data)
@@ -256,7 +258,9 @@ class FormatWriter:
                 segend = sum(has_col)
                 seg0 = [0, segend]
                 crd0 = [i for i, c in enumerate(has_col) if c]
-                seg1 = [0] + list(itertools.accumulate(map(int, csc.getnnz(0))))
+                seg1 = list(set(list(itertools.accumulate(map(int, csc.getnnz(0))))))
+                if seg1[0] != 0:
+                    seg1 = [0] + seg1
                 crd1 = csc.indices
                 data = csc.data
                 dcsc = DoublyCompressedMatrix(csc.shape, seg0, crd0, seg1, crd1, data)

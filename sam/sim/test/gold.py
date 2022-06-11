@@ -46,6 +46,9 @@ def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
         print("Dense Mat1:\n", B_scipy.toarray())
         print("Dense Mat2:\n", C_scipy.toarray())
         print("Dense Gold:", gold_nd)
@@ -58,6 +61,8 @@ def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format
     else:
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
         out_tup = remove_zeros(out_tup)
+        if debug_sim:
+            print("Out:", out_tup)
         assert (check_point_tuple(out_tup, gold_tup))
 
 
@@ -177,6 +182,9 @@ def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val):
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_vals)
         print("Dense Mat1:\n", B_scipy.toarray())
         print("Dense Mat2:\n", C_scipy.toarray())
         print("Dense Gold:", gold_nd)
