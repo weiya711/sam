@@ -27,6 +27,9 @@ class Repeat(Primitive):
             self.curr_out_ref = stkn
             self.emit_stkn = False
             return
+        elif self.emit_stkn:
+            self.curr_out_ref = ''
+            return
 
         if len(self.in_ref) > 0 and self.get_next_ref:
             self.curr_in_ref = self.in_ref.pop(0)
