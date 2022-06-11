@@ -400,8 +400,6 @@ class SparseCrdPtAccumulator2(Primitive):
             self.curr_crdpt0 = key0
             self.curr_val = self.storage[key1][key0]
 
-            print("Fiber", fiber, "key1", key1, "key0", key0, "val",self.curr_val)
-
             # Finished inner coordinates, increment outer coordinate
             if not [item for item in self.storage[key1].keys() if item > key0]:
                 # Do not increment outer coordinate if it's the last one
