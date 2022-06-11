@@ -1,6 +1,16 @@
-export SUITESPARSE_PATH = /nobackup/owhsu/sparse-datasets/suitesparse/
-export FROSTT_PATH = /nobackup/owhsu/sparse-datasets/frostt/
-export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+ifeq ($(NEVA),ON)
+	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
+	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
+	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
+endif 
+
+guard-%:
+	@ if [ "${${*}}" = "" ]; then \
+        	echo "Environment variable $* not set"; \
+        	exit 1; \
+	fi
 
 csv: 
 	scripts/pytest_suitesparse_with_benchmarks.sh
@@ -12,8 +22,8 @@ tests: sam
 run: submodules
 	./scripts/pytest_suitesparse.sh
 
-.PHONY: formats
-formats:
+.PHONY: suitesparse-formats
+suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
 	set -e && ./scripts/generate_suitesparse_formats.sh
 

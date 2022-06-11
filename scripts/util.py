@@ -11,7 +11,19 @@ import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
 
-SUITESPARSE_PATH = os.environ['SUITESPARSE_PATH']
+SUITESPARSE_PATH = os.getenv('SUITESPARSE_PATH', default="./suitessparse")
+HOSTNAME = os.getenv('HOSTNAME', default="local")
+
+
+def round_sparse(x):
+    if 0.0 <= x < 1:
+        return 1
+    elif 0.0 > x > -1:
+        return -1
+    elif x >= 0.0:
+        return math.floor(x + 0.5)
+    else:
+        return math.ceil(x - 0.5)
 
 
 # TnsFileLoader loads a tensor stored in .tns format.
