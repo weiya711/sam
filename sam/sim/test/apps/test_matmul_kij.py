@@ -72,7 +72,7 @@ def test_matmul_kij(samBench, ssname, check_gold, debug_sim, fill=0):
     repeat_Bj_8 = Repeat(debug=debug_sim)
     arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim)
     mul_5 = Multiply2(debug=debug_sim)
-    spaccumulator2_3 = SparseAccumulator1(debug=debug_sim)
+    spaccumulator2_3 = SparseAccumulator2(debug=debug_sim)
     spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim)
     spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim)
     spaccumulator2_3_drop_val = StknDrop(debug=debug_sim)

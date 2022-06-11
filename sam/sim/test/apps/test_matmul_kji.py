@@ -160,6 +160,12 @@ def test_matmul_kji(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_X0_1.get_arr(), fiberwrite_X1_2.get_arr()]
     out_segs = [fiberwrite_X0_1.get_seg_arr(), fiberwrite_X1_2.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+
     def bench():
         time.sleep(0.01)
 
