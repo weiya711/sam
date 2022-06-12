@@ -126,7 +126,30 @@ taco::Tensor<T> shiftLastMode(std::string name, taco::Tensor<T2> original) {
     return result;
 }
 
+template<typename T, typename T2>
+taco::Tensor<T> transposeTensor(std::string name, taco::Tensor<T2> original) {
+    assert(original.getOrder() == 2);
+    std::vector<int> dimensionsT = original.getDimensions();
+    std::reverse(dimensionsT.begin(), dimensionsT.end());
 
+    std::vector<int> modeOrderingT(original.getFormat().getModeOrdering());
+    std::reverse(modeOrderingT.begin(), modeOrderingT.end());
+
+    taco::Format formatT(original.getFormat().getModeFormatPacks(), modeOrderingT);
+    taco::Tensor<T> result(name, dimensionsT, formatT);
+
+    std::vector<int> coords(original.getOrder());
+    for (auto &value: taco::iterate<T2>(original)) {
+        for (int i = 0; i < original.getOrder(); i++) {
+            auto iT = original.getOrder() - 1 - i;
+            coords[iT] = value.first[i];
+        }
+
+        result.insert(coords, T(value.second));
+    }
+    result.pack();
+    return result;
+}
 
 template<typename T, typename T2>
 taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0,

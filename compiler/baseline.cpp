@@ -72,6 +72,8 @@ struct TensorInputCache {
         }
         if (includeThird) {
             this->thirdTensor = shiftLastMode<int64_t, int64_t>("D", this->otherTensor);
+            this->otherTensorTrans = transposeTensor<int64_t, int64_t>("C", this->thirdTensor);
+
         }
         if (includeVec and genOther) {
             this->otherVecFirstMode = genOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
@@ -108,6 +110,7 @@ struct TensorInputCache {
     taco::Tensor<int64_t> inputTensor;
     taco::Tensor<int64_t> otherTensor;
     taco::Tensor<int64_t> thirdTensor;
+    taco::Tensor<int64_t> otherTensorTrans;
     taco::Tensor<int64_t> otherVecFirstMode;
     taco::Tensor<int64_t> otherVecLastMode;
 
@@ -387,7 +390,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
             }
             case SPMM: {
                 result = Tensor<int64_t>("result", {DIM0, DIM0}, DCSR, fill_value);
-                Tensor<int64_t> otherShiftedTrans = otherShifted.transpose("C", {1, 0}, DCSC);
+                Tensor<int64_t> otherShiftedTrans = inputCache.otherTensorTrans;
 
                 IndexVar i, j, k;
                 result(i, j) = ssTensor(i, k) * otherShiftedTrans(k, j);
