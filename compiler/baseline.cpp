@@ -176,7 +176,7 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
     std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(frosttTensorPath, tensorName, Sparse,
                                                                      false, false, true, true, GEN_OTHER);
 
-    std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
+    // std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
 
     int DIM0 = frosttTensor.getDimension(0);
     int DIM1 = frosttTensor.getDimension(1);
@@ -346,7 +346,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
     state.counters["other_sparsity1"] = 0;
 
     auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
-    std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
+    // std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
     if (tensorPath == "") {
         state.error_occurred();
         return;
@@ -380,6 +380,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
     for (auto _: state) {
         state.PauseTiming();
         Tensor<int64_t> result;
+        IndexStmt stmt;
 
         switch (op) {
             case SPMV: {
