@@ -8,6 +8,7 @@ from sam.onyx.fiber_tree import *
 import argparse
 import math
 import csv
+import os
 
 
 class MatrixGenerator():
@@ -26,6 +27,12 @@ class MatrixGenerator():
 
         if dump_dir is not None:
             self.dump_dir = dump_dir
+            if not os.path.isdir(self.dump_dir):
+                os.mkdir(self.dump_dir)
+            else:
+                # Otherwise clean it
+                for filename in os.listdir(self.dump_dir):
+                    ret = os.remove(self.dump_dir + "/" + filename)
         else:
             self.dump_dir = tempfile.gettempdir()
             # print(f"Using temporary directory - {self.dump_dir}")
