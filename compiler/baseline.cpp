@@ -12,6 +12,7 @@
 #include "taco/format.h"
 #include "taco/index_notation/index_notation.h"
 #include "taco/index_notation/tensor_operator.h"
+#include "taco/index_notation/transformations.h"
 
 using namespace taco;
 
@@ -72,7 +73,7 @@ struct TensorInputCache {
         }
         if (includeThird) {
             this->thirdTensor = shiftLastMode<int64_t, int64_t>("D", this->otherTensor);
-            this->otherTensorTrans = transposeTensor<int64_t, int64_t>("C", this->thirdTensor);
+            this->otherTensorTrans = this->otherTensor.transpose("C", {1, 0}, DCSC);
 
         }
         if (includeVec and genOther) {
@@ -364,6 +365,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
         // just add in the label that this run is skipped.
+        std::cout << e.what() << std::endl;
         state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
         return;
     }
@@ -394,6 +396,10 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
 
                 IndexVar i, j, k;
                 result(i, j) = ssTensor(i, k) * otherShiftedTrans(k, j);
+                
+                stmt = result.getAssignment().concretize();
+                stmt = reorderLoopsTopologically(stmt);
+                // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
                 break;
             }
             case PLUS3: {
@@ -459,9 +465,17 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                     state.SkipWithError("invalid expression");
                     return;
             }
-            result.setAssembleWhileCompute(true);
-            result.compile();
-            state.ResumeTiming();
+            
+            if (op == SPMM) {
+                result.compile(stmt);
+                state.ResumeTiming();
+                result.assemble();
+            }
+            else {
+                result.setAssembleWhileCompute(true);
+                result.compile();
+                state.ResumeTiming();
+            }
 
             result.compute();
 
@@ -476,10 +490,11 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
     }
 
     TACO_BENCH_ARGS(bench_suitesparse, vecmul_spmv, SPMV);
-    TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM);
     TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3);
     TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
     TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
     TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
     // TODO: need to fix for DCSC for this
-TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
+    TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM);
+
