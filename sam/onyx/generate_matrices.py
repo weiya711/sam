@@ -71,9 +71,9 @@ class MatrixGenerator():
             seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
             self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg")
             self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd")
-            print("SEG/CRD DEPTH 0")
-            print(seg_arr)
-            print(coord_arr)
+            # print("SEG/CRD DEPTH 0")
+            # print(seg_arr)
+            # print(coord_arr)
 
             at_vals = False
             i = 1
@@ -92,16 +92,16 @@ class MatrixGenerator():
                 tmp_lvl_list = next_tmp_lvl_list
                 if at_vals:
                     # If at vals, we don't need to dump csf, we have the level
-                    print(f"VALS DEPTH {i}")
-                    print(tmp_lvl_list)
+                    # print(f"VALS DEPTH {i}")
+                    # print(tmp_lvl_list)
                     self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals")
                 else:
                     seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
                     self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg")
                     self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd")
-                    print(f"SEG/CRD DEPTH {i}")
-                    print(seg_arr)
-                    print(coord_arr)
+                    # print(f"SEG/CRD DEPTH {i}")
+                    # print(seg_arr)
+                    # print(coord_arr)
                 i = i + 1
 
     def _dump_csf(self, level_list):

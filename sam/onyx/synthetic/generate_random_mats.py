@@ -23,7 +23,16 @@ if __name__ == "__main__":
     shape = args.shape
     number = args.number
 
-    for random_mat in range(number):
-        tmp_mat = MatrixGenerator(name=f'B{random_mat}', shape=shape, sparsity=sparsity,
-                                  format='CSF', dump_dir=f"{output_dir}/random_{random_mat}_sp_{sparsity}", tensor=None)
+    # densities = [.00625, .0125, .025, .05, .1, .2, .4, .80]
+
+    sparsities = [.99375, .9875, .975, .95, .9, .8, .6, .2]
+
+    numpy.random.seed(seed)
+    random.seed(seed)
+
+    # for random_mat in range(number):
+    for idx, sparsity in enumerate(sparsities):
+        print(sparsity)
+        tmp_mat = MatrixGenerator(name=f'{name}', shape=shape, sparsity=sparsity,
+                                  format='CSF', dump_dir=f"{output_dir}/{name}_random_sp_{sparsity}", tensor=None)
         tmp_mat.dump_outputs()
