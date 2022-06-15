@@ -154,15 +154,15 @@ def test_matmul_jki(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_X1_2.set_input(spaccumulator1_3.out_crd_outer())
         fiberwrite_X1_2.update()
 
-        done = fiberwrite_X0_1.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_X1_2.out_done() and fiberwrite_X0_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 
-    fiberwrite_X0_1.autosize()
     fiberwrite_X1_2.autosize()
+    fiberwrite_X0_1.autosize()
     fiberwrite_Xvals_0.autosize()
 
-    out_crds = [fiberwrite_X0_1.get_arr(), fiberwrite_X1_2.get_arr()]
-    out_segs = [fiberwrite_X0_1.get_seg_arr(), fiberwrite_X1_2.get_seg_arr()]
+    out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()]
+    out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
     def bench():
         time.sleep(0.01)

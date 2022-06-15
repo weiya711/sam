@@ -23,6 +23,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.suitesparse
 def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     b_dirname = os.path.join(formatted_dir, ssname, "dummy", "none")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
@@ -73,7 +74,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     repeat_di_21 = Repeat(debug=debug_sim)
     repeat_ei_22 = Repeat(debug=debug_sim)
     fiberlookup_dj_19 = UncompressCrdRdScan(dim=d_shape[0], debug=debug_sim)
-    unionj_17 = Union2(debug=debug_sim)
+    intersectj_17 = Intersect2(debug=debug_sim)
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim)
@@ -139,19 +140,17 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref())
         fiberlookup_dj_19.update()
 
-        unionj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
-        unionj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
-        unionj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
-        unionj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
-        unionj_17.update()
+        intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
+        intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
+        intersectj_17.update()
 
-        repsiggen_j_16.set_istream(unionj_17.out_crd())
+        repsiggen_j_16.set_istream(intersectj_17.out_crd())
         repsiggen_j_16.update()
 
-        arrayvals_C_7.set_load(unionj_17.out_ref2())
+        arrayvals_C_7.set_load(intersectj_17.out_ref2())
         arrayvals_C_7.update()
 
-        arrayvals_d_8.set_load(unionj_17.out_ref1())
+        arrayvals_d_8.set_load(intersectj_17.out_ref1())
         arrayvals_d_8.update()
 
         repeat_bj_12.set_in_ref(repeat_bi_20.out_ref())
@@ -241,6 +240,10 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = repeat_di_21.return_statistics()
     for k in sample_dict.keys():
         extra_info["repeat_di_21" + "_" + k] =  sample_dict[k]
+
+    sample_dict = intersectj_17.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectj_17" + "_" + k] =  sample_dict[k]
 
     sample_dict = repeat_ej_13.return_statistics()
     for k in sample_dict.keys():

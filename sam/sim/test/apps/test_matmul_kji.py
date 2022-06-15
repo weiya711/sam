@@ -72,7 +72,7 @@ def test_matmul_kji(samBench, ssname, check_gold, debug_sim, fill=0):
     repeat_Ci_8 = Repeat(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     mul_5 = Multiply2(debug=debug_sim)
-    spaccumulator2_3 = SparseAccumulator1(debug=debug_sim)
+    spaccumulator2_3 = SparseAccumulator2(debug=debug_sim)
     spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim)
     spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim)
     spaccumulator2_3_drop_val = StknDrop(debug=debug_sim)
@@ -150,22 +150,16 @@ def test_matmul_kji(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_X1_2.set_input(spaccumulator2_3.out_crd_outer())
         fiberwrite_X1_2.update()
 
-        done = fiberwrite_X0_1.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_X1_2.out_done() and fiberwrite_X0_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 
-    fiberwrite_X0_1.autosize()
     fiberwrite_X1_2.autosize()
+    fiberwrite_X0_1.autosize()
     fiberwrite_Xvals_0.autosize()
 
-    out_crds = [fiberwrite_X0_1.get_arr(), fiberwrite_X1_2.get_arr()]
-    out_segs = [fiberwrite_X0_1.get_seg_arr(), fiberwrite_X1_2.get_seg_arr()]
+    out_crds = [fiberwrite_X1_2.get_arr(), fiberwrite_X0_1.get_arr()]
+    out_segs = [fiberwrite_X1_2.get_seg_arr(), fiberwrite_X0_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
-
-    if debug_sim:
-        print("Out crds:", out_crds)
-        print("Out segs:", out_segs)
-        print("Out vals:", out_vals)
-
     def bench():
         time.sleep(0.01)
 

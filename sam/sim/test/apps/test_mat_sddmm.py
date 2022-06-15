@@ -55,25 +55,26 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     D_vals_filename = os.path.join(D_dirname, "D_vals.txt")
     D_vals = read_inputs(D_vals_filename, float)
 
-    fiberlookup_Bi_24 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberlookup_Ci_25 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
-    intersecti_23 = Intersect2(debug=debug_sim)
-    fiberlookup_Bj_18 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
+    fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
+    intersecti_24 = Intersect2(debug=debug_sim)
+    fiberlookup_Bj_19 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    repsiggen_i_22 = RepeatSigGen(debug=debug_sim)
+    repeat_Di_21 = Repeat(debug=debug_sim)
+    fiberlookup_Dj_20 = UncompressCrdRdScan(dim=D_shape[1], debug=debug_sim)
+    intersectj_18 = Intersect2(debug=debug_sim)
+    fiberlookup_Dk_14 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim)
+    crddrop_9 = CrdDrop(debug=debug_sim)
+    repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
-    repsiggen_i_21 = RepeatSigGen(debug=debug_sim)
-    repeat_Di_20 = Repeat(debug=debug_sim)
-    fiberlookup_Dj_19 = UncompressCrdRdScan(dim=D_shape[1], debug=debug_sim)
-    unionj_17 = Union2(debug=debug_sim)
-    fiberlookup_Dk_13 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim)
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
-    repsiggen_j_15 = RepeatSigGen(debug=debug_sim)
-    repeat_Cj_14 = Repeat(debug=debug_sim)
-    fiberlookup_Ck_12 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim)
-    unionk_11 = Union2(debug=debug_sim)
-    repsiggen_k_10 = RepeatSigGen(debug=debug_sim)
+    repeat_Cj_15 = Repeat(debug=debug_sim)
+    fiberlookup_Ck_13 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim)
+    intersectk_12 = Intersect2(debug=debug_sim)
+    repsiggen_k_11 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_D_8 = Array(init_arr=D_vals, debug=debug_sim)
-    repeat_Bk_9 = Repeat(debug=debug_sim)
+    repeat_Bk_10 = Repeat(debug=debug_sim)
     arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim)
     mul_5 = Multiply2(debug=debug_sim)
     mul_4 = Multiply2(debug=debug_sim)
@@ -87,76 +88,66 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
-            fiberlookup_Bi_24.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_24.update()
+            fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0))
+        fiberlookup_Bi_25.update()
 
         if len(in_ref_C) > 0:
-            fiberlookup_Ci_25.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_25.update()
+            fiberlookup_Ci_26.set_in_ref(in_ref_C.pop(0))
+        fiberlookup_Ci_26.update()
 
-        intersecti_23.set_in1(fiberlookup_Bi_24.out_ref(), fiberlookup_Bi_24.out_crd())
-        intersecti_23.set_in2(fiberlookup_Ci_25.out_ref(), fiberlookup_Ci_25.out_crd())
-        intersecti_23.update()
+        intersecti_24.set_in1(fiberlookup_Bi_25.out_ref(), fiberlookup_Bi_25.out_crd())
+        intersecti_24.set_in2(fiberlookup_Ci_26.out_ref(), fiberlookup_Ci_26.out_crd())
+        intersecti_24.update()
 
-        fiberlookup_Bj_18.set_in_ref(intersecti_23.out_ref1())
-        fiberlookup_Bj_18.update()
+        fiberlookup_Bj_19.set_in_ref(intersecti_24.out_ref1())
+        fiberlookup_Bj_19.update()
 
-        fiberwrite_X0_2.set_input(intersecti_23.out_crd())
-        fiberwrite_X0_2.update()
-
-        repsiggen_i_21.set_istream(intersecti_23.out_crd())
-        repsiggen_i_21.update()
+        repsiggen_i_22.set_istream(intersecti_24.out_crd())
+        repsiggen_i_22.update()
 
         if len(in_ref_D) > 0:
-            repeat_Di_20.set_in_ref(in_ref_D.pop(0))
-        repeat_Di_20.set_in_repsig(repsiggen_i_21.out_repsig())
-        repeat_Di_20.update()
+            repeat_Di_21.set_in_ref(in_ref_D.pop(0))
+        repeat_Di_21.set_in_repsig(repsiggen_i_22.out_repsig())
+        repeat_Di_21.update()
 
-        fiberlookup_Dj_19.set_in_ref(repeat_Di_20.out_ref())
-        fiberlookup_Dj_19.update()
+        fiberlookup_Dj_20.set_in_ref(repeat_Di_21.out_ref())
+        fiberlookup_Dj_20.update()
 
-        unionj_17.set_in1(fiberlookup_Dj_19.out_ref(), fiberlookup_Dj_19.out_crd())
-        unionj_17.set_in1(fiberlookup_Dj_19.out_ref(), fiberlookup_Dj_19.out_crd())
-        unionj_17.set_in2(fiberlookup_Bj_18.out_ref(), fiberlookup_Bj_18.out_crd())
-        unionj_17.set_in2(fiberlookup_Bj_18.out_ref(), fiberlookup_Bj_18.out_crd())
-        unionj_17.update()
+        intersectj_18.set_in1(fiberlookup_Dj_20.out_ref(), fiberlookup_Dj_20.out_crd())
+        intersectj_18.set_in2(fiberlookup_Bj_19.out_ref(), fiberlookup_Bj_19.out_crd())
+        intersectj_18.update()
 
-        fiberlookup_Dk_13.set_in_ref(unionj_17.out_ref1())
-        fiberlookup_Dk_13.update()
+        fiberlookup_Dk_14.set_in_ref(intersectj_18.out_ref1())
+        fiberlookup_Dk_14.update()
 
-        fiberwrite_X1_1.set_input(unionj_17.out_crd())
-        fiberwrite_X1_1.update()
+        repsiggen_j_16.set_istream(intersectj_18.out_crd())
+        repsiggen_j_16.update()
 
-        repsiggen_j_15.set_istream(unionj_17.out_crd())
-        repsiggen_j_15.update()
+        repeat_Cj_15.set_in_ref(intersecti_24.out_ref2())
+        repeat_Cj_15.set_in_repsig(repsiggen_j_16.out_repsig())
+        repeat_Cj_15.update()
 
-        repeat_Cj_14.set_in_ref(intersecti_23.out_ref2())
-        repeat_Cj_14.set_in_repsig(repsiggen_j_15.out_repsig())
-        repeat_Cj_14.update()
+        fiberlookup_Ck_13.set_in_ref(repeat_Cj_15.out_ref())
+        fiberlookup_Ck_13.update()
 
-        fiberlookup_Ck_12.set_in_ref(repeat_Cj_14.out_ref())
-        fiberlookup_Ck_12.update()
+        intersectk_12.set_in1(fiberlookup_Ck_13.out_ref(), fiberlookup_Ck_13.out_crd())
+        intersectk_12.set_in2(fiberlookup_Dk_14.out_ref(), fiberlookup_Dk_14.out_crd())
+        intersectk_12.update()
 
-        unionk_11.set_in1(fiberlookup_Ck_12.out_ref(), fiberlookup_Ck_12.out_crd())
-        unionk_11.set_in1(fiberlookup_Ck_12.out_ref(), fiberlookup_Ck_12.out_crd())
-        unionk_11.set_in2(fiberlookup_Dk_13.out_ref(), fiberlookup_Dk_13.out_crd())
-        unionk_11.set_in2(fiberlookup_Dk_13.out_ref(), fiberlookup_Dk_13.out_crd())
-        unionk_11.update()
+        repsiggen_k_11.set_istream(intersectk_12.out_crd())
+        repsiggen_k_11.update()
 
-        repsiggen_k_10.set_istream(unionk_11.out_crd())
-        repsiggen_k_10.update()
-
-        arrayvals_C_7.set_load(unionk_11.out_ref1())
+        arrayvals_C_7.set_load(intersectk_12.out_ref1())
         arrayvals_C_7.update()
 
-        arrayvals_D_8.set_load(unionk_11.out_ref2())
+        arrayvals_D_8.set_load(intersectk_12.out_ref2())
         arrayvals_D_8.update()
 
-        repeat_Bk_9.set_in_ref(unionj_17.out_ref2())
-        repeat_Bk_9.set_in_repsig(repsiggen_k_10.out_repsig())
-        repeat_Bk_9.update()
+        repeat_Bk_10.set_in_ref(intersectj_18.out_ref2())
+        repeat_Bk_10.set_in_repsig(repsiggen_k_11.out_repsig())
+        repeat_Bk_10.update()
 
-        arrayvals_B_6.set_load(repeat_Bk_9.out_ref())
+        arrayvals_B_6.set_load(repeat_Bk_10.out_ref())
         arrayvals_B_6.update()
 
         mul_5.set_in1(arrayvals_B_6.out_load())
@@ -172,6 +163,12 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
 
         fiberwrite_Xvals_0.set_input(reduce_3.out_val())
         fiberwrite_Xvals_0.update()
+
+        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer-i())
+        fiberwrite_X0_2.update()
+
+        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner-j())
+        fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
@@ -192,29 +189,41 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
     extra_info["tensor_D_shape"] = D_shape
-    sample_dict = intersecti_23.return_statistics()
+    sample_dict = intersecti_24.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersecti_23" + "_" + k] =  sample_dict[k]
+        extra_info["intersecti_24" + "_" + k] =  sample_dict[k]
+
+    sample_dict = crddrop_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["crddrop_9" + "_" + k] =  sample_dict[k]
 
     sample_dict = fiberwrite_X0_2.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
 
-    sample_dict = repeat_Di_20.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_Di_20" + "_" + k] =  sample_dict[k]
-
     sample_dict = fiberwrite_X1_1.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
 
-    sample_dict = repeat_Cj_14.return_statistics()
+    sample_dict = repeat_Di_21.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Cj_14" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_Di_21" + "_" + k] =  sample_dict[k]
 
-    sample_dict = repeat_Bk_9.return_statistics()
+    sample_dict = intersectj_18.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Bk_9" + "_" + k] =  sample_dict[k]
+        extra_info["intersectj_18" + "_" + k] =  sample_dict[k]
+
+    sample_dict = repeat_Cj_15.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Cj_15" + "_" + k] =  sample_dict[k]
+
+    sample_dict = intersectk_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectk_12" + "_" + k] =  sample_dict[k]
+
+    sample_dict = repeat_Bk_10.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Bk_10" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_B_6.return_statistics()
     for k in sample_dict.keys():

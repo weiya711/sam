@@ -23,6 +23,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.frostt
 def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "dummy", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -87,7 +88,7 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     repeat_Di_27 = Repeat(debug=debug_sim)
     fiberlookup_Cj_24 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
     fiberlookup_Dj_25 = CompressedCrdRdScan(crd_arr=D_crd0, seg_arr=D_seg0, debug=debug_sim)
-    unionj_23 = Union2(debug=debug_sim)
+    intersectj_23 = Intersect2(debug=debug_sim)
     fiberlookup_Ck_19 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[0], fill=fill, debug=debug_sim)
     repsiggen_j_21 = RepeatSigGen(debug=debug_sim)
@@ -98,7 +99,7 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     fiberlookup_Bl_13 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim)
     repeat_Dk_15 = Repeat(debug=debug_sim)
     fiberlookup_Dl_14 = CompressedCrdRdScan(crd_arr=D_crd1, seg_arr=D_seg1, debug=debug_sim)
-    unionl_12 = Union2(debug=debug_sim)
+    intersectl_12 = Intersect2(debug=debug_sim)
     repsiggen_l_11 = RepeatSigGen(debug=debug_sim)
     arrayvals_B_7 = Array(init_arr=B_vals, debug=debug_sim)
     arrayvals_D_9 = Array(init_arr=D_vals, debug=debug_sim)
@@ -142,19 +143,17 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Dj_25.set_in_ref(repeat_Di_27.out_ref())
         fiberlookup_Dj_25.update()
 
-        unionj_23.set_in1(fiberlookup_Cj_24.out_ref(), fiberlookup_Cj_24.out_crd())
-        unionj_23.set_in1(fiberlookup_Cj_24.out_ref(), fiberlookup_Cj_24.out_crd())
-        unionj_23.set_in2(fiberlookup_Dj_25.out_ref(), fiberlookup_Dj_25.out_crd())
-        unionj_23.set_in2(fiberlookup_Dj_25.out_ref(), fiberlookup_Dj_25.out_crd())
-        unionj_23.update()
+        intersectj_23.set_in1(fiberlookup_Cj_24.out_ref(), fiberlookup_Cj_24.out_crd())
+        intersectj_23.set_in2(fiberlookup_Dj_25.out_ref(), fiberlookup_Dj_25.out_crd())
+        intersectj_23.update()
 
-        fiberlookup_Ck_19.set_in_ref(unionj_23.out_ref1())
+        fiberlookup_Ck_19.set_in_ref(intersectj_23.out_ref1())
         fiberlookup_Ck_19.update()
 
-        fiberwrite_X1_1.set_input(unionj_23.out_crd())
+        fiberwrite_X1_1.set_input(intersectj_23.out_crd())
         fiberwrite_X1_1.update()
 
-        repsiggen_j_21.set_istream(unionj_23.out_crd())
+        repsiggen_j_21.set_istream(intersectj_23.out_crd())
         repsiggen_j_21.update()
 
         repeat_Bj_20.set_in_ref(fiberlookup_Bi_31.out_ref())
@@ -174,26 +173,24 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Bl_13.set_in_ref(intersectk_17.out_ref1())
         fiberlookup_Bl_13.update()
 
-        repeat_Dk_15.set_in_ref(unionj_23.out_ref2())
+        repeat_Dk_15.set_in_ref(intersectj_23.out_ref2())
         repeat_Dk_15.set_in_repsig(repsiggen_k_16.out_repsig())
         repeat_Dk_15.update()
 
         fiberlookup_Dl_14.set_in_ref(repeat_Dk_15.out_ref())
         fiberlookup_Dl_14.update()
 
-        unionl_12.set_in1(fiberlookup_Dl_14.out_ref(), fiberlookup_Dl_14.out_crd())
-        unionl_12.set_in1(fiberlookup_Dl_14.out_ref(), fiberlookup_Dl_14.out_crd())
-        unionl_12.set_in2(fiberlookup_Bl_13.out_ref(), fiberlookup_Bl_13.out_crd())
-        unionl_12.set_in2(fiberlookup_Bl_13.out_ref(), fiberlookup_Bl_13.out_crd())
-        unionl_12.update()
+        intersectl_12.set_in1(fiberlookup_Dl_14.out_ref(), fiberlookup_Dl_14.out_crd())
+        intersectl_12.set_in2(fiberlookup_Bl_13.out_ref(), fiberlookup_Bl_13.out_crd())
+        intersectl_12.update()
 
-        repsiggen_l_11.set_istream(unionl_12.out_crd())
+        repsiggen_l_11.set_istream(intersectl_12.out_crd())
         repsiggen_l_11.update()
 
-        arrayvals_B_7.set_load(unionl_12.out_ref2())
+        arrayvals_B_7.set_load(intersectl_12.out_ref2())
         arrayvals_B_7.update()
 
-        arrayvals_D_9.set_load(unionl_12.out_ref1())
+        arrayvals_D_9.set_load(intersectl_12.out_ref1())
         arrayvals_D_9.update()
 
         repeat_Cl_10.set_in_ref(intersectk_17.out_ref2())
@@ -247,6 +244,10 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["repeat_Ci_26" + "_" + k] =  sample_dict[k]
 
+    sample_dict = intersectj_23.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectj_23" + "_" + k] =  sample_dict[k]
+
     sample_dict = fiberwrite_X1_1.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
@@ -262,6 +263,10 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = repeat_Dk_15.return_statistics()
     for k in sample_dict.keys():
         extra_info["repeat_Dk_15" + "_" + k] =  sample_dict[k]
+
+    sample_dict = intersectl_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectl_12" + "_" + k] =  sample_dict[k]
 
     sample_dict = repeat_Cl_10.return_statistics()
     for k in sample_dict.keys():
