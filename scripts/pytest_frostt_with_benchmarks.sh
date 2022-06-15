@@ -6,8 +6,12 @@
 BENCHMARKS=(
   tensor3_elemmul
   tensor3_identity
+  tensor3_elemadd
+  tensor3_ttm
+  tensor3_ttv
+  tensor3_innerprod
+  tensor_mttkrp
 )
-
 
 DATASET_NAMES=(
    facebook
