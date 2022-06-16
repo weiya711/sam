@@ -1,9 +1,11 @@
+import math
+
 import pytest
 import random
 import os
 
 from sam.sim.src.rd_scanner import BVRdScan, CompressedCrdRdScan
-from sam.sim.src.bitvector import BV, BVDrop
+from sam.sim.src.bitvector import BV, ChunkBV, BVDrop
 from sam.sim.src.wr_scanner import ValsWrScan, CompressWrScan
 from sam.sim.src.joiner import IntersectBV2
 from sam.sim.src.compute import Multiply2
@@ -11,23 +13,7 @@ from sam.sim.src.array import Array
 from sam.sim.src.split import Split
 from sam.sim.src.base import remove_emptystr
 
-from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr, remove_zeros
-
-
-def bv(ll):
-    result = 0
-    for elem in ll:
-        result |= 1 << elem
-    return result
-
-
-def inner_bv(ll, size, sf):
-    result = []
-    for i in range(int(size / sf) + 2):
-        temp = bv([elem % sf for elem in ll if max((i - 1) * sf, 0) <= elem < i * sf])
-        if temp:
-            result.append(temp)
-    return result
+from sam.sim.test.test import TIMEOUT, check_arr, get_bv
 
 
 # NOTE: This is the full vector elementwise multiplication as a bitvector
@@ -38,8 +24,8 @@ def inner_bv(ll, size, sf):
 )
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fill=0):
-    inner_fiber_cnt = int(size/sf)+1
+def test_vec_elemmul_bv(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fill=0):
+    inner_fiber_cnt = int(size / sf) + 1
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
@@ -55,55 +41,57 @@ def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=100
         print("Compressed VECTOR 1:\n", seg_arr1, "\n", crd_arr1, "\n", vals_arr1)
         print("Compressed VECTOR 2:\n", seg_arr2, "\n", crd_arr2, "\n", vals_arr2)
 
-    gold_bv1_1 = [bv([int(elem / sf) for elem in crd_arr1])]
-    gold_bv1_0 = inner_bv(crd_arr1, size, sf)
-    gold_bv1_0 += (inner_fiber_cnt - len(gold_bv1_0)) * [0]
-
-    gold_bv2_1 = [bv([int(elem / sf) for elem in crd_arr2])]
-    gold_bv2_0 = inner_bv(crd_arr2, size, sf)
-    gold_bv2_0 += (inner_fiber_cnt - len(gold_bv2_0)) * [0]
-
     gold_crd = sorted(set(crd_arr1) & set(crd_arr2))
     gold_seg = [0, len(gold_crd)]
     gold_vals = []
 
-    gold_bv1 = []
-    gold_bv0 = []
+    gold_bv = []
     if gold_crd:
         gold_vals = [vals_arr1[crd_arr1.index(i)] * vals_arr2[crd_arr2.index(i)] for i in gold_crd]
-        gold_bv1 = [bv([int(elem / sf) for elem in gold_crd])]
-        gold_bv0 = inner_bv(gold_crd, size, sf)
+        full_bv = get_bv(gold_crd + ['S0', 'D'])
+        for elem in full_bv:
+            if isinstance(elem, str) and elem[0] == '0':
+                elem = int(elem, 2)
+                for i in range(0, math.ceil(size / sf)):
+                    gold_bv.append(bin((elem >> (sf * i)) & ((1 << sf) - 1)))
+            else:
+                gold_bv.append(elem)
+        # gold_bv = [int(elem,2) for elem in gold_bv if elem[0] == '0' and int(elem, 2) > 0]
+        gold_bv = [int(elem,2) for elem in gold_bv[:-2]]
 
     if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
-        print("BV arr1 0", gold_bv1_0)
-        print("BV arr1 1", gold_bv1_1)
-        print("BV arr2 0", gold_bv2_0)
-        print("BV arr2 1", gold_bv2_1)
+        print(full_bv)
+        print(gold_bv)
 
     crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
     crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
-    split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
-    split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
 
-    bv1_0 = BV(debug=debug_sim)
-    bv1_1 = BV(debug=debug_sim)
-    bv2_0 = BV(debug=debug_sim)
-    bv2_1 = BV(debug=debug_sim)
+    bv1 = BV(debug=debug_sim)
+    bv2 = BV(debug=debug_sim)
 
-    wrscan1_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill)
-    wrscan1_1 = ValsWrScan(size=1, fill=fill)
-    wrscan2_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill)
-    wrscan2_1 = ValsWrScan(size=1, fill=fill)
+    bvchunk1 = ChunkBV(width=sf, size=size, debug=debug_sim)
+    bvchunk2 = ChunkBV(width=sf, size=size, debug=debug_sim)
+
+    inter = IntersectBV2(emit_zeros=True, debug=debug_sim)
+    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
+    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
+
+    mul = Multiply2(debug=debug_sim)
+
+    oval_wrscan = ValsWrScan(size=size, fill=fill)
+    wrscan0 = ValsWrScan(size=size, fill=fill)
 
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
     done = False
     time1 = 0
-    out_split1_0 = []
-    out_split1_1 = []
-    out_split2_0 = []
-    out_split2_1 = []
+
+    temp1 = []
+    temp2 = []
+    temp3 = []
+    temp4 = []
+    temp5 = []
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
@@ -112,103 +100,30 @@ def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=100
             crdscan2.set_in_ref(in_ref2.pop(0))
         crdscan2.update()
 
-        split1.set_in_crd(crdscan1.out_crd())
-        split1.update()
+        bv1.set_in_crd(crdscan1.out_crd())
+        bv2.set_in_crd(crdscan2.out_crd())
+        bv1.update()
+        bv2.update()
 
-        split2.set_in_crd(crdscan2.out_crd())
-        split2.update()
-        out_split1_0.append(split1.out_inner_crd())
-        out_split1_1.append(split1.out_outer_crd())
-        out_split2_0.append(split2.out_inner_crd())
-        out_split2_1.append(split2.out_outer_crd())
+        bvchunk1.set_in_bv(bv1.out_bv_int())
+        bvchunk1.update()
 
-        bv1_0.set_in_crd(split1.out_inner_crd())
-        bv1_1.set_in_crd(split1.out_outer_crd())
-        bv2_0.set_in_crd(split2.out_inner_crd())
-        bv2_1.set_in_crd(split2.out_outer_crd())
-        bv1_0.update()
-        bv1_1.update()
-        bv2_0.update()
-        bv2_1.update()
+        bvchunk2.set_in_bv(bv2.out_bv_int())
+        bvchunk2.update()
 
-        wrscan1_0.set_input(bv1_0.out_bv_int())
-        wrscan1_1.set_input(bv1_1.out_bv_int())
-        wrscan2_0.set_input(bv2_0.out_bv_int())
-        wrscan2_1.set_input(bv2_1.out_bv_int())
+        temp1.append(bvchunk1.out_bv())
+        temp2.append(bvchunk1.out_ref())
+        temp3.append(bvchunk2.out_bv())
+        temp4.append(bvchunk2.out_ref())
 
-        wrscan1_0.update()
-        wrscan1_1.update()
-        wrscan2_0.update()
-        wrscan2_1.update()
+        inter.set_in1(bvchunk1.out_ref(), bvchunk1.out_bv_int())
+        inter.set_in2(bvchunk2.out_ref(), bvchunk2.out_bv_int())
+        inter.update()
 
-        print("Timestep", time1, "\t Done -- \n",
-              "\nRdScan1:", crdscan1.out_done(), "\tRdScan2:", crdscan2.out_done(),
-              "\nSplit1:", split1.out_done(), "\tSplit2:", split2.out_done(),
-              "\nBV:", bv1_0.out_done(), bv1_1.out_done(), bv2_0.out_done(), bv2_1.out_done(),
-              "\nWrScan:", wrscan1_0.out_done(), wrscan1_1.out_done(), wrscan2_0.out_done(), wrscan2_1.out_done()
-              )
-        done = wrscan2_0.out_done() and wrscan2_1.out_done() and wrscan1_1.out_done() and wrscan1_0.out_done()
-        time1 += 1
+        temp5.append(inter.out_bv())
 
-    if debug_sim:
-        print(remove_emptystr(out_split1_0))
-        print(remove_emptystr(out_split1_1))
-        print(remove_emptystr(out_split2_0))
-        print(remove_emptystr(out_split2_1))
-
-        print([bin(i) for i in wrscan1_0.get_arr()])
-        print([bin(i) for i in wrscan1_1.get_arr()])
-        print([bin(i) for i in wrscan2_0.get_arr()])
-        print([bin(i) for i in wrscan2_1.get_arr()])
-
-    check_arr(wrscan1_0, gold_bv1_0)
-    check_arr(wrscan1_1, gold_bv1_1)
-    check_arr(wrscan2_0, gold_bv2_0)
-    check_arr(wrscan2_1, gold_bv2_1)
-
-    bvscan1_0 = BVRdScan(bv_arr=wrscan1_0.get_arr(), debug=debug_sim)
-    bvscan1_1 = BVRdScan(bv_arr=wrscan1_1.get_arr(), debug=debug_sim)
-    bvscan2_0 = BVRdScan(bv_arr=wrscan2_0.get_arr(), debug=debug_sim)
-    bvscan2_1 = BVRdScan(bv_arr=wrscan2_1.get_arr(), debug=debug_sim)
-
-    inter0 = IntersectBV2(debug=debug_sim)
-    inter1 = IntersectBV2(debug=debug_sim)
-    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
-    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    bvdrop = BVDrop(debug=debug_sim)
-    oval_wrscan = ValsWrScan(size=size, fill=fill)
-    wrscan0 = ValsWrScan(size=size, fill=fill)
-    wrscan1 = ValsWrScan(size=1, fill=fill)
-
-    in_ref1 = [0, 'D']
-    in_ref2 = [0, 'D']
-    done = False
-    time2 = 0
-    while not done and time1 < TIMEOUT:
-        if len(in_ref1) > 0:
-            bvscan1_1.set_in_ref(in_ref1.pop(0))
-        bvscan1_1.update()
-        if len(in_ref2) > 0:
-            bvscan2_1.set_in_ref(in_ref2.pop(0))
-        bvscan2_1.update()
-
-        inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv())
-        inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv())
-        inter1.update()
-
-        bvscan1_0.set_in_ref(inter1.out_ref1())
-        bvscan1_0.update()
-
-        bvscan2_0.set_in_ref(inter1.out_ref2())
-        bvscan2_0.update()
-
-        inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv())
-        inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv())
-        inter0.update()
-
-        val1.set_load(inter0.out_ref1())
-        val2.set_load(inter0.out_ref2())
+        val1.set_load(inter.out_ref1())
+        val2.set_load(inter.out_ref2())
         val1.update()
         val2.update()
         mul.set_in1(val1.out_load())
@@ -218,35 +133,35 @@ def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=100
         oval_wrscan.set_input(mul.out_val())
         oval_wrscan.update()
 
-        bvdrop.set_inner_bv(inter0.out_bv())
-        bvdrop.set_outer_bv(inter1.out_bv())
-        bvdrop.update()
-
-        wrscan0.set_input(bvdrop.out_bv_inner())
+        wrscan0.set_input(inter.out_bv())
         wrscan0.update()
-        wrscan1.set_input(bvdrop.out_bv_outer())
-        wrscan1.update()
 
-        print("Timestep", time2, "\t Done --",
-              "\nRdScan1:", bvscan1_0.out_done(), bvscan2_0.out_done(), bvscan1_1.out_done(), bvscan2_1.out_done(),
-              "\nInter:", inter0.out_done(), inter1.out_done(),
+        print("Timestep", time1, "\t Done --",
+              "\nRdScan1:", crdscan1.out_done(), crdscan2.out_done(), bv1.out_done(), bv2.out_done(),
+              "\nBVChunk:", bvchunk2.out_done(), bvchunk1.out_done(),
+              "\nInter:", inter.out_done(),
               "\nArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(),
-              "\nOutVal:", oval_wrscan.out_done(),
-              "\tOutBV1:", wrscan1.out_done(), "\tOutBV0:", wrscan0.out_done()
+              "\nOutVal:", oval_wrscan.out_done(), "\tOutBV0:", wrscan0.out_done()
               )
-        done = wrscan0.out_done() and wrscan1.out_done() and oval_wrscan.out_done()
-        time2 += 1
+        done = wrscan0.out_done() and oval_wrscan.out_done()
+        time1 += 1
+
+    oval_wrscan.autosize()
+    wrscan0.autosize()
 
     if debug_sim:
-        print("TOTAL TIME:", time1 + time2)
+        print(remove_emptystr(temp1))
+        print(remove_emptystr(temp2))
+
+        print(remove_emptystr(temp3))
+        print(remove_emptystr(temp4))
+        print(remove_emptystr(temp5))
         print(oval_wrscan.get_arr())
+        print(gold_vals)
         print(wrscan0.get_arr())
-        print(gold_bv0)
-        print(wrscan1.get_arr())
-        print(gold_bv1)
+        print(gold_bv)
 
     check_arr(oval_wrscan, gold_vals)
     if gold_crd:
-        check_arr(wrscan0, gold_bv0)
-        check_arr(wrscan1, gold_bv1)
+        check_arr(wrscan0, gold_bv)

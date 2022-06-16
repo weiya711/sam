@@ -11,26 +11,10 @@ from sam.sim.src.array import Array
 from sam.sim.src.split import Split
 from sam.sim.src.base import remove_emptystr
 
-from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr, remove_zeros
+from sam.sim.test.test import TIMEOUT, check_arr, bv, inner_bv
 
 cwd = os.getcwd()
 synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
-
-
-def bv(ll):
-    result = 0
-    for elem in ll:
-        result |= 1 << elem
-    return result
-
-
-def inner_bv(ll, size, sf):
-    result = []
-    for i in range(int(size / sf) + 2):
-        temp = bv([elem % sf for elem in ll if max((i - 1) * sf, 0) <= elem < i * sf])
-        if temp:
-            result.append(temp)
-    return result
 
 
 # NOTE: This is the full vector elementwise multiplication as a bitvector
