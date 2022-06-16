@@ -57,7 +57,7 @@ def test_vec_elemmul_bv(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fil
             else:
                 gold_bv.append(elem)
         # gold_bv = [int(elem,2) for elem in gold_bv if elem[0] == '0' and int(elem, 2) > 0]
-        gold_bv = [int(elem,2) for elem in gold_bv[:-2]]
+        gold_bv = [int(elem, 2) for elem in gold_bv[:-2]]
 
     if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
