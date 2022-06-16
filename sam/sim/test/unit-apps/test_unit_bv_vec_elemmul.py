@@ -65,9 +65,9 @@ def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
     bv2_0 = BV(debug=debug_sim)
     bv2_1 = BV(debug=debug_sim)
 
-    wrscan1_0 = ValsWrScan(size=sf, fill=fill)
+    wrscan1_0 = ValsWrScan(size=int(size/sf)+1, fill=fill)
     wrscan1_1 = ValsWrScan(size=1, fill=fill)
-    wrscan2_0 = ValsWrScan(size=sf, fill=fill)
+    wrscan2_0 = ValsWrScan(size=int(size/sf)+1, fill=fill)
     wrscan2_1 = ValsWrScan(size=1, fill=fill)
 
     in_ref1 = [0, 'D']
@@ -287,9 +287,10 @@ def test_mat_elemmul_bvonly(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 
 
 # NOTE: This is the full vector elementwise multiplication as a bitvector
+@pytest.mark.parametrize("sf", [16, 32, 64, 128])
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
-    sf = 32
+def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0):
+    inner_fiber_cnt = int(size/sf)+1
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
@@ -307,11 +308,11 @@ def test_vec_elemmul_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
 
     gold_bv1_1 = [bv([int(elem / sf) for elem in crd_arr1])]
     gold_bv1_0 = inner_bv(crd_arr1, size, sf)
-    gold_bv1_0 += (32 - len(gold_bv1_0)) * [0]
+    gold_bv1_0 += (inner_fiber_cnt - len(gold_bv1_0)) * [0]
 
     gold_bv2_1 = [bv([int(elem / sf) for elem in crd_arr2])]
     gold_bv2_0 = inner_bv(crd_arr2, size, sf)
-    gold_bv2_0 += (32 - len(gold_bv2_0)) * [0]
+    gold_bv2_0 += (inner_fiber_cnt - len(gold_bv2_0)) * [0]
 
     gold_crd = sorted(set(crd_arr1) & set(crd_arr2))
     gold_seg = [0, len(gold_crd)]
@@ -341,11 +342,12 @@ def test_vec_elemmul_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
     bv2_0 = BV(debug=debug_sim)
     bv2_1 = BV(debug=debug_sim)
 
-    wrscan1_0 = ValsWrScan(size=sf, fill=fill)
+    wrscan1_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill)
     wrscan1_1 = ValsWrScan(size=1, fill=fill)
-    wrscan2_0 = ValsWrScan(size=sf, fill=fill)
+    wrscan2_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill)
     wrscan2_1 = ValsWrScan(size=1, fill=fill)
 
+    # MAKE BIT-TREE
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
     done = False
@@ -416,6 +418,7 @@ def test_vec_elemmul_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
     check_arr(wrscan2_0, gold_bv2_0)
     check_arr(wrscan2_1, gold_bv2_1)
 
+    # COMPUTE ON BIT-TREE
     bvscan1_0 = BVRdScan(bv_arr=wrscan1_0.get_arr(), debug=debug_sim)
     bvscan1_1 = BVRdScan(bv_arr=wrscan1_1.get_arr(), debug=debug_sim)
     bvscan2_0 = BVRdScan(bv_arr=wrscan2_0.get_arr(), debug=debug_sim)
