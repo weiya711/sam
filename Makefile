@@ -1,4 +1,6 @@
-BENCHES := "" 
+ifeq ($(BENCHES),)
+BENCHES=""
+endif
 
 # Set OPENMP=ON if compiling TACO with OpenMP support.
 ifeq ($(OPENMP),)
@@ -8,9 +10,13 @@ endif
 ifeq ($(NEVA),)
 NEVA := "OFF"
 endif
-# Set GEN=1 if you would like to generate "other" tensors for performance into a file
+# Set LANKA=ON if compiling on the MIT cluster (Lanka).
+ifeq ($(LANKA),)
+LANKA := "OFF"
+endif
+# Set GEN=ON if you would like to generate "other" tensors for performance into a file
 ifeq ($(GEN),)
-GEN := "0"
+GEN := "OFF"
 endif
 
 benches_name := $(patsubst %.py,%,$(BENCHES))
@@ -29,6 +35,11 @@ ifeq ("$(NEVA)","ON")
 	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
 	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 	export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
+else ifeq ("$(LANKA)", "ON")
+	CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,24,26,28,30,32,34 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
+	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
+	export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
+	export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
 else
 	CMD := LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
 endif
@@ -50,7 +61,7 @@ tests: sam
 	python scripts/test_generating_code.py
 	make run
 
-.PHONY: formats
+PHONY: formats
 formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
 	set -e && ./scripts/generate_suitesparse_formats.sh
@@ -81,17 +92,11 @@ compiler/benchmark/googletest: submodules
 	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
 
 # ---- Validate taco-bench and SAM python simulator
-validate-bench: compiler/build/taco-bench validation-path
+validate-bench: compiler/build/taco-bench guard-VALIDATION_OUTPUT_PATH
 ifeq ($(BENCHES),"")
 	$(CMD) --benchmark_repetitions=1
 else
 	$(CMD) --benchmark_filter="$(BENCHES)" --benchmark_repetitions=1
-endif
-
-.PHONY: validation-path
-validation-path:
-ifeq ($(VALIDATION_OUTPUT_PATH),)
-	$(error VALIDATION_OUTPUT_PATH is undefined)
 endif
 
 # Separate target to run the SAM sim python benchmarks with taco cross validation logic.

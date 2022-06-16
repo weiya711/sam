@@ -19,3 +19,5 @@ suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
 cmake-build-debug/
+
+*.out

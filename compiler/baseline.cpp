@@ -160,10 +160,9 @@ std::string opName(FrosttOp op) {
 }
 
 static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp op, int fill_value = 0) {
-    bool GEN_OTHER = getEnvVar("GEN") != "";
-    auto frosttTensorPath = getTacoTensorPath();
-    frosttTensorPath += "frostt/";
-    frosttTensorPath += tnsPath;
+    bool GEN_OTHER = getEnvVar("GEN") == "ON";
+    auto frosttTensorPath = getEnvVar("FROSTT_PATH");
+    frosttTensorPath += "/" + tnsPath;
 
     auto pathSplit = taco::util::split(tnsPath, "/");
     auto filename = pathSplit[pathSplit.size() - 1];
@@ -336,7 +335,7 @@ std::string opName(SuiteSparseOp op) {
 
 static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fill_value = 0) {
 
-    bool GEN_OTHER = getEnvVar("GEN") != "";
+    bool GEN_OTHER = getEnvVar("GEN") == "ON";
 
     // Counters must be present in every run to get reported to the CSV.
     state.counters["dimx"] = 0;

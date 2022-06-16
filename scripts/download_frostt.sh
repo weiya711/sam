@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -t 360
+#SBATCH -p lanka-v3
 
 set -e
 
@@ -36,7 +37,7 @@ TENSOR_URLS=(
   "https://s3.us-east-2.amazonaws.com/frostt/frostt_data/vast-2015-mc1/vast-2015-mc1-5d.tns.gz"
 )
 
-outdir=/nobackup/owhsu/sparse-datasets/frostt
+outdir=/data/scratch/owhsu/datasets/frostt
 
 mkdir -p $outdir
 

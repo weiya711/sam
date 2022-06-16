@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
 project(taco-bench)
 set(CMAKE_BUILD_TYPE "release")
 option(NEVA "Build benchmarks for the neva or kiwi clusters." OFF)
+option(LANKA "Build benchmarks for the lanka cluster." OFF)
 
 add_subdirectory(taco)
 add_subdirectory(benchmark)

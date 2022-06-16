@@ -6,18 +6,36 @@
 
 set -u
 
-sspath=/nobackup/owhsu/sparse-datasets/suitesparse
-# out=suitesparse-bench/sam
+cwd=$(pwd)
+# LANKA
+if [ $2 -eq 1 ]; then
+	sspath=/data/scratch/changwan/florida_all/.
+	lanka=ON
+	neva=OFF
+elif [ $2 -eq 2 ]; then
+	sspath=/nobackup/owhsu/sparse-datasets/suitesparse
+	lanka=OFF
+	neva=ON
+else
+	sspath=cwd/.
+	lanka=OFF
+	neva=OFF
+fi
+
 out=suitesparse-bench/taco
 
 mkdir -p "$out"
 
 while read line; do
-	matrix="$sspath/$line.mtx"
+	if [ $2 -eq 1 ]; then
+		matrix="$sspath/$line/$line.mtx"
+	elif [ $2 -eq 2 ]; then
+		matrix="$sspath/$line.mtx"
+	else
+		matrix="$sspath/$line.mtx"
+	fi
 	csvout="$out/result-$line.csv"
-    SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse" NEVA=ON GEN=ON
-	# jsonout="$out/result-$line.json"
-	# LANKA=ON SUITESPARSE_TENSOR_PATH="$matrix" NUMPY_JSON="$jsonout" make python-bench BENCHES="numpy/ufuncs.py::bench_pydata_suitesparse_ufunc_sparse"
+	SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse" NEVA=$neva LANKA=$lanka GEN=ON
 done <$1
 
 # for path in $sspath/*; do
