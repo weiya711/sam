@@ -16,3 +16,4 @@ logs/
 results/
 sam-outputs/
 compiler/benchmark/
+cmake-build-debug/
