@@ -380,6 +380,7 @@ class IntersectBV2(BVJoiner2):
         self.count = 0
 
         self.meta_emit_zeros = emit_zeros
+
     def update(self):
         if self.done:
             self.obv = ''
