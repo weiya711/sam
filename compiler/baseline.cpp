@@ -376,6 +376,26 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
     state.counters["dimy"] = DIM1;
     state.counters["nnz"] = inputCache.nnz;
 
+    taco::Tensor<int64_t> denseMat1;
+    taco::Tensor<int64_t> denseMat2;
+    taco::Tensor<int64_t> s1("s1"), s2("s2");
+    s1.insert({}, int64_t(2));
+    s2.insert({}, int64_t(2));
+    if (op == SDDMM) {
+        denseMat1 = Tensor<int64_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
+        denseMat2 = Tensor<int64_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
+
+        // (owhsu) Making this dense matrices of all 1's
+        for (int kk = 0; kk < DIM_EXTRA; kk++) {
+            for (int ii = 0; ii < DIM0; ii++) {
+                denseMat1.insert({ii, kk}, int64_t(1));
+            }
+            for (int jj = 0; jj < DIM1; jj++) {
+                denseMat2.insert({kk, jj}, int64_t(1));
+            }
+        }
+    }
+
     for (auto _: state) {
         state.PauseTiming();
         Tensor<int64_t> result;
@@ -413,19 +433,6 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
             case SDDMM: {
                 result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
 
-                taco::Tensor<int64_t> denseMat1("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
-                taco::Tensor<int64_t> denseMat2("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1,0}));
-
-                // (owhsu) Making this dense matrices of all 1's
-                for (int kk = 0; kk < DIM_EXTRA; kk++) {
-                    for (int ii = 0; ii < DIM0; ii++) {
-                        denseMat1.insert({ii, kk}, int64_t(1));
-                    }
-                    for (int jj = 0; jj < DIM1; jj++) {
-                        denseMat2.insert({kk, jj}, int64_t(1));
-                    }
-                }
-
                 IndexVar i, j, k;
                 result(i, j) = ssTensor(i, j) * denseMat1(i, k) * denseMat2(k, j);
                 break;
@@ -450,9 +457,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
             case MATTRANSMUL: {
                 result = Tensor<int64_t>("result", {DIM1}, Format(Sparse), fill_value);
 
-                taco::Tensor<int64_t> s1("s1"), s2("s2");
-                s1.insert({}, int64_t(2));
-                s2.insert({}, int64_t(2));
+
 
                 Tensor<int64_t> otherVeci = inputCache.otherVecLastMode;
                     Tensor<int64_t> otherVecj = inputCache.otherVecFirstMode;

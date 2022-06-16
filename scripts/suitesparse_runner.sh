@@ -17,7 +17,7 @@ elif [ $2 -eq 2 ]; then
 	lanka=OFF
 	neva=ON
 else
-	sspath=cwd/.
+	sspath=$SUITESPARSE_PATH
 	lanka=OFF
 	neva=OFF
 fi
