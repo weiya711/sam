@@ -27,8 +27,7 @@ def test_bv_chunk_direct(arrs, debug_sim):
     for elem in gold_bv:
         if isinstance(elem, str) and elem[0] == '0':
             elem = int(elem, 2)
-            for i in range(0, math.ceil(size/sf)):
-                print(i)
+            for i in range(0, math.ceil(size / sf)):
                 gold_bv_chunk.append(bin((elem >> (sf * i)) & ((1 << sf) - 1)))
         else:
             gold_bv_chunk.append(elem)

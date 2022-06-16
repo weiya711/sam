@@ -26,7 +26,7 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
 def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fill=0):
-    inner_fiber_cnt = int(size/sf)+1
+    inner_fiber_cnt = int(size / sf) + 1
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))

@@ -65,9 +65,9 @@ def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
     bv2_0 = BV(debug=debug_sim)
     bv2_1 = BV(debug=debug_sim)
 
-    wrscan1_0 = ValsWrScan(size=int(size/sf)+1, fill=fill)
+    wrscan1_0 = ValsWrScan(size=int(size / sf) + 1, fill=fill)
     wrscan1_1 = ValsWrScan(size=1, fill=fill)
-    wrscan2_0 = ValsWrScan(size=int(size/sf)+1, fill=fill)
+    wrscan2_0 = ValsWrScan(size=int(size / sf) + 1, fill=fill)
     wrscan2_1 = ValsWrScan(size=1, fill=fill)
 
     in_ref1 = [0, 'D']
@@ -290,7 +290,7 @@ def test_mat_elemmul_bvonly(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 @pytest.mark.parametrize("sf", [16, 32, 64, 128])
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0):
-    inner_fiber_cnt = int(size/sf)+1
+    inner_fiber_cnt = int(size / sf) + 1
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
