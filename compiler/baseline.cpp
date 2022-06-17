@@ -245,6 +245,8 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
             auto outpath = validationPath + key + ".tns";
             taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
         }
+        state.ResumeTiming();
+
     }
 }
 
