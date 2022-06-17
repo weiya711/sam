@@ -1,6 +1,7 @@
 import pytest
 import random
 import os
+import time
 
 from sam.sim.src.rd_scanner import BVRdScan, CompressedCrdRdScan
 from sam.sim.src.bitvector import BV, BVDrop
@@ -11,7 +12,7 @@ from sam.sim.src.array import Array
 from sam.sim.src.split import Split
 from sam.sim.src.base import remove_emptystr
 
-from sam.sim.test.test import TIMEOUT, check_arr, bv, inner_bv
+from sam.sim.test.test import TIMEOUT, check_arr, bv, inner_bv, read_inputs
 
 cwd = os.getcwd()
 synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
@@ -23,41 +24,54 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.synth
+@pytest.mark.parametrize("vectype", ["random"])
+@pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fill=0):
+def test_vec_elemmul_bv_split(samBench, nnz, vectype, sparsity, sf, debug_sim, size=1000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
-    crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
-    crd_arr1 = sorted(set(crd_arr1))
-    seg_arr1 = [0, len(crd_arr1)]
-    vals_arr1 = [random.randint(0, max_val) for _ in range(len(crd_arr1))]
+    b_dirname = os.path.join(synthetic_dir, vectype, "B_" + vectype + "_sp" + str(sparsity))
 
-    crd_arr2 = [random.randint(0, max_val) for _ in range(nnz)]
-    crd_arr2 = sorted(set(crd_arr2))
-    seg_arr2 = [0, len(crd_arr2)]
-    vals_arr2 = [random.randint(0, max_val) for _ in range(len(crd_arr2))]
+    b0_seg_filename = os.path.join(b_dirname, "tensor_B_mode_0_seg")
+    b_seg0 = read_inputs(b0_seg_filename)
+    b0_crd_filename = os.path.join(b_dirname, "tensor_B_mode_0_crd")
+    b_crd0 = read_inputs(b0_crd_filename)
+
+    b_vals_filename = os.path.join(b_dirname, "tensor_B_mode_0_vals")
+    b_vals = read_inputs(b_vals_filename, float)
+
+    c_dirname = os.path.join(synthetic_dir, vectype, "C_" + vectype + "_sp" + str(sparsity))
+
+    c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
+    c_seg0 = read_inputs(c0_seg_filename)
+    c0_crd_filename = os.path.join(c_dirname, "tensor_C_mode_0_crd")
+    c_crd0 = read_inputs(c0_crd_filename)
+
+    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_0_vals")
+    c_vals = read_inputs(c_vals_filename, float)
 
     if debug_sim:
-        print("Compressed VECTOR 1:\n", seg_arr1, "\n", crd_arr1, "\n", vals_arr1)
-        print("Compressed VECTOR 2:\n", seg_arr2, "\n", crd_arr2, "\n", vals_arr2)
+        print("Compressed VECTOR 1:\n", b_seg0, "\n", b_crd0, "\n", b_vals)
+        print("Compressed VECTOR 2:\n", c_seg0, "\n", c_crd0, "\n", c_vals)
 
-    gold_bv1_1 = [bv([int(elem / sf) for elem in crd_arr1])]
-    gold_bv1_0 = inner_bv(crd_arr1, size, sf)
+    gold_bv1_1 = [bv([int(elem / sf) for elem in b_crd0])]
+    gold_bv1_0 = inner_bv(b_crd0, size, sf)
     gold_bv1_0 += (inner_fiber_cnt - len(gold_bv1_0)) * [0]
 
-    gold_bv2_1 = [bv([int(elem / sf) for elem in crd_arr2])]
-    gold_bv2_0 = inner_bv(crd_arr2, size, sf)
+    gold_bv2_1 = [bv([int(elem / sf) for elem in c_crd0])]
+    gold_bv2_0 = inner_bv(c_crd0, size, sf)
     gold_bv2_0 += (inner_fiber_cnt - len(gold_bv2_0)) * [0]
 
-    gold_crd = sorted(set(crd_arr1) & set(crd_arr2))
+    gold_crd = sorted(set(b_crd0) & set(c_crd0))
     gold_seg = [0, len(gold_crd)]
     gold_vals = []
 
     gold_bv1 = []
     gold_bv0 = []
     if gold_crd:
-        gold_vals = [vals_arr1[crd_arr1.index(i)] * vals_arr2[crd_arr2.index(i)] for i in gold_crd]
+        gold_vals = [b_vals[b_crd0.index(i)] * c_vals[c_crd0.index(i)] for i in gold_crd]
         gold_bv1 = [bv([int(elem / sf) for elem in gold_crd])]
         gold_bv0 = inner_bv(gold_crd, size, sf)
 
@@ -68,8 +82,8 @@ def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=100
         print("BV arr2 0", gold_bv2_0)
         print("BV arr2 1", gold_bv2_1)
 
-    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=b_seg0, crd_arr=b_crd0, debug=debug_sim)
+    crdscan2 = CompressedCrdRdScan(seg_arr=c_seg0, crd_arr=c_crd0, debug=debug_sim)
     split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
     split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
 
@@ -160,8 +174,8 @@ def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=100
 
     inter0 = IntersectBV2(debug=debug_sim)
     inter1 = IntersectBV2(debug=debug_sim)
-    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
-    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
+    val1 = Array(init_arr=b_vals, debug=debug_sim)
+    val2 = Array(init_arr=c_vals, debug=debug_sim)
     mul = Multiply2(debug=debug_sim)
     bvdrop = BVDrop(debug=debug_sim)
     oval_wrscan = ValsWrScan(size=size, fill=fill)
@@ -237,3 +251,13 @@ def test_vec_elemmul_bv_split(nnz, vecname, sf, debug_sim, max_val=999, size=100
     if gold_crd:
         check_arr(wrscan0, gold_bv0)
         check_arr(wrscan1, gold_bv1)
+
+    def bench():
+        time.sleep(0.0001)
+
+    extra_info = dict()
+    extra_info["cycles"] = time1 + time2
+    extra_info["vectype"] = vectype
+    extra_info["format"] = "bittree"
+
+    samBench(bench, extra_info)

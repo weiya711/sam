@@ -1,5 +1,6 @@
 import pytest
 import random
+import os
 
 from sam.sim.src.rd_scanner import CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan, CompressWrScan
@@ -23,7 +24,11 @@ def inner_crd(ll, size, sf):
 
 
 # NOTE: This is the full vector elementwise multiplication as a bitvector
-# @pytest.mark.vec
+@pytest.mark.skipif(
+    os.getenv('CI', 'false') == 'true',
+    reason='CI lacks datasets',
+)
+@pytest.mark.synth
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
 def test_vec_elemmul_split(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fill=0):
