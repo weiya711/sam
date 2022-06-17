@@ -17,11 +17,11 @@ from sam.sim.test.test import TIMEOUT, check_arr, get_bv
 
 
 # NOTE: This is the full vector elementwise multiplication as a bitvector
-# @pytest.mark.vec
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.synth
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
 def test_vec_elemmul_bv(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fill=0):

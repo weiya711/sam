@@ -1,5 +1,6 @@
 import pytest
 import random
+import os
 
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan, CompressWrScan
@@ -10,7 +11,11 @@ from sam.sim.src.array import Array
 from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr
 
 
-# @pytest.mark.vec
+@pytest.mark.skipif(
+    os.getenv('CI', 'false') == 'true',
+    reason='CI lacks datasets',
+)
+@pytest.mark.synth
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_unit_vec_elemmul_c_c_c(nnz, vecname, debug_sim, max_val=1000, size=1001, fill=0):
     assert(size > max_val)
