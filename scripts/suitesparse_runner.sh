@@ -7,17 +7,15 @@
 set -u
 
 cwd=$(pwd)
+sspath=$SUITESPARSE_PATH
 # LANKA
 if [ $2 -eq 1 ]; then
-	sspath=/data/scratch/changwan/florida_all/.
 	lanka=ON
 	neva=OFF
 elif [ $2 -eq 2 ]; then
-	sspath=/nobackup/owhsu/sparse-datasets/suitesparse
 	lanka=OFF
 	neva=ON
 else
-	sspath=$SUITESPARSE_PATH
 	lanka=OFF
 	neva=OFF
 fi
