@@ -490,6 +490,7 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
                 auto outpath = validationPath + key + ".tns";
                 taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
             }
+            state.ResumeTiming();
 
         }
     }
