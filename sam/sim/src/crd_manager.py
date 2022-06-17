@@ -58,7 +58,6 @@ class CrdDrop(Primitive):
         elif self.get_next_ocrd:
             self.curr_crd = ''
 
-        print("\t Get Stkn:", self.get_stkn)
         if len(self.inner_crd) > 0 and self.get_next_icrd:
             self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
             icrd = self.inner_crd.pop(0)
