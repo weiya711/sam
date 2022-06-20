@@ -40,7 +40,7 @@ for i in ${!DATASET_NAMES[@]}; do
 #      errors+=("${name} matmul_ijk")
 #    fi
  
-    pytest -k test_tensor --ssname $name -s  #--debug-sim 
+    pytest -k test_tensor --frosttname $name -s -vv #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 
