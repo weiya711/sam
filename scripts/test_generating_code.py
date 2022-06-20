@@ -483,21 +483,24 @@ def array_size_computation(size_array):
     return final_output_with_adds
 
 
-directory = './compiler/sam-outputs/dot'
-file_paths = []
-out_name = []
+def get_all_files(directory_path):
+    file_paths = []
+    out_name = []
 
-for filename in os.listdir(directory):
-    f = os.path.join(directory, filename)
-    if filename[0] == ".":
-        continue
-    out_name.append(filename[0:-3])
-    # checking if it is a file
-    print(out_name[-1])
-    if os.path.isfile(f):
-        file_paths.append(f)
-print(file_paths)
-print(len(file_paths))
+    for filename in os.listdir(directory_path):
+        f = os.path.join(directory_path, filename)
+        if filename[0] == ".":
+            continue
+        out_name.append(filename[0:-3])
+        # checking if it is a file
+        print(out_name[-1])
+        if os.path.isfile(f):
+            file_paths.append(f)
+    return file_paths, out_name
+
+
+DIRECTORY = './compiler/sam-outputs/dot'
+file_paths, out_name = get_all_files(DIRECTORY)
 num = 0
 for apath in file_paths:
     # apath = "../compiler/sam-outputs/dot/matmul_ijk.gv"
