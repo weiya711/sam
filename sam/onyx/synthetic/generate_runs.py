@@ -6,7 +6,7 @@ import random
 
 def generate_runs_vectors(run1, run2):
 
-    vec_size = 1000
+    vec_size = 2000
 
     vec1 = numpy.zeros(vec_size)
     vec2 = numpy.zeros(vec_size)
@@ -62,11 +62,11 @@ if __name__ == "__main__":
 
         v1, v2 = generate_runs_vectors(run_lengths[0], run_lengths[1])
 
-        tmp_v1 = MatrixGenerator(name=f'B{random_mat}', format='CSF',
+        tmp_v1 = MatrixGenerator(name=f'B', format='CSF',
                                  dump_dir=f"{output_dir}/runs_{random_mat}_{run_lengths[0]}_{run_lengths[1]}",
                                  tensor=v1)
 
-        tmp_v2 = MatrixGenerator(name=f'C{random_mat}', format='CSF',
+        tmp_v2 = MatrixGenerator(name=f'C', format='CSF',
                                  dump_dir=f"{output_dir}/runs_{random_mat}_{run_lengths[0]}_{run_lengths[1]}",
                                  tensor=v2)
 

@@ -25,31 +25,42 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     reason='CI lacks datasets',
 )
 @pytest.mark.synth
-@pytest.mark.parametrize("vectype", ["random"])
+@pytest.mark.parametrize("vectype", ["random", "runs"])
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
-@pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_bv_split(samBench, nnz, vectype, sparsity, sf, debug_sim, size=1000, fill=0):
+def test_vec_elemmul_bv_split(samBench, vectype, sparsity, sf, debug_sim, size=2000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
-    b_dirname = os.path.join(synthetic_dir, vectype, "B_" + vectype + "_sp" + str(sparsity))
+    if vectype == "random":
+        b_dirname = os.path.join(synthetic_dir, vectype, "B_" + vectype + "_sp_" + str(sparsity))
+    elif vectype == "runs":
+        b_dirname = os.path.join(synthetic_dir, vectype, "runs_0_100_200")
+
+    run_1 = 100
+    run_2 = 200
 
     b0_seg_filename = os.path.join(b_dirname, "tensor_B_mode_0_seg")
     b_seg0 = read_inputs(b0_seg_filename)
+    print(b_seg0)
     b0_crd_filename = os.path.join(b_dirname, "tensor_B_mode_0_crd")
     b_crd0 = read_inputs(b0_crd_filename)
+    print(b_crd0)
 
-    b_vals_filename = os.path.join(b_dirname, "tensor_B_mode_0_vals")
+    b_vals_filename = os.path.join(b_dirname, "tensor_B_mode_vals")
     b_vals = read_inputs(b_vals_filename, float)
+    print(b_vals)
 
-    c_dirname = os.path.join(synthetic_dir, vectype, "C_" + vectype + "_sp" + str(sparsity))
+    if vectype == "random":
+        c_dirname = os.path.join(synthetic_dir, vectype, "C_" + vectype + "_sp_" + str(sparsity))
+    elif vectype == "runs":
+        c_dirname = os.path.join(synthetic_dir, vectype, "runs_0_100_200")
 
     c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
     c_seg0 = read_inputs(c0_seg_filename)
     c0_crd_filename = os.path.join(c_dirname, "tensor_C_mode_0_crd")
     c_crd0 = read_inputs(c0_crd_filename)
 
-    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_0_vals")
+    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
     c_vals = read_inputs(c_vals_filename, float)
 
     if debug_sim:
@@ -142,12 +153,12 @@ def test_vec_elemmul_bv_split(samBench, nnz, vectype, sparsity, sf, debug_sim, s
         wrscan2_0.update()
         wrscan2_1.update()
 
-        print("Timestep", time1, "\t Done -- \n",
-              "\nRdScan1:", crdscan1.out_done(), "\tRdScan2:", crdscan2.out_done(),
-              "\nSplit1:", split1.out_done(), "\tSplit2:", split2.out_done(),
-              "\nBV:", bv1_0.out_done(), bv1_1.out_done(), bv2_0.out_done(), bv2_1.out_done(),
-              "\nWrScan:", wrscan1_0.out_done(), wrscan1_1.out_done(), wrscan2_0.out_done(), wrscan2_1.out_done()
-              )
+        # print("\nTimestep", time1, "\t Done -- \n",
+        #       "\nRdScan1:", crdscan1.out_done(), "\tRdScan2:", crdscan2.out_done(),
+        #       "\nSplit1:", split1.out_done(), "\tSplit2:", split2.out_done(),
+        #       "\nBV:", bv1_0.out_done(), bv1_1.out_done(), bv2_0.out_done(), bv2_1.out_done(),
+        #       "\nWrScan:", wrscan1_0.out_done(), wrscan1_1.out_done(), wrscan2_0.out_done(), wrscan2_1.out_done()
+        #       )
         done = wrscan2_0.out_done() and wrscan2_1.out_done() and wrscan1_1.out_done() and wrscan1_0.out_done()
         time1 += 1
 
@@ -258,6 +269,9 @@ def test_vec_elemmul_bv_split(samBench, nnz, vectype, sparsity, sf, debug_sim, s
     extra_info = dict()
     extra_info["cycles"] = time1 + time2
     extra_info["vectype"] = vectype
+    extra_info["sparsity"] = sparsity
+    extra_info["run_1"] = run_1
+    extra_info["run_2"] = run_2
     extra_info["format"] = "bittree"
 
     samBench(bench, extra_info)
