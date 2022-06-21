@@ -42,6 +42,7 @@ if __name__ == "__main__":
     # parser.add_argument("--sparsity", type=float, default=0.5)
     parser.add_argument("--output_dir", type=str, default=None)
     parser.add_argument("--run_lengths", type=int, nargs=2, default=[10, 10])
+    parser.add_argument("--output_format", type=str, default='CSF')
     # parser.add_argument("--shape", type=int, nargs="*", default=[10, 10])
     # parser.add_argument("--num_trials", type=int, default=1000)
     # parser.add_argument("--output_csv", type=str, default="runs.csv")
@@ -54,6 +55,7 @@ if __name__ == "__main__":
     # name = args.name
     # shape = args.shape
     run_lengths = args.run_lengths
+    output_format = args.output_format
 
     random.seed(seed)
     numpy.random.seed(seed)
@@ -70,5 +72,5 @@ if __name__ == "__main__":
                                  dump_dir=f"{output_dir}/runs_{random_mat}_{run_lengths[0]}_{run_lengths[1]}",
                                  tensor=v2)
 
-        tmp_v1.dump_outputs()
-        tmp_v2.dump_outputs()
+        tmp_v1.dump_outputs(format=output_format)
+        tmp_v2.dump_outputs(format=output_format)

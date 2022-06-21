@@ -12,6 +12,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir", type=str, default=None)
     parser.add_argument("--name", type=str, default='B')
     parser.add_argument("--shape", type=int, nargs="*", default=[10, 10])
+    parser.add_argument("--output_format", type=str, default='CSF')
     # parser.add_argument("--num_trials", type=int, default=1000)
     # parser.add_argument("--output_csv", type=str, default="runs.csv")
     args = parser.parse_args()
@@ -22,6 +23,7 @@ if __name__ == "__main__":
     name = args.name
     shape = args.shape
     number = args.number
+    output_format = args.output_format
 
     # densities = [.00625, .0125, .025, .05, .1, .2, .4, .80]
 
@@ -35,4 +37,5 @@ if __name__ == "__main__":
         print(sparsity)
         tmp_mat = MatrixGenerator(name=f'{name}', shape=shape, sparsity=sparsity,
                                   format='CSF', dump_dir=f"{output_dir}/{name}_random_sp_{sparsity}", tensor=None)
-        tmp_mat.dump_outputs()
+        print(tmp_mat)
+        tmp_mat.dump_outputs(format=output_format)

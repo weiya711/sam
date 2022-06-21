@@ -1,6 +1,7 @@
 import pytest
 import random
 import os
+import time
 
 from sam.sim.src.rd_scanner import CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan, CompressWrScan
@@ -11,7 +12,10 @@ from sam.sim.src.array import Array
 from sam.sim.src.split import Split
 from sam.sim.src.base import remove_emptystr
 
-from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr, remove_zeros
+from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr, remove_zeros, read_inputs
+
+cwd = os.getcwd()
+synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
 
 
 def inner_crd(ll, size, sf):
@@ -29,20 +33,49 @@ def inner_crd(ll, size, sf):
     reason='CI lacks datasets',
 )
 @pytest.mark.synth
-@pytest.mark.parametrize("nnz", [1, 10, 100, 500])
+@pytest.mark.parametrize("vectype", ["random", "runs"])
+@pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
+# @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_split(nnz, vecname, sf, debug_sim, max_val=999, size=1000, fill=0):
+def test_vec_elemmul_split(samBench, vectype, sparsity, vecname, sf, debug_sim, max_val=999, size=2000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
-    crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
-    crd_arr1 = sorted(set(crd_arr1))
-    seg_arr1 = [0, len(crd_arr1)]
-    vals_arr1 = [random.randint(0, max_val) for _ in range(len(crd_arr1))]
+    run_1 = 100
+    run_2 = 200
 
-    crd_arr2 = [random.randint(0, max_val) for _ in range(nnz)]
-    crd_arr2 = sorted(set(crd_arr2))
-    seg_arr2 = [0, len(crd_arr2)]
-    vals_arr2 = [random.randint(0, max_val) for _ in range(len(crd_arr2))]
+    if vectype == "random":
+        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_" + vectype + "_sp_" + str(sparsity))
+    elif vectype == "runs":
+        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+
+    b0_seg_filename = os.path.join(b_dirname, "tensor_B_mode_0_seg")
+    seg_arr1 = read_inputs(b0_seg_filename)
+    b0_crd_filename = os.path.join(b_dirname, "tensor_B_mode_0_crd")
+    crd_arr1 = read_inputs(b0_crd_filename)
+    b_vals_filename = os.path.join(b_dirname, "tensor_B_mode_vals")
+    vals_arr1 = read_inputs(b_vals_filename, float)
+
+    if vectype == "random":
+        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "C_" + vectype + "_sp_" + str(sparsity))
+    elif vectype == "runs":
+        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+
+    c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
+    seg_arr2 = read_inputs(c0_seg_filename)
+    c0_crd_filename = os.path.join(c_dirname, "tensor_C_mode_0_crd")
+    crd_arr2 = read_inputs(c0_crd_filename)
+    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
+    vals_arr2 = read_inputs(c_vals_filename, float)
+
+    # crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
+    # crd_arr1 = sorted(set(crd_arr1))
+    # seg_arr1 = [0, len(crd_arr1)]
+    # vals_arr1 = [random.randint(0, max_val) for _ in range(len(crd_arr1))]
+
+    # crd_arr2 = [random.randint(0, max_val) for _ in range(nnz)]
+    # crd_arr2 = sorted(set(crd_arr2))
+    # seg_arr2 = [0, len(crd_arr2)]
+    # vals_arr2 = [random.randint(0, max_val) for _ in range(len(crd_arr2))]
 
     if debug_sim:
         print("Compressed VECTOR 1:\n", seg_arr1, "\n", crd_arr1, "\n", vals_arr1)
@@ -178,7 +211,7 @@ def test_vec_elemmul_split(nnz, vecname, sf, debug_sim, max_val=999, size=1000, 
     in_ref2 = [0, 'D']
     done = False
     time2 = 0
-    while not done and time1 < TIMEOUT:
+    while not done and time2 < TIMEOUT:
         if len(in_ref1) > 0:
             rdscan1_1.set_in_ref(in_ref1.pop(0))
         rdscan1_1.update()
@@ -248,3 +281,16 @@ def test_vec_elemmul_split(nnz, vecname, sf, debug_sim, max_val=999, size=1000, 
     if gold_crd:
         check_arr(wrscan0, gold_crd0)
         check_arr(wrscan1, gold_crd1)
+
+    def bench():
+        time.sleep(0.0001)
+
+    extra_info = dict()
+    extra_info["cycles"] = time1 + time2
+    extra_info["vectype"] = vectype
+    extra_info["sparsity"] = sparsity
+    extra_info["run_1"] = run_1
+    extra_info["run_2"] = run_2
+    extra_info["format"] = "bittree"
+
+    samBench(bench, extra_info)

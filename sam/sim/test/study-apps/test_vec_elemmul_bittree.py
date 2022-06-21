@@ -31,29 +31,25 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 def test_vec_elemmul_bv_split(samBench, vectype, sparsity, sf, debug_sim, size=2000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
-    if vectype == "random":
-        b_dirname = os.path.join(synthetic_dir, vectype, "B_" + vectype + "_sp_" + str(sparsity))
-    elif vectype == "runs":
-        b_dirname = os.path.join(synthetic_dir, vectype, "runs_0_100_200")
-
     run_1 = 100
     run_2 = 200
 
+    if vectype == "random":
+        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_" + vectype + "_sp_" + str(sparsity))
+    elif vectype == "runs":
+        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+
     b0_seg_filename = os.path.join(b_dirname, "tensor_B_mode_0_seg")
     b_seg0 = read_inputs(b0_seg_filename)
-    print(b_seg0)
     b0_crd_filename = os.path.join(b_dirname, "tensor_B_mode_0_crd")
     b_crd0 = read_inputs(b0_crd_filename)
-    print(b_crd0)
-
     b_vals_filename = os.path.join(b_dirname, "tensor_B_mode_vals")
     b_vals = read_inputs(b_vals_filename, float)
-    print(b_vals)
 
     if vectype == "random":
-        c_dirname = os.path.join(synthetic_dir, vectype, "C_" + vectype + "_sp_" + str(sparsity))
+        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "C_" + vectype + "_sp_" + str(sparsity))
     elif vectype == "runs":
-        c_dirname = os.path.join(synthetic_dir, vectype, "runs_0_100_200")
+        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
 
     c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
     c_seg0 = read_inputs(c0_seg_filename)
@@ -197,7 +193,7 @@ def test_vec_elemmul_bv_split(samBench, vectype, sparsity, sf, debug_sim, size=2
     in_ref2 = [0, 'D']
     done = False
     time2 = 0
-    while not done and time1 < TIMEOUT:
+    while not done and time2 < TIMEOUT:
         if len(in_ref1) > 0:
             bvscan1_1.set_in_ref(in_ref1.pop(0))
         bvscan1_1.update()

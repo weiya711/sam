@@ -57,11 +57,14 @@ class MatrixGenerator():
     def _create_fiber_tree(self):
         self.fiber_tree = FiberTree(tensor=self.array)
 
-    def dump_outputs(self):
+    def dump_outputs(self, format=None):
         '''
         Dump the matrix into many files depending on matrix format
         '''
         print(f"Using dump directory - {self.dump_dir}")
+
+        if format is not None:
+            self.format = format
 
         if self.format == 'CSF':
             # In CSF format, need to iteratively create seg/coord arrays
@@ -103,6 +106,11 @@ class MatrixGenerator():
                     # print(seg_arr)
                     # print(coord_arr)
                 i = i + 1
+        elif format == "UNC":
+            flat_array = []
+            for val in self.array:
+                flat_array.append(val)
+            self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals")
 
     def _dump_csf(self, level_list):
         """ Dumps the csf-based seg/coord array for each level, unless it is a vals list
