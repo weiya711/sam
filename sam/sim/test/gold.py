@@ -236,6 +236,6 @@ def check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_val
     pass
 
 
-#### OTHER CHECKS (TODO later)
+# ---------------- OTHER CHECKS (TODO later) ---------------- #
 def check_gold_tensor3_identity(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     pass
