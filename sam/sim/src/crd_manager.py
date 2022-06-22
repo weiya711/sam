@@ -15,6 +15,8 @@ class CrdDrop(Primitive):
         self.curr_ocrd = ''
         self.curr_crd = ''
         self.has_crd = False
+        self.prev_ocrd_stkn = True
+        self.get_stkn = False
         self.get_next_icrd = False
         self.get_next_ocrd = True
 
@@ -34,12 +36,24 @@ class CrdDrop(Primitive):
             if isinstance(self.curr_ocrd, int):
                 self.get_next_icrd = True
                 self.get_next_ocrd = False
+                self.prev_ocrd_stkn = False
+                self.get_stkn = False
             else:
                 self.curr_crd = self.curr_ocrd
-                self.get_next_icrd = False
-                self.get_next_ocrd = True
+
+                if self.prev_ocrd_stkn:
+                    self.get_next_icrd = True
+                    self.get_next_ocrd = False
+                    self.get_stkn = True
+                else:
+                    self.get_next_icrd = False
+                    self.get_next_ocrd = True
+                    self.get_stkn = False
+
                 if self.curr_ocrd == 'D':
                     self.done = True
+                self.prev_ocrd_stkn = True
+
             self.has_crd = False
         elif self.get_next_ocrd:
             self.curr_crd = ''
@@ -48,6 +62,11 @@ class CrdDrop(Primitive):
             self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
             icrd = self.inner_crd.pop(0)
             self.curr_inner_crd = icrd
+            if self.get_stkn:
+                assert is_stkn(icrd) == is_stkn(self.curr_ocrd)
+                self.get_next_ocrd = True
+                self.get_next_icrd = False
+                self.get_stkn = False
             if isinstance(icrd, int):
                 self.has_crd = True
                 self.curr_crd = ''
@@ -72,11 +91,15 @@ class CrdDrop(Primitive):
                 self.get_next_ocrd = True
         elif self.get_next_icrd:
             self.curr_crd = ''
+            self.curr_inner_crd = ''
+        else:
+            self.curr_inner_crd = ''
 
         if self.debug:
             print("DEBUG: CRDDROP: Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd,
                   "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
-                  "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd)
+                  "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd,
+                  "\n Prev Stkn:", self.prev_ocrd_stkn, "\t Get Stkn:", self.get_stkn)
 
     def set_outer_crd(self, crd):
         if crd != '':

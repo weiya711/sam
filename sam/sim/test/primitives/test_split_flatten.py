@@ -35,11 +35,15 @@ arrs_dict7 = {'crd_in': [0, 2, 3, 9, 11, 12, 'S0', 'D'],
               'ocrd_gold': [0, 1, 3, 4, 'S0', 'D'],
               'icrd_gold': [0, 2, 'S0', 3, 'S0', 9, 11, 'S0', 12, 'S1', 'D']
               }
+arrs_dict8 = {'crd_in': [0, 1, 2, 3, 4, 5, '', 6, 7, 'S0', 'D'],
+              'ocrd_gold': [0, 1, 'S0', 'D'],
+              'icrd_gold': [0, 1, 2, 3, 'S0', 4, 5, 6, 7, 'S1', 'D']
+              }
 
 
 @pytest.mark.parametrize("orig", [True, False])
 @pytest.mark.parametrize("arrs", [(arrs_dict1, 4), (arrs_dict2, 4), (arrs_dict3, 2), (arrs_dict4, 2), (arrs_dict5, 4),
-                                  (arrs_dict7, 3)])
+                                  (arrs_dict7, 3), (arrs_dict8, 4)])
 def test_split_direct(arrs, orig, debug_sim):
     split_factor = arrs[1]
     arrs = arrs[0]

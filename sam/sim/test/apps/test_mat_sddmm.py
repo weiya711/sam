@@ -23,6 +23,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
+@pytest.mark.suitesparse
 def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")

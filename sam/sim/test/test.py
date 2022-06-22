@@ -1,7 +1,7 @@
 import copy
 import random
-
 import numpy as np
+from functools import reduce
 
 from sam.sim.src.wr_scanner import WrScan, CompressWrScan
 from sam.sim.src.array import Array
@@ -254,3 +254,34 @@ def read_inputs(filename, intype=int):
         for line in f:
             return_list.append(intype(line))
     return return_list
+
+
+# --------------Bitvector Helper Functions------------------------ #
+def get_bv(crd):
+    gold_bv = []
+    temp = []
+    for x in crd:
+        if isinstance(x, int):
+            temp.append(x)
+        else:
+            if temp:
+                gold_bv.append(bin(reduce(lambda a, b: a | b, [0b1 << i for i in temp])))
+                temp = []
+            gold_bv.append(x)
+    return gold_bv
+
+
+def bv(ll):
+    result = 0
+    for elem in ll:
+        result |= 1 << elem
+    return result
+
+
+def inner_bv(ll, size, sf):
+    result = []
+    for i in range(int(size / sf) + 2):
+        temp = bv([elem % sf for elem in ll if max((i - 1) * sf, 0) <= elem < i * sf])
+        if temp:
+            result.append(temp)
+    return result
