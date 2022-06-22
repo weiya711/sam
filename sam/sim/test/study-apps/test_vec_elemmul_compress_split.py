@@ -33,7 +33,7 @@ def inner_crd(ll, size, sf):
     reason='CI lacks datasets',
 )
 @pytest.mark.synth
-@pytest.mark.parametrize("vectype", ["random", "runs"])
+@pytest.mark.parametrize("vectype", ["random", "runs", "blocks"])
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
 # @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
@@ -47,6 +47,8 @@ def test_vec_elemmul_split(samBench, vectype, sparsity, vecname, sf, debug_sim, 
         b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_" + vectype + "_sp_" + str(sparsity))
     elif vectype == "runs":
         b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+    elif vectype == "blocks":
+        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_blocks_20_20")
 
     b0_seg_filename = os.path.join(b_dirname, "tensor_B_mode_0_seg")
     seg_arr1 = read_inputs(b0_seg_filename)
@@ -59,6 +61,8 @@ def test_vec_elemmul_split(samBench, vectype, sparsity, vecname, sf, debug_sim, 
         c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "C_" + vectype + "_sp_" + str(sparsity))
     elif vectype == "runs":
         c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+    elif vectype == "blocks":
+        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "C_blocks_20_20")
 
     c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
     seg_arr2 = read_inputs(c0_seg_filename)
