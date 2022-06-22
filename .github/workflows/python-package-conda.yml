@@ -35,4 +35,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Python style checking flake8
       run: |
-        flake8 . --count --select=E,W --statistics --ignore=W503,W504 --max-line-length=127 --exclude='*/test/apps/*'
+        flake8 . --count --select=E,W --statistics --ignore=W503,W504 --max-line-length=127 --exclude='*/test/apps/*,*/test/fusion-study/*'
