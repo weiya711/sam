@@ -71,8 +71,8 @@ class Array(Primitive):
             self.done = True
             val = 'D'
         elif addr >= self.size:
-            raise Exception("Address (" + str(addr) + ") is out of array size (" 
-                + str(self.size) + ") bounds, please resize")
+            raise Exception("Address (" + str(addr) + ") is out of array size (" +
+                            str(self.size) + ") bounds, please resize")
         else:
             val = self.arr[addr]
 
@@ -92,8 +92,8 @@ class Array(Primitive):
             self.done = True
             return
         elif addr >= self.size:
-            raise Exception("Address (" + str(addr) + ") is out of array size (" 
-                + str(self.size) + ") bounds, please resize")
+            raise Exception("Address (" + str(addr) + ") is out of array size (" +
+                            str(self.size) + ") bounds, please resize")
         else:
             self.arr[addr] = val
 

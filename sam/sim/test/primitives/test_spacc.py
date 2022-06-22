@@ -60,8 +60,7 @@ def test_spacc1_direct(arrs, debug_sim):
     assert (out_val == gold_val)
 
 
-arrs_dict1 = {
-              'crd1_in': [0, 2, 3, 0, 0, 2, 2, 2, 3, 3, 3, 3, 3, 0, 'D'],
+arrs_dict1 = {'crd1_in': [0, 2, 3, 0, 0, 2, 2, 2, 3, 3, 3, 3, 3, 0, 'D'],
               'crd0_in': [0, 2, 3, 0, 2, 0, 0, 3, 0, 2, 3, 0, 2, 0, 'D'],
               'val_in': [50, 5, 10, 40, 4, 8, -40, 33, 36, 1, 2, 3, 4, 5, 'D'],
               'crd1_gold': [0, 2, 3, 'S0', 'D'],
