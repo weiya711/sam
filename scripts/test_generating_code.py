@@ -131,7 +131,7 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan\n")
     f.write("from sam.sim.src.wr_scanner import ValsWrScan\n")
     f.write("from sam.sim.src.joiner import Intersect2, Union2\n")
-    f.write("from sam.sim.src.compute import Multiply2\n")
+    f.write("from sam.sim.src.compute import Multiply2, Add2\n")
     f.write("from sam.sim.src.crd_manager import CrdDrop, CrdHold\n")
     f.write("from sam.sim.src.repeater import Repeat, RepeatSigGen\n")
     f.write("from sam.sim.src.accumulator import Reduce\n")
@@ -329,6 +329,9 @@ def finish_outputs(f, elements):
 
     if len(elements.keys()) > 1:
         f.write(tab(1) + "out_crds = [")
+    else:
+        f.write(tab(1) + "out_crds = []\n")
+
     output_list += " out_crds = ["
     count = 0
     for elem in elements.keys():
@@ -345,6 +348,9 @@ def finish_outputs(f, elements):
     count = 0
     if len(elements.keys()) > 1:
         f.write(tab(1) + "out_segs = [")
+    else:
+        f.write(tab(1) + "out_segs = []\n")
+
     output_list += ", out_segs = ["
     for elem in elements.keys():
         if elements[elem] != "vals":

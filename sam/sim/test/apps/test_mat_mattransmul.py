@@ -4,7 +4,7 @@ import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
-from sam.sim.src.compute import Multiply2
+from sam.sim.src.compute import Multiply2, Add2
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
@@ -201,6 +201,8 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     fiberwrite_xvals_0.autosize()
 
+    out_crds = []
+    out_segs = []
     out_vals = fiberwrite_xvals_0.get_arr()
     def bench():
         time.sleep(0.01)

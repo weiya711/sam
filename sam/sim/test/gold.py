@@ -202,3 +202,40 @@ def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val):
 
 def check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val):
     pass
+
+
+def check_gold_mat_sddmm(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_mat_mattransmul(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_mat_residual(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_mat_elemadd3(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_ttv(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_ttm(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+#### OTHER CHECKS (TODO later)
+def check_gold_tensor3_identity(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
