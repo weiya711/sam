@@ -1,26 +1,10 @@
 import copy
 import pytest
 
-from functools import reduce
-
 from sam.sim.src.split import Split
 from sam.sim.src.bitvector import BV
 from sam.sim.src.base import remove_emptystr
-from sam.sim.test.test import TIMEOUT
-
-
-def get_bv(crd):
-    gold_bv = []
-    temp = []
-    for x in crd:
-        if isinstance(x, int):
-            temp.append(x)
-        else:
-            if temp:
-                gold_bv.append(bin(reduce(lambda a, b: a | b, [0b1 << i for i in temp])))
-                temp = []
-            gold_bv.append(x)
-    return gold_bv
+from sam.sim.test.test import TIMEOUT, get_bv
 
 
 arrs_dict1 = {'crd_in': [0, 2, 3, 9, 11, 12, 'S0', 'D']}
@@ -47,10 +31,13 @@ arrs_dict16 = {'crd_in': [0, 2, 3, 9, 11, 12, 'S0', 'D']}
 arrs_dict17 = {'crd_in': [0, 1, 3, 4, 'S0', 'D']}
 arrs_dict18 = {'crd_in': [0, 2, 'S0', 3, 'S0', 9, 11, 'S0', 12, 'S1', 'D']}
 
+arrs_dict19 = {'crd_in': ['S0', 'D']}
+
 
 @pytest.mark.parametrize("arrs", [arrs_dict1, arrs_dict2, arrs_dict3, arrs_dict4, arrs_dict5, arrs_dict6,
                                   arrs_dict7, arrs_dict8, arrs_dict9, arrs_dict10, arrs_dict11, arrs_dict12,
-                                  arrs_dict13, arrs_dict14, arrs_dict15, arrs_dict16, arrs_dict17, arrs_dict18])
+                                  arrs_dict13, arrs_dict14, arrs_dict15, arrs_dict16, arrs_dict17, arrs_dict18,
+                                  arrs_dict19])
 def test_bv_direct(arrs, debug_sim):
     crd = copy.deepcopy(arrs['crd_in'])
     gold_bv = get_bv(crd)

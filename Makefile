@@ -61,11 +61,6 @@ tests: sam
 	python scripts/test_generating_code.py
 	make run
 
-PHONY: formats
-formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
-	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
-	set -e && ./scripts/generate_suitesparse_formats.sh
-
 # ---- Build taco and make sam graphs ----
 sam: taco/build 
 	 cd compiler && bash -xe ./sam-kernels.sh
@@ -104,11 +99,20 @@ endif
 # 	pytest $(IGNORE_FLAGS) $(BENCHFLAGS) $(BENCHES)
 
 # ---- Setup proper environment stuff ----
+suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
+	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
+	set -e && ./scripts/generate_suitesparse_formats.sh
+
+frostt-formats: env taco/build guard-FROSTT_FORMATTED_PATH guard-FROSTT_PATH
+	./scripts/generate_frostt_formats.sh
+
 .PHONY: env
 env:
 	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
 	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
 	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 
 .PHONY: pydepends
 pydepends:

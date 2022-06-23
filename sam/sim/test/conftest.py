@@ -13,18 +13,22 @@ def pytest_addoption(parser):
                      help="Flag that enables functional output checking")
     parser.addoption("--result-out", action="store",
                      help="Store output to filename for functional output checking")
+    parser.addoption("--synth", action="store_true", default=False,
+                     help="Flag that enables functional output checking")
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "suitesparse: mark test as needing suitesparse dataset to run")
     config.addinivalue_line("markers", "frostt: mark test as needing suitesparse dataset to run")
     config.addinivalue_line("markers", "vec: mark test as needing suitesparse dataset to run")
+    config.addinivalue_line("markers", "synth: mark test as needing synthetic dataset to run")
 
 
 def pytest_collection_modifyitems(config, items):
     skip_ss = pytest.mark.skip(reason="Need --ssname option to run")
     skip_frostt = pytest.mark.skip(reason="Need --frosttname option to run")
     skip_vec = pytest.mark.skip(reason="Need --vecname option to run")
+    skip_synth = pytest.mark.skip(reason="Need --synth option to run")
     if not config.getoption("--ssname"):
         # --ssname given in cli: do not skip apps/ tests
         for item in items:
@@ -39,6 +43,11 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "vec" in item.keywords:
                 item.add_marker(skip_vec)
+    if not config.getoption("--synth"):
+        # --synth given in cli: do not skip apps/ tests
+        for item in items:
+            if "synth" in item.keywords:
+                item.add_marker(skip_synth)
 
 
 @pytest.fixture
@@ -69,6 +78,11 @@ def frosttname(request):
 @pytest.fixture
 def vecname(request):
     return request.config.getoption("--vecname")
+
+
+@pytest.fixture
+def synth(request):
+    return request.config.getoption("--synth")
 
 
 @pytest.fixture

@@ -7,17 +7,29 @@ import numpy
 import itertools
 import shutil
 import numpy as np
+import math
 
 from pathlib import Path
 from dataclasses import dataclass
 
-SUITESPARSE_PATH = os.environ['SUITESPARSE_PATH']
+HOSTNAME = os.environ['HOSTNAME']
+
+
+def round_sparse(x):
+    if 0.0 <= x < 1:
+        return 1
+    elif 0.0 > x > -1:
+        return -1
+    elif x >= 0.0:
+        return math.floor(x + 0.5)
+    else:
+        return math.ceil(x - 0.5)
 
 
 # TnsFileLoader loads a tensor stored in .tns format.
 class TnsFileLoader:
-    def __init__(self):
-        pass
+    def __init__(self, cast_int=True):
+        self.cast = cast_int
 
     def load(self, path):
         coordinates = []
@@ -26,18 +38,23 @@ class TnsFileLoader:
         first = True
         with open(path, 'r') as f:
             for line in f:
-                data = line.split(' ')
+                data = line[:-1].split(' ')
                 if first:
                     first = False
                     dims = [0] * (len(data) - 1)
                     for i in range(len(data) - 1):
                         coordinates.append([])
+                data = [elem for elem in data if elem != '']
 
                 for i in range(len(data) - 1):
                     coordinates[i].append(int(data[i]) - 1)
                     dims[i] = max(dims[i], coordinates[i][-1] + 1)
                 # TODO (rohany): What if we want this to be an integer?
-                values.append(float(data[-1]))
+                if self.cast:
+                    val = round_sparse(float(data[-1]))
+                    values.append(val)
+                else:
+                    values.append(float(data[-1]))
         return dims, coordinates, values
 
 
@@ -65,9 +82,9 @@ class TnsFileDumper:
 # ScipySparseTensorLoader loads a sparse tensor from a file into a
 # scipy.sparse CSR matrix.
 class ScipySparseTensorLoader:
-    def __init__(self, format):
+    def __init__(self, tformat):
         self.loader = TnsFileLoader()
-        self.format = format
+        self.format = tformat
 
     def load(self, path):
         dims, coords, values = self.loader.load(path)
@@ -76,9 +93,9 @@ class ScipySparseTensorLoader:
         elif self.format == "csc":
             return scipy.sparse.csc_matrix((values, (coords[0], coords[1])), shape=tuple(dims))
         elif self.format == "coo":
-            return scipy.sparse.coo_matrix(values, (coords[0], coords[1]), shape=tuple(dims))
+            return scipy.sparse.coo_matrix(values, (coords[0], coords[1]))
         else:
-            assert (False)
+            assert False
 
 
 # PydataSparseTensorLoader loads a sparse tensor from a file into
@@ -208,19 +225,20 @@ class InputCacheSuiteSparse:
 
 
 class FormatWriter:
-    def __init__(self):
-        pass
+    def __init__(self, cast_int=True):
+        self.cast = cast_int
 
     def convert_format(self, coo, format_str):
+        if self.cast:
+            cast_data = np.array([round_sparse(elem) for elem in coo.data])
+            coo = scipy.sparse.coo_matrix((cast_data, (coo.row, coo.col)))
 
         if format_str == "csr":
             return scipy.sparse.csr_matrix(coo)
         elif format_str == "csc":
             return scipy.sparse.csc_matrix(coo)
-        elif format_str == "coo":
-            return coo
-        elif format_str == "cooT":
-            # This matrix will get transposed on writeout
+        elif format_str == "coo" or format_str == "cooT":
+            # This matrix will get transposed on writeout for cooT
             return coo
         else:
             if format_str == "dense":
@@ -242,15 +260,16 @@ class FormatWriter:
                 csc = scipy.sparse.csc_matrix(coo)
                 has_col = [rc > 0 for rc in csc.getnnz(0)]
                 segend = sum(has_col)
-                seg0 = [0, segend]
-                crd0 = [i for i, c in enumerate(has_col) if c]
-                seg1 = [0] + list(itertools.accumulate(map(int, csc.getnnz(0))))
-                crd1 = csc.indices
+                # Transposed since it is DCSC
+                seg1 = [0, segend]
+                crd1 = [i for i, c in enumerate(has_col) if c]
+                seg0 = [0] + list(itertools.accumulate(map(int, csc.getnnz(0))))
+                crd0 = csc.indices
                 data = csc.data
                 dcsc = DoublyCompressedMatrix(csc.shape, seg0, crd0, seg1, crd1, data)
                 return dcsc
             else:
-                assert (False)
+                assert False
 
     def writeout(self, coo, format_str, filename):
         tensor = self.convert_format(coo, format_str)
@@ -335,7 +354,7 @@ class FormatWriter:
                 outfile.write("vals\n")
                 outfile.write(array_str(tensor.data) + '\n')
             else:
-                assert (False)
+                assert False
 
             os.chmod(filename, 0o666)
 
@@ -367,7 +386,8 @@ class FormatWriter:
         filename = os.path.join(dir_path, tensorname + "_shape.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.shape))
-            os.chmod(filename, 0o666)
+            if HOSTNAME == 'kiwi':
+                os.chmod(filename, 0o775)
 
             os.symlink(filename, os.path.join(dcsr_dir, tensorname + "_shape.txt"))
             os.symlink(filename, os.path.join(csr_dir, tensorname + "_shape.txt"))
@@ -377,29 +397,24 @@ class FormatWriter:
         filename = os.path.join(dcsr_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.seg0))
-            os.chmod(filename, 0o666)
 
         filename = os.path.join(dcsr_dir, tensorname + "0_crd.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.crd0))
-            os.chmod(filename, 0o666)
 
         filename = os.path.join(dcsr_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.seg1))
-            os.chmod(filename, 0o666)
 
         filename = os.path.join(dir_path, tensorname + "1_crd_s1.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.crd1))
-            os.chmod(filename, 0o666)
             os.symlink(filename, os.path.join(dcsr_dir, tensorname + "1_crd.txt"))
             os.symlink(filename, os.path.join(csr_dir, tensorname + "1_crd.txt"))
 
         filename = os.path.join(dir_path, tensorname + "_vals_s.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsr.data))
-            os.chmod(filename, 0o666)
             os.symlink(filename, os.path.join(dcsr_dir, tensorname + "_vals.txt"))
             os.symlink(filename, os.path.join(csr_dir, tensorname + "_vals.txt"))
 
@@ -407,36 +422,30 @@ class FormatWriter:
         filename = os.path.join(csr_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(csr.indptr))
-            os.chmod(filename, 0o666)
 
         dcsc = self.convert_format(coo, "dcsc")
 
         filename = os.path.join(dcsc_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.seg0))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.seg1))
 
         filename = os.path.join(dcsc_dir, tensorname + "1_crd.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.crd0))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.crd1))
 
         filename = os.path.join(dcsc_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.seg1))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.seg0))
 
         filename = os.path.join(dir_path, tensorname + "0_crd.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.crd1))
-            os.chmod(filename, 0o666)
+            ofile.write(array_newline_str(dcsc.crd0))
             os.symlink(filename, os.path.join(dcsc_dir, tensorname + "0_crd.txt"))
             os.symlink(filename, os.path.join(csc_dir, tensorname + "0_crd.txt"))
 
         filename = os.path.join(dir_path, tensorname + "_vals_sT.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(dcsc.data))
-            os.chmod(filename, 0o666)
             os.symlink(filename, os.path.join(dcsc_dir, tensorname + "_vals.txt"))
             os.symlink(filename, os.path.join(csc_dir, tensorname + "_vals.txt"))
 
@@ -444,7 +453,6 @@ class FormatWriter:
         filename = os.path.join(csc_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
             ofile.write(array_newline_str(csc.indptr))
-            os.chmod(filename, 0o666)
 
         if not omit_dense:
             dense = self.convert_format(coo, "dense")
@@ -456,7 +464,17 @@ class FormatWriter:
             filename = os.path.join(dense_dir, tensorname + "_vals.txt")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dense))
-                os.chmod(filename, 0o666)
+
+        if HOSTNAME == 'kiwi':
+            for root, dirs, files in os.walk(dir_path):
+                for d in dirs:
+                    path = os.path.join(root, d)
+                    shutil.chown(path, group='sparsity')
+                    os.chmod(path, 0o775)
+                for f in files:
+                    path = os.path.join(root, f)
+                    shutil.chown(path, group='sparsity')
+                    os.chmod(path, 0o775)
 
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
@@ -508,6 +526,7 @@ class SuiteSparseTensor:
 # SuiteSparse tensors.
 class TensorCollectionSuiteSparse:
     def __init__(self):
+        SUITESPARSE_PATH = os.environ['SUITESPARSE_PATH']
         data = SUITESPARSE_PATH
         sstensors = glob.glob(os.path.join(data, "*.mtx"))
         self.tensors = [SuiteSparseTensor(t) for t in sstensors]
@@ -529,8 +548,60 @@ def safeCastPydataTensorToInts(tensor):
     for i in range(len(data)):
         # If the cast would turn a value into 0, instead write a 1. This preserves
         # the sparsity pattern of the data.
-        if int(tensor.data[i]) == 0:
-            data[i] = 1
-        else:
-            data[i] = int(tensor.data[i])
+        # if int(tensor.data[i]) == 0:
+        #     data[i] = 1
+        # else:
+        #     data[i] = int(tensor.data[i])
+        data[i] = round_sparse(tensor.data[i])
     return sparse.COO(tensor.coords, data, tensor.shape)
+
+
+def parse_taco_format(infilename, outdir, tensorname, format_str):
+    with open(infilename, 'r') as inf:
+        level = -1
+        count = 0
+        seg = True
+        level_done = False
+        for line in inf:
+            if count == 0:
+                dim_start = line.find('(') + 1
+                dim_end = line.find(')')
+                dims = line[dim_start: dim_end]
+                dims = dims.split('x')
+
+                shapefile = os.path.join(outdir, tensorname + '_shape.txt')
+                with open(shapefile, 'w+') as shapef:
+                    shapef.write(array_newline_str(dims))
+            else:
+                if line.find(':') > -1:
+                    level += 1
+                    seg = True
+                    level_done = False
+                else:
+                    start = line.find('[') + 1
+                    end = line.find(']')
+                    line = line[start: end]
+                    line = line.split(', ')
+
+                    if level_done:
+                        # This is a values array
+                        valfile = os.path.join(outdir, tensorname + '_val.txt')
+                        with open(valfile, 'w+') as valf:
+                            valf.write(array_newline_str(line))
+                    else:
+                        level_format = format_str[level]
+                        if level_format == 's':
+                            if seg:
+                                segfile = os.path.join(outdir, tensorname + str(level) +
+                                                       '_seg.txt')
+                                with open(segfile, 'w+') as segf:
+                                    segf.write(array_newline_str(line))
+                                seg = False
+                            else:
+                                crdfile = os.path.join(outdir, tensorname + str(level) +
+                                                       '_crd.txt')
+                                with open(crdfile, 'w+') as crdf:
+                                    crdf.write(array_newline_str(line))
+                                level_done = True
+
+            count += 1

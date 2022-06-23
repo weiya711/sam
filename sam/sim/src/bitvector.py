@@ -6,13 +6,83 @@ from .token import EmptyFiberStknDrop
 from functools import reduce
 
 
-class BV(Primitive):
-    def __init__(self, width=4, **kwargs):
+# Compresses entire fiber with splitting of Bitvectors into "width" widths
+class ChunkBV(Primitive):
+    def __init__(self, width=4, size=16, **kwargs):
         super().__init__(**kwargs)
 
-        # TODO: see if we need this
-        # may not need this if we always compress the ENTIRE fiber...hmmm
-        self.bv_width = width
+        self.meta_width = width
+        self.meta_size = size
+        self.curr_in_bv = None
+        self.curr_bv = ''
+        self.curr_ref = ''
+        self.ref_sum = 0
+
+        self.in_bv = []
+        self.emit_chunk = False
+        self.count = 0
+
+    def update(self):
+        # bin(bv)   # gives 0bx number
+        if self.done:
+            self.curr_bv = ''
+            self.curr_ref = ''
+        elif self.emit_chunk:
+            mask = (1 << self.meta_width) - 1
+            self.curr_bv = self.curr_in_bv & mask
+            self.curr_in_bv = self.curr_in_bv >> self.meta_width
+            self.count += 1
+            self.emit_chunk = self.count * self.meta_width < self.meta_size
+            self.curr_ref = self.ref_sum
+            self.ref_sum += popcount(self.curr_bv)
+
+        elif len(self.in_bv) > 0:
+            self.curr_in_bv = self.in_bv.pop(0)
+            if isinstance(self.curr_in_bv, int):
+
+                mask = (1 << self.meta_width) - 1
+                self.curr_bv = self.curr_in_bv & mask
+                self.curr_in_bv = self.curr_in_bv >> self.meta_width
+                self.count += 1
+                self.ref_sum = 0
+                self.curr_ref = self.ref_sum
+                self.ref_sum += popcount(self.curr_bv)
+
+                self.emit_chunk = self.count * self.meta_width < self.meta_size
+            elif is_stkn(self.curr_in_bv):
+                self.curr_bv = self.curr_in_bv
+                self.curr_ref = self.curr_in_bv
+            else:
+                self.curr_bv = 'D'
+                self.curr_ref = 'D'
+                self.done = True
+        else:
+            self.curr_bv = ''
+            self.curr_ref = ''
+
+        if self.debug:
+            print("Curr OutBV:", self.curr_bv, "\tCurr InBV:", self.curr_in_bv, "\tCount:", self.count,
+                  "\t EmitChunk:", self.emit_chunk)
+
+    def set_in_bv(self, bv):
+        if bv != '':
+            self.in_bv.append(bv)
+
+    def out_bv_int(self):
+        return self.curr_bv
+
+    def out_bv(self):
+        result = bin(self.curr_bv) if isinstance(self.curr_bv, int) else self.curr_bv
+        return result
+
+    def out_ref(self):
+        return self.curr_ref
+
+
+# Always compresses entire fiber with no splitting
+class BV(Primitive):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         self.in_crd = []
         self.crds = []
@@ -34,9 +104,9 @@ class BV(Primitive):
                 self.curr_bv = ''
                 self.crds.append(in_crd)
             elif is_stkn(in_crd):
-                self.curr_bv = reduce(lambda a, b: a | b, [0b1 << c for c in self.crds])
-                self.emit_stkn = True
                 self.stkn = in_crd
+                self.curr_bv = self.stkn if not self.crds else reduce(lambda a, b: a | b, [0b1 << c for c in self.crds])
+                self.emit_stkn = bool(self.crds)
                 self.crds = []
             else:
                 self.curr_bv = 'D'

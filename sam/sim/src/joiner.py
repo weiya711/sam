@@ -350,7 +350,7 @@ class Union2(CrdJoiner2):
 
 
 class IntersectBV2(BVJoiner2):
-    def __init__(self, **kwargs):
+    def __init__(self, emit_zeros=False, **kwargs):
         super().__init__(**kwargs)
 
         self.in_ref1 = []
@@ -378,6 +378,8 @@ class IntersectBV2(BVJoiner2):
 
         self.total_count = 0
         self.count = 0
+
+        self.meta_emit_zeros = emit_zeros
 
     def update(self):
         if self.done:
@@ -440,7 +442,10 @@ class IntersectBV2(BVJoiner2):
                 self.total_count += 1
                 self.count += 1
             elif not self.curr_bv1 & self.curr_bv2:
-                self.obv = ''
+                if self.meta_emit_zeros:
+                    self.obv = 0
+                else:
+                    self.obv = ''
                 self.oref1 = ''
                 self.oref2 = ''
             else:
