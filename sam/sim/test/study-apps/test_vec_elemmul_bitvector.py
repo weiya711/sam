@@ -211,6 +211,8 @@ def test_vec_elemmul_bv(samBench, vecname, vectype, sparsity, sf, debug_sim, max
     extra_info["sparsity"] = sparsity
     extra_info["run_1"] = run_1
     extra_info["run_2"] = run_2
-    extra_info["format"] = "bittree"
+    extra_info["format"] = "bitvector"
+    extra_info["split_factor"] = sf
+    extra_info["test_name"] = "test_vec_elemmul_bv"
 
     samBench(bench, extra_info)

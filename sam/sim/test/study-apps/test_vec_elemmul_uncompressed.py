@@ -98,5 +98,7 @@ def test_unit_vec_elemmul_u_u_u(samBench, vectype, sparsity, debug_sim, dim1=200
     extra_info["run_1"] = run_1
     extra_info["run_2"] = run_2
     extra_info["format"] = "dense"
+    extra_info["split_factor"] = 1
+    extra_info["test_name"] = "test_unit_vec_elemmul_u_u_u"
 
     samBench(bench, extra_info)

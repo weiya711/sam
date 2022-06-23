@@ -273,5 +273,7 @@ def test_vec_elemmul_bv_split(samBench, vectype, sparsity, sf, debug_sim, size=2
     extra_info["run_1"] = run_1
     extra_info["run_2"] = run_2
     extra_info["format"] = "bittree"
+    extra_info["split_factor"] = sf
+    extra_info["test_name"] = "test_vec_elemmul_bv_split"
 
     samBench(bench, extra_info)

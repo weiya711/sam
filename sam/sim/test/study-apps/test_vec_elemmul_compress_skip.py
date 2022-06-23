@@ -162,6 +162,8 @@ def test_vec_elemmul_skip_c_c_c(samBench, vectype, sparsity, debug_sim, max_val=
     extra_info["sparsity"] = sparsity
     extra_info["run_1"] = run_1
     extra_info["run_2"] = run_2
-    extra_info["format"] = "bittree"
+    extra_info["format"] = "compressed"
+    extra_info["split_factor"] = 1
+    extra_info["test_name"] = "test_vec_elemmul_skip_c_c_c"
 
     samBench(bench, extra_info)
