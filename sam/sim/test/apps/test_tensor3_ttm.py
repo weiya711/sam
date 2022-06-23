@@ -147,8 +147,8 @@ def test_tensor3_ttm(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_7.set_load(intersectl_8.out_ref2())
         arrayvals_C_7.update()
 
-        mul_5.set_in1(arrayvals_B_6.out_load())
-        mul_5.set_in2(arrayvals_C_7.out_load())
+        mul_5.set_in1(arrayvals_B_6.out_val())
+        mul_5.set_in2(arrayvals_C_7.out_val())
         mul_5.update()
 
         reduce_4.set_in_val(mul_5.out_val())

@@ -151,12 +151,12 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_B_6.set_load(repeat_Bk_10.out_ref())
         arrayvals_B_6.update()
 
-        mul_5.set_in1(arrayvals_B_6.out_load())
-        mul_5.set_in2(arrayvals_C_7.out_load())
+        mul_5.set_in1(arrayvals_B_6.out_val())
+        mul_5.set_in2(arrayvals_C_7.out_val())
         mul_5.update()
 
-        mul_4.set_in1(mul_5.out_load())
-        mul_4.set_in2(arrayvals_D_8.out_load())
+        mul_4.set_in1(mul_5.out_val())
+        mul_4.set_in2(arrayvals_D_8.out_val())
         mul_4.update()
 
         reduce_3.set_in_val(mul_4.out_val())
@@ -165,10 +165,10 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_Xvals_0.set_input(reduce_3.out_val())
         fiberwrite_Xvals_0.update()
 
-        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer-i())
+        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer())
         fiberwrite_X0_2.update()
 
-        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner-j())
+        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner())
         fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()

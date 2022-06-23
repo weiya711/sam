@@ -14,9 +14,11 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -165,10 +167,10 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_Xvals_0.set_input(reduce_3.out_val())
         fiberwrite_Xvals_0.update()
 
-        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer-i())
+        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer - i())
         fiberwrite_X0_2.update()
 
-        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner-j())
+        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner - j())
         fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
@@ -181,6 +183,7 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
     out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+
     def bench():
         time.sleep(0.01)
 
@@ -192,59 +195,59 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_D_shape"] = D_shape
     sample_dict = intersecti_24.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersecti_24" + "_" + k] =  sample_dict[k]
+        extra_info["intersecti_24" + "_" + k] = sample_dict[k]
 
     sample_dict = crddrop_9.return_statistics()
     for k in sample_dict.keys():
-        extra_info["crddrop_9" + "_" + k] =  sample_dict[k]
+        extra_info["crddrop_9" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_X0_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_X0_2" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_X1_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_X1_1" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_Di_21.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Di_21" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_Di_21" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectj_18.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_18" + "_" + k] =  sample_dict[k]
+        extra_info["intersectj_18" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_Cj_15.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Cj_15" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_Cj_15" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectk_12.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectk_12" + "_" + k] =  sample_dict[k]
+        extra_info["intersectk_12" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_Bk_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Bk_10" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_Bk_10" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_B_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_B_6" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_B_6" + "_" + k] = sample_dict[k]
 
     sample_dict = reduce_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_3" + "_" + k] =  sample_dict[k]
+        extra_info["reduce_3" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_Xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_C_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_C_7" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_C_7" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_D_8.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_D_8" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_D_8" + "_" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

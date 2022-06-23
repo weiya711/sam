@@ -144,8 +144,8 @@ def test_tensor3_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_6.set_load(unionk_7.out_ref2())
         arrayvals_C_6.update()
 
-        add_4.set_in1(arrayvals_B_5.out_load())
-        add_4.set_in2(arrayvals_C_6.out_load())
+        add_4.set_in1(arrayvals_B_5.out_val())
+        add_4.set_in2(arrayvals_C_6.out_val())
         add_4.update()
 
         fiberwrite_Xvals_0.set_input(add_4.out_val())

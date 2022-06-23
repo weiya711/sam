@@ -130,8 +130,8 @@ def test_matmul_jki(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_8.set_load(repeat_Ci_9.out_ref())
         arrayvals_C_8.update()
 
-        mul_6.set_in1(arrayvals_C_8.out_load())
-        mul_6.set_in2(arrayvals_B_7.out_load())
+        mul_6.set_in1(arrayvals_C_8.out_val())
+        mul_6.set_in2(arrayvals_B_7.out_val())
         mul_6.update()
 
         spaccumulator1_3_drop_crd_outer.set_in_stream(crdhold_4.out_crd_outer())

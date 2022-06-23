@@ -74,12 +74,12 @@ class CodeGenerationdatasets:
 
     def get_edge_data(self):
         return self.edge_data
-    
+
     def get_edge_info(self, v, i):
-        if self.edge_data[v][i] == None and len(self.edge_data[v][i]) == 0:
+        if self.edge_data[v][i] is None and len(self.edge_data[v][i]) == 0:
             return ""
         if "-i" in self.edge_data[v][i] or "-j" in self.edge_data[v][i] or "-k" in self.edge_data[v][i]:
-            return  str(self.edge_data[v][i])[:-2]
+            return str(self.edge_data[v][i])[:-2]
         return str(self.edge_data[v][i])
 
     def get_parents(self):
@@ -845,12 +845,12 @@ for apath in file_paths:
                 data.add_done(v)
 
             if d[v]["type"] == "mul" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                data.get_if_node_done(v) == 0:
+                    data.get_if_node_done(v) == 0:
                 for i in range(len(data.get_parents()[v])):
                     u_ = data.get_parents()[v][i]
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
-                        d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                            d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
+                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "add" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -873,7 +873,7 @@ for apath in file_paths:
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, data.get_if_done(), v) and \
                     data.get_if_node_done(v) == 0:
                 for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i] 
+                    u_ = data.get_parents()[v][i]
                     if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
                             in d[u_]["object"]:
                         local_index = data.get_edge_data()[v][i][-1]

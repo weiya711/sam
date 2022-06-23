@@ -187,23 +187,23 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_f_11.set_load(repeat_fj_14.out_ref())
         arrayvals_f_11.update()
 
-        mul_9.set_in1(arrayvals_e_10.out_load())
-        mul_9.set_in2(arrayvals_f_11.out_load())
+        mul_9.set_in1(arrayvals_e_10.out_val())
+        mul_9.set_in2(arrayvals_f_11.out_val())
         mul_9.update()
 
         arrayvals_b_6.set_load(repeat_bj_12.out_ref())
         arrayvals_b_6.update()
 
-        mul_5.set_in1(arrayvals_b_6.out_load())
-        mul_5.set_in2(arrayvals_C_7.out_load())
+        mul_5.set_in1(arrayvals_b_6.out_val())
+        mul_5.set_in2(arrayvals_C_7.out_val())
         mul_5.update()
 
-        mul_4.set_in1(mul_5.out_load())
-        mul_4.set_in2(arrayvals_d_8.out_load())
+        mul_4.set_in1(mul_5.out_val())
+        mul_4.set_in2(arrayvals_d_8.out_val())
         mul_4.update()
 
-        add_3.set_in1(mul_4.out_load())
-        add_3.set_in2(mul_9.out_load())
+        add_3.set_in1(mul_4.out_val())
+        add_3.set_in2(mul_9.out_val())
         add_3.update()
 
         reduce_2.set_in_val(add_3.out_val())

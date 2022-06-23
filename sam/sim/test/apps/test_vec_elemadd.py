@@ -86,8 +86,8 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_c_4.set_load(unioni_5.out_ref2())
         arrayvals_c_4.update()
 
-        add_2.set_in1(arrayvals_b_3.out_load())
-        add_2.set_in2(arrayvals_c_4.out_load())
+        add_2.set_in1(arrayvals_b_3.out_val())
+        add_2.set_in2(arrayvals_c_4.out_val())
         add_2.update()
 
         fiberwrite_xvals_0.set_input(add_2.out_val())

@@ -79,8 +79,8 @@ def test_vec_scalar_mul(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_b_3.set_load(repeat_bi_5.out_ref())
         arrayvals_b_3.update()
 
-        mul_2.set_in1(arrayvals_b_3.out_load())
-        mul_2.set_in2(arrayvals_c_4.out_load())
+        mul_2.set_in1(arrayvals_b_3.out_val())
+        mul_2.set_in2(arrayvals_c_4.out_val())
         mul_2.update()
 
         fiberwrite_xvals_0.set_input(mul_2.out_val())

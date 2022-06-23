@@ -200,12 +200,12 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_8.set_load(repeat_Cl_10.out_ref())
         arrayvals_C_8.update()
 
-        mul_6.set_in1(arrayvals_C_8.out_load())
-        mul_6.set_in2(arrayvals_B_7.out_load())
+        mul_6.set_in1(arrayvals_C_8.out_val())
+        mul_6.set_in2(arrayvals_B_7.out_val())
         mul_6.update()
 
-        mul_5.set_in1(mul_6.out_load())
-        mul_5.set_in2(arrayvals_D_9.out_load())
+        mul_5.set_in1(mul_6.out_val())
+        mul_5.set_in2(arrayvals_D_9.out_val())
         mul_5.update()
 
         reduce_4.set_in_val(mul_5.out_val())

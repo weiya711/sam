@@ -151,12 +151,12 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_D_7.set_load(unionj_8.out_ref3())
         arrayvals_D_7.update()
 
-        add_4.set_in1(arrayvals_B_5.out_load())
-        add_4.set_in2(arrayvals_C_6.out_load())
+        add_4.set_in1(arrayvals_B_5.out_val())
+        add_4.set_in2(arrayvals_C_6.out_val())
         add_4.update()
 
-        add_3.set_in1(add_4.out_load())
-        add_3.set_in2(arrayvals_D_7.out_load())
+        add_3.set_in1(add_4.out_val())
+        add_3.set_in2(arrayvals_D_7.out_val())
         add_3.update()
 
         fiberwrite_Xvals_0.set_input(add_3.out_val())

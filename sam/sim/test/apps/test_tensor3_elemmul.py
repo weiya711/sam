@@ -133,8 +133,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_6.set_load(intersectk_9.out_ref2())
         arrayvals_C_6.update()
 
-        mul_4.set_in1(arrayvals_B_5.out_load())
-        mul_4.set_in2(arrayvals_C_6.out_load())
+        mul_4.set_in1(arrayvals_B_5.out_val())
+        mul_4.set_in2(arrayvals_C_6.out_val())
         mul_4.update()
 
         fiberwrite_Xvals_0.set_input(mul_4.out_val())
@@ -142,13 +142,13 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
         crddrop_7.set_outer_crd(intersecti_15.out_crd())
         crddrop_7.set_inner_crd(crddrop_8.out_crd())
-        fiberwrite_X0_3.set_input(crddrop_7.out_crd_outer-i())
+        fiberwrite_X0_3.set_input(crddrop_7.out_crd_outer())
         fiberwrite_X0_3.update()
 
-        fiberwrite_X1_2.set_input(crddrop_7.out_crd_inner-j())
+        fiberwrite_X1_2.set_input(crddrop_7.out_crd_inner())
         fiberwrite_X1_2.update()
 
-        fiberwrite_X2_1.set_input(crddrop_8.out_crd_inner-k())
+        fiberwrite_X2_1.set_input(crddrop_8.out_crd_inner())
         fiberwrite_X2_1.update()
 
         done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()

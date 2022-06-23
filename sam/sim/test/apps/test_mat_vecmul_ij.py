@@ -104,8 +104,8 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_c_5.set_load(intersectj_6.out_ref1())
         arrayvals_c_5.update()
 
-        mul_3.set_in1(arrayvals_B_4.out_load())
-        mul_3.set_in2(arrayvals_c_5.out_load())
+        mul_3.set_in1(arrayvals_B_4.out_val())
+        mul_3.set_in2(arrayvals_c_5.out_val())
         mul_3.update()
 
         reduce_2.set_in_val(mul_3.out_val())

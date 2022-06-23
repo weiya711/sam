@@ -115,8 +115,8 @@ def test_mat_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_5.set_load(unionj_6.out_ref2())
         arrayvals_C_5.update()
 
-        add_3.set_in1(arrayvals_B_4.out_load())
-        add_3.set_in2(arrayvals_C_5.out_load())
+        add_3.set_in1(arrayvals_B_4.out_val())
+        add_3.set_in2(arrayvals_C_5.out_val())
         add_3.update()
 
         fiberwrite_Xvals_0.set_input(add_3.out_val())

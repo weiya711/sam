@@ -125,8 +125,8 @@ def test_matmul_jik(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_6.set_load(intersectk_7.out_ref1())
         arrayvals_C_6.update()
 
-        mul_4.set_in1(arrayvals_B_5.out_load())
-        mul_4.set_in2(arrayvals_C_6.out_load())
+        mul_4.set_in1(arrayvals_B_5.out_val())
+        mul_4.set_in2(arrayvals_C_6.out_val())
         mul_4.update()
 
         reduce_3.set_in_val(mul_4.out_val())
