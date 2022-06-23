@@ -2,3 +2,6 @@
 	path = compiler/taco
 	url = https://github.com/weiya711/taco/
 	branch = sam
+[submodule "compiler/benchmark"]
+	path = compiler/benchmark
+	url = https://github.com/google/benchmark.git
