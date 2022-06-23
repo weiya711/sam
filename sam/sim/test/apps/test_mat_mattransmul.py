@@ -32,7 +32,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ds10")
+    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss10")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -41,12 +41,22 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
     C_crd0 = read_inputs(C0_crd_filename)
 
+    C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
+    C_seg1 = read_inputs(C1_seg_filename)
+    C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
+    C_crd1 = read_inputs(C1_crd_filename)
+
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    d_dirname = os.path.join(formatted_dir, ssname, "dummy", "d0")
+    d_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
     d_shape_filename = os.path.join(d_dirname, "d_shape.txt")
     d_shape = read_inputs(d_shape_filename)
+
+    d0_seg_filename = os.path.join(d_dirname, "d0_seg.txt")
+    d_seg0 = read_inputs(d0_seg_filename)
+    d0_crd_filename = os.path.join(d_dirname, "d0_crd.txt")
+    d_crd0 = read_inputs(d0_crd_filename)
 
     d_vals_filename = os.path.join(d_dirname, "d_vals.txt")
     d_vals = read_inputs(d_vals_filename, float)
@@ -58,22 +68,28 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     e_vals_filename = os.path.join(e_dirname, "e_vals.txt")
     e_vals = read_inputs(e_vals_filename, float)
 
-    f_dirname = os.path.join(formatted_dir, ssname, "dummy", "d0")
+    f_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
     f_shape_filename = os.path.join(f_dirname, "f_shape.txt")
     f_shape = read_inputs(f_shape_filename)
+
+    f0_seg_filename = os.path.join(f_dirname, "f0_seg.txt")
+    f_seg0 = read_inputs(f0_seg_filename)
+    f0_crd_filename = os.path.join(f_dirname, "f0_crd.txt")
+    f_crd0 = read_inputs(f0_crd_filename)
 
     f_vals_filename = os.path.join(f_dirname, "f_vals.txt")
     f_vals = read_inputs(f_vals_filename, float)
 
-    fiberlookup_Ci_27 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim)
-    fiberlookup_fi_28 = UncompressCrdRdScan(dim=f_shape[0], debug=debug_sim)
+    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
+    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim)
     unioni_26 = Union2(debug=debug_sim)
     fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim)
     repsiggen_i_24 = RepeatSigGen(debug=debug_sim)
     repeat_bi_20 = Repeat(debug=debug_sim)
     repeat_di_21 = Repeat(debug=debug_sim)
     repeat_ei_22 = Repeat(debug=debug_sim)
-    fiberlookup_dj_19 = UncompressCrdRdScan(dim=d_shape[0], debug=debug_sim)
+    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim)
     intersectj_17 = Intersect2(debug=debug_sim)
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
@@ -196,13 +212,14 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_xvals_0.set_input(reduce_2.out_val())
         fiberwrite_xvals_0.update()
 
-        done = fiberwrite_xvals_0.out_done()
+        done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1
 
+    fiberwrite_x0_1.autosize()
     fiberwrite_xvals_0.autosize()
 
-    out_crds = []
-    out_segs = []
+    out_crds = [fiberwrite_x0_1.get_arr()]
+    out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
     def bench():
         time.sleep(0.01)
@@ -277,5 +294,5 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_vals, "d0")
+        check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)
