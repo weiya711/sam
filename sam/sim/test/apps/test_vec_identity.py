@@ -3,19 +3,20 @@ import time
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
-from sam.sim.src.joiner import Intersect2
-from sam.sim.src.compute import Multiply2
-from sam.sim.src.crd_manager import CrdDrop
+from sam.sim.src.joiner import Intersect2, Union2
+from sam.sim.src.compute import Multiply2, Add2
+from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
+from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -23,7 +24,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_identity(samBench, ssname, debug_sim, fill=0):
+def test_vec_identity(samBench, ssname, check_gold, debug_sim, fill=0):
     b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
@@ -86,4 +87,7 @@ def test_vec_identity(samBench, ssname, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
 
+    if check_gold:
+        print("Checking gold...")
+        check_gold_vec_identity(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)
