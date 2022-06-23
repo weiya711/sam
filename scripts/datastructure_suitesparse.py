@@ -8,7 +8,7 @@ from pathlib import Path
 from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 
 cwd = os.getcwd()
-SS_PATH = os.getenv('SUITESPARSE_PATH')
+SS_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(cwd, 'suitesparse'))
 
 out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 

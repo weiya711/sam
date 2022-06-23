@@ -8,7 +8,7 @@ cwd = os.getcwd()
 ss_formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
-def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val):
+def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format="ss01"):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -39,9 +39,16 @@ def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val):
     C_scipy = scipy.sparse.csc_matrix((C_vals, C0_crd, C0_seg), shape=C_shape)
 
     gold_nd = (B_scipy * C_scipy).toarray()
+    transpose = out_format[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
         print("Dense Mat1:\n", B_scipy.toarray())
         print("Dense Mat2:\n", C_scipy.toarray())
         print("Dense Gold:", gold_nd)
@@ -54,6 +61,8 @@ def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val):
     else:
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
         out_tup = remove_zeros(out_tup)
+        if debug_sim:
+            print("Out:", out_tup)
         assert (check_point_tuple(out_tup, gold_tup))
 
 
@@ -173,6 +182,9 @@ def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val):
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
         print("Dense Mat1:\n", B_scipy.toarray())
         print("Dense Mat2:\n", C_scipy.toarray())
         print("Dense Gold:", gold_nd)
@@ -188,5 +200,50 @@ def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val):
         assert (check_point_tuple(out_tup, gold_tup))
 
 
+def check_gold_vecmul_ji(ssname, debug_sim, out_crds, out_segs, out_val):
+    return check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val)
+
+
+def check_gold_vecmul_ij(ssname, debug_sim, out_crds, out_segs, out_val):
+    return check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val)
+
+
 def check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val):
+    pass
+
+
+def check_gold_mat_sddmm(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_mat_mattransmul(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_mat_residual(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_mat_elemadd3(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_ttv(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_ttm(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+def check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    pass
+
+
+# ---------------- OTHER CHECKS (TODO later) ---------------- #
+def check_gold_tensor3_identity(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     pass

@@ -2,47 +2,37 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+
 BENCHMARKS=(
-  matmul_kij
-  matmul_kji
-  matmul_ikj
-  matmul_jki
-  matmul_ijk
-  matmul_jik
-  mat_elemmul
-  mat_identity
-#  vecmul_ij
-#  vecmul_ji
-#  vec_elemmul
-#  vec_identity
-#  vec_elemadd
-#  vec_scalar_mul
-#  tensor3_elemmul
-#  tensor3_identity
+  tensor3_elemmul
+  tensor3_identity
+  tensor3_elemadd
+  tensor3_ttm
+  tensor3_ttv
+  tensor3_innerprod
+  tensor_mttkrp
 )
 
-
-# FIXME: Need to change this to take in an input file as in taco side
 DATASET_NAMES=(
-  bcsstm04
-  bcsstm02
-  bcsstm03
-  lpi_bgprtr
-  cage4
-  klein-b1
-  GD02_a
-  GD95_b
-  Hamrle1
-  LF10
+   facebook
+   fb10k
+   fb1k
+   nell-1
+   nell-2
+   taco-tensor
 )
+
+outdir=/nobackup/owhsu/sparse-datasets/frostt-formatted
+
+export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt
+export FROSTT_FORMATTED_PATH=$outdir
+
 
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 
-export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 cwd=$(pwd)
 resultdir=results
 

@@ -12,7 +12,8 @@ import math
 from pathlib import Path
 from dataclasses import dataclass
 
-HOSTNAME = os.environ['HOSTNAME']
+SUITESPARSE_PATH = os.getenv('SUITESPARSE_PATH', default="./suitessparse")
+HOSTNAME = os.getenv('HOSTNAME', default="local")
 
 
 def round_sparse(x):
@@ -251,7 +252,10 @@ class FormatWriter:
                 segend = sum(has_row)
                 seg0 = [0, segend]
                 crd0 = [i for i, r in enumerate(has_row) if r]
-                seg1 = [0] + list(itertools.accumulate(map(int, csr.getnnz(1))))
+                seg1 = list(itertools.accumulate(map(int, csr.getnnz(1))))
+                seg1 = [item for item, _ in itertools.groupby(seg1)]
+                if seg1[0] != 0:
+                    seg1 = [0] + seg1
                 crd1 = csr.indices
                 data = csr.data
                 dcsr = DoublyCompressedMatrix(csr.shape, seg0, crd0, seg1, crd1, data)
@@ -260,11 +264,13 @@ class FormatWriter:
                 csc = scipy.sparse.csc_matrix(coo)
                 has_col = [rc > 0 for rc in csc.getnnz(0)]
                 segend = sum(has_col)
-                # Transposed since it is DCSC
-                seg1 = [0, segend]
-                crd1 = [i for i, c in enumerate(has_col) if c]
-                seg0 = [0] + list(itertools.accumulate(map(int, csc.getnnz(0))))
-                crd0 = csc.indices
+                seg0 = [0, segend]
+                crd0 = [i for i, c in enumerate(has_col) if c]
+                seg1 = list(itertools.accumulate(map(int, csc.getnnz(0))))
+                seg1 = [item for item, _ in itertools.groupby(seg1)]
+                if seg1[0] != 0:
+                    seg1 = [0] + seg1
+                crd1 = csc.indices
                 data = csc.data
                 dcsc = DoublyCompressedMatrix(csc.shape, seg0, crd0, seg1, crd1, data)
                 return dcsc

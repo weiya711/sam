@@ -70,12 +70,13 @@ class Multiply2(Compute2):
             curr_in2 = self.in2.pop(0)
             if curr_in1 == 'D' or curr_in2 == 'D':
                 # Inputs are both the same and done tokens
-                assert (curr_in1 == curr_in2)
+                assert curr_in1 == curr_in2, "Both must be done tokens: " + str(curr_in1) + " != " + str(curr_in2)
                 self.curr_out = curr_in1
                 self.done = True
             elif is_stkn(curr_in1) or is_stkn(curr_in2):
                 # Inputs are both the same and stop tokens
-                assert (curr_in1 == curr_in2)
+                assert curr_in1 == curr_in2, "Both must be the same stop token: " + str(curr_in1) + " != " \
+                                             + str(curr_in2)
                 self.curr_out = curr_in1
             else:
                 # Both inputs are values

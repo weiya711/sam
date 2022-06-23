@@ -62,6 +62,7 @@ tests: sam
 	make run
 
 # ---- Build taco and make sam graphs ----
+.PHONY: sam
 sam: taco/build 
 	 cd compiler && bash -xe ./sam-kernels.sh
 

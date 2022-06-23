@@ -1,27 +1,23 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -t 360
-outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+outdir=/nobackup/owhsu/sparse-datasets/frostt-formatted
 
 DATASET_NAMES=(
-  bcsstm04
-  bcsstm02
-  bcsstm03
-  lpi_bgprtr
-  cage4
-  klein-b1
-  GD02_a
-  GD95_b
-  Hamrle1
-  LF10
+   facebook
+   fb10k
+   fb1k
+   nell-1
+   nell-2
+   taco-tensor
 )
 
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-export SUITESPARSE_FORMATTED_PATH=$outdir
+export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt
+export FROSTT_FORMATTED_PATH=$outdir
 
 mkdir -p $outdir
 cd ./sam/sim
@@ -30,8 +26,21 @@ for i in ${!DATASET_NAMES[@]}; do
     name=${DATASET_NAMES[$i]} 
 
     echo "Testing $name..."
+#    pytest -k test_mat_mul_ijk_csr_full_i --ssname $name 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then 
+#      errors+=("${name} matmul_ijk_full")
+#    fi
 
-    pytest -k test_matmul_ --ssname $name -s  #--debug-sim 
+#    pytest -k test_mat_identity_i --ssname $name -s 
+#    status=$?
+#    if [ $status -gt 0 ]
+#    then
+#      errors+=("${name} matmul_ijk")
+#    fi
+ 
+    pytest -k test_tensor --frosttname $name -s -vv #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 

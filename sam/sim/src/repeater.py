@@ -13,9 +13,24 @@ class Repeat(Primitive):
         self.curr_in_ref = ''
         self.get_next_ref = True
         self.get_next_rep = True
+        self.emit_stkn = False
         self.stop_token_cnt = 0
 
     def update(self):
+        if len(self.in_ref) > 0 and self.emit_stkn:
+            next_in = self.in_ref[0]
+            if is_stkn(next_in):
+                stkn = increment_stkn(next_in)
+                self.in_ref.pop(0)
+            else:
+                stkn = 'S0'
+            self.curr_out_ref = stkn
+            self.emit_stkn = False
+            return
+        elif self.emit_stkn:
+            self.curr_out_ref = ''
+            return
+
         if len(self.in_ref) > 0 and self.get_next_ref:
             self.curr_in_ref = self.in_ref.pop(0)
             if is_stkn(self.curr_in_ref):
@@ -36,13 +51,17 @@ class Repeat(Primitive):
             repeat = self.in_repeat.pop(0)
             if repeat == 'S':
                 self.get_next_ref = True
-                next_in = self.in_ref[0]
-                if is_stkn(next_in):
-                    stkn = increment_stkn(next_in)
-                    self.in_ref.pop(0)
+                if len(self.in_ref) > 0:
+                    next_in = self.in_ref[0]
+                    if is_stkn(next_in):
+                        stkn = increment_stkn(next_in)
+                        self.in_ref.pop(0)
+                    else:
+                        stkn = 'S0'
+                    self.curr_out_ref = stkn
                 else:
-                    stkn = 'S0'
-                self.curr_out_ref = stkn
+                    self.emit_stkn = True
+                    self.curr_out_ref = ''
             elif repeat == 'D':
                 if self.curr_out_ref != 'D':
                     raise Exception("Both repeat and ref signal need to end in 'D'")
