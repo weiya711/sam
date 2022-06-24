@@ -102,6 +102,8 @@ def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
         crddrop_6.set_outer_crd(intersecti_10.out_crd())
         crddrop_6.set_inner_crd(intersectj_7.out_crd())
+        crddrop_6.update()
+
         arrayvals_B_4.set_load(intersectj_7.out_ref1())
         arrayvals_B_4.update()
 

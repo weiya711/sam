@@ -127,6 +127,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
         crddrop_8.set_outer_crd(intersectj_12.out_crd())
         crddrop_8.set_inner_crd(intersectk_9.out_crd())
+        crddrop_8.update()
+
         arrayvals_B_5.set_load(intersectk_9.out_ref1())
         arrayvals_B_5.update()
 
@@ -142,6 +144,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
         crddrop_7.set_outer_crd(intersecti_15.out_crd())
         crddrop_7.set_inner_crd(crddrop_8.out_crd())
+        crddrop_7.update()
+
         fiberwrite_X0_3.set_input(crddrop_7.out_crd_outer())
         fiberwrite_X0_3.update()
 
