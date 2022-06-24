@@ -2,6 +2,8 @@ import pytest
 import time
 import scipy.sparse
 import math
+import os
+import csv
 
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
@@ -14,15 +16,11 @@ from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
-import os
-import csv
 
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
-KDIM = 256
 
 
 # FIXME: Figureout formats
@@ -50,10 +48,10 @@ def test_mat_sddmm_unfused(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
-    C_vals = np.ones(math.prod(C_shape)).tolist()
+    C_vals = np.arange(math.prod(C_shape)).tolist()
 
     D_shape = (KDIM, B_shape[1])
-    D_vals = np.ones(math.prod(D_shape)).tolist()
+    D_vals = np.arange(math.prod(D_shape)).tolist()
 
     fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
     repsiggen_i_22 = RepeatSigGen(debug=debug_sim)
