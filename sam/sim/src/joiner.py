@@ -348,7 +348,6 @@ class Union2(CrdJoiner2):
     def print_union_rate(self):
         return print("Intersection rate: ", self.return_union_rate())
 
-
 class IntersectBV2(BVJoiner2):
     def __init__(self, emit_zeros=False, **kwargs):
         super().__init__(**kwargs)

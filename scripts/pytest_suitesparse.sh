@@ -7,6 +7,7 @@ DATASET_NAMES=(
 #  bcsstm04
   bcsstm02
   lpi_itest2
+  lp_scsd1
 #  bcsstm03
 #  lpi_bgprtr
 #  cage4
@@ -30,11 +31,11 @@ for i in ${!DATASET_NAMES[@]}; do
 
     echo "Testing $name..."
 
-    pytest -k test_matmul_ --ssname $name -s  #--debug-sim 
+    pytest ./test/final-apps --ssname $name -s --check-gold #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 
-      errors+=("${name} matmul_ijk")
+      errors+=("${name}")
     fi
  
 

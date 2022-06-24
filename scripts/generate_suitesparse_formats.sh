@@ -10,6 +10,7 @@ DATASET_NAMES=(
 #  bcsstm04
   bcsstm02
   lpi_itest2
+  lp_scsd1
 #  bcsstm03
 #  lpi_bgprtr
 #  cage4
