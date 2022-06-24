@@ -22,8 +22,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
-KDIM = 256
-
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -50,10 +48,10 @@ def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0)
     B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
-    C_vals = np.ones(math.prod(C_shape)).tolist()
+    C_vals = np.arange(math.prod(C_shape)).tolist()
 
     D_shape = (KDIM, B_shape[1])
-    D_vals = np.ones(math.prod(D_shape)).tolist()
+    D_vals = np.arange(math.prod(D_shape)).tolist()
 
     fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
     fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
@@ -86,6 +84,12 @@ def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0)
     done = False
     time_cnt = 0
 
+    tempb = []
+    tempc = []
+    tempd = []
+    tempci = []
+    tempcj = []
+    tempck = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0))
@@ -153,6 +157,20 @@ def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0)
 
         arrayvals_B_6.set_load(repeat_Bk_10.out_ref())
         arrayvals_B_6.update()
+
+        # tempb.append(arrayvals_B_6.out_val())
+        # tempc.append(arrayvals_C_7.out_val())
+        # tempd.append(arrayvals_D_8.out_val())
+        # tempci.append(fiberlookup_Ci_26.out_ref())
+        # tempcj.append(repeat_Cj_15.out_ref())
+        # tempck.append(fiberlookup_Ck_13.out_ref())
+        # print("B", remove_emptystr(tempb))
+        # print("C", remove_emptystr(tempc))
+        # print("D", remove_emptystr(tempd))
+        # print("Ci", remove_emptystr(tempci))
+        # print("Cj", remove_emptystr(tempcj))
+        # print("Ck", remove_emptystr(tempck))
+
 
         mul_5.set_in1(arrayvals_B_6.out_val())
         mul_5.set_in2(arrayvals_C_7.out_val())
