@@ -72,6 +72,8 @@ class UncompressCrdRdScan(CrdRdScan):
                     self.curr_crd = stkn
                     self.curr_ref = stkn
                 else:
+                    self.curr_crd = ''
+                    self.curr_ref = ''
                     self.emit_tkn = True
             else:
                 self.curr_crd = 0
@@ -113,6 +115,8 @@ class UncompressCrdRdScan(CrdRdScan):
                 self.curr_crd = stkn
                 self.curr_ref = stkn
             else:
+                self.curr_crd = ''
+                self.curr_ref = ''
                 self.emit_tkn = True
         else:
             self.curr_crd += 1

@@ -5,7 +5,7 @@ import math
 from sam.sim.src.base import *
 from sam.sim.test.test import *
 
-KDIM = 256
+KDIM = 10
 
 cwd = os.getcwd()
 ss_formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -69,7 +69,7 @@ def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val):
+def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -100,6 +100,10 @@ def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val):
     C_scipy = scipy.sparse.csr_matrix((C_vals, C1_crd, C1_seg), shape=C_shape)
 
     gold_nd = (B_scipy.multiply(C_scipy)).toarray()
+    transpose = format_str[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
@@ -151,7 +155,7 @@ def check_gold_mat_identity(ssname, debug_sim, out_crds, out_segs, out_val):
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val):
+def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -182,6 +186,10 @@ def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val):
     C_scipy = scipy.sparse.csr_matrix((C_vals, C1_crd, C1_seg), shape=C_shape)
 
     gold_nd = (B_scipy + C_scipy).toarray()
+    transpose = format_str[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
@@ -229,10 +237,10 @@ def check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_val, format_
     B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
-    C_vals = np.ones(C_shape)
+    C_vals = np.arange(math.prod(C_shape)).reshape(C_shape)
 
     D_shape = (KDIM, B_shape[1])
-    D_vals = np.ones(D_shape)
+    D_vals = np.arange(math.prod(D_shape)).reshape(D_shape[::-1]).transpose()
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
 

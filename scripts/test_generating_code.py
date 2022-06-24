@@ -9,9 +9,10 @@ frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_el
 suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
                     "matmul_jki", "mat_vecmul_ij", "mat_vecmul_ji", "matmul_kji", "mat_elemadd3", "mat_sddmm.gv",
                     "mat_elemadd", "mat_mattransmul", "mat_residual", "mat_sddmm"]
-vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "mat_vecmul_ij", "mat_vecmul_ji", "vec_identity",
+vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
             "vec_scalar_mul"]
 
+other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij", "mat_vecmul_ji"]
 
 class TensorFormat:
     def __init__(self):
@@ -150,8 +151,13 @@ def generate_header(f, out_name):
     f.write("import os\n")
     f.write("import csv\n")
     f.write("cwd = os.getcwd()\n")
-    f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
-    f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
+    if out_name in suitesparse_list:
+        f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
+    elif out_name in frostt_list:
+        f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
+    if out_name in other_list:
+        f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n")
+        
     f.write("# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")

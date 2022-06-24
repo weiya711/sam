@@ -7,16 +7,17 @@ outdir=${SUITESPARSE_FORMATTED_PATH}
 basedir=$(pwd)
 
 DATASET_NAMES=(
-  bcsstm04
+#  bcsstm04
   bcsstm02
-  bcsstm03
-  lpi_bgprtr
-  cage4
-  klein-b1
-  GD02_a
-  GD95_b
-  Hamrle1
-  LF10
+  lpi_itest2
+#  bcsstm03
+#  lpi_bgprtr
+#  cage4
+#  klein-b1
+#  GD02_a
+#  GD95_b
+#  Hamrle1
+#  LF10
 )
 
 mkdir -p $outdir
