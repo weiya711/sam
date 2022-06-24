@@ -667,7 +667,7 @@ for apath in file_paths:
         else:
             invalid_flag = 1
             print("Error invalid node detected", node_info["type"], "\n")
-    if invalid_flag == 1 or "mat_residual" in apath:
+    if invalid_flag == 1:
         os.system("rm " + out_name[num] + ".py")
         print(out_name[num] + " failed\n")
         num += 1
@@ -758,6 +758,8 @@ for apath in file_paths:
             if d[v]["type"] == "union" and parents_done(networkx_graph, data.get_if_done(), v) and \
                     data.get_if_node_done(v) == 0:
                 for i in range(len(data.get_parents()[v])):
+                    if i % 2 == 1:
+                        continue
                     u_ = data.get_parents()[v][i]
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
                             d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")

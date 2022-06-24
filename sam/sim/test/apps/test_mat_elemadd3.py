@@ -110,10 +110,7 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Di_15.update()
 
         unioni_12.set_in1(fiberlookup_Bi_13.out_ref(), fiberlookup_Bi_13.out_crd())
-        unioni_12.set_in1(fiberlookup_Bi_13.out_ref(), fiberlookup_Bi_13.out_crd())
         unioni_12.set_in2(fiberlookup_Ci_14.out_ref(), fiberlookup_Ci_14.out_crd())
-        unioni_12.set_in2(fiberlookup_Ci_14.out_ref(), fiberlookup_Ci_14.out_crd())
-        unioni_12.set_in3(fiberlookup_Di_15.out_ref(), fiberlookup_Di_15.out_crd())
         unioni_12.set_in3(fiberlookup_Di_15.out_ref(), fiberlookup_Di_15.out_crd())
         unioni_12.update()
 
@@ -130,10 +127,7 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Dj_11.update()
 
         unionj_8.set_in1(fiberlookup_Bj_9.out_ref(), fiberlookup_Bj_9.out_crd())
-        unionj_8.set_in1(fiberlookup_Bj_9.out_ref(), fiberlookup_Bj_9.out_crd())
         unionj_8.set_in2(fiberlookup_Cj_10.out_ref(), fiberlookup_Cj_10.out_crd())
-        unionj_8.set_in2(fiberlookup_Cj_10.out_ref(), fiberlookup_Cj_10.out_crd())
-        unionj_8.set_in3(fiberlookup_Dj_11.out_ref(), fiberlookup_Dj_11.out_crd())
         unionj_8.set_in3(fiberlookup_Dj_11.out_ref(), fiberlookup_Dj_11.out_crd())
         unionj_8.update()
 

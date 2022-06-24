@@ -124,8 +124,6 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_fi_28.update()
 
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
-        unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
-        unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
         unioni_26.update()
 

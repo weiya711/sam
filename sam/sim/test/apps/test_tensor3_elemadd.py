@@ -99,8 +99,6 @@ def test_tensor3_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Ci_15.update()
 
         unioni_13.set_in1(fiberlookup_Bi_14.out_ref(), fiberlookup_Bi_14.out_crd())
-        unioni_13.set_in1(fiberlookup_Bi_14.out_ref(), fiberlookup_Bi_14.out_crd())
-        unioni_13.set_in2(fiberlookup_Ci_15.out_ref(), fiberlookup_Ci_15.out_crd())
         unioni_13.set_in2(fiberlookup_Ci_15.out_ref(), fiberlookup_Ci_15.out_crd())
         unioni_13.update()
 
@@ -114,8 +112,6 @@ def test_tensor3_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Cj_12.update()
 
         unionj_10.set_in1(fiberlookup_Bj_11.out_ref(), fiberlookup_Bj_11.out_crd())
-        unionj_10.set_in1(fiberlookup_Bj_11.out_ref(), fiberlookup_Bj_11.out_crd())
-        unionj_10.set_in2(fiberlookup_Cj_12.out_ref(), fiberlookup_Cj_12.out_crd())
         unionj_10.set_in2(fiberlookup_Cj_12.out_ref(), fiberlookup_Cj_12.out_crd())
         unionj_10.update()
 
@@ -129,8 +125,6 @@ def test_tensor3_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Ck_9.update()
 
         unionk_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd())
-        unionk_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd())
-        unionk_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd())
         unionk_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd())
         unionk_7.update()
 

@@ -69,8 +69,6 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_ci_7.update()
 
         unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
-        unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
-        unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.update()
 

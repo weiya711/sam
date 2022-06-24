@@ -122,7 +122,7 @@ def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val, forma
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_mat_identity(ssname, debug_sim, out_crds, out_segs, out_val):
+def check_gold_mat_identity(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
