@@ -11,6 +11,8 @@ def pytest_addoption(parser):
     parser.addoption("--vecname", action="store", help="Vector name for the end-to-end test")
     parser.addoption("--check-gold", action="store_true", default=False,
                      help="Flag that enables functional output checking")
+    parser.addoption("--result-out", action="store",
+                     help="Store output to filename for functional output checking")
     parser.addoption("--synth", action="store_true", default=False,
                      help="Flag that enables functional output checking")
 
@@ -61,6 +63,11 @@ def check_gold(request):
 @pytest.fixture
 def ssname(request):
     return request.config.getoption("--ssname")
+
+
+@pytest.fixture
+def result_out(request):
+    return request.config.getoption("--result-out")
 
 
 @pytest.fixture

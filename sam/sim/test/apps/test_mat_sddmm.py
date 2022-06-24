@@ -16,8 +16,6 @@ import os
 import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
-
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
@@ -25,7 +23,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.suitesparse
 def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname,  "orig", "ss01")
+    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -42,14 +40,14 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname,  "other", "dd01")
+    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "dd01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    D_dirname = os.path.join(formatted_dir, ssname,  "other", "dd10")
+    D_dirname = os.path.join(formatted_dir, ssname, "dummy", "dd10")
     D_shape_filename = os.path.join(D_dirname, "D_shape.txt")
     D_shape = read_inputs(D_shape_filename)
 
@@ -121,6 +119,10 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Dk_14.set_in_ref(intersectj_18.out_ref1())
         fiberlookup_Dk_14.update()
 
+        crddrop_9.set_outer_crd(intersecti_24.out_crd())
+        crddrop_9.set_inner_crd(intersectj_18.out_crd())
+        crddrop_9.update()
+
         repsiggen_j_16.set_istream(intersectj_18.out_crd())
         repsiggen_j_16.update()
 
@@ -152,14 +154,10 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_B_6.update()
 
         mul_5.set_in1(arrayvals_B_6.out_val())
-        mul_5.update()
-
         mul_5.set_in2(arrayvals_C_7.out_val())
         mul_5.update()
 
         mul_4.set_in1(mul_5.out_val())
-        mul_4.update()
-
         mul_4.set_in2(arrayvals_D_8.out_val())
         mul_4.update()
 
