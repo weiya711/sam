@@ -22,8 +22,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
-KDIM = 256
-
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -50,28 +48,30 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, debug_sim, fill=0)
     B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
-    C_vals = np.ones(math.prod(C_shape)).tolist()
+    C_vals = np.arange(math.prod(C_shape)).tolist()
 
     D_shape = (KDIM, B_shape[1])
-    D_vals = np.ones(math.prod(D_shape)).tolist()
+    D_vals = np.arange(math.prod(D_shape)).tolist()
 
     fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-
     fiberlookup_Bj_19 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
+    repsiggen_k_11 = RepeatSigGen(debug=debug_sim)
+    repeat_Bk_10 = Repeat(debug=debug_sim)
+
     repsiggen_i_22 = RepeatSigGen(debug=debug_sim)
     repeat_Di_21 = Repeat(debug=debug_sim)
-    fiberlookup_Dj_20 = UncompressCrdRdScan(dim=D_shape[1], debug=debug_sim)
     fiberlookup_Dk_14 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim)
+
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
     repeat_Cj_15 = Repeat(debug=debug_sim)
     fiberlookup_Ck_13 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim)
+
     intersectk_12 = Intersect2(debug=debug_sim)
-    repsiggen_k_11 = RepeatSigGen(debug=debug_sim)
+
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_D_8 = Array(init_arr=D_vals, debug=debug_sim)
-    repeat_Bk_10 = Repeat(debug=debug_sim)
     arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim)
     mul_5 = Multiply2(debug=debug_sim)
     mul_4 = Multiply2(debug=debug_sim)
@@ -99,16 +99,13 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, debug_sim, fill=0)
         repeat_Di_21.set_in_repsig(repsiggen_i_22.out_repsig())
         repeat_Di_21.update()
 
-        fiberlookup_Dj_20.set_in_ref(repeat_Di_21.out_ref())
-        fiberlookup_Dj_20.update()
-
-        fiberlookup_Dk_14.set_in_ref(fiberlookup_Bj_19.out_ref())
+        fiberlookup_Dk_14.set_in_ref(fiberlookup_Bj_19.out_crd())
         fiberlookup_Dk_14.update()
 
         repsiggen_j_16.set_istream(fiberlookup_Bj_19.out_crd())
         repsiggen_j_16.update()
 
-        repeat_Cj_15.set_in_ref(fiberlookup_Bi_25.out_ref())
+        repeat_Cj_15.set_in_ref(fiberlookup_Bi_25.out_crd())
         repeat_Cj_15.set_in_repsig(repsiggen_j_16.out_repsig())
         repeat_Cj_15.update()
 
