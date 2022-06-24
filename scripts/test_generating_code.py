@@ -767,6 +767,7 @@ for apath in file_paths:
                         f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     if index_value == d[v]["outer"]:
                         f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "crdhold" and parents_done(networkx_graph, data.get_if_done(), v) and \

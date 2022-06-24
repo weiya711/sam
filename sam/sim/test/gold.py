@@ -1,8 +1,11 @@
 import scipy.sparse
 import os
+import math
 
 from sam.sim.src.base import *
 from sam.sim.test.test import *
+
+KDIM = 256
 
 cwd = os.getcwd()
 ss_formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -212,8 +215,54 @@ def check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val):
     pass
 
 
-def check_gold_mat_sddmm(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
-    pass
+def check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
+    B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
+    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape = read_inputs(B_shape_filename)
+
+    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg = read_inputs(B1_seg_filename)
+    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd = read_inputs(B1_crd_filename)
+
+    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals = read_inputs(B_vals_filename, float)
+
+    C_shape = (B_shape[0], KDIM)
+    C_vals = np.ones(C_shape)
+
+    D_shape = (KDIM, B_shape[1])
+    D_vals = np.ones(D_shape)
+
+    B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
+
+    gold_nd = (B_scipy.multiply(C_vals @ D_vals)).toarray()
+    transpose = format_str[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+
+    gold_tup = convert_ndarr_point_tuple(gold_nd)
+
+    if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
+        print("Dense Mat1:\n", B_scipy.toarray())
+        print("Dense Mat2:\n", C_vals)
+        print("Dense Mat3:\n", D_vals)
+        print("Dense Gold:", gold_nd)
+        print("Gold:", gold_tup)
+
+    if not out_val:
+        assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
+        out_tup = remove_zeros(out_tup)
+        if debug_sim:
+            print("Out:", out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
 
 
 def check_gold_mat_mattransmul(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):

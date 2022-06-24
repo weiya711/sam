@@ -1,10 +1,12 @@
 import pytest
 import time
 import scipy.sparse
+import math
+
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
-from sam.sim.src.compute import Multiply2
+from sam.sim.src.compute import Multiply2, Add2
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
@@ -17,7 +19,10 @@ import csv
 
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
+other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
+KDIM = 256
 
 
 # FIXME: Figureout formats
@@ -27,7 +32,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.suitesparse
 def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -44,19 +49,11 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "dd01")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
-    C_shape = read_inputs(C_shape_filename)
+    C_shape = (B_shape[0], KDIM)
+    C_vals = np.ones(math.prod(C_shape)).tolist()
 
-    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
-    C_vals = read_inputs(C_vals_filename, float)
-
-    D_dirname = os.path.join(formatted_dir, ssname, "dummy", "dd10")
-    D_shape_filename = os.path.join(D_dirname, "D_shape.txt")
-    D_shape = read_inputs(D_shape_filename)
-
-    D_vals_filename = os.path.join(D_dirname, "D_vals.txt")
-    D_vals = read_inputs(D_vals_filename, float)
+    D_shape = (KDIM, B_shape[1])
+    D_vals = np.ones(math.prod(D_shape)).tolist()
 
     fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
     fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
@@ -123,6 +120,10 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Dk_14.set_in_ref(intersectj_18.out_ref1())
         fiberlookup_Dk_14.update()
 
+        crddrop_9.set_outer_crd(intersecti_24.out_crd())
+        crddrop_9.set_inner_crd(intersectj_18.out_crd())
+        crddrop_9.update()
+
         repsiggen_j_16.set_istream(intersectj_18.out_crd())
         repsiggen_j_16.update()
 
@@ -153,12 +154,12 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_B_6.set_load(repeat_Bk_10.out_ref())
         arrayvals_B_6.update()
 
-        mul_5.set_in1(arrayvals_B_6.out_load())
-        mul_5.set_in2(arrayvals_C_7.out_load())
+        mul_5.set_in1(arrayvals_B_6.out_val())
+        mul_5.set_in2(arrayvals_C_7.out_val())
         mul_5.update()
 
-        mul_4.set_in1(mul_5.out_load())
-        mul_4.set_in2(arrayvals_D_8.out_load())
+        mul_4.set_in1(mul_5.out_val())
+        mul_4.set_in2(arrayvals_D_8.out_val())
         mul_4.update()
 
         reduce_3.set_in_val(mul_4.out_val())
@@ -167,14 +168,17 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_Xvals_0.set_input(reduce_3.out_val())
         fiberwrite_Xvals_0.update()
 
-        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer - i())
+        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer())
         fiberwrite_X0_2.update()
 
-        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner - j())
+        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner())
         fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
+
+    if debug_sim:
+        print("TOTAL TIME", time_cnt)
 
     fiberwrite_X0_2.autosize()
     fiberwrite_X1_1.autosize()

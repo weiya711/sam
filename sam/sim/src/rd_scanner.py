@@ -38,23 +38,11 @@ class UncompressCrdRdScan(CrdRdScan):
 
         self.meta_dim = dim
 
-    def update(self):
+        self.end_fiber = False
+        self.emit_tkn = False
 
-        # run out of coordinates, move to next input reference
-        if self.curr_crd == '' or self.curr_crd == 'D':
-            self.curr_crd = ''
-            self.curr_ref = ''
-        elif is_stkn(self.curr_crd):
-            self.curr_in_ref = self.in_ref.pop(0)
-            if self.curr_in_ref == 'D':
-                self.curr_crd = 'D'
-                self.curr_ref = 'D'
-                self.done = True
-                return
-            else:
-                self.curr_crd = 0
-                self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
-        elif self.curr_crd >= self.meta_dim - 1:
+    def update(self):
+        if self.emit_tkn and len(self.in_ref) > 0:
             next_in = self.in_ref[0]
             if is_stkn(next_in):
                 self.in_ref.pop(0)
@@ -63,13 +51,77 @@ class UncompressCrdRdScan(CrdRdScan):
                 stkn = 'S0'
             self.curr_crd = stkn
             self.curr_ref = stkn
+            self.emit_tkn = False
+            return
+        elif self.end_fiber and len(self.in_ref) > 0:
+            self.curr_in_ref = self.in_ref.pop(0)
+            if self.curr_in_ref == 'D':
+                self.curr_crd = 'D'
+                self.curr_ref = 'D'
+                self.done = True
+                self.end_fiber = False
+                return
+            elif is_stkn(self.curr_in_ref):
+                if len(self.in_ref) > 0:
+                    next_in = self.in_ref[0]
+                    if is_stkn(next_in):
+                        self.in_ref.pop(0)
+                        stkn = increment_stkn(next_in)
+                    else:
+                        stkn = 'S0'
+                    self.curr_crd = stkn
+                    self.curr_ref = stkn
+                else:
+                    self.emit_tkn = True
+            else:
+                self.curr_crd = 0
+                self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
+                self.end_fiber = False
+                return
+        elif self.end_fiber or self.emit_tkn:
+            self.curr_crd = ''
+            self.curr_ref = ''
+            return
+
+        # run out of coordinates, move to next input reference
+        if self.curr_crd == '' or self.curr_crd == 'D':
+            self.curr_crd = ''
+            self.curr_ref = ''
+        elif is_stkn(self.curr_crd):
+            if len(self.in_ref) > 0:
+                self.curr_in_ref = self.in_ref.pop(0)
+                if self.curr_in_ref == 'D':
+                    self.curr_crd = 'D'
+                    self.curr_ref = 'D'
+                    self.done = True
+                    return
+                else:
+                    self.curr_crd = 0
+                    self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
+            else:
+                self.curr_crd = ''
+                self.curr_ref = ''
+                self.end_fiber = True
+        elif self.curr_crd >= self.meta_dim - 1:
+            if len(self.in_ref) > 0:
+                next_in = self.in_ref[0]
+                if is_stkn(next_in):
+                    self.in_ref.pop(0)
+                    stkn = increment_stkn(next_in)
+                else:
+                    stkn = 'S0'
+                self.curr_crd = stkn
+                self.curr_ref = stkn
+            else:
+                self.emit_tkn = True
         else:
             self.curr_crd += 1
             self.curr_ref = self.curr_crd + self.curr_in_ref * self.meta_dim
 
         if self.debug:
             print("DEBUG: U RD SCAN: \t "
-                  "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
+                  "Curr inref:", self.curr_in_ref, "\tEmit tkn:", self.emit_tkn, "\tEnd Fiber", self.end_fiber,
+                  "\nCurr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
 
 
 def last_stkn(skiplist):

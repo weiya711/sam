@@ -121,6 +121,10 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Dk_14.set_in_ref(intersectj_18.out_ref1())
         fiberlookup_Dk_14.update()
 
+        crddrop_9.set_outer_crd(intersecti_24.out_crd())
+        crddrop_9.set_inner_crd(intersectj_18.out_crd())
+        crddrop_9.update()
+
         repsiggen_j_16.set_istream(intersectj_18.out_crd())
         repsiggen_j_16.update()
 
