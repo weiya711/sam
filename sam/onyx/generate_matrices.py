@@ -57,11 +57,20 @@ class MatrixGenerator():
     def _create_fiber_tree(self):
         self.fiber_tree = FiberTree(tensor=self.array)
 
-    def dump_outputs(self, format=None):
+    def dump_outputs(self, format=None, tpose=False, dump_shape=True):
         '''
         Dump the matrix into many files depending on matrix format
         '''
         print(f"Using dump directory - {self.dump_dir}")
+
+        # Transpose it first if necessary
+        if tpose is True:
+            # print("TPOSING")
+            # print(self.array)
+            self.array = numpy.transpose(self.array)
+            self.shape = self.array.shape
+            self.fiber_tree = FiberTree(tensor=self.array)
+            # print(self.array)
 
         if format is not None:
             self.format = format
@@ -108,9 +117,18 @@ class MatrixGenerator():
                 i = i + 1
         elif format == "UNC":
             flat_array = []
-            for val in self.array:
+            for val in numpy.nditer(self.array):
                 flat_array.append(val)
             self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals")
+
+        if dump_shape:
+            self.write_array(self.array.shape, name=f"shape")
+
+        # Transpose it back
+        if tpose is True:
+            self.array = numpy.transpose(self.array)
+            self.shape = self.array.shape
+            self.fiber_tree = FiberTree(tensor=self.array)
 
     def _dump_csf(self, level_list):
         """ Dumps the csf-based seg/coord array for each level, unless it is a vals list

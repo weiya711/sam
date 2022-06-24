@@ -18,46 +18,88 @@ cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
+synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
+
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_matmul_ijk(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+# @pytest.mark.suitesparse
+@pytest.mark.synth
+@pytest.mark.parametrize("sparsity", [0.95])
+# def test_matmul_ijk(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_matmul_ijk(samBench, sparsity, check_gold, debug_sim, fill=0):
+
+    # DCSR
+    B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
+    B_shape_filename = os.path.join(B_dirname, "shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "shift-trans", "ss10")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    # DCSC
+    C_dirname = os.path.join(synthetic_dir, f"matrix/DCSC/C_random_sp_{sparsity}/")
+    C_shape_filename = os.path.join(C_dirname, "shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
+
+    # B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    # B_shape = read_inputs(B_shape_filename)
+
+    # B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    # B_seg0 = read_inputs(B0_seg_filename)
+    # B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    # B_crd0 = read_inputs(B0_crd_filename)
+
+    # B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    # B_seg1 = read_inputs(B1_seg_filename)
+    # B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    # B_crd1 = read_inputs(B1_crd_filename)
+
+    # B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    # B_vals = read_inputs(B_vals_filename, float)
+
+    # C_dirname = os.path.join(formatted_dir, ssname, "shift-trans", "ss10")
+    # C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    # C_shape = read_inputs(C_shape_filename)
+
+    # C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
+    # C_seg0 = read_inputs(C0_seg_filename)
+    # C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
+    # C_crd0 = read_inputs(C0_crd_filename)
+
+    # C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
+    # C_seg1 = read_inputs(C1_seg_filename)
+    # C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
+    # C_crd1 = read_inputs(C1_crd_filename)
+
+    # C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    # C_vals = read_inputs(C_vals_filename, float)
 
     fiberlookup_Bi_17 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
@@ -149,7 +191,8 @@ def test_matmul_ijk(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    # extra_info["dataset"] = ssname
+    extra_info["dataset"] = "synthetic"
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
@@ -191,5 +234,5 @@ def test_matmul_ijk(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        # check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

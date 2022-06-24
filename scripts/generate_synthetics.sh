@@ -34,3 +34,26 @@ do
     esac
 done
 popd
+
+# Now generate the matrices in both DCSR/DCSC formats
+pushd $SYNTHETIC_PATH
+
+mkdir -p "${SYNTHETIC_PATH}/matrix/DCSR"
+mkdir -p "${SYNTHETIC_PATH}/matrix/DCSC"
+mkdir -p "${SYNTHETIC_PATH}/matrix/DENSE"
+
+i=50
+j=50
+k=20
+
+sparsity="0.95"
+
+python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity $sparsity --output_dir ${SYNTHETIC_PATH}/matrix/DCSR/ --name B --shape $i $k --output_format CSF
+python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity $sparsity --output_dir ${SYNTHETIC_PATH}/matrix/DCSC/ --name B --shape $i $k --output_format CSF --transpose
+python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity $sparsity --output_dir ${SYNTHETIC_PATH}/matrix/DENSE/ --name B --shape $i $k --output_format UNC
+
+python ${SRC_PATH}/generate_random_mats.py --seed 1 --sparsity $sparsity --output_dir ${SYNTHETIC_PATH}/matrix/DCSR/ --name C --shape $k $j --output_format CSF
+python ${SRC_PATH}/generate_random_mats.py --seed 1 --sparsity $sparsity --output_dir ${SYNTHETIC_PATH}/matrix/DCSC/ --name C --shape $k $j --output_format CSF --transpose
+python ${SRC_PATH}/generate_random_mats.py --seed 1 --sparsity $sparsity --output_dir ${SYNTHETIC_PATH}/matrix/DENSE/ --name C --shape $k $j --output_format UNC
+
+popd
