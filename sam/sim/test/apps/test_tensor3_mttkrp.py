@@ -24,8 +24,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "sss012")
+def test_tensor3_mttkrp(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname,  "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -47,7 +47,7 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    C_dirname = os.path.join(formatted_dir, frosttname,  "other", "ss01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -64,7 +64,7 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    D_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    D_dirname = os.path.join(formatted_dir, frosttname,  "other", "ss01")
     D_shape_filename = os.path.join(D_dirname, "D_shape.txt")
     D_shape = read_inputs(D_shape_filename)
 
@@ -200,12 +200,16 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_8.set_load(repeat_Cl_10.out_ref())
         arrayvals_C_8.update()
 
-        mul_6.set_in1(arrayvals_C_8.out_load())
-        mul_6.set_in2(arrayvals_B_7.out_load())
+        mul_6.set_in1(arrayvals_C_8.out_val())
         mul_6.update()
 
-        mul_5.set_in1(mul_6.out_load())
-        mul_5.set_in2(arrayvals_D_9.out_load())
+        mul_6.set_in2(arrayvals_B_7.out_val())
+        mul_6.update()
+
+        mul_5.set_in1(mul_6.out_val())
+        mul_5.update()
+
+        mul_5.set_in2(arrayvals_D_9.out_val())
         mul_5.update()
 
         reduce_4.set_in_val(mul_5.out_val())
@@ -231,7 +235,7 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape

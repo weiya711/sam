@@ -25,7 +25,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.suitesparse
 def test_mat_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    B_dirname = os.path.join(formatted_dir, ssname,  "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -42,7 +42,7 @@ def test_mat_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "shift", "ss01")
+    C_dirname = os.path.join(formatted_dir, ssname,  "shift", "ss01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -86,8 +86,6 @@ def test_mat_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Ci_11.update()
 
         unioni_9.set_in1(fiberlookup_Bi_10.out_ref(), fiberlookup_Bi_10.out_crd())
-        unioni_9.set_in1(fiberlookup_Bi_10.out_ref(), fiberlookup_Bi_10.out_crd())
-        unioni_9.set_in2(fiberlookup_Ci_11.out_ref(), fiberlookup_Ci_11.out_crd())
         unioni_9.set_in2(fiberlookup_Ci_11.out_ref(), fiberlookup_Ci_11.out_crd())
         unioni_9.update()
 
@@ -101,8 +99,6 @@ def test_mat_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Cj_8.update()
 
         unionj_6.set_in1(fiberlookup_Bj_7.out_ref(), fiberlookup_Bj_7.out_crd())
-        unionj_6.set_in1(fiberlookup_Bj_7.out_ref(), fiberlookup_Bj_7.out_crd())
-        unionj_6.set_in2(fiberlookup_Cj_8.out_ref(), fiberlookup_Cj_8.out_crd())
         unionj_6.set_in2(fiberlookup_Cj_8.out_ref(), fiberlookup_Cj_8.out_crd())
         unionj_6.update()
 
@@ -115,8 +111,8 @@ def test_mat_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_5.set_load(unionj_6.out_ref2())
         arrayvals_C_5.update()
 
-        add_3.set_in1(arrayvals_B_4.out_load())
-        add_3.set_in2(arrayvals_C_5.out_load())
+        add_3.set_in1(arrayvals_B_4.out_val())
+        add_3.set_in2(arrayvals_C_5.out_val())
         add_3.update()
 
         fiberwrite_Xvals_0.set_input(add_3.out_val())

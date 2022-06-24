@@ -25,7 +25,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.suitesparse
 def test_matmul_kij(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
+    B_dirname = os.path.join(formatted_dir, ssname,  "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -42,7 +42,7 @@ def test_matmul_kij(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "shift-trans", "ss01")
+    C_dirname = os.path.join(formatted_dir, ssname,  "shift-trans", "ss01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -126,8 +126,10 @@ def test_matmul_kij(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_B_6.set_load(repeat_Bj_8.out_ref())
         arrayvals_B_6.update()
 
-        mul_5.set_in1(arrayvals_B_6.out_load())
-        mul_5.set_in2(arrayvals_C_7.out_load())
+        mul_5.set_in1(arrayvals_B_6.out_val())
+        mul_5.update()
+
+        mul_5.set_in2(arrayvals_C_7.out_val())
         mul_5.update()
 
         spaccumulator2_3_drop_crd_outer.set_in_stream(crdhold_4.out_crd_outer())

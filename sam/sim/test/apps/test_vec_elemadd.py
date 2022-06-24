@@ -24,8 +24,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
+def test_vec_elemadd(samBench, , check_gold, debug_sim, fill=0):
+    b_dirname = os.path.join(formatted_dir, ,  "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
 
@@ -37,7 +37,7 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "shift", "s0")
+    c_dirname = os.path.join(formatted_dir, ,  "shift", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -72,8 +72,6 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_ci_7.update()
 
         unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
-        unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
-        unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.update()
 
@@ -86,8 +84,8 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_c_4.set_load(unioni_5.out_ref2())
         arrayvals_c_4.update()
 
-        add_2.set_in1(arrayvals_b_3.out_load())
-        add_2.set_in2(arrayvals_c_4.out_load())
+        add_2.set_in1(arrayvals_b_3.out_val())
+        add_2.set_in2(arrayvals_c_4.out_val())
         add_2.update()
 
         fiberwrite_xvals_0.set_input(add_2.out_val())
@@ -106,7 +104,7 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = 
     extra_info["cycles"] = time_cnt
     extra_info["tensor_b_shape"] = b_shape
     extra_info["tensor_c_shape"] = c_shape

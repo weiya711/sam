@@ -162,15 +162,31 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-    f.write("def test_" + out_name + "(samBench, ssname, check_gold, debug_sim, fill=0):\n")
+    f.write("def test_" + out_name + "(samBench, ")
+    if out_name in frostt_list:
+        f.write("frosttname, ")
+    if out_name in suitesparse_list:
+        f.write("ssname, ")
+    if out_name in vec_list:
+        f.write(", ")
+    f.write("check_gold, debug_sim, fill=0):\n")
+
+def get_dataset_name(test_name):
+    if test_name in frostt_list:
+        return "frosttname, "
+    if test_name in suitesparse_list:
+        return "ssname, "
+    else:
+        return ", "
 
 
-def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
+
+def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name):
     # Assuming tje format is csr and csc:
     for ten in tensor_format_parse.return_all_tensors():
         if tensor_format_parse.get_location(ten) == 0:
             continue
-        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname, \"" +
+        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + " \"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(
             tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
@@ -298,12 +314,13 @@ def gen_data_formats(size, app_name, path):
             ans_list = ["orig", "shift"]
             return ans_list
         else:
-            ans_list = ["dummy", "dummy"]
+            ans_list = ["orig", "other"]
 
             return ans_list
     else:
-        for i in range(size - 1):
-            ans_list.append("dummy")
+        ans_list = ["orig"]
+        for i in range(size - 2):
+            ans_list.append("other")
         return ans_list
 
 
@@ -381,11 +398,11 @@ def finish_outputs(f, elements):
     return output_list
 
 
-def generate_benchmarking_code(f, tensor_format_parse):
+def generate_benchmarking_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
     f.write(tab(1) + "extra_info = dict()\n")
-    f.write(tab(1) + "extra_info[\"dataset\"] = ssname\n")
+    f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name)[:-2] + "\n")
     f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
     ct = 0
     output_tensor = ""
@@ -557,7 +574,7 @@ for apath in file_paths:
             tens_fmt[k] = {}
             tens_fmt[k]["information"] = data_formats[ct - 1]
         ct += 1
-    generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse)
+    generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         d[u] = node_info
@@ -650,17 +667,18 @@ for apath in file_paths:
                         array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
-                print(node_info)
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
+                #print(node_info)
+                #f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
+                #        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
+                #        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
+                continue
             if node_info["sink"] == "true":
                 output_nodes[d[u]["object"]] = node_info["mode"]
         else:
             invalid_flag = 1
             print("Error invalid node detected", node_info["type"], "\n")
-    if invalid_flag == 1 or "mat_residual" in apath:
+    if invalid_flag == 1:
         os.system("rm " + out_name[num] + ".py")
         print(out_name[num] + " failed\n")
         num += 1
@@ -751,6 +769,8 @@ for apath in file_paths:
             if d[v]["type"] == "union" and parents_done(networkx_graph, data.get_if_done(), v) and \
                     data.get_if_node_done(v) == 0:
                 for i in range(len(data.get_parents()[v])):
+                    if i % 2 == 1:
+                        continue
                     u_ = data.get_parents()[v][i]
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
                             d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
@@ -902,7 +922,7 @@ for apath in file_paths:
     sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
     output_list = finish_outputs(f, sorted_nodes)
 
-    generate_benchmarking_code(f, tensor_format_parse)
+    generate_benchmarking_code(f, tensor_format_parse, out_name[num])
     generate_check_against_gold_code(f, tensor_format_parse)
 
     f.close()

@@ -25,7 +25,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.suitesparse
 def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    B_dirname = os.path.join(formatted_dir, ssname,  "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -42,7 +42,7 @@ def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "shift", "ss01")
+    C_dirname = os.path.join(formatted_dir, ssname,  "shift", "ss01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -108,17 +108,19 @@ def test_mat_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_5.set_load(intersectj_7.out_ref2())
         arrayvals_C_5.update()
 
-        mul_3.set_in1(arrayvals_B_4.out_load())
-        mul_3.set_in2(arrayvals_C_5.out_load())
+        mul_3.set_in1(arrayvals_B_4.out_val())
+        mul_3.update()
+
+        mul_3.set_in2(arrayvals_C_5.out_val())
         mul_3.update()
 
         fiberwrite_Xvals_0.set_input(mul_3.out_val())
         fiberwrite_Xvals_0.update()
 
-        fiberwrite_X0_2.set_input(crddrop_6.out_crd_outer-i())
+        fiberwrite_X0_2.set_input(crddrop_6.out_crd_outer())
         fiberwrite_X0_2.update()
 
-        fiberwrite_X1_1.set_input(crddrop_6.out_crd_inner-j())
+        fiberwrite_X1_1.set_input(crddrop_6.out_crd_inner())
         fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()

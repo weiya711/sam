@@ -24,8 +24,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_innerprod(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "sss012")
+def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname,  "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -47,7 +47,7 @@ def test_tensor3_innerprod(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "sss012")
+    C_dirname = os.path.join(formatted_dir, frosttname,  "other", "sss012")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -129,8 +129,10 @@ def test_tensor3_innerprod(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_6.set_load(intersectk_7.out_ref2())
         arrayvals_C_6.update()
 
-        mul_4.set_in1(arrayvals_B_5.out_load())
-        mul_4.set_in2(arrayvals_C_6.out_load())
+        mul_4.set_in1(arrayvals_B_5.out_val())
+        mul_4.update()
+
+        mul_4.set_in2(arrayvals_C_6.out_val())
         mul_4.update()
 
         reduce_3.set_in_val(mul_4.out_val())
@@ -157,7 +159,7 @@ def test_tensor3_innerprod(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape

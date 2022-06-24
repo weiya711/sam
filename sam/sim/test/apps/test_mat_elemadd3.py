@@ -25,7 +25,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.suitesparse
 def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    B_dirname = os.path.join(formatted_dir, ssname,  "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -42,7 +42,7 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    C_dirname = os.path.join(formatted_dir, ssname,  "other", "ss01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -59,7 +59,7 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    D_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    D_dirname = os.path.join(formatted_dir, ssname,  "other", "ss01")
     D_shape_filename = os.path.join(D_dirname, "D_shape.txt")
     D_shape = read_inputs(D_shape_filename)
 
@@ -112,10 +112,7 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Di_15.update()
 
         unioni_12.set_in1(fiberlookup_Bi_13.out_ref(), fiberlookup_Bi_13.out_crd())
-        unioni_12.set_in1(fiberlookup_Bi_13.out_ref(), fiberlookup_Bi_13.out_crd())
         unioni_12.set_in2(fiberlookup_Ci_14.out_ref(), fiberlookup_Ci_14.out_crd())
-        unioni_12.set_in2(fiberlookup_Ci_14.out_ref(), fiberlookup_Ci_14.out_crd())
-        unioni_12.set_in3(fiberlookup_Di_15.out_ref(), fiberlookup_Di_15.out_crd())
         unioni_12.set_in3(fiberlookup_Di_15.out_ref(), fiberlookup_Di_15.out_crd())
         unioni_12.update()
 
@@ -132,10 +129,7 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_Dj_11.update()
 
         unionj_8.set_in1(fiberlookup_Bj_9.out_ref(), fiberlookup_Bj_9.out_crd())
-        unionj_8.set_in1(fiberlookup_Bj_9.out_ref(), fiberlookup_Bj_9.out_crd())
         unionj_8.set_in2(fiberlookup_Cj_10.out_ref(), fiberlookup_Cj_10.out_crd())
-        unionj_8.set_in2(fiberlookup_Cj_10.out_ref(), fiberlookup_Cj_10.out_crd())
-        unionj_8.set_in3(fiberlookup_Dj_11.out_ref(), fiberlookup_Dj_11.out_crd())
         unionj_8.set_in3(fiberlookup_Dj_11.out_ref(), fiberlookup_Dj_11.out_crd())
         unionj_8.update()
 
@@ -151,12 +145,12 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_D_7.set_load(unionj_8.out_ref3())
         arrayvals_D_7.update()
 
-        add_4.set_in1(arrayvals_B_5.out_load())
-        add_4.set_in2(arrayvals_C_6.out_load())
+        add_4.set_in1(arrayvals_B_5.out_val())
+        add_4.set_in2(arrayvals_C_6.out_val())
         add_4.update()
 
-        add_3.set_in1(add_4.out_load())
-        add_3.set_in2(arrayvals_D_7.out_load())
+        add_3.set_in1(add_4.out_val())
+        add_3.set_in2(arrayvals_D_7.out_val())
         add_3.update()
 
         fiberwrite_Xvals_0.set_input(add_3.out_val())

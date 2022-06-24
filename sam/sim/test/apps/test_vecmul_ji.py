@@ -25,7 +25,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.suitesparse
 def test_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
+    B_dirname = os.path.join(formatted_dir, ssname,  "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -42,7 +42,7 @@ def test_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "shift", "s0")
+    c_dirname = os.path.join(formatted_dir, ssname,  "shift", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -103,8 +103,10 @@ def test_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_c_5.set_load(repeat_ci_6.out_ref())
         arrayvals_c_5.update()
 
-        mul_3.set_in1(arrayvals_c_5.out_load())
-        mul_3.set_in2(arrayvals_B_4.out_load())
+        mul_3.set_in1(arrayvals_c_5.out_val())
+        mul_3.update()
+
+        mul_3.set_in2(arrayvals_B_4.out_val())
         mul_3.update()
 
         spaccumulator1_2_drop_crd.set_in_stream(fiberlookup_Bi_9.out_crd())

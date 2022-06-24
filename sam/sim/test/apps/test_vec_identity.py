@@ -24,8 +24,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_identity(samBench, ssname, check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
+def test_vec_identity(samBench, , check_gold, debug_sim, fill=0):
+    b_dirname = os.path.join(formatted_dir, ,  "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
 
@@ -72,7 +72,7 @@ def test_vec_identity(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = 
     extra_info["cycles"] = time_cnt
     extra_info["tensor_b_shape"] = b_shape
     sample_dict = fiberwrite_x0_1.return_statistics()
