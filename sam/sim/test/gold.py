@@ -9,7 +9,7 @@ KDIM = 10
 
 cwd = os.getcwd()
 ss_formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
+frostt_dir = os.getenv('FROSTT_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 def _shiftLastMode(tensor):
     dok = scipy.sparse.dok_matrix(tensor)
@@ -372,8 +372,8 @@ def check_gold_tensor3_ttm(frosttname, debug_sim, out_crds, out_segs, out_val, f
 
 
 def check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
-    pass
-
+    if frosttname == "fb1k":
+        assert out_val == 1066.0
 
 def check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     pass

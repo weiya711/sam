@@ -591,7 +591,7 @@ def parse_taco_format(infilename, outdir, tensorname, format_str):
 
                     if level_done:
                         # This is a values array
-                        valfile = os.path.join(outdir, tensorname + '_val.txt')
+                        valfile = os.path.join(outdir, tensorname + '_vals.txt')
                         with open(valfile, 'w+') as valf:
                             valf.write(array_newline_str(line))
                     else:

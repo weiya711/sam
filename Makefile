@@ -104,7 +104,7 @@ suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
 	set -e && ./scripts/generate_suitesparse_formats.sh
 
-frostt-formats: env taco/build guard-FROSTT_FORMATTED_PATH guard-FROSTT_PATH
+frostt-formats: taco/build guard-FROSTT_FORMATTED_PATH guard-FROSTT_PATH
 	./scripts/generate_frostt_formats.sh
 
 .PHONY: env
