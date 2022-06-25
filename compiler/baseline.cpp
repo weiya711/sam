@@ -16,7 +16,7 @@
 
 using namespace taco;
 
-#define DIM_EXTRA 256
+#define DIM_EXTRA 10 
 
 template<int I, class...Ts>
 decltype(auto) get(Ts &&... ts) {
