@@ -51,8 +51,11 @@ def increment_stkn(elem):
 
 
 def decrement_stkn(elem):
-    assert (stkn_order(elem) > 0)
-    return 'S' + str(stkn_order(elem) - 1)
+    assert (stkn_order(elem) >= 0)
+    if stkn_order(elem) > 0:
+        return 'S' + str(stkn_order(elem) - 1)
+    else:
+        return ''
 
 
 def smaller_stkn(a, b):

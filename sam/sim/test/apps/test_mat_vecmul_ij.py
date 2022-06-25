@@ -42,16 +42,21 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "other", "s0")
-    c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
+    c_dirname = os.path.join(formatted_dir, ssname, "other")
+    c_fname = [f for f in os.listdir(c_dirname) if ssname + "-vec_mode1" in f]
+    assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
+    c_fname = c_fname[0]
+    c_dirname = os.path.join(c_dirname, c_fname)
+
+    c_shape_filename = os.path.join(c_dirname, "C_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
-    c0_seg_filename = os.path.join(c_dirname, "c0_seg.txt")
+    c0_seg_filename = os.path.join(c_dirname, "C0_seg.txt")
     c_seg0 = read_inputs(c0_seg_filename)
-    c0_crd_filename = os.path.join(c_dirname, "c0_crd.txt")
+    c0_crd_filename = os.path.join(c_dirname, "C0_crd.txt")
     c_crd0 = read_inputs(c0_crd_filename)
 
-    c_vals_filename = os.path.join(c_dirname, "c_vals.txt")
+    c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
     fiberlookup_Bi_12 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
@@ -90,6 +95,7 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         repeat_ci_9.set_in_repsig(repsiggen_i_10.out_repsig())
         repeat_ci_9.update()
 
+
         fiberlookup_cj_8.set_in_ref(repeat_ci_9.out_ref())
         fiberlookup_cj_8.update()
 
@@ -115,6 +121,11 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1
+
+        if time_cnt % 100 == 0:
+            print(fiberwrite_xvals_0.out_done(), reduce_2.out_done(), mul_3.out_done(), arrayvals_c_5.out_done(), arrayvals_B_4.out_done(),
+                  intersectj_6.out_done(), fiberlookup_cj_8.out_done(), repeat_ci_9.out_done(), fiberlookup_Bj_7.out_done())
+            print("TIME:", time_cnt)
 
     fiberwrite_x0_1.autosize()
     fiberwrite_xvals_0.autosize()

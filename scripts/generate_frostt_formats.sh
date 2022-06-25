@@ -33,7 +33,7 @@ for i in ${!FORMATS[@]}; do
     echo "Generating files for format $format..."
     
     $basedir/compiler/taco/build/bin/taco-test sam.pack_$format
-    $basedir/compiler/taco/build/bin/taco-test sam.pack_other
+    $basedir/compiler/taco/build/bin/taco-test sam.pack_other_frostt
 
     for j in ${!DATASET_NAMES[@]}; do
         

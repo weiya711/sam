@@ -82,20 +82,20 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     unioni1_12 = Union2(debug=debug_sim)
     unioni2_12 = Union2(debug=debug_sim)
     unioni3_12 = Union2(debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=3 * len(B_crd0), fill=fill, debug=debug_sim)
     fiberlookup_Bj_9 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
     fiberlookup_Cj_10 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
     fiberlookup_Dj_11 = CompressedCrdRdScan(crd_arr=D_crd1, seg_arr=D_seg1, debug=debug_sim)
     unionj1_8 = Union2(debug=debug_sim)
     unionj2_8 = Union2(debug=debug_sim)
     unionj3_8 = Union2(debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=3 * len(B_crd0) + 1, size=3 * len(B_vals), fill=fill, debug=debug_sim)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
     arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_D_7 = Array(init_arr=D_vals, debug=debug_sim)
     add_4 = Add2(debug=debug_sim)
     add_3 = Add2(debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_Xvals_0 = ValsWrScan(size=3 * len(B_vals), fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_D = [0, 'D']
@@ -176,6 +176,13 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
+        if (time_cnt % 1000000 == 0):
+            print("TIME:", time_cnt)
+            print("DONE:", fiberwrite_X0_2.out_done(), fiberwrite_X1_1.out_done(), fiberwrite_Xvals_0.out_done(),
+                  unioni1_12.out_done(), unioni2_12.out_done(), unioni3_12.out_done(),
+                  unionj1_8.out_done(), unionj2_8.out_done(), unionj3_8.out_done(),
+                  fiberlookup_Bj_9.out_done(), fiberlookup_Cj_10.out_done(), fiberlookup_Dj_11.out_done())
+    print("TOTAL TIME:", time_cnt)
 
     fiberwrite_X0_2.autosize()
     fiberwrite_X1_1.autosize()

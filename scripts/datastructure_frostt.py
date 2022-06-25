@@ -6,7 +6,7 @@ from util import parse_taco_format
 cwd = os.getcwd()
 
 
-formats = ["sss012", "dss", "dds", "ddd", "dsd", "sdd", "sds", "ssd"]
+formats = ["sss012", "ss01", "dss", "dds", "ddd", "dsd", "sdd", "sds", "ssd"]
 
 parser = argparse.ArgumentParser(description="Process some Frostt tensors into per-level datastructures")
 parser.add_argument('-n', '--name', metavar='fname', type=str, action='store',
@@ -15,11 +15,15 @@ parser.add_argument('-f', '--format', metavar='fformat', type=str, action='store
                     help='The format that the tensor should be converted to')
 parser.add_argument('-i', '--int', action='store_false', default=True, help='Safe sparsity cast to int for values')
 parser.add_argument('-s', '--shift', action='store_false', default=True, help='Also format shifted tensor')
-parser.add_argument('-o', '--other', action='store_true', default=True, help='Format other tensor')
+parser.add_argument('-o', '--other', action='store_true', default=False, help='Format other tensor')
+parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, help='Format suitesparse other tensor') 
 args = parser.parse_args()
 
-if args.other is not None:
-    outdir_name = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+if args.other:
+    if args.suitesparse:
+        outdir_name = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+    else:
+        outdir_name = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
     taco_format_dirname = os.getenv('TACO_TENSOR_PATH')
     if taco_format_dirname is None:
         print("Please set the TACO_TENSOR_PATH environment variable")
@@ -43,7 +47,7 @@ if args.name is None:
 if args.format is not None:
     assert args.format in formats
     levels = args.format[:-3]
-    if args.other is not None:
+    if args.other:
         otherfileNames = [f for f in os.listdir(taco_format_dirname) if
                           os.path.isfile(os.path.join(taco_format_dirname,f)) and args.name in f]
 

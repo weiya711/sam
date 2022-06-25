@@ -227,16 +227,76 @@ def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val, forma
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_vecmul_ji(ssname, debug_sim, out_crds, out_segs, out_val):
-    return check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val)
+def check_gold_mat_vecmul_ji(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
+    return check_gold_mat_vecmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str)
 
 
-def check_gold_vecmul_ij(ssname, debug_sim, out_crds, out_segs, out_val):
-    return check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val)
+def check_gold_mat_vecmul_ij(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
+    return check_gold_mat_vecmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str)
 
 
-def check_gold_vecmul(ssname, debug_sim, out_crds, out_segs, out_val):
-    pass
+def check_gold_mat_vecmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
+    # CSR
+    B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
+    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape = read_inputs(B_shape_filename)
+
+    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg = read_inputs(B1_seg_filename)
+    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd = read_inputs(B1_crd_filename)
+
+    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals = read_inputs(B_vals_filename, float)
+
+    c_dirname = os.path.join(ss_formatted_dir, ssname, "other")
+    c_fname = [f for f in os.listdir(c_dirname) if ssname + "-vec_mode1" in f]
+    assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
+    c_fname = c_fname[0]
+    c_dirname = os.path.join(c_dirname, c_fname)
+
+    c_shape = B_shape[1]
+
+    c0_seg_filename = os.path.join(c_dirname, "C0_seg.txt")
+    c_seg0 = read_inputs(c0_seg_filename)
+    c0_crd_filename = os.path.join(c_dirname, "C0_crd.txt")
+    c_crd0 = read_inputs(c0_crd_filename)
+
+    c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
+    c_vals = read_inputs(c_vals_filename, float)
+
+    B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
+    c_nd = np.zeros(c_shape)
+    print(c_crd0)
+    for i in range(len(c_crd0)):
+        val = c_vals[i]
+        crd = c_crd0[i]
+        c_nd[crd] = val
+
+    gold_nd = (B_scipy @ c_nd)
+    transpose = format_str[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+
+    gold_tup = convert_ndarr_point_tuple(gold_nd)
+
+    if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
+        print("Dense Mat1:\n", B_scipy.toarray())
+        print("Dense Vec2:\n", c_nd)
+        print("Dense Gold:", gold_nd)
+        print("Gold:", gold_tup)
+
+    if not out_val:
+        assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
 
 
 def check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
@@ -416,7 +476,7 @@ def check_gold_tensor3_ttm(frosttname, debug_sim, out_crds, out_segs, out_val, f
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
         out_tup = remove_zeros(out_tup)
         assert (check_point_tuple(out_tup, gold_tup))
-        
+
 
 def check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     if frosttname == "fb1k":
