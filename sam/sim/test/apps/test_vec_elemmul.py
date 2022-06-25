@@ -21,8 +21,8 @@ cwd = os.getcwd()
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
+def test_vec_elemmul(samBench, vecname, check_gold, debug_sim, fill=0):
+    b_dirname = os.path.join(formatted_dir, vecname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
 
@@ -34,7 +34,7 @@ def test_vec_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "shift", "s0")
+    c_dirname = os.path.join(formatted_dir, vecname, "shift", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -101,7 +101,7 @@ def test_vec_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = vecname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_b_shape"] = b_shape
     extra_info["tensor_c_shape"] = c_shape
@@ -127,5 +127,5 @@ def test_vec_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_vec_elemmul(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_vec_elemmul(vecname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

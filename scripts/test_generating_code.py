@@ -12,7 +12,9 @@ suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "
 vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
             "vec_scalar_mul"]
 
-other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij", "mat_vecmul_ji"]
+other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij",
+              "mat_vecmul_ji"]
+
 
 class TensorFormat:
     def __init__(self):
@@ -157,7 +159,7 @@ def generate_header(f, out_name):
         f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
     if out_name in other_list:
         f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n")
-        
+
     f.write("# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
@@ -169,15 +171,34 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-    f.write("def test_" + out_name + "(samBench, ssname, check_gold, debug_sim, fill=0):\n")
+
+    f.write("def test_" + out_name + "(samBench, ")
+    if out_name in frostt_list:
+        f.write("frosttname, ")
+    elif out_name in suitesparse_list:
+        f.write("ssname, ")
+    elif out_name in vec_list:
+        f.write("vecname, ")
+    f.write("check_gold, debug_sim, fill=0):\n")
 
 
-def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
+def get_dataset_name(test_name):
+    if test_name in frostt_list:
+        return "frosttname, "
+    elif test_name in suitesparse_list:
+        return "ssname, "
+    elif test_name in vec_list:
+        return "vecname, "
+    else:
+        return ", "
+
+
+def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name):
     # Assuming tje format is csr and csc:
     for ten in tensor_format_parse.return_all_tensors():
         if tensor_format_parse.get_location(ten) == 0:
             continue
-        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname, \"" +
+        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + "\"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(
             tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
@@ -301,16 +322,17 @@ def gen_data_formats(size, app_name, path):
         if "elemadd" in app_name:
             ans_list = ["orig", "shift"]
             return ans_list
-        if "vecmul" in app_name:
+        if "innerprod" in app_name:
             ans_list = ["orig", "shift"]
             return ans_list
-        else:
-            ans_list = ["dummy", "dummy"]
 
-            return ans_list
+        ans_list = ["orig", "other"]
+
+        return ans_list
     else:
-        for i in range(size - 1):
-            ans_list.append("dummy")
+        ans_list = ["orig"]
+        for i in range(size - 2):
+            ans_list.append("other")
         return ans_list
 
 
@@ -388,11 +410,11 @@ def finish_outputs(f, elements):
     return output_list
 
 
-def generate_benchmarking_code(f, tensor_format_parse):
+def generate_benchmarking_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
     f.write(tab(1) + "extra_info = dict()\n")
-    f.write(tab(1) + "extra_info[\"dataset\"] = ssname\n")
+    f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name)[:-2] + "\n")
     f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
     ct = 0
     output_tensor = ""
@@ -411,14 +433,14 @@ def generate_benchmarking_code(f, tensor_format_parse):
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
 
 
-def generate_check_against_gold_code(f, tensor_format_parse):
+def generate_check_against_gold_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "if check_gold:\n")
     f.write(tab(2) + "print(\"Checking gold...\")\n")
     f.write(tab(2) + "check_gold_")
     check = out_name[num]
     if "matmul" in check:
         check = check[:-4]
-    f.write(check + "(ssname, debug_sim, out_crds, out_segs, out_vals, \"" +
+    f.write(check + "(" + get_dataset_name(test_name) + "debug_sim, out_crds, out_segs, out_vals, \"" +
             tensor_format_parse.get_format(output_tensor) + "\")\n")
     f.write(tab(1) + "samBench(bench, extra_info)")
 
@@ -564,7 +586,7 @@ for apath in file_paths:
             tens_fmt[k] = {}
             tens_fmt[k]["information"] = data_formats[ct - 1]
         ct += 1
-    generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse)
+    generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         d[u] = node_info
@@ -657,11 +679,12 @@ for apath in file_paths:
                         array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
-                print(node_info)
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
+                # print(node_info)
+                # f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
+                #        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
+                #        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
+                continue
             if node_info["sink"] == "true":
                 output_nodes[d[u]["object"]] = node_info["mode"]
         else:
@@ -912,8 +935,8 @@ for apath in file_paths:
     sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
     output_list = finish_outputs(f, sorted_nodes)
 
-    generate_benchmarking_code(f, tensor_format_parse)
-    generate_check_against_gold_code(f, tensor_format_parse)
+    generate_benchmarking_code(f, tensor_format_parse, out_name[num])
+    generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
 
     f.close()
     os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
