@@ -12,7 +12,9 @@ suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "
 vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
             "vec_scalar_mul"]
 
-other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij", "mat_vecmul_ji"]
+other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij",
+              "mat_vecmul_ji"]
+
 
 class TensorFormat:
     def __init__(self):
@@ -157,7 +159,7 @@ def generate_header(f, out_name):
         f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
     if out_name in other_list:
         f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n")
-        
+
     f.write("# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
@@ -179,6 +181,7 @@ def generate_header(f, out_name):
         f.write("vecname, ")
     f.write("check_gold, debug_sim, fill=0):\n")
 
+
 def get_dataset_name(test_name):
     if test_name in frostt_list:
         return "frosttname, "
@@ -188,7 +191,6 @@ def get_dataset_name(test_name):
         return "vecname, "
     else:
         return ", "
-
 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name):
@@ -323,7 +325,6 @@ def gen_data_formats(size, app_name, path):
         if "innerprod" in app_name:
             ans_list = ["orig", "shift"]
             return ans_list
-
 
         ans_list = ["orig", "other"]
 
@@ -678,8 +679,8 @@ for apath in file_paths:
                         array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
-                #print(node_info)
-                #f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
+                # print(node_info)
+                # f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                 #        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
                 #        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
@@ -904,7 +905,7 @@ for apath in file_paths:
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, data.get_if_done(), v) and \
                     data.get_if_node_done(v) == 0:
                 for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i] 
+                    u_ = data.get_parents()[v][i]
                     if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
                             in d[u_]["object"]:
                         local_index = data.get_edge_data()[v][i][-1]
