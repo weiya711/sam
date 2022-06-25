@@ -15,7 +15,6 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
 # FIXME: Figureout formats
@@ -25,7 +24,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.frostt
 def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname,  "orig", "sss012")
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -47,7 +46,7 @@ def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname,  "other", "sss012")
+    C_dirname = os.path.join(formatted_dir, frosttname, "shift", "sss012")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -130,8 +129,6 @@ def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
         arrayvals_C_6.update()
 
         mul_4.set_in1(arrayvals_B_5.out_val())
-        mul_4.update()
-
         mul_4.set_in2(arrayvals_C_6.out_val())
         mul_4.update()
 

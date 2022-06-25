@@ -23,7 +23,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 )
 @pytest.mark.suitesparse
 def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -40,14 +40,14 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "dd01")
+    C_dirname = os.path.join(formatted_dir, ssname, "other", "dd01")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    D_dirname = os.path.join(formatted_dir, ssname, "dummy", "dd10")
+    D_dirname = os.path.join(formatted_dir, ssname, "other", "dd10")
     D_shape_filename = os.path.join(D_dirname, "D_shape.txt")
     D_shape = read_inputs(D_shape_filename)
 

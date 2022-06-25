@@ -7,10 +7,12 @@ from collections import defaultdict
 frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_elemadd", "tensor3_innerprod",
                "tensor3_mttkrp", "tensor3_ttv"]
 suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
-                    "matmul_jki", "vecmul_ij", "vecmul_ji", "matmul_kji", "mat_elemadd3", "mat_sddmm.gv", "mat_elemadd",
-                    "mat_mattransmul", "mat_residual", "mat_sddmm"]
-vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vecmul_ij", "vectmul_ji", "vec_identity", "vec_scalar_mul"]
+                    "matmul_jki", "mat_vecmul_ij", "mat_vecmul_ji", "matmul_kji", "mat_elemadd3", "mat_sddmm.gv",
+                    "mat_elemadd", "mat_mattransmul", "mat_residual", "mat_sddmm"]
+vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
+            "vec_scalar_mul"]
 
+other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij", "mat_vecmul_ji"]
 
 class TensorFormat:
     def __init__(self):
@@ -73,12 +75,12 @@ class CodeGenerationdatasets:
 
     def get_edge_data(self):
         return self.edge_data
-    
+
     def get_edge_info(self, v, i):
-        if self.edge_data[v][i] == None and len(self.edge_data[v][i]) == 0:
+        if self.edge_data[v][i] is None and len(self.edge_data[v][i]) == 0:
             return ""
         if "-i" in self.edge_data[v][i] or "-j" in self.edge_data[v][i] or "-k" in self.edge_data[v][i]:
-            return  str(self.edge_data[v][i])[:-2]
+            return str(self.edge_data[v][i])[:-2]
         return str(self.edge_data[v][i])
 
     def get_parents(self):
@@ -149,8 +151,13 @@ def generate_header(f, out_name):
     f.write("import os\n")
     f.write("import csv\n")
     f.write("cwd = os.getcwd()\n")
-    f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
-    f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
+    if out_name in suitesparse_list:
+        f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
+    elif out_name in frostt_list:
+        f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
+    if out_name in other_list:
+        f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n")
+        
     f.write("# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
@@ -162,20 +169,23 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
+
     f.write("def test_" + out_name + "(samBench, ")
     if out_name in frostt_list:
         f.write("frosttname, ")
-    if out_name in suitesparse_list:
+    elif out_name in suitesparse_list:
         f.write("ssname, ")
-    if out_name in vec_list:
-        f.write(", ")
+    elif out_name in vec_list:
+        f.write("vecname, ")
     f.write("check_gold, debug_sim, fill=0):\n")
 
 def get_dataset_name(test_name):
     if test_name in frostt_list:
         return "frosttname, "
-    if test_name in suitesparse_list:
+    elif test_name in suitesparse_list:
         return "ssname, "
+    elif test_name in vec_list:
+        return "vecname, "
     else:
         return ", "
 
@@ -186,7 +196,7 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
     for ten in tensor_format_parse.return_all_tensors():
         if tensor_format_parse.get_location(ten) == 0:
             continue
-        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + " \"" +
+        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + "\"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(
             tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
@@ -310,13 +320,14 @@ def gen_data_formats(size, app_name, path):
         if "elemadd" in app_name:
             ans_list = ["orig", "shift"]
             return ans_list
-        if "vecmul" in app_name:
+        if "innerprod" in app_name:
             ans_list = ["orig", "shift"]
             return ans_list
-        else:
-            ans_list = ["orig", "other"]
 
-            return ans_list
+
+        ans_list = ["orig", "other"]
+
+        return ans_list
     else:
         ans_list = ["orig"]
         for i in range(size - 2):
@@ -786,6 +797,7 @@ for apath in file_paths:
                         f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     if index_value == d[v]["outer"]:
                         f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "crdhold" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -864,12 +876,12 @@ for apath in file_paths:
                 data.add_done(v)
 
             if d[v]["type"] == "mul" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                data.get_if_node_done(v) == 0:
+                    data.get_if_node_done(v) == 0:
                 for i in range(len(data.get_parents()[v])):
                     u_ = data.get_parents()[v][i]
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
-                        d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                            d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
+                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "add" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -906,7 +918,7 @@ for apath in file_paths:
                                 str(data.get_edge_info(v, i)) + "())\n")
                         f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     else:
-                        print(apath, " ", str(data.get_edge_data()[v][i]))
+                        # print(apath, " ", str(data.get_edge_data()[v][i]))
                         f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_info(v, i)) + "())\n")
                         f.write(tab(2) + d[v]["object"] + ".update()\n\n")

@@ -15,7 +15,6 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
 # FIXME: Figureout formats
@@ -25,7 +24,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
 )
 @pytest.mark.frostt
 def test_tensor3_identity(samBench, frosttname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname,  "orig", "sss012")
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 

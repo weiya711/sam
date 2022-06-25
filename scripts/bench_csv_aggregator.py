@@ -19,10 +19,10 @@ def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
         for fname in tqdm.tqdm(glob.glob(os.path.join(folder, "*.csv"))):
             # Open up the file.
             with open(fname, 'r') as f:
-                # Discard the first 10 lines. This corresponds to the
+                # Discard the first 9 lines. This corresponds to the
                 # google-benchmark generated header.
                 if taco:
-                    for i in range(0, 10):
+                    for i in range(0, 9):
                         f.readline()
                 # Open the rest of the file as a CSV.
                 reader = csv.reader(f)
@@ -35,14 +35,14 @@ def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
                     continue
                 # Find the column that contains label. We're going to skip
                 # entries that have a skip marker in the label.
-                # labelIdx = header.index("label", 0)
+                labelIdx = header.index("label", 0)
                 if first:
                     header.append("original_filename")
                     writer.writerow(header)
                     first = False
                 for row in reader:
-                    # if "SKIPPED" not in row[labelIdx]:
-                    #     validLabels.add(row[labelIdx])
+                    if taco and "SKIPPED" not in row[labelIdx]:
+                        validLabels.add(row[labelIdx])
                     row.append(fname)
                     writer.writerow(row)
     # Write out the set of valid labels.

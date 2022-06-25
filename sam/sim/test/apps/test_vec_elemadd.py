@@ -15,17 +15,14 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
-
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_elemadd(samBench, , check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ,  "orig", "s0")
+def test_vec_elemadd(samBench, vecname, check_gold, debug_sim, fill=0):
+    b_dirname = os.path.join(formatted_dir, vecname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
 
@@ -37,7 +34,7 @@ def test_vec_elemadd(samBench, , check_gold, debug_sim, fill=0):
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ,  "shift", "s0")
+    c_dirname = os.path.join(formatted_dir, vecname, "shift", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -104,7 +101,7 @@ def test_vec_elemadd(samBench, , check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = 
+    extra_info["dataset"] = vecname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_b_shape"] = b_shape
     extra_info["tensor_c_shape"] = c_shape
