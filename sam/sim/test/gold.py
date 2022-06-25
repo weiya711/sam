@@ -10,6 +10,10 @@ KDIM = 10
 cwd = os.getcwd()
 ss_formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 frostt_dir = os.getenv('FROSTT_PATH', default=os.path.join(cwd, 'mode-formats'))
+validate_dir = os.getenv('VALIDATION_OUTPUT_PATH', default=os.path.join(cwd, 'mode-formats'))
+
+tnsLoader = TnsFileLoader(False)
+
 
 def _shiftLastMode(tensor):
     dok = scipy.sparse.dok_matrix(tensor)
@@ -363,6 +367,21 @@ def check_gold_mat_elemadd3(ssname, debug_sim, out_crds, out_segs, out_val, form
         assert (check_point_tuple(out_tup, gold_tup))
 
 
+def check_gold_tensor3_elemadd(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
+    validation_path = os.path.join(validate_dir, "frostt-taco", frosttname + "-plus2-taco.tns")
+    dims, coordinates, vals = tnsLoader.load(validation_path)
+    coordinates.append(vals)
+    gold_tup = convert_point_tuple(coordinates)
+    if not out_val:
+        assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
 def check_gold_tensor3_ttv(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     pass
 
@@ -373,7 +392,8 @@ def check_gold_tensor3_ttm(frosttname, debug_sim, out_crds, out_segs, out_val, f
 
 def check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     if frosttname == "fb1k":
-        assert out_val == 1066.0
+        assert out_val == [1066.0]
+
 
 def check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     pass
