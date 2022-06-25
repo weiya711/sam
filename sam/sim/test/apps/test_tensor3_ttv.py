@@ -192,5 +192,5 @@ def test_tensor3_ttv(samBench, frosttname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_ttv(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_tensor3_ttv(frosttname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

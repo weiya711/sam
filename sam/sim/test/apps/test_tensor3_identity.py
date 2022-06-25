@@ -124,5 +124,5 @@ def test_tensor3_identity(samBench, frosttname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_identity(ssname, debug_sim, out_crds, out_segs, out_vals, "sss012")
+        check_gold_tensor3_identity(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
     samBench(bench, extra_info)

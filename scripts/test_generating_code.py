@@ -432,14 +432,14 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
 
 
-def generate_check_against_gold_code(f, tensor_format_parse):
+def generate_check_against_gold_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "if check_gold:\n")
     f.write(tab(2) + "print(\"Checking gold...\")\n")
     f.write(tab(2) + "check_gold_")
     check = out_name[num]
     if "matmul" in check:
         check = check[:-4]
-    f.write(check + "(ssname, debug_sim, out_crds, out_segs, out_vals, \"" +
+    f.write(check + "(" + get_dataset_name(test_name) + "debug_sim, out_crds, out_segs, out_vals, \"" +
             tensor_format_parse.get_format(output_tensor) + "\")\n")
     f.write(tab(1) + "samBench(bench, extra_info)")
 
@@ -935,7 +935,7 @@ for apath in file_paths:
     output_list = finish_outputs(f, sorted_nodes)
 
     generate_benchmarking_code(f, tensor_format_parse, out_name[num])
-    generate_check_against_gold_code(f, tensor_format_parse)
+    generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
 
     f.close()
     os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")

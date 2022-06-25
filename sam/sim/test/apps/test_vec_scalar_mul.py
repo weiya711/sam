@@ -122,5 +122,5 @@ def test_vec_scalar_mul(samBench, vecname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_vec_scalar_mul(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_vec_scalar_mul(vecname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

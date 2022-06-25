@@ -198,5 +198,5 @@ def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_innerprod(ssname, debug_sim, out_crds, out_segs, out_vals, "none")
+        check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_vals, "none")
     samBench(bench, extra_info)

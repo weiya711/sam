@@ -303,5 +303,5 @@ def test_tensor3_mttkrp(samBench, frosttname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_mttkrp(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

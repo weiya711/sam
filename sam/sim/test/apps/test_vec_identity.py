@@ -86,5 +86,5 @@ def test_vec_identity(samBench, vecname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_vec_identity(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_vec_identity(vecname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)
