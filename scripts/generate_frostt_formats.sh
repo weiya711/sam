@@ -33,12 +33,14 @@ for i in ${!FORMATS[@]}; do
     echo "Generating files for format $format..."
     
     $basedir/compiler/taco/build/bin/taco-test sam.pack_$format
+    $basedir/compiler/taco/build/bin/taco-test sam.pack_other
 
     for j in ${!DATASET_NAMES[@]}; do
         
         name=${DATASET_NAMES[$j]} 
         echo "Generating input format files for $name..."
         python $basedir/scripts/datastructure_frostt.py -n $name -f $format
+        python $basedir/scripts/datastructure_frostt.py -n $name -f $format --other
         chmod -R 775 $FROSTT_FORMATTED_PATH
     done
 done
