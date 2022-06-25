@@ -14,10 +14,12 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+
 cwd = os.getcwd()
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -25,7 +27,7 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_ttv(samBench, frosttname, check_gold, debug_sim, fill=0):
+def test_tensor3_ttv_FINAL(samBench, frosttname, check_gold, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -49,7 +51,7 @@ def test_tensor3_ttv(samBench, frosttname, check_gold, debug_sim, fill=0):
     B_vals = read_inputs(B_vals_filename, float)
 
     c_dirname = os.path.join(formatted_dir, frosttname, "other")
-    c_fname = [f for f in os.listdir(c_dirname) if frosttname+"-vec_mode2" in f]
+    c_fname = [f for f in os.listdir(c_dirname) if frosttname + "-vec_mode2" in f]
     assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
     c_fname = c_fname[0]
     c_dirname = os.path.join(c_dirname, c_fname)
@@ -151,6 +153,7 @@ def test_tensor3_ttv(samBench, frosttname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
     out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+
     def bench():
         time.sleep(0.01)
 
@@ -161,39 +164,39 @@ def test_tensor3_ttv(samBench, frosttname, check_gold, debug_sim, fill=0):
     extra_info["tensor_c_shape"] = c_shape
     sample_dict = fiberwrite_X0_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_X0_2" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_ci_14.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_ci_14" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_ci_14" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_cj_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_cj_10" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_cj_10" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectk_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectk_7" + "_" + k] =  sample_dict[k]
+        extra_info["intersectk_7" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_B_5.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_B_5" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_B_5" + "_" + k] = sample_dict[k]
 
     sample_dict = reduce_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_3" + "_" + k] =  sample_dict[k]
+        extra_info["reduce_3" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_Xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_c_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_c_6" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_c_6" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_X1_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_X1_1" + "_" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

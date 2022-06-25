@@ -383,12 +383,40 @@ def check_gold_tensor3_elemadd(frosttname, debug_sim, out_crds, out_segs, out_va
 
 
 def check_gold_tensor3_ttv(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
-    pass
+    validation_path = os.path.join(validate_dir, "frostt-taco", frosttname + "-ttv-taco.tns")
+    dims, coordinates, vals = tnsLoader.load(validation_path)
+    coordinates.append(vals)
+    gold_tup = convert_point_tuple(coordinates)
+    print(out_segs)
+    print(out_crds)
+    print(out_val)
+    if not out_val:
+        assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
 
 
 def check_gold_tensor3_ttm(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
-    pass
-
+    validation_path = os.path.join(validate_dir, "frostt-taco", frosttname + "-ttm-taco.tns")
+    dims, coordinates, vals = tnsLoader.load(validation_path)
+    coordinates.append(vals)
+    gold_tup = convert_point_tuple(coordinates)
+    print(out_segs)
+    print(out_crds)
+    print(out_val)
+    if not out_val:
+        assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+        
 
 def check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_val, format_str):
     if frosttname == "fb1k":

@@ -48,7 +48,12 @@ def test_tensor3_ttm(samBench, frosttname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname, "other", "ss01")
+    C_dirname =os.path.join(formatted_dir, frosttname, "other")
+    C_fname = [f for f in os.listdir(C_dirname) if frosttname + "-mat_mode2" in f]
+    assert len(C_fname) == 1, "Should only have one 'other' folder that matches"
+    C_fname = C_fname[0]
+    C_dirname = os.path.join(C_dirname, C_fname)
+
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 

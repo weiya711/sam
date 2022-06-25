@@ -91,15 +91,15 @@ struct TensorInputCache {
             int DIM2 = this->inputTensor.getDimension(2);
 
             this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
-            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
-            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
+            this->otherMatMode2MTTKRP = this->otherMatTTM;
         } else if (this->inputTensor.getOrder() > 2 and includeMat) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
-            this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
-            this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+            this->otherMatTTM = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+            this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
+            this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
         }
         return std::make_pair(this->inputTensor, this->otherTensor);
     }
