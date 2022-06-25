@@ -186,8 +186,8 @@ def remove_zeros(pt_tup):
 def check_point_tuple(pt_tup1, pt_tup2):
     tup1 = sorted(pt_tup1)
     tup2 = sorted(pt_tup2)
-    # assert len(tup1) == len(tup2), "Pts1 length (" + str(len(tup1)) + " != Pts2 length (" + str(len(tup2)) + ")"
-    # assert len(tup1[0]) == len(tup2[0]), str(len(tup1[0])) + " != " + str(len(tup2[0]))
+    assert len(tup1) == len(tup2), "Pts1 length (" + str(len(tup1)) + " != Pts2 length (" + str(len(tup2)) + ")"
+    assert len(tup1[0]) == len(tup2[0]), str(len(tup1[0])) + " != " + str(len(tup2[0]))
 
     for i in range(len(tup1)):
         if tup1[i] != tup2[i]:

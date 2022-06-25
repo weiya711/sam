@@ -25,14 +25,14 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 )
 @pytest.mark.suitesparse
 def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ssname, "dummy", "none")
+    b_dirname = os.path.join(formatted_dir, ssname, "orig", "none")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
 
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss10")
+    C_dirname = os.path.join(formatted_dir, ssname, "other", "ss10")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -49,7 +49,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    d_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
+    d_dirname = os.path.join(formatted_dir, ssname, "other", "s0")
     d_shape_filename = os.path.join(d_dirname, "d_shape.txt")
     d_shape = read_inputs(d_shape_filename)
 
@@ -61,14 +61,14 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     d_vals_filename = os.path.join(d_dirname, "d_vals.txt")
     d_vals = read_inputs(d_vals_filename, float)
 
-    e_dirname = os.path.join(formatted_dir, ssname, "dummy", "none")
+    e_dirname = os.path.join(formatted_dir, ssname, "other", "none")
     e_shape_filename = os.path.join(e_dirname, "e_shape.txt")
     e_shape = read_inputs(e_shape_filename)
 
     e_vals_filename = os.path.join(e_dirname, "e_vals.txt")
     e_vals = read_inputs(e_vals_filename, float)
 
-    f_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
+    f_dirname = os.path.join(formatted_dir, ssname, "other", "s0")
     f_shape_filename = os.path.join(f_dirname, "f_shape.txt")
     f_shape = read_inputs(f_shape_filename)
 

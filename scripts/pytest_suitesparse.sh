@@ -6,16 +6,16 @@ outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 DATASET_NAMES=(
 #  bcsstm04
   bcsstm02
+  bcsstm03
+  lpi_bgprtr
+  cage4
+  klein-b1
+  GD02_a
+  GD95_b
+  Hamrle1
+  LF10
   lpi_itest2
   lp_scsd1
-#  bcsstm03
-#  lpi_bgprtr
-#  cage4
-#  klein-b1
-#  GD02_a
-#  GD95_b
-#  Hamrle1
-#  LF10
 )
 
 errors=()
