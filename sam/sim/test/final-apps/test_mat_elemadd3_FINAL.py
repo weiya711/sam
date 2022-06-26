@@ -197,10 +197,17 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["expression"] = "elemadd3"
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
     extra_info["tensor_D_shape"] = D_shape
+    extra_info["suitesparse/nnz"] = len(B_vals)
+    extra_info["tensor_C/nnz"] = len(C_vals)
+    extra_info["tensor_D/nnz"] = len(D_vals)
+    extra_info["result/vals_size"] = len(out_vals)
+    extra_info["result/nnz"] = len([x for x in out_vals if x != 0])
+
     sample_dict = fiberwrite_X0_2.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_X0_2" + "_" + k] = sample_dict[k]
