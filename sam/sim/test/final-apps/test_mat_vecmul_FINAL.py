@@ -75,8 +75,8 @@ def test_mat_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
     spaccumulator1_2_drop_crd_inner = StknDrop(debug=debug_sim)
     spaccumulator1_2_drop_val = StknDrop(debug=debug_sim)
     crdhold = CrdHold(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * len(B_crd0), fill=fill, debug=debug_sim)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=len(B_crd0), fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_c = [0, 'D']
     done = False

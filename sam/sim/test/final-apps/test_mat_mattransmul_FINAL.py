@@ -14,9 +14,11 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -24,7 +26,7 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     C_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
     C_shape = read_inputs(C_shape_filename)
@@ -57,7 +59,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
     d_vals = read_inputs(d_vals_filename, float)
-    
+
     f_dirname = os.path.join(formatted_dir, ssname, "other")
     f_fname = [f for f in os.listdir(f_dirname) if ssname + "-vec_mode1" in f]
     assert len(f_fname) == 1, "Should only have one 'other' folder that matches"
@@ -72,7 +74,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     f_vals_filename = os.path.join(f_dirname, "C_vals.txt")
     f_vals = read_inputs(f_vals_filename, float)
-    
+
     e_vals = [2]
     e_shape = [0]
 
@@ -234,6 +236,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
+
     def bench():
         time.sleep(0.01)
 
@@ -247,63 +250,63 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_f_shape"] = f_shape
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_bi_20.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_bi_20" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_bi_20" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_bj_12.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_bj_12" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_bj_12" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_b_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_b_6" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_b_6" + "_" + k] = sample_dict[k]
 
     sample_dict = reduce_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_2" + "_" + k] =  sample_dict[k]
+        extra_info["reduce_2" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_di_21.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_di_21" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_di_21" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectj_17.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_17" + "_" + k] =  sample_dict[k]
+        extra_info["intersectj_17" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_ej_13.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_ej_13" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_ej_13" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_e_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_e_10" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_e_10" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_fj_14.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_fj_14" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_fj_14" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_f_11.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_f_11" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_f_11" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_C_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_C_7" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_C_7" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_d_8.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_d_8" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_d_8" + "_" + k] = sample_dict[k]
 
     sample_dict = repeat_ei_22.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_ei_22" + "_" + k] =  sample_dict[k]
+        extra_info["repeat_ei_22" + "_" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

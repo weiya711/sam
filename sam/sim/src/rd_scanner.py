@@ -259,7 +259,13 @@ class CompressedCrdRdScan(CrdRdScan):
 
             # See 'N' 0-token which immediately emits a stop token and ends the fiber
             elif is_0tkn(curr_in_ref):
-                self._emit_stkn_code()
+                self.curr_crd = 'N'
+                self.curr_ref = 'N'
+                self.end_fiber = True
+                self.emit_fiber_stkn = True
+                self.curr_addr = 0
+                self.stop_addr = 0
+                self.start_addr = 0
 
             # Default case where input reference is an integer value
             # which means to get the segment

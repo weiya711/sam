@@ -68,15 +68,15 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, debug_sim, fill=0)
 
     intersectk_12 = Intersect2(debug=debug_sim)
 
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=len(B_crd0), fill=fill, debug=debug_sim)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=len(B_crd0) + 1, size=len(B_vals), fill=fill, debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_D_8 = Array(init_arr=D_vals, debug=debug_sim)
     arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim)
     mul_5 = Multiply2(debug=debug_sim)
     mul_4 = Multiply2(debug=debug_sim)
     reduce_3 = Reduce(debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * len(B_vals), fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_D = [0, 'D']

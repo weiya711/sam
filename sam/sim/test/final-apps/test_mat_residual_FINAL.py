@@ -20,44 +20,60 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
-arr_dict1 = {"vi_seg": [0, 2],
-             "vi_crd": [1, 2],
-             "vi_vals": [1, 2],
-             "vj_seg": [0, 1],
-             "vj_crd": [1],
-             "vj_vals": [5],
-             "mi_seg": [0, 2],
-             "mi_crd": [0, 2],
-             "mj_seg": [0, 1, 2],
-             "mj_crd": [1, 1],
-             "m_vals": [3, 4],
-             "gold_seg": [0, 3],
-             "gold_crd": [0, 1, 2],
-             "gold_vals": [-15, 1, -18]}
+# FIXME: Figureout formats
+@pytest.mark.skipif(
+    os.getenv('CI', 'false') == 'true',
+    reason='CI lacks datasets',
+)
+@pytest.mark.suitesparse
+def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
+    C_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
+    C_shape = read_inputs(C_shape_filename)
 
-@pytest.mark.parametrize("arrs", [arr_dict1])
-def test_unit_mat_residual(samBench, arrs, check_gold, debug_sim, fill=0):
-    C_shape = (3, 3)
+    C0_seg_filename = os.path.join(C_dirname, "B0_seg.txt")
+    C_seg0 = read_inputs(C0_seg_filename)
+    C0_crd_filename = os.path.join(C_dirname, "B0_crd.txt")
+    C_crd0 = read_inputs(C0_crd_filename)
 
-    C_seg0 = copy.deepcopy(arrs["mi_seg"])
-    C_crd0 = copy.deepcopy(arrs["mi_crd"])
-    C_seg1 = copy.deepcopy(arrs["mj_seg"])
-    C_crd1 = copy.deepcopy(arrs["mj_crd"])
-    C_vals = copy.deepcopy(arrs["m_vals"])
+    C1_seg_filename = os.path.join(C_dirname, "B1_seg.txt")
+    C_seg1 = read_inputs(C1_seg_filename)
+    C1_crd_filename = os.path.join(C_dirname, "B1_crd.txt")
+    C_crd1 = read_inputs(C1_crd_filename)
 
+    C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
+    C_vals = read_inputs(C_vals_filename, float)
+
+    b_dirname = os.path.join(formatted_dir, ssname, "other")
+    b_fname = [f for f in os.listdir(b_dirname) if ssname + "-vec_mode0" in f]
+    assert len(b_fname) == 1, "Should only have one 'other' folder that matches"
+    b_fname = b_fname[0]
+    b_dirname = os.path.join(b_dirname, b_fname)
     b_shape = [C_shape[0]]
-    b_seg0 = copy.deepcopy(arrs["vi_seg"])
-    b_crd0 = copy.deepcopy(arrs["vi_crd"])
-    b_vals = copy.deepcopy(arrs["vi_vals"])
+
+    b0_seg_filename = os.path.join(b_dirname, "C0_seg.txt")
+    b_seg0 = read_inputs(b0_seg_filename)
+    b0_crd_filename = os.path.join(b_dirname, "C0_crd.txt")
+    b_crd0 = read_inputs(b0_crd_filename)
+
+    b_vals_filename = os.path.join(b_dirname, "C_vals.txt")
+    b_vals = read_inputs(b_vals_filename, float)
+
+    d_dirname = os.path.join(formatted_dir, ssname, "other")
+    d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode1" in f]
+    assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
+    d_fname = d_fname[0]
+    d_dirname = os.path.join(d_dirname, d_fname)
 
     d_shape = [C_shape[1]]
-    d_seg0 = copy.deepcopy(arrs["vj_seg"])
-    d_crd0 = copy.deepcopy(arrs["vj_crd"])
-    d_vals = copy.deepcopy(arrs["vj_vals"])
 
-    gold_seg = copy.deepcopy(arrs["gold_seg"])
-    gold_crd = copy.deepcopy(arrs["gold_crd"])
-    gold_vals = copy.deepcopy(arrs["gold_vals"])
+    d0_seg_filename = os.path.join(d_dirname, "C0_seg.txt")
+    d_seg0 = read_inputs(d0_seg_filename)
+    d0_crd_filename = os.path.join(d_dirname, "C0_crd.txt")
+    d_crd0 = read_inputs(d0_crd_filename)
+
+    d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
+    d_vals = read_inputs(d_vals_filename, float)
 
     fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim)
     fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
@@ -83,10 +99,6 @@ def test_unit_mat_residual(samBench, arrs, check_gold, debug_sim, fill=0):
     done = False
     time_cnt = 0
 
-    temp = []
-    temp1 = []
-    temp2 = []
-    temp3 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_b) > 0:
             fiberlookup_bi_17.set_in_ref(in_ref_b.pop(0))
@@ -117,14 +129,6 @@ def test_unit_mat_residual(samBench, arrs, check_gold, debug_sim, fill=0):
         fiberlookup_dj_12.set_in_ref(repeat_di_13.out_ref())
         fiberlookup_dj_12.update()
 
-        temp.append(fiberlookup_Cj_11.out_crd())
-        temp1.append(fiberlookup_dj_12.out_crd())
-        temp2.append(fiberlookup_Cj_11.out_ref())
-        temp3.append(fiberlookup_dj_12.out_ref())
-        print(remove_emptystr(temp))
-        print(remove_emptystr(temp1))
-        print(remove_emptystr(temp2))
-        print(remove_emptystr(temp3))
         intersectj_10.set_in1(fiberlookup_dj_12.out_ref(), fiberlookup_dj_12.out_crd())
         intersectj_10.set_in2(fiberlookup_Cj_11.out_ref(), fiberlookup_Cj_11.out_crd())
         intersectj_10.update()
@@ -169,6 +173,52 @@ def test_unit_mat_residual(samBench, arrs, check_gold, debug_sim, fill=0):
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
 
-    assert out_crds[0] == gold_crd
-    assert out_segs[0] == gold_seg
-    assert out_vals == gold_vals
+    def bench():
+        time.sleep(0.01)
+
+    extra_info = dict()
+    extra_info["dataset"] = ssname
+    extra_info["cycles"] = time_cnt
+    extra_info["tensor_b_shape"] = b_shape
+    extra_info["tensor_C_shape"] = C_shape
+    extra_info["tensor_d_shape"] = d_shape
+    sample_dict = fiberwrite_x0_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
+
+    sample_dict = repeat_di_13.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_di_13" + "_" + k] = sample_dict[k]
+
+    sample_dict = intersectj_10.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectj_10" + "_" + k] = sample_dict[k]
+
+    sample_dict = repeat_bj_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_bj_8" + "_" + k] = sample_dict[k]
+
+    sample_dict = arrayvals_b_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_b_4" + "_" + k] = sample_dict[k]
+
+    sample_dict = reduce_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["reduce_2" + "_" + k] = sample_dict[k]
+
+    sample_dict = fiberwrite_xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
+
+    sample_dict = arrayvals_C_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_C_6" + "_" + k] = sample_dict[k]
+
+    sample_dict = arrayvals_d_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_d_7" + "_" + k] = sample_dict[k]
+
+    if check_gold:
+        print("Checking gold...")
+        check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+    samBench(bench, extra_info)
