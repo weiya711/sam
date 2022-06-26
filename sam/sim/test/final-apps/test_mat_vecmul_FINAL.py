@@ -26,7 +26,7 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)

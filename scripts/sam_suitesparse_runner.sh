@@ -1,0 +1,102 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH --mem 120000
+#SBATCH -p lanka-v3
+#SBATCH --exclusive
+
+set -u
+
+BENCHMARKS=(
+  mat_vecmul_FINAL
+  matmul_FINAL
+  mat_elemadd_FINAL
+  mat_elemadd3_FINAL
+  mat_residual_FINAL
+  mat_mattransmul_FINAL
+)
+
+# LANKA
+if [ $2 -eq 1 ]; then
+	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
+	export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
+	export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
+	export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
+	export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
+	export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
+	
+	mkdir -p $TACO_TENSOR_PATH
+	mkdir -p $SUITESPARSE_FORMATTED_PATH
+	mkdir -p $FROSTT_FORMATTED_TACO_PATH
+	mkdir -p $FROSTT_FORMATTED_PATH
+
+	lanka=ON
+	neva=OFF
+elif [ $2 -eq 2 ]; then
+	lanka=OFF
+	neva=ON
+else
+	lanka=OFF
+	neva=OFF
+fi
+
+format_outdir=${SUITESPARSE_FORMATTED_PATH} 
+basedir=$(pwd)
+sspath=$SUITESPARSE_PATH
+benchout=suitesparse-bench/sam
+
+conda activate aha
+
+mkdir -p "$benchout"
+mkdir -p $format_outdir
+mkdir -p $TACO_TENSOR_PATH/other-formatted-taco
+
+make -j8 taco/build NEVA=$neva LANKA=$lanka GEN=ON
+
+for b in ${!BENCHMARKS[@]}; do
+	bench=${BENCHMARKS[$b]}
+	path=$basedir/$benchout/$bench
+	mkdir -p $basedir/$benchout/$bench
+	echo "Testing $bench..."
+
+	while read line; do
+		cd $format_outdir
+
+		if [ $2 -eq 1 ]; then
+			matrix="$sspath/$line/$line.mtx"
+		elif [ $2 -eq 2 ]; then
+			matrix="$sspath/$line.mtx"
+		else
+			matrix="$sspath/$line.mtx"
+		fi
+
+		if [ "$bench" == "mat_vecmul_FINAL" ]; then
+			echo "Generating input format files for $line..."
+			SUITESPARSE_TENSOR_PATH=$matrix python $basedir/scripts/datastructure_suitesparse.py -n $line 
+
+			SUITESPARSE_TENSOR_PATH=$matrix $basedir/compiler/taco/build/bin/taco-test sam.pack_other_ss    
+			python $basedir/scripts/datastructure_frostt.py -n $line -f ss01 --other -ss
+		fi
+
+		cd $basedir/sam/sim
+
+		pytest test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
+		python $basedir/scripts/converter.py --json_name $path/$line.json	
+		    
+		status=$?
+		if [ $status -gt 0 ]
+		then 
+		  errors+=("${line}, ${bench}")
+		fi
+	done
+
+	python $basedir/scripts/bench_csv_aggregator.py $path $basedir/suitesparse_$bench.csv
+
+	echo -e "${RED}Failed tests:"
+	for i in ${!errors[@]}; do
+	    error=${errors[$i]} 
+	    echo -e "${RED}$error,"
+	done
+	echo -e "${NC}"
+done <$1
+
+

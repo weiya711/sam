@@ -6,7 +6,7 @@ fonttools==4.25.0
 graphviz==0.16
 iniconfig==1.1.1
 kiwisolver==1.3.1
-llvmlite==0.38.0
+llvmlite==0.36.0
 matplotlib==3.4.3
 mkl-fft==1.3.1
 mkl-random==1.2.2
@@ -27,7 +27,6 @@ pycodestyle==2.8.0
 pydot==1.4.1
 pyparsing==3.0.4
 pytest==6.2.5
-pytest-benchmark==3.4.1
 pytest-benchmark==4.64.0
 pytest-repeat==0.9.1
 python-dateutil==2.8.2
