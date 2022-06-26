@@ -65,6 +65,7 @@ struct TensorInputCache {
         this->lastPath = path;
         this->inputTensor = castToType<int64_t>("B", this->lastLoaded);
         this->otherTensor = shiftLastMode<int64_t, int64_t>("C", this->inputTensor);
+
         if (countNNZ) {
             this->nnz = 0;
             for (auto &it: iterate<int64_t>(this->inputTensor)) {
@@ -81,9 +82,21 @@ struct TensorInputCache {
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
             this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
         } else if (includeVec) {
+            std::vector<int32_t> firstDim;
+            std::vector<int32_t> lastDim;
+            if (this->inputTensor.getOrder() == 2) {
+                firstDim.push_back(this->inputTensor.getDimension(0));
+                lastDim.push_back(this->inputTensor.getDimension(1));
+            } else {
+                firstDim.push_back(this->inputTensor.getDimension(0));
+                lastDim.push_back(this->inputTensor.getDimension(2));
+            }
+
             this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
+            this->otherVecFirstMode.getTacoTensorT()->dimensions = &firstDim[0];
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
             this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
+            this->otherVecLastMode.getTacoTensorT()->dimensions = &lastDim[0];
         }
 
         if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
