@@ -15,6 +15,10 @@ BENCHMARKS=(
   mat_mattransmul_FINAL
 )
 
+errors=()
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 # LANKA
 if [ $2 -eq 1 ]; then
 	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
@@ -44,6 +48,17 @@ basedir=$(pwd)
 sspath=$SUITESPARSE_PATH
 benchout=suitesparse-bench/sam
 
+__conda_setup="$('/data/scratch/owhsu/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/data/scratch/owhsu/miniconda/etc/profile.d/conda.sh" ]; then
+        . "/data/scratch/owhsu/miniconda/etc/profile.d/conda.sh"
+    else
+        export PATH="/data/scratch/owhsu/miniconda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
 conda activate aha
 
 mkdir -p "$benchout"
@@ -87,9 +102,11 @@ for b in ${!BENCHMARKS[@]}; do
 		then 
 		  errors+=("${line}, ${bench}")
 		fi
-	done
 
-	python $basedir/scripts/bench_csv_aggregator.py $path $basedir/suitesparse_$bench.csv
+		cd $basedir
+	done <$1
+
+	python $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
 
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do
@@ -97,6 +114,5 @@ for b in ${!BENCHMARKS[@]}; do
 	    echo -e "${RED}$error,"
 	done
 	echo -e "${NC}"
-done <$1
-
+done
 
