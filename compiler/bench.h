@@ -208,8 +208,8 @@ template<typename T, typename T2>
 taco::Tensor<T> getOtherMat(std::string name, std::string datasetName, taco::Tensor<T2> original, std::vector<int> dimensions, std::string filestr,
                             int mode = 0, float sparsity=0.001, taco::Format format = taco::DCSR) {
     taco::Tensor<T> result;
-    taco::Tensor<double> tensor = taco::read(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode)+"_"+filestr, dimensions, sparsity),
-                                             format, true);
+    taco::Tensor<double> tensor = taco::readDim(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode)+"_"+filestr, dimensions, sparsity),
+                                             format, dimensions, true);
     result = castToType<T>(name, tensor);
     return result;
 }
