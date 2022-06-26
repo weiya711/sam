@@ -92,11 +92,9 @@ struct TensorInputCache {
                 lastDim.push_back(this->inputTensor.getDimension(2));
             }
 
-            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
-            this->otherVecFirstMode.getTacoTensorT()->dimensions = &firstDim[0];
+            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor, firstDim);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
-            this->otherVecLastMode.getTacoTensorT()->dimensions = &lastDim[0];
+            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastDim, lastMode);
         }
 
         if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
