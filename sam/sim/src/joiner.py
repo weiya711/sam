@@ -131,7 +131,7 @@ class Intersect2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.change_crd1 = True
                 self.change_crd2 = True
-                self.zero_token_count += 1
+                self.zero_token_output += 1
             elif self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
                 assert self.curr_crd1 == self.curr_crd2, "Both coordinates need to be done tokens"
                 self.done = True
