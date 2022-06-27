@@ -99,17 +99,6 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     done = False
     time_cnt = 0
 
-    temp = []
-    temp1 = []
-    temp2 = []
-    temp3 = []
-    temp4 = []
-    temp5 = []
-    temp6 = []
-    temp7 = []
-    temp8 = []
-    temp9 = []
-
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_b) > 0:
             fiberlookup_bi_17.set_in_ref(in_ref_b.pop(0))
@@ -140,14 +129,6 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_dj_12.set_in_ref(repeat_di_13.out_ref())
         fiberlookup_dj_12.update()
 
-        temp.append(fiberlookup_Cj_11.out_crd())
-        temp1.append(fiberlookup_dj_12.out_crd())
-        temp2.append(fiberlookup_Cj_11.out_ref())
-        temp3.append(fiberlookup_dj_12.out_ref())
-        print("Cj", remove_emptystr(temp))
-        print(remove_emptystr(temp2))
-        print("dj", remove_emptystr(temp1))
-        print(remove_emptystr(temp3))
         intersectj_10.set_in1(fiberlookup_dj_12.out_ref(), fiberlookup_dj_12.out_crd())
         intersectj_10.set_in2(fiberlookup_Cj_11.out_ref(), fiberlookup_Cj_11.out_crd())
         intersectj_10.update()
@@ -167,14 +148,6 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
 
         arrayvals_b_4.set_load(repeat_bj_8.out_ref())
         arrayvals_b_4.update()
-        temp7.append(unioni_16.out_crd())
-        temp6.append(unioni_16.out_ref1())
-        temp5.append(repeat_bj_8.out_ref())
-        temp4.append(arrayvals_b_4.out_val())
-        print("union crd", remove_emptystr(temp7))
-        print("bi ref", remove_emptystr(temp6))
-        print("bj rep", remove_emptystr(temp5))
-        print()
 
         mul_5.set_in1(arrayvals_C_6.out_val())
         mul_5.set_in2(arrayvals_d_7.out_val())

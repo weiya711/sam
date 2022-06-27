@@ -16,7 +16,7 @@ parser.add_argument('-f', '--format', metavar='fformat', type=str, action='store
 parser.add_argument('-i', '--int', action='store_false', default=True, help='Safe sparsity cast to int for values')
 parser.add_argument('-s', '--shift', action='store_false', default=True, help='Also format shifted tensor')
 parser.add_argument('-o', '--other', action='store_true', default=False, help='Format other tensor')
-parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, help='Format suitesparse other tensor') 
+parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, help='Format suitesparse other tensor')
 args = parser.parse_args()
 
 if args.other:
@@ -49,7 +49,7 @@ if args.format is not None:
     levels = args.format[:-3]
     if args.other:
         otherfileNames = [f for f in os.listdir(taco_format_dirname) if
-                          os.path.isfile(os.path.join(taco_format_dirname,f)) and args.name in f]
+                          os.path.isfile(os.path.join(taco_format_dirname, f)) and args.name in f]
 
         for otherfile in otherfileNames:
             taco_format_orig_filename = os.path.join(taco_format_dirname, otherfile)

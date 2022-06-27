@@ -150,7 +150,8 @@ def test_tensor3_elemadd_FINAL(samBench, frosttname, check_gold, debug_sim, fill
         fiberwrite_Xvals_0.set_input(add_4.out_val())
         fiberwrite_Xvals_0.update()
 
-        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and \
+               fiberwrite_Xvals_0.out_done()
 
     fiberwrite_X0_3.autosize()
     fiberwrite_X1_2.autosize()

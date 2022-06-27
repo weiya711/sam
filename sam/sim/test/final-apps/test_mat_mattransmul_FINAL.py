@@ -115,13 +115,6 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     done = False
     time_cnt = 0
 
-    temp1 = []
-    temp2 = []
-    temp3 = []
-    temp4 = []
-    temp5 = []
-    temp6 = []
-    temp7 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
@@ -131,19 +124,12 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
             fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
         fiberlookup_fi_28.update()
 
-        temp1.append(fiberlookup_fi_28.out_crd())
-        temp2.append(fiberlookup_Ci_27.out_crd())
-
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
         unioni_26.update()
 
-        temp3.append(unioni_26.out_crd())
         fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
         fiberlookup_Cj_18.update()
-
-        temp4.append(fiberlookup_Cj_18.out_crd())
-        temp5.append(fiberlookup_dj_19.out_crd())
 
         fiberwrite_x0_1.set_input(unioni_26.out_crd())
         fiberwrite_x0_1.update()

@@ -3,11 +3,11 @@
 #SBATCH -t 360
 
 DATASET_NAMES=(
-  facebook
   fb1k
   fb10k
-  nell-1
+  facebook
   nell-2
+  nell-1
 )
 
 IGNORED_NAMES=(

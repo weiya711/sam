@@ -34,28 +34,54 @@ class Compute2(Primitive, ABC):
 class Add2(Compute2):
     def __init__(self, neg1=False, neg2=False, **kwargs):
         super().__init__(**kwargs)
+        self.fill_value = 0
         self.neg1 = neg1
         self.neg2 = neg2
 
+        self.get1 = True
+        self.get2 = True
+
+        self.curr_in1 = ''
+        self.curr_in2 = ''
+
     def update(self):
         if len(self.in1) > 0 and len(self.in2) > 0:
-            curr_in1 = self.in1.pop(0)
-            curr_in2 = self.in2.pop(0)
-            if curr_in1 == 'D' or curr_in2 == 'D':
+            if self.get1:
+                self.curr_in1 = self.in1.pop(0)
+            if self.get2:
+                self.curr_in2 = self.in2.pop(0)
+
+            if self.curr_in1 == 'D' or self.curr_in2 == 'D':
                 # Inputs are both the same and done tokens
-                assert (curr_in1 == curr_in2)
-                self.curr_out = curr_in1
+                assert (self.curr_in1 == self.curr_in2)
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                self.get2 = True
                 self.done = True
-            elif is_stkn(curr_in1) or is_stkn(curr_in2):
+            elif is_stkn(self.curr_in1) and isinstance(self.curr_in2, int):
+                # FIXME: Patch for union for b(i)+C(i,j)*d(j)
+                self.curr_out = self.curr_in2 + self.fill_value
+                self.get1 = False
+                self.get2 = True
+            elif is_stkn(self.curr_in2) and isinstance(self.curr_in1, int):
+                # FIXME: Patch for union for b(i)+C(i,j)*d(j)
+                self.curr_out = self.curr_in1 + self.fill_value
+                self.get1 = True
+                self.get2 = False
+            elif is_stkn(self.curr_in1) and is_stkn(self.curr_in2):
                 # Inputs are both the same and stop tokens
-                assert (curr_in1 == curr_in2)
-                self.curr_out = curr_in1
+                assert (self.curr_in1 == self.curr_in2)
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                self.get2 = True
             else:
                 # Both inputs are values
-                self.curr_out = (-1) ** self.neg1 * curr_in1 + (-1) ** self.neg2 * curr_in2
+                self.curr_out = (-1) ** self.neg1 * self.curr_in1 + (-1) ** self.neg2 * self.curr_in2
+                self.get1 = True
+                self.get2 = True
             self.compute_fifos()
             if self.debug:
-                print("DEBUG: Curr Out:", self.curr_out, "\t Curr In1:", curr_in1, "\t Curr In2:", curr_in2)
+                print("DEBUG: Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1, "\t Curr In2:", self.curr_in2)
         else:
             self.curr_out = ''
 
@@ -63,27 +89,52 @@ class Add2(Compute2):
 class Multiply2(Compute2):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.fill_value = 0
+
+        self.get1 = True
+        self.get2 = True
+
+        self.curr_in1 = ''
+        self.curr_in2 = ''
 
     def update(self):
         if len(self.in1) > 0 and len(self.in2) > 0:
-            curr_in1 = self.in1.pop(0)
-            curr_in2 = self.in2.pop(0)
-            if curr_in1 == 'D' or curr_in2 == 'D':
+            if self.get1:
+                self.curr_in1 = self.in1.pop(0)
+            if self.get2:
+                self.curr_in2 = self.in2.pop(0)
+            if self.curr_in1 == 'D' or self.curr_in2 == 'D':
                 # Inputs are both the same and done tokens
-                assert curr_in1 == curr_in2, "Both must be done tokens: " + str(curr_in1) + " != " + str(curr_in2)
-                self.curr_out = curr_in1
+                assert self.curr_in1 == self.curr_in2, "Both must be done tokens: " + str(self.curr_in1) + " != " + str(self.curr_in2)
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                self.get2 = True
                 self.done = True
-            elif is_stkn(curr_in1) or is_stkn(curr_in2):
+            elif is_stkn(self.curr_in1) and isinstance(self.curr_in2, int):
+                # FIXME: Patch for union for b(i)+C(i,j)*d(j)
+                self.curr_out = self.fill_value
+                self.get1 = False
+                self.get2 = True
+            elif is_stkn(self.curr_in2) and isinstance(self.curr_in1, int):
+                # FIXME: Patch for union for b(i)+C(i,j)*d(j)
+                self.curr_out = self.fill_value
+                self.get1 = True
+                self.get2 = False
+            elif is_stkn(self.curr_in1) and is_stkn(self.curr_in2):
                 # Inputs are both the same and stop tokens
-                assert curr_in1 == curr_in2, "Both must be the same stop token: " + str(curr_in1) + " != " \
-                                             + str(curr_in2)
-                self.curr_out = curr_in1
+                assert self.curr_in1 == self.curr_in2, "Both must be the same stop token: " + str(self.curr_in1) + " != " \
+                                             + str(self.curr_in2)
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                self.get2 = True
             else:
                 # Both inputs are values
-                self.curr_out = curr_in1 * curr_in2
+                self.curr_out = self.curr_in1 * self.curr_in2
+                self.get1 = True
+                self.get2 = True
             self.compute_fifos()
             if self.debug:
                 print("DEBUG: MULT: \t "
-                      "Curr Out:", self.curr_out, "\t Curr In1:", curr_in1, "\t Curr In2:", curr_in2)
+                      "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1, "\t Curr In2:", self.curr_in2)
         else:
             self.curr_out = ''

@@ -2,21 +2,47 @@ from .base import *
 
 
 class Repeat(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, union=False, **kwargs):
         super().__init__(**kwargs)
 
         self.in_ref = []
         self.in_repeat = []
+        self.in_union_other_0tkn = []
+
         self.in_ref_size = 0
         self.in_repeat_size = 0
         self.curr_out_ref = ''
         self.curr_in_ref = ''
+        self.curr_union_other = ''
         self.get_next_ref = True
         self.get_next_rep = True
         self.emit_stkn = False
-        self.stop_token_cnt = 0
+        self.empty_rep_fiber = True
+        self.get_next_ref_union = False
+        self.meta_union_mode = union
 
     def update(self):
+        if len(self.in_ref) > 0 and self.get_next_ref_union:
+            next_in = self.in_ref.pop(0)
+            assert isinstance(next_in, int)
+            if isinstance(next_in, int):
+                self.curr_out_ref = next_in
+                self.emit_stkn = True
+            else:
+                assert is_0tkn(next_in), "Next ref should only be int or 0tkn but is " + str(next_in)
+                if len(self.in_ref) > 0:
+                    next_in = self.in_ref[0]
+                    if is_stkn(next_in):
+                        stkn = increment_stkn(next_in)
+                        self.in_ref.pop(0)
+                    else:
+                        stkn = 'S0'
+                    self.curr_out_ref = stkn
+                else:
+                    self.emit_stkn = True
+                    self.curr_out_ref = ''
+            self.get_next_ref_union = False
+
         if len(self.in_ref) > 0 and self.emit_stkn:
             next_in = self.in_ref[0]
             if is_stkn(next_in):
@@ -49,7 +75,30 @@ class Repeat(Primitive):
         repeat = ''
         if len(self.in_repeat) > 0 and self.get_next_rep:
             repeat = self.in_repeat.pop(0)
-            if repeat == 'S':
+            if repeat == 'S' and self.empty_rep_fiber and self.meta_union_mode:
+                if len(self.in_ref) > 0:
+                    next_in = self.in_ref.pop(0)
+                    if isinstance(next_in, int):
+                        self.curr_out_ref = next_in
+                        self.emit_stkn = True
+                    else:
+                        assert is_0tkn(next_in), "Next ref should only be int or 0tkn but is " + str(next_in)
+                        if len(self.in_ref) > 0:
+                            next_in = self.in_ref[0]
+                            if is_stkn(next_in):
+                                stkn = increment_stkn(next_in)
+                                self.in_ref.pop(0)
+                            else:
+                                stkn = 'S0'
+                            self.curr_out_ref = stkn
+                        else:
+                            self.emit_stkn = True
+                            self.curr_out_ref = ''
+                        self.empty_rep_fiber = True
+                else:
+                    self.curr_out_ref = ''
+                    self.get_next_ref_union = True
+            elif repeat == 'S':
                 self.get_next_ref = True
                 if len(self.in_ref) > 0:
                     next_in = self.in_ref[0]
@@ -62,6 +111,7 @@ class Repeat(Primitive):
                 else:
                     self.emit_stkn = True
                     self.curr_out_ref = ''
+                self.empty_rep_fiber = True
             elif repeat == 'D':
                 if self.curr_out_ref != 'D':
                     raise Exception("Both repeat and ref signal need to end in 'D'")
@@ -70,6 +120,7 @@ class Repeat(Primitive):
             elif repeat == 'R':
                 self.get_next_ref = False
                 self.curr_out_ref = self.curr_in_ref
+                self.empty_rep_fiber = False
             else:
                 raise Exception('Repeat signal cannot be: ' + str(repeat))
         elif self.get_next_rep:
@@ -87,6 +138,14 @@ class Repeat(Primitive):
     def set_in_repeat(self, repeat):
         if repeat != '':
             self.in_repeat.append(repeat)
+
+    # def set_in_union_0tkn(self, union_0tkn):
+    #     if union_0tkn != '':
+    #         self.in_union_other_0tkn.append(union_0tkn)
+    #
+    # def set_in_union_other_ref(self, union_0tkn):
+    #     if union_0tkn != '':
+    #         self.in_union_other_0tkn.append(union_0tkn)
 
     def set_in_repsig(self, repeat):
         if repeat != '':

@@ -176,7 +176,7 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
-        if (time_cnt % 1000000 == 0):
+        if time_cnt % 1000000 == 0:
             print("TIME:", time_cnt)
             print("DONE:", fiberwrite_X0_2.out_done(), fiberwrite_X1_1.out_done(), fiberwrite_Xvals_0.out_done(),
                   unioni1_12.out_done(), unioni2_12.out_done(), unioni3_12.out_done(),

@@ -14,65 +14,65 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
+arr_dict1 = {"vi_seg": [0, 2],
+             "vi_crd": [1, 2],
+             "vi_vals": [1, 2],
+             "vj_seg": [0, 2],
+             "vj_crd": [1, 2],
+             "vj_vals": [5, 6],
+             "mi_seg": [0, 2],
+             "mi_crd": [0, 2],
+             "mj_seg": [0, 1, 2],
+             "mj_crd": [1, 1],
+             "m_vals": [3, 4],
+             "gold_seg": [0, 3],
+             "gold_crd": [0, 1, 2],
+             "gold_vals": [30, 2, 44]}
+
+arr_dict2 = {"vi_seg": [0, 5],
+             "vi_crd": [1, 2, 4, 8, 15],
+             "vi_vals": [1, 1, 1, 1, 1],
+             "vj_seg": [0, 4],
+             "vj_crd": [0, 3, 9, 15],
+             "vj_vals": [2, 2, 2, 2],
+             "mi_seg": [0, 16],
+             "mi_crd": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+             "mj_seg": [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32],
+             "mj_crd": [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13,
+                        14, 14, 15, 15, 1],
+             "m_vals": [-3] * 32}
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
-    C_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
-    C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
-    C_shape = read_inputs(C_shape_filename)
+@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2])
+def test_mat_mattransmul(samBench, arrs, check_gold, debug_sim, fill=0):
+    C_shape = (16, 16)
 
-    C0_seg_filename = os.path.join(C_dirname, "B0_seg.txt")
-    C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "B0_crd.txt")
-    C_crd0 = read_inputs(C0_crd_filename)
+    C_seg1 = copy.deepcopy(arrs["mi_seg"])
+    C_crd1 = copy.deepcopy(arrs["mi_crd"])
+    C_seg0 = copy.deepcopy(arrs["mj_seg"])
+    C_crd0 = copy.deepcopy(arrs["mj_crd"])
+    C_vals = copy.deepcopy(arrs["m_vals"])
 
-    C1_seg_filename = os.path.join(C_dirname, "B1_seg.txt")
-    C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "B1_crd.txt")
-    C_crd1 = read_inputs(C1_crd_filename)
-
-    C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
-    C_vals = read_inputs(C_vals_filename, float)
-
-    d_dirname = os.path.join(formatted_dir, ssname, "other")
-    d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode0" in f]
-    assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
-    d_fname = d_fname[0]
-    d_dirname = os.path.join(d_dirname, d_fname)
+    f_shape = [C_shape[1]]
+    f_seg0 = copy.deepcopy(arrs["vi_seg"])
+    f_crd0 = copy.deepcopy(arrs["vi_crd"])
+    f_vals = copy.deepcopy(arrs["vi_vals"])
 
     d_shape = [C_shape[0]]
+    d_seg0 = copy.deepcopy(arrs["vj_seg"])
+    d_crd0 = copy.deepcopy(arrs["vj_crd"])
+    d_vals = copy.deepcopy(arrs["vj_vals"])
 
-    d0_seg_filename = os.path.join(d_dirname, "C0_seg.txt")
-    d_seg0 = read_inputs(d0_seg_filename)
-    d0_crd_filename = os.path.join(d_dirname, "C0_crd.txt")
-    d_crd0 = read_inputs(d0_crd_filename)
-
-    d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
-    d_vals = read_inputs(d_vals_filename, float)
-    
-    f_dirname = os.path.join(formatted_dir, ssname, "other")
-    f_fname = [f for f in os.listdir(f_dirname) if ssname + "-vec_mode1" in f]
-    assert len(f_fname) == 1, "Should only have one 'other' folder that matches"
-    f_fname = f_fname[0]
-    f_dirname = os.path.join(f_dirname, f_fname)
-    f_shape = [C_shape[1]]
-
-    f0_seg_filename = os.path.join(f_dirname, "C0_seg.txt")
-    f_seg0 = read_inputs(f0_seg_filename)
-    f0_crd_filename = os.path.join(f_dirname, "C0_crd.txt")
-    f_crd0 = read_inputs(f0_crd_filename)
-
-    f_vals_filename = os.path.join(f_dirname, "C_vals.txt")
-    f_vals = read_inputs(f_vals_filename, float)
-    
     e_vals = [2]
     e_shape = [0]
 
@@ -113,6 +113,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     done = False
     time_cnt = 0
 
+    temp = []
     temp1 = []
     temp2 = []
     temp3 = []
@@ -120,6 +121,13 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     temp5 = []
     temp6 = []
     temp7 = []
+    temp8 = []
+    temp9 = []
+    temp10 = []
+    temp11 = []
+    temp12 = []
+    temp13 = []
+    temp14 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
@@ -129,19 +137,15 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
             fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
         fiberlookup_fi_28.update()
 
-        temp1.append(fiberlookup_fi_28.out_crd())
-        temp2.append(fiberlookup_Ci_27.out_crd())
+        # temp1.append(fiberlookup_fi_28.out_crd())
+        # temp2.append(fiberlookup_Ci_27.out_crd())
 
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
         unioni_26.update()
 
-        temp3.append(unioni_26.out_crd())
         fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
         fiberlookup_Cj_18.update()
-
-        temp4.append(fiberlookup_Cj_18.out_crd())
-        temp5.append(fiberlookup_dj_19.out_crd())
 
         fiberwrite_x0_1.set_input(unioni_26.out_crd())
         fiberwrite_x0_1.update()
@@ -171,8 +175,6 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
         intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
         intersectj_17.update()
 
-        temp7.append(intersectj_17.out_crd())
-
         repsiggen_j_16.set_istream(intersectj_17.out_crd())
         repsiggen_j_16.update()
 
@@ -193,6 +195,23 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
         repeat_fj_14.set_in_ref(unioni_26.out_ref2())
         repeat_fj_14.set_in_repsig(repsiggen_j_16.out_repsig())
         repeat_fj_14.update()
+
+        temp7.append(unioni_26.out_crd())
+        temp6.append(unioni_26.out_ref1())
+        temp8.append(unioni_26.out_ref2())
+        temp12.append(repeat_di_21.out_ref())
+        temp9.append(repeat_bi_20.out_ref())
+        temp10.append(repeat_ei_22.out_ref())
+
+        temp.append(fiberlookup_Cj_18.out_crd())
+        temp1.append(fiberlookup_dj_19.out_crd())
+        temp2.append(fiberlookup_Cj_18.out_ref())
+        temp3.append(fiberlookup_dj_19.out_ref())
+
+        temp13.append(intersectj_17.out_crd())
+        temp4.append(repeat_bj_12.out_ref())
+        temp11.append(repeat_ej_13.out_ref())
+        temp5.append(repeat_fj_14.out_ref())
 
         arrayvals_e_10.set_load(repeat_ej_13.out_ref())
         arrayvals_e_10.update()
@@ -234,78 +253,72 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
-    def bench():
-        time.sleep(0.01)
 
-    extra_info = dict()
-    extra_info["dataset"] = ssname
-    extra_info["cycles"] = time_cnt
-    extra_info["tensor_b_shape"] = b_shape
-    extra_info["tensor_C_shape"] = C_shape
-    extra_info["tensor_d_shape"] = d_shape
-    extra_info["tensor_e_shape"] = e_shape
-    extra_info["tensor_f_shape"] = f_shape
-    sample_dict = fiberwrite_x0_1.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
 
-    sample_dict = repeat_bi_20.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_bi_20" + "_" + k] =  sample_dict[k]
+    print("unioni", remove_emptystr(temp7))
+    print(remove_emptystr(temp6))
+    print(remove_emptystr(temp8))
+    print("repeat di", remove_emptystr(temp12))
+    print("rep bi", remove_emptystr(temp9))
+    print("rep ei", remove_emptystr(temp10))
 
-    sample_dict = repeat_bj_12.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_bj_12" + "_" + k] =  sample_dict[k]
+    print("Cj", remove_emptystr(temp))
+    print(remove_emptystr(temp2))
+    print("dj", remove_emptystr(temp1))
+    print(remove_emptystr(temp3))
 
-    sample_dict = arrayvals_b_6.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["arrayvals_b_6" + "_" + k] =  sample_dict[k]
+    print("intj",remove_emptystr(temp13))
+    print("rep bj",remove_emptystr(temp4))
+    print("rep ej",remove_emptystr(temp11))
+    print("rep fj",remove_emptystr(temp5))
+    print()
 
-    sample_dict = reduce_2.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["reduce_2" + "_" + k] =  sample_dict[k]
+    print(out_crds[0])
+    print(out_segs[0])
+    print(out_vals)
+    print()
+    if "gold_seg" in arrs.keys():
+        gold_seg = copy.deepcopy(arrs["gold_seg"])
+        gold_crd = copy.deepcopy(arrs["gold_crd"])
+        gold_vals = copy.deepcopy(arrs["gold_vals"])
 
-    sample_dict = fiberwrite_xvals_0.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+        assert out_crds[0] == gold_crd
+        assert out_segs[0] == gold_seg
+        assert out_vals == gold_vals
 
-    sample_dict = repeat_di_21.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_di_21" + "_" + k] =  sample_dict[k]
+    else:
+        B_scipy = scipy.sparse.csr_matrix((C_vals, C_crd0, C_seg0), shape=C_shape)
+        b_nd = np.zeros(f_shape)
+        d_nd = np.zeros(d_shape)
 
-    sample_dict = intersectj_17.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["intersectj_17" + "_" + k] =  sample_dict[k]
+        for i in range(len(f_crd0)):
+            val = f_vals[i]
+            crd = f_crd0[i]
+            b_nd[crd] = val
 
-    sample_dict = repeat_ej_13.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_ej_13" + "_" + k] =  sample_dict[k]
+        for i in range(len(d_crd0)):
+            val = d_vals[i]
+            crd = d_crd0[i]
+            d_nd[crd] = val
 
-    sample_dict = arrayvals_e_10.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["arrayvals_e_10" + "_" + k] =  sample_dict[k]
+        gold_nd = 2 * B_scipy @ d_nd + 2 * b_nd
 
-    sample_dict = repeat_fj_14.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_fj_14" + "_" + k] =  sample_dict[k]
+        gold_tup = convert_ndarr_point_tuple(gold_nd)
+        if debug_sim:
+            print("Out segs:", out_segs)
+            print("Out crds:", out_crds)
+            print("Out vals:", out_vals)
+            print("Dense Vec1:\n", b_nd)
+            print("Dense Mat1:\n", B_scipy.toarray())
+            print("Dense Vec2:\n", d_nd)
+            print("Dense Gold:", gold_nd)
+            print("Gold:", gold_tup)
 
-    sample_dict = arrayvals_f_11.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["arrayvals_f_11" + "_" + k] =  sample_dict[k]
-
-    sample_dict = arrayvals_C_7.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["arrayvals_C_7" + "_" + k] =  sample_dict[k]
-
-    sample_dict = arrayvals_d_8.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["arrayvals_d_8" + "_" + k] =  sample_dict[k]
-
-    sample_dict = repeat_ei_22.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_ei_22" + "_" + k] =  sample_dict[k]
-
-    if check_gold:
-        print("Checking gold...")
-        check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
-    samBench(bench, extra_info)
+        if not out_vals:
+            assert out_vals == gold_tup
+        elif not gold_tup:
+            assert all([v == 0 for v in out_vals])
+        else:
+            out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+            out_tup = remove_zeros(out_tup)
+            assert (check_point_tuple(out_tup, gold_tup))
