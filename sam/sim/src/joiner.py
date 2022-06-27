@@ -66,7 +66,7 @@ class Intersect2(CrdJoiner2):
 
         self.difference_in_ref = 0
         self.max_diff_in_ref = 0
-        self.drop_token_output = 0
+        self.zero_token_output = 0
 
         self.ocrd = 0
         self.oref1 = 0
@@ -131,6 +131,7 @@ class Intersect2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.change_crd1 = True
                 self.change_crd2 = True
+                self.zero_token_count += 1
             elif self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
                 assert self.curr_crd1 == self.curr_crd2, "Both coordinates need to be done tokens"
                 self.done = True
@@ -230,8 +231,8 @@ class Intersect2(CrdJoiner2):
     def return_statistics(self):
         stat_dict = {"fifos_ref_1": self.size_in_ref1, "fifos_ref_2": self.size_in_ref2,
                      "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
-                     "fifo_difference": self.max_diff_in_ref, "intersection_rate": self.count / self.total_count,
-                     "drop_count": self.drop_token_output, "valid_output": self.total_count - self.drop_token_output,
+                     "fifo_difference": self.max_run_count, "intersection_rate": self.count / self.total_count,
+                     "drop_count": self.zero_token_output, "valid_output": self.total_count - self.zero_token_output,
                      "run_count": self.max_run_count}
         return stat_dict
 
@@ -251,7 +252,8 @@ class Union2(CrdJoiner2):
         self.curr_ref2 = None
 
         self.total_count = 0
-        self.count = 0
+        self.one_only_count = 0
+        self.two_only_count = 0
 
     def update(self):
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
@@ -270,7 +272,6 @@ class Union2(CrdJoiner2):
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.total_count += 1
-                self.count += 1
             elif is_stkn(self.curr_crd1):
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
@@ -278,6 +279,7 @@ class Union2(CrdJoiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.total_count += 1
+                self.two_only_count += 1
             elif is_stkn(self.curr_crd2):
                 self.ocrd = self.curr_crd1
                 self.oref1 = self.curr_ref1
@@ -285,6 +287,7 @@ class Union2(CrdJoiner2):
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.total_count += 1
+                self.one_only_count += 1
             elif self.curr_crd1 < self.curr_crd2:
                 self.ocrd = self.curr_crd1
                 self.oref1 = self.curr_ref1
@@ -292,6 +295,7 @@ class Union2(CrdJoiner2):
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.total_count += 1
+                self.one_only_count += 1
             elif self.curr_crd1 > self.curr_crd2:
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
@@ -299,6 +303,7 @@ class Union2(CrdJoiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.total_count += 1
+                self.two_only_count += 1
             else:
                 raise Exception('Intersect2: should not enter this case')
         else:
@@ -362,6 +367,13 @@ class Union2(CrdJoiner2):
 
     def print_union_rate(self):
         return print("Union rate: ", self.return_union_rate())
+
+    def return_statistics(self):
+        stat_dict = {"fifos_ref_1": self.size_in_ref1, "fifos_ref_2": self.size_in_ref2,
+                     "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
+                     "one_only": self.one_only_count, "two_only": self.two_only_count,
+                     "total_count": self.total_count}
+        return stat_dict
 
 
 class IntersectBV2(BVJoiner2):

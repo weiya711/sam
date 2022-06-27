@@ -234,61 +234,76 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_d_shape"] = d_shape
     extra_info["tensor_e_shape"] = e_shape
     extra_info["tensor_f_shape"] = f_shape
+
+    extra_info["tensor_b/nnz"] = len(b_vals)
+    extra_info["tensor_C/nnz"] = len(C_vals)
+    extra_info["tensor_D/nnz"] = len(d_vals)
+    extra_info["tensor_e/nnz"] = len(e_vals)
+    extra_info["tensor_f/nnz"] = len(f_vals)
+
+    extra_info["result/vals_size"] = len(out_vals)
+    extra_info["result/nnz"] = len([x for x in out_vals if x != 0])
+
+ 
+    sample_dict = unioni_26.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["unioni_26" + "/" + k] = sample_dict[k]
+ 
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_x0_1" + "/" + k] = sample_dict[k]
 
     sample_dict = repeat_bi_20.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_bi_20" + "_" + k] = sample_dict[k]
+        extra_info["repeat_bi_20" + "/" + k] = sample_dict[k]
 
     sample_dict = repeat_bj_12.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_bj_12" + "_" + k] = sample_dict[k]
+        extra_info["repeat_bj_12" + "/" + k] = sample_dict[k]
 
     sample_dict = arrayvals_b_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_b_6" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_b_6" + "/" + k] = sample_dict[k]
 
     sample_dict = reduce_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_2" + "_" + k] = sample_dict[k]
+        extra_info["reduce_2" + "/" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "/" + k] = sample_dict[k]
 
     sample_dict = repeat_di_21.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_di_21" + "_" + k] = sample_dict[k]
+        extra_info["repeat_di_21" + "/" + k] = sample_dict[k]
 
     sample_dict = intersectj_17.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_17" + "_" + k] = sample_dict[k]
+        extra_info["intersectj_17" + "/" + k] = sample_dict[k]
 
     sample_dict = repeat_ej_13.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_ej_13" + "_" + k] = sample_dict[k]
+        extra_info["repeat_ej_13" + "/" + k] = sample_dict[k]
 
     sample_dict = arrayvals_e_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_e_10" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_e_10" + "/" + k] = sample_dict[k]
 
     sample_dict = repeat_fj_14.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_fj_14" + "_" + k] = sample_dict[k]
+        extra_info["repeat_fj_14" + "/" + k] = sample_dict[k]
 
     sample_dict = arrayvals_f_11.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_f_11" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_f_11" + "/" + k] = sample_dict[k]
 
     sample_dict = arrayvals_C_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_C_7" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_C_7" + "/" + k] = sample_dict[k]
 
     sample_dict = arrayvals_d_8.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_d_8" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_d_8" + "/" + k] = sample_dict[k]
 
     sample_dict = repeat_ei_22.return_statistics()
     for k in sample_dict.keys():
