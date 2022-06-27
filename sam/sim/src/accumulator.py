@@ -136,6 +136,8 @@ class SparseCrdPtAccumulator1(Primitive):
 
             if self.curr_in_outer_crdpt in self.storage.keys():
                 inner_dict = self.storage[self.curr_in_outer_crdpt]
+                for k in inner_dict.keys():
+                    self.hits_tracker[k] = 1
                 if self.curr_in_inner_crdpt in inner_dict.keys():
                     self.hits_tracker[self.curr_in_inner_crdpt] += 1
                     inner_dict[self.curr_in_inner_crdpt] += self.valtype(self.curr_in_val)
@@ -402,6 +404,8 @@ class SparseCrdPtAccumulator2(Primitive):
             else:
                 if self.curr_in1_crdpt in self.storage.keys():
                     inner_dict = self.storage[self.curr_in1_crdpt]
+                    for k in inner_dict.keys():
+                        self.hits_tracker[k] = 1
                     if self.curr_in0_crdpt in inner_dict.keys():
                         self.hits_tracker[self.curr_in0_crdpt] += 1
                         inner_dict[self.curr_in0_crdpt] += self.valtype(self.curr_in_val)
