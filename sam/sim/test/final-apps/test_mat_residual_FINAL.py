@@ -75,11 +75,12 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
     d_vals = read_inputs(d_vals_filename, float)
 
+    C_shape0_min = min(len(b_vals) + len(C_crd0), b_shape[0])
     fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim)
     fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
     unioni_16 = Union2(debug=debug_sim)
     fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape0_min, fill=fill, debug=debug_sim)
     repsiggen_i_14 = RepeatSigGen(debug=debug_sim)
     repeat_di_13 = Repeat(debug=debug_sim)
     fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim)
@@ -90,7 +91,7 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     arrayvals_b_4 = Array(init_arr=b_vals, debug=debug_sim)
     add_3 = Add2(debug=debug_sim, neg2=True)
     reduce_2 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape0_min, fill=fill, debug=debug_sim)
     in_ref_b = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_d = [0, 'D']
@@ -173,7 +174,6 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_b_shape"] = b_shape
     extra_info["tensor_C_shape"] = C_shape
     extra_info["tensor_d_shape"] = d_shape
-
 
     extra_info["tensor_b/nnz"] = len(b_vals)
     extra_info["tensor_C/nnz"] = len(C_vals)

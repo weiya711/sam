@@ -69,10 +69,10 @@ def test_tensor3_ttv_FINAL(samBench, frosttname, check_gold, debug_sim, fill=0):
 
     fiberlookup_Bi_17 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
     fiberlookup_Bj_13 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=len(B_crd0), fill=fill, debug=debug_sim)
     repsiggen_i_15 = RepeatSigGen(debug=debug_sim)
     fiberlookup_Bk_8 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=len(B_crd0) + 1, size=len(B_crd1), fill=fill, debug=debug_sim)
     repsiggen_j_11 = RepeatSigGen(debug=debug_sim)
     repeat_ci_14 = Repeat(debug=debug_sim)
     repeat_cj_10 = Repeat(debug=debug_sim)
@@ -82,7 +82,7 @@ def test_tensor3_ttv_FINAL(samBench, frosttname, check_gold, debug_sim, fill=0):
     arrayvals_c_6 = Array(init_arr=c_vals, debug=debug_sim)
     mul_4 = Multiply2(debug=debug_sim)
     reduce_3 = Reduce(debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * len(B_crd1), fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_c = [0, 'D']
     done = False

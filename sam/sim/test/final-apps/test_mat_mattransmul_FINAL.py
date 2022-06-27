@@ -81,11 +81,12 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     b_shape = [0]
     b_vals = [2]
 
+    C_shape1_min = min(C_shape[1], len(f_crd0) + len(C_crd1))
     fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
     fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim)
     unioni_26 = Union2(debug=debug_sim)
     fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape1_min, fill=fill, debug=debug_sim)
     repsiggen_i_24 = RepeatSigGen(debug=debug_sim)
     repeat_bi_20 = Repeat(debug=debug_sim)
     repeat_di_21 = Repeat(debug=debug_sim)
@@ -104,7 +105,7 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     mul_4 = Multiply2(debug=debug_sim)
     add_3 = Add2(debug=debug_sim)
     reduce_2 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape1_min, fill=fill, debug=debug_sim)
     in_ref_C = [0, 'D']
     in_ref_f = [0, 'D']
     in_ref_b = [0, 'D']

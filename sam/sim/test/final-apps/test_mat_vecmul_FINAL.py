@@ -61,6 +61,10 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
+    # THIS IS FOR SIZE INFO
+    Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    Bs_seg = read_inputs(os.path.join(Bs_dirname, "B0_seg.txt"))
+
     fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
     fiberlookup_cj_12 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
     intersectj_10 = Intersect2(debug=debug_sim)
@@ -75,8 +79,8 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     spaccumulator1_2_drop_crd_inner = StknDrop(debug=debug_sim)
     spaccumulator1_2_drop_val = StknDrop(debug=debug_sim)
     crdhold = CrdHold(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * len(B_crd0), fill=fill, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=len(B_crd0), fill=fill, debug=debug_sim)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * Bs_seg[-1], fill=fill, debug=debug_sim)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_c = [0, 'D']
     done = False

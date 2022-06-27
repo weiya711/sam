@@ -60,6 +60,10 @@ def test_matmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
+    # THIS IS FOR SIZE INFO
+    Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    Bs_seg = read_inputs(os.path.join(Bs_dirname, "B0_seg.txt"))
+
     fiberlookup_Bk_17 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
     fiberlookup_Ck_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
     intersectk_16 = Intersect2(debug=debug_sim)
@@ -77,9 +81,9 @@ def test_matmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim)
     spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim)
     spaccumulator2_3_drop_val = StknDrop(debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=Bs_seg[-1] + 1, size=Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
