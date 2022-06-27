@@ -22,7 +22,7 @@ def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
                 # Discard the first 9 lines. This corresponds to the
                 # google-benchmark generated header.
                 if taco:
-                    for i in range(0, 9):
+                    for i in range(0, 10):
                         f.readline()
                 # Open the rest of the file as a CSV.
                 reader = csv.reader(f)
