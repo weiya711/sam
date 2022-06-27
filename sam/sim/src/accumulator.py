@@ -84,6 +84,8 @@ class Reduce(Primitive):
 class SparseCrdPtAccumulator1(Primitive):
     def __init__(self, maxdim=100, valtype=float, **kwargs):
         super().__init__(**kwargs)
+        self.hits_tracker = {}
+
         self.outer_crdpt = []
         self.inner_crdpt = []
         self.in_val = []
@@ -134,9 +136,13 @@ class SparseCrdPtAccumulator1(Primitive):
 
             if self.curr_in_outer_crdpt in self.storage.keys():
                 inner_dict = self.storage[self.curr_in_outer_crdpt]
+                for k in inner_dict.keys():
+                    self.hits_tracker[k] = 1
                 if self.curr_in_inner_crdpt in inner_dict.keys():
+                    self.hits_tracker[self.curr_in_inner_crdpt] += 1
                     inner_dict[self.curr_in_inner_crdpt] += self.valtype(self.curr_in_val)
                 else:
+                    self.hits_tracker[self.curr_in_inner_crdpt] = 1
                     inner_dict[self.curr_in_inner_crdpt] = self.valtype(self.curr_in_val)
             # If a done token is seen, cannot emit done until all coordinates have been written out
             elif self.curr_in_outer_crdpt == 'D':
@@ -203,6 +209,17 @@ class SparseCrdPtAccumulator1(Primitive):
     def out_val(self):
         return self.curr_val
 
+    def return_hits(self):
+        i = 0
+        cnt_gt_zero = 0
+        cnt_total = 0
+        for k in hits_tracker.keys():
+            if hits_tracker[k] > i:
+                i = hits_tracker[k]
+            if hits_tracker[k] > 1:
+                cnt_gt_zero += 1
+            cnt_total += 1
+        return i, cnt_gt_zero, cnt_total
 
 # Accumulation into a vector
 class SparseAccumulator1(Primitive):
@@ -329,6 +346,10 @@ class SparseAccumulator1(Primitive):
         stats_dict["in_outer_fifo"] = self.in_outer_crd_pt_fifo
         stats_dict["in_inner_fifo"] = self.in_inner_crd_pt_fifo
         stats_dict["in_val_fifo"] = self.in_val_fifo
+        hits_info = self.crdpt_spacc.return_hits() 
+        stats_dict["max_hits"] = hits_info[0]
+        stats_dict["hits_gt_one"] = hits_info[1]
+        stats_dict["total_elemes"] = hits_info[2]
         return stats_dict
 
     def print_fifos(self):
@@ -360,6 +381,8 @@ class SparseCrdPtAccumulator2(Primitive):
         self.storage = dict()
         self.valtype = valtype
 
+        self.hits_tracker = {}
+
     def update(self):
         if self.done:
             self.curr_crdpt0 = ''
@@ -381,9 +404,13 @@ class SparseCrdPtAccumulator2(Primitive):
             else:
                 if self.curr_in1_crdpt in self.storage.keys():
                     inner_dict = self.storage[self.curr_in1_crdpt]
+                    for k in inner_dict.keys():
+                        self.hits_tracker[k] = 1
                     if self.curr_in0_crdpt in inner_dict.keys():
+                        self.hits_tracker[self.curr_in0_crdpt] += 1
                         inner_dict[self.curr_in0_crdpt] += self.valtype(self.curr_in_val)
                     else:
+                        self.hits_tracker[self.curr_in0_crdpt] = 1
                         inner_dict[self.curr_in0_crdpt] = self.valtype(self.curr_in_val)
                 else:
                     self.storage[self.curr_in1_crdpt] = {self.curr_in0_crdpt: self.valtype(self.curr_in_val)}
@@ -454,6 +481,18 @@ class SparseCrdPtAccumulator2(Primitive):
 
     def out_val(self):
         return self.curr_val
+
+    def return_hits(self):
+        i = 0
+        cnt_gt_zero = 0
+        cnt_total = 0
+        for k in hits_tracker.keys():
+            if hits_tracker[k] > i:
+                i = hits_tracker[k]
+            if hits_tracker[k] > 1:
+                cnt_gt_zero += 1
+            cnt_total += 1
+        return i, cnt_gt_zero, cnt_total
 
 
 # Accumulation into a matrix (2D)
@@ -553,6 +592,8 @@ class SparseAccumulator2(Primitive):
         return self.curr_val
 
     def return_statistics(self):
+        hits_info = self.crdpt_spacc.return_hits()
         stats_dict = {"in1_fifo": self.in1_fifo, "in0_fifo": self.in0_fifo,
-                      "inval_fifo": self.inval_fifo}
+                "inval_fifo": self.inval_fifo, "max_hits": hits_info[0], "gt_one": hits_info[1],
+                "total_elems": hits_info[2]}
         return stats_dict

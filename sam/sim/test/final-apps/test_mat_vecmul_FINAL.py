@@ -159,33 +159,39 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_c_shape"] = c_shape
+    extra_info["tensor_B/nnz"] = len(B_vals)
+    extra_info["tensor_c/nnz"] = len(c_vals)
+
+    extra_info["result/vals_size"] = len(out_vals)
+    extra_info["result/nnz"] = len([x for x in out_vals if x != 0])
+
     sample_dict = intersectj_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_10" + "_" + k] = sample_dict[k]
+        extra_info["intersectj_10" + "/" + k] = sample_dict[k]
 
     sample_dict = spaccumulator1_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["spaccumulator1_2" + "_" + k] = sample_dict[k]
+        extra_info["spaccumulator1_2" + "/" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "/" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_x0_1" + "/" + k] = sample_dict[k]
 
     sample_dict = repeat_ci_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_ci_6" + "_" + k] = sample_dict[k]
+        extra_info["repeat_ci_6" + "/" + k] = sample_dict[k]
 
     sample_dict = arrayvals_c_5.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_c_5" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_c_5" + "/" + k] = sample_dict[k]
 
     sample_dict = arrayvals_B_4.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_B_4" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_B_4" + "/" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")
