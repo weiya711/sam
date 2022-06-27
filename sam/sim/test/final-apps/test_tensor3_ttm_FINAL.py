@@ -167,7 +167,7 @@ def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, debug_sim, fill=0):
         fiberwrite_Xvals_0.update()
 
         done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and \
-               fiberwrite_Xvals_0.out_done()
+            fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 
     fiberwrite_X0_3.autosize()
