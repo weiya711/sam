@@ -84,10 +84,8 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     repeat_di_13 = Repeat(debug=debug_sim)
     fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim)
     intersectj_10 = Intersect2(debug=debug_sim)
-    repsiggen_j_9 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_d_7 = Array(init_arr=d_vals, debug=debug_sim)
-    repeat_bj_8 = Repeat(debug=debug_sim)
     mul_5 = Multiply2(debug=debug_sim)
     arrayvals_b_4 = Array(init_arr=b_vals, debug=debug_sim)
     add_3 = Add2(debug=debug_sim, neg2=True)
@@ -133,34 +131,27 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
         intersectj_10.set_in2(fiberlookup_Cj_11.out_ref(), fiberlookup_Cj_11.out_crd())
         intersectj_10.update()
 
-        repsiggen_j_9.set_istream(intersectj_10.out_crd())
-        repsiggen_j_9.update()
-
         arrayvals_C_6.set_load(intersectj_10.out_ref2())
         arrayvals_C_6.update()
 
         arrayvals_d_7.set_load(intersectj_10.out_ref1())
         arrayvals_d_7.update()
 
-        repeat_bj_8.set_in_ref(unioni_16.out_ref1())
-        repeat_bj_8.set_in_repsig(repsiggen_j_9.out_repsig())
-        repeat_bj_8.update()
-
-        arrayvals_b_4.set_load(repeat_bj_8.out_ref())
+        arrayvals_b_4.set_load(unioni_16.out_ref1())
         arrayvals_b_4.update()
 
         mul_5.set_in1(arrayvals_C_6.out_val())
         mul_5.set_in2(arrayvals_d_7.out_val())
         mul_5.update()
 
-        add_3.set_in1(arrayvals_b_4.out_val())
-        add_3.set_in2(mul_5.out_val())
-        add_3.update()
-
-        reduce_2.set_in_val(add_3.out_val())
+        reduce_2.set_in_val(mul_5.out_val())
         reduce_2.update()
 
-        fiberwrite_xvals_0.set_input(reduce_2.out_val())
+        add_3.set_in1(arrayvals_b_4.out_val())
+        add_3.set_in2(reduce_2.out_val())
+        add_3.update()
+
+        fiberwrite_xvals_0.set_input(add_3.out_val())
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
@@ -193,10 +184,6 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = intersectj_10.return_statistics()
     for k in sample_dict.keys():
         extra_info["intersectj_10" + "_" + k] = sample_dict[k]
-
-    sample_dict = repeat_bj_8.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_bj_8" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_b_4.return_statistics()
     for k in sample_dict.keys():

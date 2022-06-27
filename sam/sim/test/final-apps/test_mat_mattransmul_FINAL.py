@@ -95,9 +95,9 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim)
-    repeat_bj_12 = Repeat(debug=debug_sim)
-    repeat_ej_13 = Repeat(debug=debug_sim)
-    repeat_fj_14 = Repeat(debug=debug_sim)
+    repeat_bj_12 = Repeat(debug=debug_sim, union=True)
+    # repeat_ej_13 = Repeat(debug=debug_sim, union=True)
+    # repeat_fj_14 = Repeat(debug=debug_sim, union=True)
     arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim)
     arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim)
     arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim)
@@ -159,8 +159,6 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
         intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
         intersectj_17.update()
 
-        temp7.append(intersectj_17.out_crd())
-
         repsiggen_j_16.set_istream(intersectj_17.out_crd())
         repsiggen_j_16.update()
 
@@ -174,18 +172,10 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
         repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig())
         repeat_bj_12.update()
 
-        repeat_ej_13.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_ej_13.set_in_ref(repeat_ei_22.out_ref())
-        repeat_ej_13.update()
-
-        repeat_fj_14.set_in_ref(unioni_26.out_ref2())
-        repeat_fj_14.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_fj_14.update()
-
-        arrayvals_e_10.set_load(repeat_ej_13.out_ref())
+        arrayvals_e_10.set_load(repeat_ei_22.out_ref())
         arrayvals_e_10.update()
 
-        arrayvals_f_11.set_load(repeat_fj_14.out_ref())
+        arrayvals_f_11.set_load(unioni_26.out_ref2())
         arrayvals_f_11.update()
 
         mul_9.set_in1(arrayvals_e_10.out_val())
@@ -203,14 +193,14 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
         mul_4.set_in2(arrayvals_d_8.out_val())
         mul_4.update()
 
-        add_3.set_in1(mul_4.out_val())
+        reduce_2.set_in_val(mul_4.out_val())
+        reduce_2.update()
+
+        add_3.set_in1(reduce_2.out_val())
         add_3.set_in2(mul_9.out_val())
         add_3.update()
 
-        reduce_2.set_in_val(add_3.out_val())
-        reduce_2.update()
-
-        fiberwrite_xvals_0.set_input(reduce_2.out_val())
+        fiberwrite_xvals_0.set_input(add_3.out_val())
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
@@ -266,17 +256,9 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["intersectj_17" + "_" + k] = sample_dict[k]
 
-    sample_dict = repeat_ej_13.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_ej_13" + "_" + k] = sample_dict[k]
-
     sample_dict = arrayvals_e_10.return_statistics()
     for k in sample_dict.keys():
         extra_info["arrayvals_e_10" + "_" + k] = sample_dict[k]
-
-    sample_dict = repeat_fj_14.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["repeat_fj_14" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_f_11.return_statistics()
     for k in sample_dict.keys():

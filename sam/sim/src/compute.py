@@ -70,7 +70,8 @@ class Add2(Compute2):
                 self.get2 = False
             elif is_stkn(self.curr_in1) and is_stkn(self.curr_in2):
                 # Inputs are both the same and stop tokens
-                assert (self.curr_in1 == self.curr_in2)
+                assert self.curr_in1 == self.curr_in2, "Both must be the same stop token: " + str(self.curr_in1) +\
+                                                       " != " + str(self.curr_in2)
                 self.curr_out = self.curr_in1
                 self.get1 = True
                 self.get2 = True
