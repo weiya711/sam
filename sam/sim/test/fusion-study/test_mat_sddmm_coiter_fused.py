@@ -171,7 +171,6 @@ def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0)
         # print("Cj", remove_emptystr(tempcj))
         # print("Ck", remove_emptystr(tempck))
 
-
         mul_5.set_in1(arrayvals_B_6.out_val())
         mul_5.set_in2(arrayvals_C_7.out_val())
         mul_5.update()

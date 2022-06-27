@@ -16,7 +16,8 @@ import os
 import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -153,6 +154,7 @@ def test_tensor3_innerprod(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = []
     out_segs = []
     out_vals = fiberwrite_xvals_0.get_arr()
+
     def bench():
         time.sleep(0.01)
 
@@ -163,39 +165,39 @@ def test_tensor3_innerprod(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_C_shape"] = C_shape
     sample_dict = intersecti_13.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersecti_13" + "_" + k] =  sample_dict[k]
+        extra_info["intersecti_13" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectj_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_10" + "_" + k] =  sample_dict[k]
+        extra_info["intersectj_10" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectk_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectk_7" + "_" + k] =  sample_dict[k]
+        extra_info["intersectk_7" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_B_5.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_B_5" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_B_5" + "_" + k] = sample_dict[k]
 
     sample_dict = reduce_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_3" + "_" + k] =  sample_dict[k]
+        extra_info["reduce_3" + "_" + k] = sample_dict[k]
 
     sample_dict = reduce_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_2" + "_" + k] =  sample_dict[k]
+        extra_info["reduce_2" + "_" + k] = sample_dict[k]
 
     sample_dict = reduce_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_1" + "_" + k] =  sample_dict[k]
+        extra_info["reduce_1" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_C_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_C_6" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_C_6" + "_" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")
