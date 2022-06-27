@@ -248,11 +248,17 @@ def read_combined_inputs(filename, formatlist):
     return return_list
 
 
-def read_inputs(filename, intype=int):
+def read_inputs(filename, intype=int, base=10, early_terminate=None):
     return_list = []
     with open(filename) as f:
         for line in f:
-            return_list.append(intype(line))
+            if early_terminate is not None:
+                if early_terminate in line:
+                    break
+            if base == 16:
+                return_list.append(intype(line, base))
+            else:
+                return_list.append(intype(line))
     return return_list
 
 

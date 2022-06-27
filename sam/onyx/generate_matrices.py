@@ -9,6 +9,7 @@ import argparse
 import math
 import csv
 import os
+from sam.sim.test.test import *
 
 
 class MatrixGenerator():
@@ -322,6 +323,33 @@ def run_statistics(name, seed, shape, dump_dir, sparsity):
         avg2 = 0
 
     return (avg1, avg2)
+
+
+def get_tensor_from_files(name, files_dir, shape):
+    all_files = os.listdir(files_dir)
+    dims = len(shape)
+    segs = []
+    crds = []
+    vals = None
+    for mode in range(dims):
+        seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
+        crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
+        segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=16, early_terminate='x'))
+        crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=16, early_terminate='x'))
+    val_f = [fil for fil in all_files if name in fil and f'mode_vals' in fil][0]
+    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=16, early_terminate='x')
+
+    pt_list = get_point_list(crds, segs, val_arr=vals)
+    mat_base = numpy.zeros(shape)
+    for pt_idx in range(len(pt_list[0])):
+        pt_base = []
+        for i in range(dims):
+            pt_base.append(pt_list[i][pt_idx])
+        mat_base[tuple(pt_base)] = pt_list[dims][pt_idx]
+
+    mg = MatrixGenerator(name="X", shape=shape, sparsity=0.7, format='CSF', dump_dir=None, tensor=mat_base)
+
+    return mg
 
 
 if __name__ == "__main__":
