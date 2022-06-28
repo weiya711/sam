@@ -86,8 +86,10 @@ class MergeNode(HWNode):
         cmrg_enable = 1
         # TODO what is this supposed to be?
         cmrg_stop_lvl = 1
+        op = 0
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
-            'cmrg_stop_lvl': cmrg_stop_lvl
+            'cmrg_stop_lvl': cmrg_stop_lvl,
+            'op': op
         }
-        return (cmrg_enable, cmrg_stop_lvl), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs

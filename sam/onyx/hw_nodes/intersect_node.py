@@ -1,4 +1,5 @@
 from sam.onyx.hw_nodes.hw_node import *
+from lake.modules.intersect import JoinerOp
 
 
 class IntersectNode(HWNode):
@@ -40,7 +41,7 @@ class IntersectNode(HWNode):
             out_conn = 0
             print(edge)
             comment = edge.get_attributes()['comment'].strip('"')
-            if "C" in comment:
+            if "C" in comment or "c" in comment:
                 out_conn = 1
             new_conns = {
                 f'isect_to_rd_scan': [
@@ -122,8 +123,16 @@ class IntersectNode(HWNode):
         print(attributes)
         cmrg_enable = 0
         cmrg_stop_lvl = 0
+        type_op = attributes['type'].strip('"')
+        if type_op == "intersect":
+            op = JoinerOp.INTERSECT.value
+        elif type_op == "union":
+            op = JoinerOp.UNION.value
+        else:
+            raise ValueError
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
-            'cmrg_stop_lvl': cmrg_stop_lvl
+            'cmrg_stop_lvl': cmrg_stop_lvl,
+            'op': op
         }
-        return (cmrg_enable, cmrg_stop_lvl), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs

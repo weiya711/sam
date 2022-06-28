@@ -104,7 +104,7 @@ class ReadScannerNode(HWNode):
             print("CHECKING READ TENSOR - INTERSECT")
             print(self.get_tensor())
             # comment = edge.get_attributes()['comment'].strip('"')
-            if self.get_tensor() == 'C':
+            if self.get_tensor() == 'C' or self.get_tensor() == 'c':
                 isect_conn = 1
             e_type = edge.get_attributes()['type'].strip('"')
             if "crd" in e_type:
@@ -163,7 +163,7 @@ class ReadScannerNode(HWNode):
             print(edge)
             print("CHECKING READ TENSOR - COMPUTE")
             print(self.get_tensor())
-            if self.get_tensor() == 'C':
+            if self.get_tensor() == 'C' or self.get_tensor() == 'c':
                 compute_conn = 1
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [
