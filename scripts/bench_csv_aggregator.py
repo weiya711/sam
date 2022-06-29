@@ -35,14 +35,14 @@ def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
                     continue
                 # Find the column that contains label. We're going to skip
                 # entries that have a skip marker in the label.
-                labelIdx = header.index("label", 0)
+                # labelIdx = header.index("label", 0)
                 if first:
                     header.append("original_filename")
                     writer.writerow(header)
                     first = False
                 for row in reader:
-                    if taco and "SKIPPED" not in row[labelIdx]:
-                        validLabels.add(row[labelIdx])
+                    # if taco and "SKIPPED" not in row[labelIdx]:
+                        # validLabels.add(row[labelIdx])
                     row.append(fname)
                     writer.writerow(row)
     # Write out the set of valid labels.

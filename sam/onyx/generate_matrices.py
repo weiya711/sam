@@ -1,5 +1,6 @@
 from ast import dump
 from operator import mod
+from venv import create
 import numpy
 import random
 import scipy.sparse as ss
@@ -325,7 +326,20 @@ def run_statistics(name, seed, shape, dump_dir, sparsity):
     return (avg1, avg2)
 
 
-def get_tensor_from_files(name, files_dir, shape):
+def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
+    mat_base = numpy.zeros(shape)
+    dims = len(shape)
+    for pt_idx in range(len(pt_list[0])):
+        pt_base = []
+        for i in range(dims):
+            pt_base.append(pt_list[i][pt_idx])
+        mat_base[tuple(pt_base)] = pt_list[dims][pt_idx]
+
+    mg = MatrixGenerator(name=f"{name}", shape=shape, sparsity=0.7, format='CSF', dump_dir=None, tensor=mat_base)
+    return mg
+
+
+def get_tensor_from_files(name, files_dir, shape, base=10, early_terminate=None) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
     segs = []
@@ -334,20 +348,13 @@ def get_tensor_from_files(name, files_dir, shape):
     for mode in range(dims):
         seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
         crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
-        segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=16, early_terminate='x'))
-        crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=16, early_terminate='x'))
+        segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate))
+        crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
     val_f = [fil for fil in all_files if name in fil and f'mode_vals' in fil][0]
-    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=16, early_terminate='x')
+    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate)
 
     pt_list = get_point_list(crds, segs, val_arr=vals)
-    mat_base = numpy.zeros(shape)
-    for pt_idx in range(len(pt_list[0])):
-        pt_base = []
-        for i in range(dims):
-            pt_base.append(pt_list[i][pt_idx])
-        mat_base[tuple(pt_base)] = pt_list[dims][pt_idx]
-
-    mg = MatrixGenerator(name="X", shape=shape, sparsity=0.7, format='CSF', dump_dir=None, tensor=mat_base)
+    mg = create_matrix_from_point_list(name, pt_list, shape)
 
     return mg
 

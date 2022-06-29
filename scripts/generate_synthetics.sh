@@ -11,6 +11,7 @@ fi
 export SRC_PATH="$(pwd)/sam/onyx/synthetic/"
 
 # Create the main directories
+mkdir -p $SYNTHETIC_PATH
 pushd $SYNTHETIC_PATH
 for vectype in "random" "blocks" "runs"
 do

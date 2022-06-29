@@ -1,5 +1,7 @@
+from calendar import c
 import pytest
 import time
+from sam.onyx.generate_matrices import create_matrix_from_point_list, get_tensor_from_files
 import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
@@ -14,6 +16,7 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+import numpy
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -55,14 +58,18 @@ def test_matmul_ijk(samBench, sparsity, check_gold, debug_sim, fill=0):
     C_shape_filename = os.path.join(C_dirname, "shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
+    # C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
+    # C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
+    # C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
+    # C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
@@ -236,5 +243,26 @@ def test_matmul_ijk(samBench, sparsity, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
+        sim_pt_list = get_point_list(out_crds, out_segs, val_arr=out_vals)
+        sim_mg = create_matrix_from_point_list(name="X", pt_list=sim_pt_list, shape=[B_shape[0], C_shape[0]])
+        x_mat_sim = sim_mg.get_matrix()
+
+        # GET NUMPY REPS OF INPUT MATS
+        b_mg = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape)
+        b_mat = b_mg.get_matrix()
+        # print(b_mat)
+        # C is stored in DCSC - need to transpose upon reading.
+        c_mg = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape)
+        c_mat = c_mg.get_matrix()
+        c_mat_transpose = numpy.transpose(c_mat)
+        # print(c_mat_transpose)
+        # c_mat_transpose = c_mat
+
+        x_mat_gold = numpy.matmul(b_mat, c_mat_transpose)
+        print(x_mat_gold)
+        print(x_mat_sim)
+
+        assert numpy.array_equal(x_mat_gold, x_mat_sim)
+
         # check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)
