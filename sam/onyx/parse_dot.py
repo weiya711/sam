@@ -14,6 +14,8 @@ class SAMDotGraph():
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]
+        self.mode_map = {}
+        self.get_mode_map()
         self.mapped_graph = {}
         self.seq = 0
         self.local_mems = local_mems
@@ -27,6 +29,37 @@ class SAMDotGraph():
         else:
             self.rewrite_rsg_broadcast()
         self.map_nodes()
+
+    def get_mode_map(self):
+        sc = self.graph.get_comment().strip('"')
+        for tensor in sc.split(","):
+            tensor_name = tensor.split("=")[0]
+            self.mode_map[tensor_name] = {}
+            tensor_format = tensor.split("=")[1]
+            print(tensor_name)
+            print(tensor_format)
+            for mode, tf_subspec in enumerate(tensor_format[0:len(tensor_format) // 2]):
+                actual_mode = int(tensor_format[mode + len(tensor_format) // 2])
+                self.mode_map[tensor_name][actual_mode] = (mode, tf_subspec)
+        print(self.mode_map)
+        self.mode_map_list = []
+        self.tensor_list = []
+        for tensor, mappings in self.mode_map.items():
+            self.tensor_list.append(tensor)
+            mappings_list = []
+            for idx in range(len(mappings.keys())):
+                mappings_list.append(mappings[idx])
+            self.mode_map_list.append(mappings_list)
+
+        self.remaining = {}
+
+        for tensor, mappings in self.mode_map.items():
+            self.remaining[tensor] = tuple(mappings.items())
+        # print(self.tensor_list)
+        # print(self.mode_map_list)
+        # return self.tensor_list, self.mode_map_list
+        # return self.mode_map
+        return self.remaining
 
     def map_nodes(self):
         '''
