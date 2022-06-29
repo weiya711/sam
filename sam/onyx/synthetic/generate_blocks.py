@@ -50,6 +50,9 @@ def generate_blocks_vectors(num_nonzeros, len, vec_size):
                 filled_vec2[inject_idx2 + idx_off] = 1
                 nnz_2 += 1
 
+            # if nnz_1 >= num_nonzeros or nnz_2 >= num_nonzeros:
+                # break
+
         # nnz_1 += len
         # nnz_2 += len
         if nnz_1 >= num_nonzeros and nnz_2 >= num_nonzeros:

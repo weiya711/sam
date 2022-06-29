@@ -31,7 +31,7 @@ def create_ASPLOS_plots(csv_path):
 
     df = pd.read_csv(csv_path)
     # print(df.to_string())
-    small_df = df.filter(items=['cycles', 'vectype', 'sparsity', 'split_factor', 'test_name'])
+    small_df = df.filter(items=['cycles', 'vectype', 'sparsity', 'split_factor', 'test_name', 'block_size', 'run_length'])
 
     test_dfs = {}
 
@@ -48,7 +48,7 @@ def create_ASPLOS_plots(csv_path):
     plot_runs_sf(test_dfs=test_dfs)
     plot_blocks_sf(test_dfs=test_dfs)
 
-    plt.show()
+    # plt.show()
 
 
 def plot_urandom_const_sf(test_dfs):
@@ -64,6 +64,8 @@ def plot_urandom_const_sf(test_dfs):
     plt.xlabel('Sparsity (% nonzeros)', **xlabel_keywords)
     plt.ylabel('Simulator Cycles', **ylabel_keywords)
     plt.title('Simulator Cycles vs Sparsity (random)', **title_keywords)
+    fig.set_size_inches(16, 12)
+    plt.savefig('urandom_const_sf.pdf')
 
 
 def plot_urandom_sf_const_sp(test_dfs):
@@ -76,30 +78,38 @@ def plot_urandom_sf_const_sp(test_dfs):
     plt.xlabel('Split Factor', **xlabel_keywords)
     plt.ylabel('Simulator Cycles', **ylabel_keywords)
     plt.title('Simulator Cycles vs Split Factor (random)', **title_keywords)
+    fig.set_size_inches(16, 12)
+    plt.savefig('urandom_const_sp.pdf')
 
 
 def plot_runs_sf(test_dfs):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
-        t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'runs')]
+        t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'runs') &
+                              ((test_dfs[test]['split_factor'] == 1) | (test_dfs[test]['split_factor'] == 64))]
         print(t_df)
-        plt.plot(t_df['split_factor'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        plt.plot(t_df['run_length'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
     plt.legend(test_names_legend, **legend_keywords)
-    plt.xlabel('Split Factor', **xlabel_keywords)
+    plt.xlabel('Run Length', **xlabel_keywords)
     plt.ylabel('Simulator Cycles', **ylabel_keywords)
     plt.title('Simulator Cycles vs Split Factor (runs)', **title_keywords)
+    fig.set_size_inches(16, 12)
+    plt.savefig('runs_sf.pdf')
 
 
 def plot_blocks_sf(test_dfs):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
-        t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'blocks')]
+        t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'blocks') &
+                              ((test_dfs[test]['split_factor'] == 1) | (test_dfs[test]['split_factor'] == 64))]
         print(t_df)
-        plt.plot(t_df['split_factor'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        plt.plot(t_df['block_size'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
     plt.legend(test_names_legend, **legend_keywords)
-    plt.xlabel('Split Factor', **xlabel_keywords)
+    plt.xlabel('Block Size', **xlabel_keywords)
     plt.ylabel('Simulator Cycles', **ylabel_keywords)
     plt.title('Simulator Cycles vs Split Factor (blocks)', **title_keywords)
+    fig.set_size_inches(16, 12)
+    plt.savefig('blocks_sf.pdf')
 
 
 if __name__ == "__main__":

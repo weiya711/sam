@@ -25,18 +25,24 @@ def generate_runs_vectors(vec_shape, run_length, nnz):
     while not done:
 
         for run_idx in range(run_length):
+            if nnz_1 >= nnz:
+                break
             vec1[inject_idx + run_idx] = random.randint(0, 1000)
+            nnz_1 += 1
 
         # Now create a run on the other side
         inject_idx = inject_idx + run_idx + 1
 
         for run_idx in range(run_length):
+            if nnz_2 >= nnz:
+                break
             vec2[inject_idx + run_idx] = random.randint(0, 1000)
+            nnz_2 += 1
 
         inject_idx = inject_idx + run_idx + 1
 
-        nnz_1 += run_length
-        nnz_2 += run_length
+        # nnz_1 += run_length
+        # nnz_2 += run_length
 
         if nnz_1 >= nnz and nnz_2 >= nnz:
             done = True
