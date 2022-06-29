@@ -5,7 +5,7 @@ import csv
 def write_csv(path, outpath):
     with open(outpath, 'w+', newline='') as outcsv:
         writer = csv.writer(outcsv)
-        writer.writerow(["name", "orig ss01 len", "orig ss10 len"])
+        writer.writerow(["name", "ss01-len", "ss10-len"])
         for dir in os.listdir(path):
             tensor_dirname = os.path.join(path, dir)
             if os.path.isdir(tensor_dirname):
@@ -22,7 +22,7 @@ def write_csv(path, outpath):
                     last_line = f.readlines()[-1]
                     ss10_len = last_line
 
-                writer.writerow(tensorname, ss10_len, ss10_len)
+                writer.writerow([tensorname, ss10_len, ss10_len])
 
 
 parser = argparse.ArgumentParser()
