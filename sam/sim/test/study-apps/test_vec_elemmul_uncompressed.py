@@ -20,19 +20,19 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     reason='CI lacks datasets',
 )
 @pytest.mark.synth
+@pytest.mark.parametrize("run_length", [1, 2, 5, 10, 20, 30, 40, 50, 75, 100, 200, 300, 400])
 @pytest.mark.parametrize("vectype", ["random", "runs", "blocks"])
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
-def test_unit_vec_elemmul_u_u_u(samBench, vectype, sparsity, debug_sim, dim1=2000, max_val=1000, fill=0):
-
-    run_1 = 100
-    run_2 = 200
+def test_unit_vec_elemmul_u_u_u(samBench, run_length, vectype, sparsity, debug_sim, dim1=2000, max_val=1000, fill=0):
 
     if vectype == "random":
         b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "B_" + vectype + "_sp_" + str(sparsity))
     elif vectype == "runs":
-        b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "runs_0_100_200")
+        # b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "runs_0_100_200")
+        b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", f"runs_rl_{run_length}_nnz_400")
     elif vectype == "blocks":
-        b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "B_blocks_20_20")
+        # b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "B_blocks_20_20")
+        b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", f"B_blocks_400_{run_length}")
 
     b_vals_filename = os.path.join(b_dirname, "tensor_B_mode_vals")
     in_vec1 = read_inputs(b_vals_filename, float)
@@ -40,9 +40,11 @@ def test_unit_vec_elemmul_u_u_u(samBench, vectype, sparsity, debug_sim, dim1=200
     if vectype == "random":
         c_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "C_" + vectype + "_sp_" + str(sparsity))
     elif vectype == "runs":
-        c_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "runs_0_100_200")
+        # c_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "runs_0_100_200")
+        c_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", f"runs_rl_{run_length}_nnz_400")
     elif vectype == "blocks":
-        c_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "C_blocks_20_20")
+        # c_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "C_blocks_20_20")
+        c_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", f"C_blocks_400_{run_length}")
 
     c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
     in_vec2 = read_inputs(c_vals_filename, float)
@@ -95,8 +97,8 @@ def test_unit_vec_elemmul_u_u_u(samBench, vectype, sparsity, debug_sim, dim1=200
     extra_info["cycles"] = time_cnt
     extra_info["vectype"] = vectype
     extra_info["sparsity"] = sparsity
-    extra_info["run_1"] = run_1
-    extra_info["run_2"] = run_2
+    extra_info["run_length"] = run_length
+    extra_info["block_size"] = run_length
     extra_info["format"] = "dense"
     extra_info["split_factor"] = 1
     extra_info["test_name"] = "test_unit_vec_elemmul_u_u_u"

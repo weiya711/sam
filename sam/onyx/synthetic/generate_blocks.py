@@ -5,7 +5,7 @@ import argparse
 TRIES = 1000
 
 
-def generate_blocks_vectors(num, len, vec_size):
+def generate_blocks_vectors(num_nonzeros, len, vec_size):
 
     vec1 = numpy.zeros(vec_size)
     vec2 = numpy.zeros(vec_size)
@@ -13,8 +13,12 @@ def generate_blocks_vectors(num, len, vec_size):
     filled_vec1 = numpy.zeros(vec_size)
     filled_vec2 = numpy.zeros(vec_size)
 
+    nnz_1 = 0
+    nnz_2 = 0
+    done = False
     # Create a num of blocks in the first
-    for i in range(num):
+    # for i in range(num):
+    while done is False:
         # Pick them with the len margin on either side
         picked_safe = False
         num_tries = 0
@@ -27,7 +31,7 @@ def generate_blocks_vectors(num, len, vec_size):
             # Check that there's room for it
             for margin_idx in range(-1 * len, 2 * len):
                 check_margin_idx = inject_idx1 + margin_idx
-                if check_margin_idx < 0 or check_margin_idx > vec_size:
+                if check_margin_idx < 0 or check_margin_idx >= vec_size:
                     continue
                 elif filled_vec1[check_margin_idx] != 0:
                     safe = False
@@ -40,24 +44,16 @@ def generate_blocks_vectors(num, len, vec_size):
             if (inject_idx1 + idx_off) >= 0 and (inject_idx1 + idx_off) < vec_size:
                 vec1[inject_idx1 + idx_off] = random.randint(0, 1000)
                 filled_vec1[inject_idx1 + idx_off] = 1
+                nnz_1 += 1
             if (inject_idx2 + idx_off) >= 0 and (inject_idx2 + idx_off) < vec_size:
                 vec2[inject_idx2 + idx_off] = random.randint(0, 1000)
                 filled_vec2[inject_idx2 + idx_off] = 1
+                nnz_2 += 1
 
-        # inject_idx = inject_idx + 1
-
-        # for run_idx in range(run1):
-        #     vec1[inject_idx + run_idx] = random.randint(0, 1000)
-
-        # # Now create a run on the other side
-        # inject_idx = inject_idx + run_idx + 1
-
-        # for run_idx in range(run2):
-        #     vec2[inject_idx + run_idx] = random.randint(0, 1000)
-
-        # inject_idx = inject_idx + run_idx + 1
-
-        # vec1[inject_idx] = random.randint(0, 1000)
+        # nnz_1 += len
+        # nnz_2 += len
+        if nnz_1 >= num_nonzeros and nnz_2 >= num_nonzeros:
+            done = True
 
     return vec1, vec2
 
@@ -66,7 +62,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Generate matrices - block')
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--number_blocks", type=int, default=20)
+    parser.add_argument("--number_nonzeros", type=int, default=400)
     parser.add_argument("--len_blocks", type=int, default=20)
     # parser.add_argument("--sparsity", type=float, default=0.5)
     parser.add_argument("--output_dir", type=str, default=None)
@@ -78,7 +74,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     seed = args.seed
-    num_blocks = args.number_blocks
+    nnz = args.number_nonzeros
     len_blocks = args.len_blocks
     # sparsity = args.sparsity
     output_dir = args.output_dir
@@ -93,12 +89,12 @@ if __name__ == "__main__":
     # for random_mat in range(number):
     # for idx, sparsity in enumerate(sparsities):
     # print(sparsity)
-    vec1, vec2 = generate_blocks_vectors(num_blocks, len_blocks, shape[0])
+    vec1, vec2 = generate_blocks_vectors(nnz, len_blocks, shape[0])
 
     v1 = MatrixGenerator(name=f'B', shape=shape, format='CSF',
-                         dump_dir=f"{output_dir}/B_blocks_{num_blocks}_{len_blocks}", tensor=vec1)
+                         dump_dir=f"{output_dir}/B_blocks_{nnz}_{len_blocks}", tensor=vec1)
     v2 = MatrixGenerator(name=f'C', shape=shape, format='CSF',
-                         dump_dir=f"{output_dir}/C_blocks_{num_blocks}_{len_blocks}", tensor=vec2)
+                         dump_dir=f"{output_dir}/C_blocks_{nnz}_{len_blocks}", tensor=vec2)
 
     print(v1)
     print(v2)

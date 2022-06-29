@@ -25,21 +25,20 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     reason='CI lacks datasets',
 )
 @pytest.mark.synth
+@pytest.mark.parametrize("run_length", [1, 2, 5, 10, 20, 30, 40, 50, 75, 100, 200, 300, 400])
 @pytest.mark.parametrize("vectype", ["random", "runs", "blocks"])
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_bv_split(samBench, vectype, sparsity, sf, debug_sim, size=2000, fill=0):
+def test_vec_elemmul_bv_split(samBench, run_length, vectype, sparsity, sf, debug_sim, size=2000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
-
-    run_1 = 100
-    run_2 = 200
 
     if vectype == "random":
         b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_" + vectype + "_sp_" + str(sparsity))
     elif vectype == "runs":
-        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+        # b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", f"runs_rl_{run_length}_nnz_400")
     elif vectype == "blocks":
-        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_blocks_20_20")
+        b_dirname = os.path.join(synthetic_dir, vectype, "compressed", f"B_blocks_400_{run_length}")
 
     b0_seg_filename = os.path.join(b_dirname, "tensor_B_mode_0_seg")
     b_seg0 = read_inputs(b0_seg_filename)
@@ -51,9 +50,11 @@ def test_vec_elemmul_bv_split(samBench, vectype, sparsity, sf, debug_sim, size=2
     if vectype == "random":
         c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "C_" + vectype + "_sp_" + str(sparsity))
     elif vectype == "runs":
-        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+        # c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "runs_0_100_200")
+        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", f"runs_rl_{run_length}_nnz_400")
     elif vectype == "blocks":
-        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "C_blocks_20_20")
+        c_dirname = os.path.join(synthetic_dir, vectype, "compressed", f"C_blocks_400_{run_length}")
+        # c_dirname = os.path.join(synthetic_dir, vectype, "compressed", "C_blocks_20_20")
 
     c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
     c_seg0 = read_inputs(c0_seg_filename)
@@ -270,8 +271,8 @@ def test_vec_elemmul_bv_split(samBench, vectype, sparsity, sf, debug_sim, size=2
     extra_info["cycles"] = time1 + time2
     extra_info["vectype"] = vectype
     extra_info["sparsity"] = sparsity
-    extra_info["run_1"] = run_1
-    extra_info["run_2"] = run_2
+    extra_info["run_length"] = run_length
+    extra_info["block_size"] = run_length
     extra_info["format"] = "bittree"
     extra_info["split_factor"] = sf
     extra_info["test_name"] = "test_vec_elemmul_bv_split"
