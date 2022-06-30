@@ -201,6 +201,18 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["mul_3" + "/" + k] = sample_dict[k]
 
+    sample_dict = fiberlookup_Bj_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_11" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_cj_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_ci_12" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Bi_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_9" + "/" + k] = sample_dict[k]
+ 
     if check_gold:
         print("Checking gold...")
         check_gold_mat_vecmul_ji(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")

@@ -216,6 +216,30 @@ def test_tensor3_elemadd_FINAL(samBench, frosttname, check_gold, debug_sim, fill
     for k in sample_dict.keys():
         extra_info["add_4" + "/" + k] = sample_dict[k]
 
+    sample_dict = fiberlookup_Bi_14.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_14" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Ci_15.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_15" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bj_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bj_11" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Cj_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_12" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bk_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bk_8" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Ck_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ck_9" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_tensor3_elemadd(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")

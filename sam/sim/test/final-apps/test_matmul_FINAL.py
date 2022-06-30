@@ -220,6 +220,22 @@ def test_matmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["mul_5" + "/" + k] = sample_dict[k]
 
+    sample_dict = fiberlookup_Bk_17.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bk_17" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Ck_18.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ck_18" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bi_15.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_15" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Cj_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_11" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")

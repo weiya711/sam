@@ -175,7 +175,23 @@ def test_mat_elemadd_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = add_3.return_statistics()
     for k in sample_dict.keys():
         extra_info["add_3" + "/" + k] = sample_dict[k]
- 
+
+    sample_dict = fiberlookup_Bi_10.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_10" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Ci_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_11" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bj_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bj_7" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Cj_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_8" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")

@@ -233,7 +233,22 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["result/vals_size"] = len(out_vals)
     extra_info["result/nnz"] = len([x for x in out_vals if x != 0])
 
- 
+    sample_dict = fiberlookup_Ci_27.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_27" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_fi_28.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_fi_28" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Cj_18.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_18" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_dj_19.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_dj_19" + "/" + k] = sample_dict[k]
+
     sample_dict = unioni_26.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni_26" + "/" + k] = sample_dict[k]

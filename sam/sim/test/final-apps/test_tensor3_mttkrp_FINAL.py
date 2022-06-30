@@ -329,6 +329,34 @@ def test_tensor3_mttkrp_FINAL(samBench, frosttname, check_gold, debug_sim, fill=
     for k in sample_dict.keys():
         extra_info["mul_5" + "/" + k] = sample_dict[k]
 
+    sample_dict = fiberlookup_Bi_31.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_31" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Cj_24.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_24" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Dj_25.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Dj_25" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Ck_19.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ck_19" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bk_18.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bk_18" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bl_13.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bl_13" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Dl_14.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Dl_14" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_vals, "ss01")

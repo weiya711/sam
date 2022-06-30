@@ -208,12 +208,38 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["result/vals_size"] = len(out_vals)
     extra_info["result/nnz"] = len([x for x in out_vals if x != 0])
 
+    sample_dict = fiberlookup_Bi_13.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_13" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Ci_14.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_14" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Di_15.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Di_15" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Bj_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_9" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Cj_10.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_10" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Dj_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Dj_11" + "/" + k] = sample_dict[k]
+
     sample_dict = unioni1_12.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni1_12" + "/" + k] = sample_dict[k]
+    
     sample_dict = unioni2_12.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni2_12" + "/" + k] = sample_dict[k]
+    
     sample_dict = unioni3_12.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni3_12" + "/" + k] = sample_dict[k]

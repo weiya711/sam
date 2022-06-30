@@ -207,7 +207,23 @@ def test_tensor3_ttv_FINAL(samBench, frosttname, check_gold, debug_sim, fill=0):
     sample_dict = mul_4.return_statistics()
     for k in sample_dict.keys():
         extra_info["mul_4" + "/" + k] = sample_dict[k]
-    
+
+    sample_dict = fiberlookup_Bi_17.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_17" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bj_13.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bj_13" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bj_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bj_8" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_ck_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_ck_9" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_tensor3_ttv(frosttname, debug_sim, out_crds, out_segs, out_vals, "ss01")

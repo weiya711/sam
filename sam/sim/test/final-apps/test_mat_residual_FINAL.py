@@ -226,6 +226,22 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["add_3" + "/" + k] = sample_dict[k]
 
+    sample_dict = fiberlookup_bi_17.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_bi_17" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_Ci_18.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_18" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Cj_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_11" + "/" + k] = sample_dict[k]
+    
+    sample_dict = fiberlookup_dj_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_dj_12" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
