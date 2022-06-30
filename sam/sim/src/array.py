@@ -27,6 +27,8 @@ class Array(Primitive):
         self.curr_load = ''
 
     def update(self):
+        self.update_done()
+
         if self.load_en and len(self.load_addrs) > 0:
             self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
             self.curr_load = self.load(self.load_addrs.pop(0))
@@ -124,6 +126,7 @@ class Array(Primitive):
     def return_statistics(self):
         stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size,
                       "elements_touched": len(self.address_seen), "valid_loads": self.valid_loads}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
     def print_fifos(self):

@@ -41,6 +41,8 @@ class ValsWrScan(WrScan):
         self.curr_addr = 0
 
     def update(self):
+        self.update_done()
+
         if len(self.input) > 0:
             val = self.input.pop(0)
 
@@ -82,6 +84,8 @@ class CompressWrScan(WrScan):
         self.seg_arr = Array(size=self.seg_size, fill=0, debug=self.debug)
 
     def update(self):
+        self.update_done()
+
         if len(self.input) > 0:
             in_crd = self.input.pop(0)
 
@@ -142,6 +146,8 @@ class UncompressWrScan(WrScan):
         self.dim = ''
 
     def update(self):
+        self.update_done()
+
         if isinstance(self.input, int):
             self.dim = self.input
         elif self.input == 'D':

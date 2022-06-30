@@ -21,6 +21,8 @@ class CrdDrop(Primitive):
         self.get_next_ocrd = True
 
     def update(self):
+        self.update_done()
+
         icrd = ""
         if self.debug:
             print("OuterCrds:", self.outer_crd)
@@ -121,6 +123,7 @@ class CrdDrop(Primitive):
 
     def return_statistics(self):
         stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo": self.outer_crd_fifo}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -140,6 +143,8 @@ class CrdHold(Primitive):
         self.repeat = Repeat(debug=self.debug)
 
     def update(self):
+        self.update_done()
+
         if self.done:
             self.curr_crd = ''
             return
@@ -204,6 +209,7 @@ class CrdPtConverter(Primitive):
         self.inner_last_level = last_level
 
     def update(self):
+        self.update_done()
 
         if self.curr_ocrd != '':
             self.prev_ocrd = self.curr_ocrd

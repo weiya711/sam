@@ -11,6 +11,8 @@ class StknDrop(Primitive):
         self.curr_out = ''
 
     def update(self):
+        self.update_done()
+
         ival = ''
 
         if self.done:
@@ -52,6 +54,8 @@ class EmptyFiberStknDrop(Primitive):
         self.curr_out = ''
 
     def update(self):
+        self.update_done()
+
         ival = ''
 
         if self.done:

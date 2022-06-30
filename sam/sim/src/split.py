@@ -24,6 +24,8 @@ class Split(Primitive):
         self.orig_crd = orig_crd
 
     def update(self):
+        self.update_done()
+
         if self.done:
             self.curr_ocrd = ''
             self.curr_icrd = ''

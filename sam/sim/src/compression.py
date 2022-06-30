@@ -11,6 +11,8 @@ class Compression(Primitive):
         self.curr_crd = ''
 
     def update(self):
+        self.update_done()
+
         icrd = ""
 
         if self.done:

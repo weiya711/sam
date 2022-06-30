@@ -23,6 +23,8 @@ class ChunkBV(Primitive):
         self.count = 0
 
     def update(self):
+        self.update_done()
+
         # bin(bv)   # gives 0bx number
         if self.done:
             self.curr_bv = ''
@@ -92,6 +94,8 @@ class BV(Primitive):
         self.emit_stkn = False
 
     def update(self):
+        self.update_done()
+
         # bin(bv)   # gives 0bx number
         if self.done:
             self.curr_bv = ''
@@ -164,6 +168,8 @@ class BVDropOnly(BVDropSuper):
         self.get_next_obv = True
 
     def update(self):
+        self.update_done()
+
         ibv = ""
         if self.debug:
             print("Outer BV:", self.outer_bv)
@@ -251,6 +257,8 @@ class BVDrop(BVDropSuper):
         self.curr_ibv = ''
 
     def update(self):
+        self.update_done()
+
         if len(self.outer_bv) > 0:
             self.bv_drop.set_outer_bv(self.outer_bv.pop(0))
 

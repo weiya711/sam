@@ -19,6 +19,8 @@ class Flatten(Primitive):
         self.split_factor = split_factor
 
     def update(self):
+        self.update_done()
+
         if self.done:
             self.curr_crd = ''
             return

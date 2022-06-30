@@ -33,6 +33,7 @@ class Compute2(Primitive, ABC):
 
     def return_statistics(self):
         dic = {"cycle_operation": self.cycles_operated}
+        dic.update(super().return_statistics())
         return dic
 
 class Add2(Compute2):
@@ -49,6 +50,8 @@ class Add2(Compute2):
         self.curr_in2 = ''
 
     def update(self):
+        self.update_done()
+
         if len(self.in1) > 0 and len(self.in2) > 0:
             if self.get1:
                 self.curr_in1 = self.in1.pop(0)
@@ -104,6 +107,8 @@ class Multiply2(Compute2):
         self.curr_in2 = ''
 
     def update(self):
+        self.update_done()
+
         if len(self.in1) > 0 and len(self.in2) > 0:
             if self.get1:
                 self.curr_in1 = self.in1.pop(0)

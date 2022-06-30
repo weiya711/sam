@@ -24,6 +24,7 @@ class Reduce(Primitive):
 
     def update(self):
         self.update_done()
+
         curr_in_val = ""
         if self.done:
             self.curr_out = ""
@@ -127,8 +128,8 @@ class SparseCrdPtAccumulator1(Primitive):
         self.zero_out = 0
         self.nonzero_out = 0
 
-
     def update(self):
+        self.update_done()
         self.out_crd_fifo = max(self.out_crd_fifo, len(self.outer_crdpt))
         self.in_crd_fifo = max(self.in_crd_fifo, len(self.inner_crdpt))
         self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
@@ -558,6 +559,7 @@ class SparseCrdPtAccumulator2(Primitive):
         stats_dict = {"stkn_outs": self.stop_token_out,
                       "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
                       "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -664,4 +666,5 @@ class SparseAccumulator2(Primitive):
                       "inval_fifo": self.inval_fifo, "max_hits": hits_info[0], "gt_one": hits_info[1],
                       "total_elems": hits_info[2]}
         stats_dict.update(self.crdpt_spacc.return_statistics())
+        stats_dict.update(super().return_statistics())
         return stats_dict

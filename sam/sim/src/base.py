@@ -96,7 +96,7 @@ class Primitive(ABC):
             self.done_cycles += 1
 
     def return_statistics(self):
-        return {"done_cycles":   self.update_done()}
+        return {"done_cycles":   self.done_cycles}
 
 def remove_emptystr(stream):
     return [x for x in stream if x != '']

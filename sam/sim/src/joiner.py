@@ -153,7 +153,6 @@ class Intersect2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.change_crd1 = True
                 self.change_crd2 = True
-                self.hit_count += 1
                 self.run_count = 0
                 self.max_run_count = max(self.max_run_count, abs(self.run_count))
             elif is_stkn(self.curr_crd1):
@@ -230,9 +229,10 @@ class Intersect2(CrdJoiner2):
     def return_statistics(self):
         stat_dict = {"fifos_ref_1": self.size_in_ref1, "fifos_ref_2": self.size_in_ref2,
                      "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
-                     "fifo_difference": self.max_run_count, "intersection_rate": self.count / self.total_count,
+                     "fifo_difference": self.max_run_count, "intersection_rate": self.return_intersection_rate(),
                      "drop_count": self.zero_token_output, "valid_output": self.total_count - self.zero_token_output,
                      "run_count": self.max_run_count}
+        stat_dict.update(super().return_statistics())
         return stat_dict
 
 
@@ -255,6 +255,8 @@ class Union2(CrdJoiner2):
         self.two_only_count = 0
 
     def update(self):
+        self.update_done()
+
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
                 assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
@@ -372,6 +374,7 @@ class Union2(CrdJoiner2):
                      "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
                      "one_only": self.one_only_count, "two_only": self.two_only_count,
                      "total_count": self.total_count}
+        stat_dict.update(super().return_statistics())
         return stat_dict
 
 
@@ -408,6 +411,8 @@ class IntersectBV2(BVJoiner2):
         self.meta_emit_zeros = emit_zeros
 
     def update(self):
+        self.update_done()
+
         if self.done:
             self.obv = ''
             self.oref1 = ''

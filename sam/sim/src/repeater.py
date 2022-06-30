@@ -23,6 +23,7 @@ class Repeat(Primitive):
         self.meta_union_mode = union
 
     def update(self):
+        self.update_done()
         # if len(self.in_ref) > 0 and self.get_next_ref_union:
         #     next_in = self.in_ref.pop(0)
         #     assert isinstance(next_in, int)
@@ -77,7 +78,6 @@ class Repeat(Primitive):
         if len(self.in_repeat) > 0 and self.get_next_rep:
             repeat = self.in_repeat.pop(0)
             if repeat == 'S' and self.empty_rep_fiber and self.meta_union_mode:
-                print("UNION STUFF:", self.curr_in_ref, repeat)
                 if isinstance(self.curr_in_ref, int):
                     self.curr_out_ref = self.curr_in_ref
                     self.emit_stkn = True
@@ -181,6 +181,8 @@ class RepeatSigGen(Primitive):
         self.istream_size = 0
 
     def update(self):
+        self.update_done()
+
         istream = ''
 
         if len(self.istream) > 0:
