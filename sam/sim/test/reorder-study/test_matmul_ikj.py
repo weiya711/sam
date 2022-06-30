@@ -221,6 +221,7 @@ def test_matmul_ikj(samBench, sparsity, check_gold, debug_sim, fill=0):
     extra_info = dict()
     # extra_info["dataset"] = ssname
     extra_info["dataset"] = "synthetic"
+    extra_info["test_name"] = "ikj"
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape

@@ -15,21 +15,22 @@ test_markers = ['o', "v", "^", "s", "+", "x"]
 
 def create_REORDER_plots(df):
     # print(df.to_string())
-    small_df = df.filter(items=['name', 'cycles', 'sparsity'])
+    # small_df = df.filter(items=['name', 'cycles', 'sparsity', 'test_name'])
+    small_df = df.filter(items=['name', 'cycles', 'test_name'])
 
     test_dfs = {}
 
-    reorder_tests = ['ikj',
-                     'kij',
-                     'ijk',
-                     'kji',
+    reorder_tests = ['ijk',
+                     'jik',
+                     'ikj',
                      'jki',
-                     'jik']
+                     'kij',
+                     'kji']
 
     for test in reorder_tests:
 
         # t_df = small_df.filter(like='test')
-        t_df = small_df[test in small_df['name']]
+        t_df = small_df[small_df['test_name'] == test]
         test_dfs[test] = t_df
         # print(t_df)
 
@@ -41,11 +42,12 @@ def plot_reorder(test_dfs, test_names, legend):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test]
-        plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        # plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        plt.bar(t_df['test_name'], t_df['cycles'])
     plt.legend(legend, **legend_keywords)
-    plt.yscale('log', base=2)
+    # plt.yscale('log', base=2)
     # plt.xscale('logit', base=2)
-    plt.xscale('logit')
+    # plt.xscale('logit')
     plt.xlabel('Sparsity (% nonzeros)', **xlabel_keywords)
     plt.ylabel('Simulator Cycles', **ylabel_keywords)
     plt.title('Simulator Cycles vs Sparsity (random)', **title_keywords)
