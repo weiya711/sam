@@ -19,6 +19,8 @@ class Reduce(Primitive):
         self.stop_token_out = 0
         self.drop_token_out = 0
         self.valid_token_out = 0
+        self.zero_out = 0
+        self.nonzero_out = 0
 
     def update(self):
         curr_in_val = ""
@@ -45,11 +47,16 @@ class Reduce(Primitive):
                 self.curr_out = ""
         else:
             self.curr_out = ""
+
         if self.curr_out == "":
             self.drop_token_out += 1
         elif is_stkn(self.curr_out):
             self.stop_token_out += 1
         else:
+            if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
+                self.zero_out += 1
+            else:
+                self.nonzero_out += 1
             self.valid_token_out += 1
 
         self.compute_fifos()
@@ -76,8 +83,9 @@ class Reduce(Primitive):
 
     def return_statistics(self):
         stats_dict = {"red_count": self.reduction_count, "total_inputs": self.num_inputs,
-                      "total_outputs": self.num_outputs, "stpkn_outs": self.stop_token_out,
-                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out}
+                      "total_outputs": self.num_outputs, "stkn_outs": self.stop_token_out,
+                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
         return stats_dict
 
 
@@ -111,17 +119,24 @@ class SparseCrdPtAccumulator1(Primitive):
         self.storage = dict()
         self.valtype = valtype
 
+        self.stop_token_out = 0
+        self.drop_token_out = 0
+        self.valid_token_out = 0
+        self.zero_out = 0
+        self.nonzero_out = 0
+
+
     def update(self):
         self.out_crd_fifo = max(self.out_crd_fifo, len(self.outer_crdpt))
         self.in_crd_fifo = max(self.in_crd_fifo, len(self.inner_crdpt))
         self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
-        if self.done:
-            self.curr_outer_crd = ''
-            self.curr_inner_crd = ''
+
         if self.done:
             self.curr_outer_crdpt = ''
             self.curr_inner_crdpt = ''
             self.curr_val = ''
+
+            self.drop_token_out += 1
             return
 
         if len(self.in_val) > 0 and len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0:
@@ -176,6 +191,17 @@ class SparseCrdPtAccumulator1(Primitive):
             self.curr_inner_crdpt = ''
             self.curr_val = ''
 
+        if self.curr_val == "":
+            self.drop_token_out += 1
+        elif is_stkn(self.curr_val):
+            self.stop_token_out += 1
+        else:
+            if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
+                self.zero_out += 1
+            else:
+                self.nonzero_out += 1
+            self.valid_token_out += 1
+
         if self.debug:
             print("Done:", self.out_done(),
                   "\n Curr in ocrd: ", self.curr_in_outer_crdpt, "\t Curr in icrd", self.curr_in_inner_crdpt,
@@ -208,6 +234,12 @@ class SparseCrdPtAccumulator1(Primitive):
 
     def out_val(self):
         return self.curr_val
+
+    def return_statistics(self):
+        stats_dict = {"stkn_outs": self.stop_token_out,
+                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        return stats_dict
 
     def return_hits(self):
         i = 0
@@ -350,7 +382,8 @@ class SparseAccumulator1(Primitive):
         hits_info = self.crdpt_spacc.return_hits()
         stats_dict["max_hits"] = hits_info[0]
         stats_dict["hits_gt_one"] = hits_info[1]
-        stats_dict["total_elemes"] = hits_info[2]
+        stats_dict["total_elems"] = hits_info[2]
+        stats_dict.update(self.crdpt_spacc.return_statistics())
         return stats_dict
 
     def print_fifos(self):
@@ -383,12 +416,19 @@ class SparseCrdPtAccumulator2(Primitive):
         self.valtype = valtype
 
         self.hits_tracker = {}
+        self.stop_token_out = 0
+        self.drop_token_out = 0
+        self.valid_token_out = 0
+        self.zero_out = 0
+        self.nonzero_out = 0
 
     def update(self):
         if self.done:
             self.curr_crdpt0 = ''
             self.curr_crdpt1 = ''
             self.curr_val = ''
+
+            self.drop_token_out += 1
             return
 
         if len(self.in_val) > 0 and len(self.in_crdpt1) > 0 and len(self.in_crdpt0) > 0:
@@ -448,6 +488,17 @@ class SparseCrdPtAccumulator2(Primitive):
             self.curr_crdpt1 = ''
             self.curr_val = ''
 
+        if self.curr_val == "":
+            self.drop_token_out += 1
+        elif is_stkn(self.curr_val):
+            self.stop_token_out += 1
+        else:
+            if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
+                self.zero_out += 1
+            else:
+                self.nonzero_out += 1
+            self.valid_token_out += 1
+
         if self.debug:
             print("Done:", self.out_done(),
                   "\n Curr in crd1: ", self.curr_in1_crdpt,
@@ -494,6 +545,12 @@ class SparseCrdPtAccumulator2(Primitive):
                 cnt_gt_zero += 1
             cnt_total += 1
         return i, cnt_gt_zero, cnt_total
+
+    def return_statistics(self):
+        stats_dict = {"stkn_outs": self.stop_token_out,
+                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        return stats_dict
 
 
 # Accumulation into a matrix (2D)
@@ -597,4 +654,5 @@ class SparseAccumulator2(Primitive):
         stats_dict = {"in1_fifo": self.in1_fifo, "in0_fifo": self.in0_fifo,
                       "inval_fifo": self.inval_fifo, "max_hits": hits_info[0], "gt_one": hits_info[1],
                       "total_elems": hits_info[2]}
+        stats_dict.update(self.crdpt_spacc.return_statistics())
         return stats_dict
