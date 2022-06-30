@@ -23,6 +23,7 @@ class Reduce(Primitive):
         self.nonzero_out = 0
 
     def update(self):
+        self.update_done()
         curr_in_val = ""
         if self.done:
             self.curr_out = ""
@@ -86,6 +87,7 @@ class Reduce(Primitive):
                       "total_outputs": self.num_outputs, "stkn_outs": self.stop_token_out,
                       "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
                       "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -239,6 +241,7 @@ class SparseCrdPtAccumulator1(Primitive):
         stats_dict = {"stkn_outs": self.stop_token_out,
                       "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
                       "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
     def return_hits(self):
@@ -281,6 +284,8 @@ class SparseAccumulator1(Primitive):
         self.val_stkn = val_stkn
 
     def update(self):
+        self.update_done()
+
         # What to do for drop tokens?
         self.in_outer_crd_pt_fifo = max(self.in_outer_crd_pt_fifo, len(self.in_outer_crdpt))
         self.in_inner_crd_pt_fifo = max(self.in_inner_crd_pt_fifo, len(self.in_inner_crdpt))
@@ -384,6 +389,7 @@ class SparseAccumulator1(Primitive):
         stats_dict["hits_gt_one"] = hits_info[1]
         stats_dict["total_elems"] = hits_info[2]
         stats_dict.update(self.crdpt_spacc.return_statistics())
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
     def print_fifos(self):
@@ -423,6 +429,8 @@ class SparseCrdPtAccumulator2(Primitive):
         self.nonzero_out = 0
 
     def update(self):
+        self.update_done()
+
         if self.done:
             self.curr_crdpt0 = ''
             self.curr_crdpt1 = ''
@@ -580,6 +588,7 @@ class SparseAccumulator2(Primitive):
         self.val_stkn = val_stkn
 
     def update(self):
+        self.update_done()
         self.compute_fifo()
 
         if len(self.in1_crdpt) > 0:

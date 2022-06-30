@@ -70,6 +70,7 @@ class Primitive(ABC):
     def __init__(self, debug=False, **kwargs):
         self.done = False
         self.debug = debug
+        self.done_cycles = 0
 
     def out_done(self):
         return self.done
@@ -84,6 +85,18 @@ class Primitive(ABC):
     def reset(self):
         self.done = False
 
+    def get_done_cycle(self):
+        if self.done:
+            return self.done_cycles
+        else:
+            return ''
+
+    def update_done(self):
+        if not self.done:
+            self.done_cycles += 1
+
+    def return_statistics(self):
+        return {"done_cycles":   self.update_done()}
 
 def remove_emptystr(stream):
     return [x for x in stream if x != '']

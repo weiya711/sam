@@ -201,11 +201,12 @@ class CompressedCrdRdScan(CrdRdScan):
             self.unique_crds.append(self.curr_crd)
         self.total_outputs += 1
 
-
     def return_statistics(self):
-        dic = {"total_size": len(crd_arr), "outputs_by_block": self.total_outputs, "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs), "skip_list_fifo": len(self.in_crd_skip)}
+        dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
+               "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
+               "skip_list_fifo": len(self.in_crd_skip)}
+        dic.update(super().return_statistics())
         return dic
-
 
     def update(self):
         # Process skip token first and save

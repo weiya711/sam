@@ -96,7 +96,6 @@ class Intersect2(CrdJoiner2):
         self.change_crd2 = True
         self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''  # Skip list
         self.change_crd1 = False
-        self.total_count += 1
 
     def _inc1(self):
         self.ocrd = ''
@@ -107,9 +106,10 @@ class Intersect2(CrdJoiner2):
         self.change_crd1 = True
         self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''  # Skip list
         self.change_crd2 = False
-        self.total_count += 1
 
     def update(self):
+        self.update_done()
+
         # Skip list
         self.curr_skip1 = ''
         self.curr_skip2 = ''
@@ -153,8 +153,7 @@ class Intersect2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 self.change_crd1 = True
                 self.change_crd2 = True
-                self.total_count += 1
-                self.count += 1
+                self.hit_count += 1
                 self.run_count = 0
                 self.max_run_count = max(self.max_run_count, abs(self.run_count))
             elif is_stkn(self.curr_crd1):
