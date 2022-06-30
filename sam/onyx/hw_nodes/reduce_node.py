@@ -47,7 +47,17 @@ class ReduceNode(HWNode):
         elif other_type == IntersectNode:
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
         elif other_type == ReduceNode:
-            raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
+            other_red = other.get_name()
+            new_conns = {
+                'reduce_to_wr_scan': [
+                    # send output to rd scanner
+                    ([(red, "data_out"), (other_red, "data_in")], 17),
+                    # ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
+                    # ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
+                    # ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
+                ]
+            }
+            return new_conns
         elif other_type == LookupNode:
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
         elif other_type == MergeNode:

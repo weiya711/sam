@@ -52,7 +52,7 @@ def test_matmul_ikj(samBench, sparsity, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    # DCSC
+    # DCSR
     C_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/C_random_sp_{sparsity}/")
     C_shape_filename = os.path.join(C_dirname, "shape")
     C_shape = read_inputs(C_shape_filename)
@@ -216,6 +216,7 @@ def test_matmul_ikj(samBench, sparsity, check_gold, debug_sim, fill=0):
 
     def bench():
         time.sleep(0.01)
+        # check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss10")
 
     extra_info = dict()
     # extra_info["dataset"] = ssname

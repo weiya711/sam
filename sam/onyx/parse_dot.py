@@ -38,6 +38,8 @@ class SAMDotGraph():
             tensor_format = tensor.split("=")[1]
             print(tensor_name)
             print(tensor_format)
+            if tensor_format == 'none':
+                continue
             for mode, tf_subspec in enumerate(tensor_format[0:len(tensor_format) // 2]):
                 actual_mode = int(tensor_format[mode + len(tensor_format) // 2])
                 self.mode_map[tensor_name][actual_mode] = (mode, tf_subspec)
@@ -396,7 +398,7 @@ class SAMDotGraph():
 
 
 if __name__ == "__main__":
-    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "matmul_ijk.gv"
+    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "tensor3_elemmul.gv"
     # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
     # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_elemmul.gv"
     temp_out = "/home/max/Documents/SPARSE/sam/mek.gv"

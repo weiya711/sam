@@ -53,9 +53,9 @@ mkdir -p "${SYNTHETIC_PATH}/matrix/DCSR"
 mkdir -p "${SYNTHETIC_PATH}/matrix/DCSC"
 mkdir -p "${SYNTHETIC_PATH}/matrix/DENSE"
 
-i=50
-j=50
-k=20
+i=250
+j=250
+k=100
 
 sparsity="0.95"
 
