@@ -34,11 +34,12 @@ class Repeat(Primitive):
         if len(self.in_ref) > 0 and self.get_next_ref:
             self.curr_in_ref = self.in_ref.pop(0)
             if is_stkn(self.curr_in_ref):
-                self.curr_out_ref = self.curr_in_ref
-                self.get_next_rep = False
+                self.get_next_rep = True
+                self.get_next_ref = False
             elif self.curr_in_ref == 'D':
                 self.curr_out_ref = 'D'
                 self.get_next_rep = True
+                self.get_next_ref = False
                 self.done = True
             else:
                 self.get_next_rep = True
@@ -51,6 +52,7 @@ class Repeat(Primitive):
             repeat = self.in_repeat.pop(0)
             if repeat == 'S':
                 self.get_next_ref = True
+                self.get_next_rep = False
                 if len(self.in_ref) > 0:
                     next_in = self.in_ref[0]
                     if is_stkn(next_in):
@@ -66,9 +68,11 @@ class Repeat(Primitive):
                 if self.curr_out_ref != 'D':
                     raise Exception("Both repeat and ref signal need to end in 'D'")
                 self.get_next_ref = True
+                self.get_next_rep = False
                 self.curr_out_ref = 'D'
             elif repeat == 'R':
                 self.get_next_ref = False
+                self.get_next_rep = True
                 self.curr_out_ref = self.curr_in_ref
             else:
                 raise Exception('Repeat signal cannot be: ' + str(repeat))
@@ -78,7 +82,7 @@ class Repeat(Primitive):
         if self.debug:
             print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
                   "\t Get Rep:", self.get_next_rep, "\t Rep:", repeat,
-                  "\t Out Ref:", self.curr_out_ref)
+                  "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn)
 
     def set_in_ref(self, ref):
         if ref != '':

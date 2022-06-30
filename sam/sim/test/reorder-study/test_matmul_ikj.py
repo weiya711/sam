@@ -262,7 +262,7 @@ def test_matmul_ikj(samBench, sparsity, check_gold, debug_sim, fill=0):
     if check_gold:
         print("Checking gold...")
         sim_pt_list = get_point_list(out_crds, out_segs, val_arr=out_vals)
-        sim_mg = create_matrix_from_point_list(name="X", pt_list=sim_pt_list, shape=[B_shape[0], C_shape[0]])
+        sim_mg = create_matrix_from_point_list(name="X", pt_list=sim_pt_list, shape=[B_shape[0], C_shape[1]])
         x_mat_sim = sim_mg.get_matrix()
 
         # GET NUMPY REPS OF INPUT MATS
