@@ -21,6 +21,7 @@ class Array(Primitive):
         self.load_en = False
         self.store_en = False
         self.address_seen = []
+        self.valid_loads = 0
 
         self.curr_load = ''
 
@@ -78,6 +79,7 @@ class Array(Primitive):
             if addr not in self.address_seen:
                 self.address_seen.append(addr)
             val = self.arr[addr]
+            self.valid_loads += 1
 
         if self.debug:
             print("DEBUG: ARRAY LD:", "\t Addr:", addr, "\t Val:", val)
@@ -119,7 +121,7 @@ class Array(Primitive):
         self.arr = [fill for _ in range(self.size)]
 
     def return_statistics(self):
-        stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size, "elements_touched", len(self.address_seen)}
+        stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size, "elements_touched": len(self.address_seen), "valid_loads": self.valid_loads}
         return stats_dict
 
     def print_fifos(self):
