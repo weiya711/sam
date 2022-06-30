@@ -172,6 +172,10 @@ class CompressedCrdRdScan(CrdRdScan):
         self.unique_refs = []
         self.unique_crds = []
         self.total_outputs = 0
+        self.elements_skipped = 0
+        self.skip_cnt = 0
+        self.intersection_behind_cnt = 0
+        self.fiber_behind_cnt = 0
 
         self.begin = True
 
@@ -206,7 +210,9 @@ class CompressedCrdRdScan(CrdRdScan):
     def return_statistics(self):
         dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
                "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
-               "skip_list_fifo": len(self.in_crd_skip)}
+               "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
+               "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
+               "intersection_behind_fiber": fiber_behind_cnt}
         dic.update(super().return_statistics())
         return dic
 
@@ -220,9 +226,11 @@ class CompressedCrdRdScan(CrdRdScan):
                     and self.curr_skip < self.prev_crd:
                 # ignore the skip if it's too small
                 self.skip_processed = True
+                self.intersection_behind_cnt += 1
             elif self.skip_stkn_cnt < self.out_stkn_cnt:
                 # ignore the skip if it's a fiber behind
                 self.skip_processed = True
+                self.fiber_behind_cnt += 1
             else:
                 self.skip_processed = False
 
@@ -313,16 +321,22 @@ class CompressedCrdRdScan(CrdRdScan):
                             if self.curr_skip in curr_range:
                                 self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
                                 self._set_curr()
+                                self.elements_skipped += curr_range.index(self.curr_skip) + 1
+                                self.skip_cnt += 1
 
                             # Else emit smallest coordinate larger than the one provided by skip
                             else:
                                 larger = [i for i in curr_range if i > self.curr_skip]
                                 if not larger:
                                     self._emit_stkn_code()
+                                    self.elements_skipped += len(curr_range)
+                                    self.skip_cnt += 1
                                 else:
                                     val_larger = min(larger)
                                     self.curr_addr = curr_range.index(val_larger) + self.start_addr
                                     self._set_curr()
+                                    self.elements_skipped += curr_range.index(val_larger) + 1
+                                    self.skip_cnt += 1
 
                         # Early exit from skip
                         elif is_stkn(self.curr_skip):
@@ -351,16 +365,22 @@ class CompressedCrdRdScan(CrdRdScan):
                     if self.curr_skip in curr_range:
                         self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
                         self._set_curr()
+                        self.elements_skipped += curr_range.index(self.curr_skip) + 1
+                        self.skip_cnt += 1
 
                     # Else emit smallest coordinate larger than the one provided by skip
                     else:
                         larger = [i for i in curr_range if i > self.curr_skip]
                         if not larger:
                             self._emit_stkn_code()
+                            self.elements_skipped += len(curr_range)
+                            self.skip_cnt += 1
                         else:
                             val_larger = min(larger)
                             self.curr_addr = curr_range.index(val_larger) + self.start_addr
                             self._set_curr()
+                            self.elements_skipped += curr_range.index(val_larger) + 1
+                            self.skip_cnt += 1
 
                     default_behavior = False
                 elif is_stkn(self.curr_skip):
