@@ -96,6 +96,7 @@ class Intersect2(CrdJoiner2):
         self.change_crd2 = True
         self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''  # Skip list
         self.change_crd1 = False
+        self.zero_token_output += 1
 
     def _inc1(self):
         self.ocrd = ''
@@ -106,6 +107,7 @@ class Intersect2(CrdJoiner2):
         self.change_crd1 = True
         self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''  # Skip list
         self.change_crd2 = False
+        self.zero_token_output += 1
 
     def update(self):
         self.update_done()
@@ -190,6 +192,7 @@ class Intersect2(CrdJoiner2):
                 self.ocrd = ''
                 self.oref1 = ''
                 self.oref2 = ''
+            self.zero_token_output += 1
         self.compute_fifos()
 
         if self.debug:
