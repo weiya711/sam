@@ -32,7 +32,7 @@ class Compute2(Primitive, ABC):
         print("Compute block in 2: ", self.in2_size)
 
     def return_statistics(self):
-        dic = {"cycle_operation": self.cyles_operated}
+        dic = {"cycle_operation": self.cycles_operated}
         return dic
 
 class Add2(Compute2):
