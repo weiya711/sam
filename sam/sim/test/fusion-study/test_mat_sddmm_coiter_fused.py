@@ -1,3 +1,4 @@
+import enum
 import pytest
 import time
 import scipy.sparse
@@ -16,11 +17,15 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+from sam.onyx.generate_matrices import create_matrix_from_point_list, get_tensor_from_files
+import numpy
 
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
+synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
 
 
 # FIXME: Figureout formats
@@ -28,30 +33,61 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+# @pytest.mark.suitesparse
+@pytest.mark.synth
+@pytest.mark.parametrize("sparsity", [0.95])
+# def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=0):
+
+    # DCSR
+    B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
+    B_shape_filename = os.path.join(B_dirname, "shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
+
+    # B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    # B_shape = read_inputs(B_shape_filename)
+
+    # B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    # B_seg0 = read_inputs(B0_seg_filename)
+    # B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    # B_crd0 = read_inputs(B0_crd_filename)
+
+    # B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    # B_seg1 = read_inputs(B1_seg_filename)
+    # B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    # B_crd1 = read_inputs(B1_crd_filename)
+
+    # B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    # B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
     C_vals = np.arange(math.prod(C_shape)).tolist()
+    for idx in range(len(C_vals)):
+        C_vals[idx] = 1
+    # C_vals = np.ones(math.prod(C_shape)).to_list()
+    # C_vals = np.ones([C_shape[0] * C_shape[1]]).to_list()
+
+    # print(C_vals)
 
     D_shape = (KDIM, B_shape[1])
     D_vals = np.arange(math.prod(D_shape)).tolist()
+    for idx in range(len(D_vals)):
+        D_vals[idx] = 1
+    # D_vals = np.ones(D_shape).to_list()
 
     fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
     fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
@@ -208,7 +244,8 @@ def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0)
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    # extra_info["dataset"] = ssname
+    extra_info["dataset"] = "synthetic"
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
@@ -271,5 +308,23 @@ def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0)
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+
+        sim_pt_list = get_point_list(out_crds, out_segs, val_arr=out_vals)
+        sim_mg = create_matrix_from_point_list(name="X", pt_list=sim_pt_list, shape=[B_shape[0], B_shape[1]])
+        x_mat_sim = sim_mg.get_matrix()
+
+        # GET NUMPY REPS OF INPUT MATS
+        b_mg = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape)
+        b_mat = b_mg.get_matrix()
+        # print(b_mat)
+        # C is stored in DCSC - need to transpose upon reading.
+        c_mat = numpy.ones(C_shape)
+        d_mat = numpy.ones(D_shape)
+
+        x_mat_gold = numpy.multiply(b_mat, numpy.matmul(c_mat, d_mat))
+        print(x_mat_gold)
+        print(x_mat_sim)
+
+        assert numpy.array_equal(x_mat_gold, x_mat_sim)
+        # check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

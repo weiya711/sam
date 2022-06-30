@@ -31,7 +31,7 @@ for b in ${!BENCHMARKS[@]}; do
 
     pytest sam/sim/test/study-apps/$bench.py --synth -k "random-40 or 0.2-blocks or 0.2-runs" --benchmark-json="$path/$bench.json"
     python $cwd/scripts/converter.py --json_name $path/$bench.json
-    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/SYNTH_OUT.csv
+    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/SYNTH_OUT_ACCEL.csv
 
 done
 
@@ -45,7 +45,7 @@ BENCHMARKS=(
 )
 
 cwd=$(pwd)
-resultdir=results_mats
+resultdir=results_reorder
 
 for b in ${!BENCHMARKS[@]}; do
     bench=${BENCHMARKS[$b]}
@@ -56,7 +56,29 @@ for b in ${!BENCHMARKS[@]}; do
 
     pytest sam/sim/test/reorder-study/$bench.py --synth --check-gold --benchmark-json="$path/$bench.json"
     python $cwd/scripts/converter.py --json_name $path/$bench.json
-    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/SYNTH_OUT_MAT.csv
+    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/SYNTH_OUT_REORDER.csv
+
+done
+
+BENCHMARKS=(
+    test_mat_sddmm_coiter_fused
+    test_mat_sddmm_locate_fused
+    test_mat_sddmm_unfused
+)
+
+cwd=$(pwd)
+resultdir=results_fusion
+
+for b in ${!BENCHMARKS[@]}; do
+    bench=${BENCHMARKS[$b]}
+    path=$resultdir/
+
+    mkdir -p $resultdir/
+    echo "Testing $bench..."
+
+    pytest sam/sim/test/fusion-study/$bench.py --synth --check-gold --benchmark-json="$path/$bench.json"
+    python $cwd/scripts/converter.py --json_name $path/$bench.json
+    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/SYNTH_OUT_FUSION.csv
 
 done
 
