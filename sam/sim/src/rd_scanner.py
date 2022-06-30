@@ -166,6 +166,11 @@ class CompressedCrdRdScan(CrdRdScan):
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
 
+        # Statistics
+        self.unique_refs = []
+        self.unique_crds = []
+        self.total_outputs = 0
+
         self.begin = True
 
     def _emit_stkn_code(self):
@@ -190,6 +195,17 @@ class CompressedCrdRdScan(CrdRdScan):
     def _set_curr(self):
         self.curr_ref = self.curr_addr
         self.curr_crd = self.crd_arr[self.curr_addr]
+        if self.curr_ref not in self.unique_refs:
+            self.unique_refs.append(self.curr_ref)
+        if self.curr_crd not in self.unique_crds:
+            self.unique_crds.append(self.curr_crd)
+        self.total_outputs += 1
+
+
+    def return_statistics(self):
+        dic = {"total_size": len(crd_arr), "outputs_by_block": self.total_outputs, "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs), "skip_list_fifo": len(self.in_crd_skip)}
+        return dic
+
 
     def update(self):
         # Process skip token first and save
