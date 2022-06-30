@@ -20,6 +20,7 @@ class Array(Primitive):
         self.store_vals_size = 0
         self.load_en = False
         self.store_en = False
+        self.address_seen = []
 
         self.curr_load = ''
 
@@ -74,6 +75,8 @@ class Array(Primitive):
             raise Exception("Address (" + str(addr) + ") is out of array size (" +
                             str(self.size) + ") bounds, please resize")
         else:
+            if addr not in self.address_seen:
+                self.address_seen.append(addr)
             val = self.arr[addr]
 
         if self.debug:
@@ -116,7 +119,7 @@ class Array(Primitive):
         self.arr = [fill for _ in range(self.size)]
 
     def return_statistics(self):
-        stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size}
+        stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size, "elements_touched", len(self.address_seen)}
         return stats_dict
 
     def print_fifos(self):

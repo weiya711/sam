@@ -227,6 +227,14 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, debug_sim, fill=0)
     for k in sample_dict.keys():
         extra_info["arrayvals_D_8" + "/" + k] = sample_dict[k]
 
+    sample_dict = mul_5.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_C_7" + "/" + k] = sample_dict[k]
+
+    sample_dict = mul_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_D_8" + "/" + k] = sample_dict[k]
+ 
     if check_gold:
         print("Checking gold...")
         check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")

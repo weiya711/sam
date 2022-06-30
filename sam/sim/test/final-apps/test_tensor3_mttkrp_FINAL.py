@@ -321,6 +321,14 @@ def test_tensor3_mttkrp_FINAL(samBench, frosttname, check_gold, debug_sim, fill=
     for k in sample_dict.keys():
         extra_info["repeat_Di_27" + "/" + k] = sample_dict[k]
 
+    sample_dict = mul_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["mul_6" + "/" + k] = sample_dict[k]
+
+    sample_dict = mul_5.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["mul_5" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_vals, "ss01")

@@ -252,6 +252,14 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["arrayvals_D_7" + "/" + k] = sample_dict[k]
 
+    sample_dict = add_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["add_4" + "/" + k] = sample_dict[k]
+
+    sample_dict = add_3.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["add_3" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_mat_elemadd3(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")

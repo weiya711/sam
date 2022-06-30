@@ -290,6 +290,22 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["repeat_ei_22" + "_" + k] = sample_dict[k]
 
+    sample_dict = mul_5.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["mul_5" + "_" + k] = sample_dict[k]
+
+    sample_dict = mul_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["mul_9" + "_" + k] = sample_dict[k]
+
+    sample_dict = mul_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["mul_4" + "_" + k] = sample_dict[k]
+
+    sample_dict = add_3.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["add_3" + "_" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")

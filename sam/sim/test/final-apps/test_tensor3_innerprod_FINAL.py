@@ -205,6 +205,10 @@ def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, debug_sim, fi
     for k in sample_dict.keys():
         extra_info["arrayvals_C_6" + "/" + k] = sample_dict[k]
 
+    sample_dict = mul_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["mul_4" + "/" + k] = sample_dict[k]
+
     if check_gold:
         print("Checking gold...")
         check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_vals, "none")
