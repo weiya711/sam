@@ -25,11 +25,11 @@ class RepeatNode(HWNode):
         other_type = type(other)
 
         if other_type == GLBNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == BuffetNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == MemoryNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == ReadScannerNode:
             rd_scan = other.get_name()
             new_conns = {
@@ -44,25 +44,33 @@ class RepeatNode(HWNode):
 
             return new_conns
         elif other_type == WriteScannerNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == IntersectNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == ReduceNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == LookupNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == MergeNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == RepeatNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            other_repeat = other.get_name()
+            new_conns = {
+                f'repeat_to_repeat': [
+                    # send output to rd scanner
+                    ([(repeat, f"ref_data_out"), (other_repeat, "proc_data_in")], 17),
+                ]
+            }
+
+            return new_conns
         elif other_type == ComputeNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == BroadcastNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == RepSigGenNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         else:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
 
         return new_conns
 
