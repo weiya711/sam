@@ -22,6 +22,7 @@ class CrdDrop(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.outer_crd) > 0 or len(self.inner_crd) > 0)
 
         icrd = ""
         if self.debug:
@@ -144,6 +145,7 @@ class CrdHold(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.outer_crd) > 0 or len(self.inner_crd) > 0)
 
         if self.done:
             self.curr_crd = ''
@@ -210,6 +212,7 @@ class CrdPtConverter(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0)
 
         if self.curr_ocrd != '':
             self.prev_ocrd = self.curr_ocrd

@@ -7,7 +7,6 @@ class Repeat(Primitive):
 
         self.in_ref = []
         self.in_repeat = []
-        self.in_union_other_0tkn = []
 
         self.in_ref_size = 0
         self.in_repeat_size = 0
@@ -24,6 +23,7 @@ class Repeat(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_ref) > 0 or len(self.in_repeat) > 0)
         # if len(self.in_ref) > 0 and self.get_next_ref_union:
         #     next_in = self.in_ref.pop(0)
         #     assert isinstance(next_in, int)
@@ -165,6 +165,7 @@ class Repeat(Primitive):
 
     def return_statistics(self):
         stats_dict = {"in_ref_size": self.in_ref_size, "in_repeat_size": self.in_repeat_size}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -182,6 +183,7 @@ class RepeatSigGen(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.istream) > 0)
 
         istream = ''
 
@@ -219,4 +221,5 @@ class RepeatSigGen(Primitive):
 
     def return_statistics(self):
         stats_dict = {"in_repeat_size": self.istream_size}
+        stats_dict.update(super().return_statistics())
         return stats_dict

@@ -51,6 +51,8 @@ class Add2(Compute2):
 
     def update(self):
         self.update_done()
+        print(self.in1)
+        self.block_start |= not self.block_start and (len(self.in1) > 0 or len(self.in2) > 0)
 
         if len(self.in1) > 0 and len(self.in2) > 0:
             if self.get1:
@@ -108,6 +110,7 @@ class Multiply2(Compute2):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in1) > 0 or len(self.in2) > 0)
 
         if len(self.in1) > 0 and len(self.in2) > 0:
             if self.get1:

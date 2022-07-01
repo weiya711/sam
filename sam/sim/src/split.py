@@ -25,6 +25,7 @@ class Split(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_crd) > 0)
 
         if self.done:
             self.curr_ocrd = ''

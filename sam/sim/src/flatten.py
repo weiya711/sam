@@ -20,6 +20,7 @@ class Flatten(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_inner_crd) > 0 or len(self.in_outer_crd) > 0)
 
         if self.done:
             self.curr_crd = ''

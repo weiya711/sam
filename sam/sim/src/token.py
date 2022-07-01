@@ -12,6 +12,7 @@ class StknDrop(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_stream) > 0)
 
         ival = ''
 
@@ -55,6 +56,7 @@ class EmptyFiberStknDrop(Primitive):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_stream) > 0)
 
         ival = ''
 

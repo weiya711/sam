@@ -71,6 +71,9 @@ class Primitive(ABC):
         self.done = False
         self.debug = debug
         self.done_cycles = 0
+        self.start_cycle = 0
+        self.total_cycles = 0
+        self.block_start = True
 
     def out_done(self):
         return self.done
@@ -92,11 +95,15 @@ class Primitive(ABC):
             return ''
 
     def update_done(self):
+        self.total_cycles += 1
         if not self.done:
             self.done_cycles += 1
+        if not self.block_start and self.start_cycle == 0:
+            self.start_cycle = self.total_cycles
 
     def return_statistics(self):
-        return {"done_cycles":   self.done_cycles}
+        return {"done_cycles": self.done_cycles, "start_cycle": self.start_cycle}
+
 
 def remove_emptystr(stream):
     return [x for x in stream if x != '']

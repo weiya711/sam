@@ -111,6 +111,7 @@ class Intersect2(CrdJoiner2):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_crd1) > 0 or len(self.in_crd2) > 0)
 
         # Skip list
         self.curr_skip1 = ''
@@ -259,6 +260,7 @@ class Union2(CrdJoiner2):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_crd1) > 0 or len(self.in_crd2) > 0)
 
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
@@ -415,6 +417,7 @@ class IntersectBV2(BVJoiner2):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.in_bv1) > 0 or len(self.in_bv2) > 0)
 
         if self.done:
             self.obv = ''

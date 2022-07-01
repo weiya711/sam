@@ -42,6 +42,7 @@ class ValsWrScan(WrScan):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.input) > 0)
 
         if len(self.input) > 0:
             val = self.input.pop(0)
@@ -64,6 +65,7 @@ class ValsWrScan(WrScan):
     def return_statistics(self):
         stats_dict = {}
         stats_dict["size"] = self.curr_addr
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -85,6 +87,7 @@ class CompressWrScan(WrScan):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.input) > 0)
 
         if len(self.input) > 0:
             in_crd = self.input.pop(0)
@@ -134,6 +137,7 @@ class CompressWrScan(WrScan):
         stats_dict = {}
         stats_dict["seg_size"] = self.seg_size
         stats_dict["arr_size"] = self.size
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -147,6 +151,7 @@ class UncompressWrScan(WrScan):
 
     def update(self):
         self.update_done()
+        self.block_start = not self.block_start and (len(self.input) > 0)
 
         if isinstance(self.input, int):
             self.dim = self.input
