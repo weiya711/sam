@@ -115,6 +115,7 @@ class Intersect2(CrdJoiner2):
         self.update_done()
         if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
             self.block_start = False
+        self.total_count += 1
 
         # Skip list
         self.curr_skip1 = ''
@@ -161,7 +162,7 @@ class Intersect2(CrdJoiner2):
                 self.change_crd2 = True
                 self.run_count = 0
                 if self.ocrd != '':
-                    self.count += 1
+                    self.count += 1 
                 self.max_run_count = max(self.max_run_count, abs(self.run_count))
             elif is_stkn(self.curr_crd1):
                 self._inc2()
@@ -204,6 +205,7 @@ class Intersect2(CrdJoiner2):
             self.valid_count += 1
         if is_stkn(self.ocrd):
             self.stop_count += 1
+
         self.compute_fifos()
 
         if self.debug:
@@ -273,6 +275,7 @@ class Union2(CrdJoiner2):
         self.update_done()
         if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
             self.block_start = False
+        self.total_count += 1
 
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
@@ -289,14 +292,12 @@ class Union2(CrdJoiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count += 1
             elif is_stkn(self.curr_crd1):
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
                 self.oref2 = self.curr_ref2
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count += 1
                 self.two_only_count += 1
             elif is_stkn(self.curr_crd2):
                 self.ocrd = self.curr_crd1
@@ -304,7 +305,6 @@ class Union2(CrdJoiner2):
                 self.oref2 = 'N'
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count += 1
                 self.one_only_count += 1
             elif is_0tkn(self.curr_crd2):
                 self.ocrd = self.curr_crd1
@@ -312,7 +312,6 @@ class Union2(CrdJoiner2):
                 self.oref2 = 'N'
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count += 1
                 self.one_only_count += 1
             elif is_0tkn(self.curr_crd1):
                 self.ocrd = self.curr_crd2
@@ -320,7 +319,6 @@ class Union2(CrdJoiner2):
                 self.oref2 = self.curr_ref2
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count += 1
                 self.two_only_count += 1
             elif self.curr_crd1 < self.curr_crd2:
                 self.ocrd = self.curr_crd1
@@ -328,7 +326,6 @@ class Union2(CrdJoiner2):
                 self.oref2 = 'N'
                 self.curr_crd1 = self.in_crd1.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
-                self.total_count += 1
                 self.one_only_count += 1
             elif self.curr_crd1 > self.curr_crd2:
                 self.ocrd = self.curr_crd2
@@ -336,7 +333,6 @@ class Union2(CrdJoiner2):
                 self.oref2 = self.curr_ref2
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
-                self.total_count += 1
                 self.two_only_count += 1
             else:
                 raise Exception('Intersect2: should not enter this case')
