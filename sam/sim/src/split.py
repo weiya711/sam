@@ -25,7 +25,8 @@ class Split(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_crd) > 0)
+        if len(self.in_crd) > 0:
+            self.block_start = False
 
         if self.done:
             self.curr_ocrd = ''
@@ -86,7 +87,7 @@ class Split(Primitive):
                   "\n Emit Stkn:", self.emit_stkn, "\t Prev Stkn:", self.prev_stkn)
 
     def set_in_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.in_crd.append(crd)
 
     def out_outer_crd(self):

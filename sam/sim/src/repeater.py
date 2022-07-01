@@ -23,7 +23,9 @@ class Repeat(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_ref) > 0 or len(self.in_repeat) > 0)
+        if (len(self.in_ref) > 0 or len(self.in_repeat) > 0):
+            self.block_start = False
+
         # if len(self.in_ref) > 0 and self.get_next_ref_union:
         #     next_in = self.in_ref.pop(0)
         #     assert isinstance(next_in, int)
@@ -133,11 +135,11 @@ class Repeat(Primitive):
                   "\t Out Ref:", self.curr_out_ref)
 
     def set_in_ref(self, ref):
-        if ref != '':
+        if ref != '' and ref is not None:
             self.in_ref.append(ref)
 
     def set_in_repeat(self, repeat):
-        if repeat != '':
+        if repeat != '' and repeat is not None:
             self.in_repeat.append(repeat)
 
     # def set_in_union_0tkn(self, union_0tkn):
@@ -149,7 +151,7 @@ class Repeat(Primitive):
     #         self.in_union_other_0tkn.append(union_0tkn)
 
     def set_in_repsig(self, repeat):
-        if repeat != '':
+        if repeat != '' and repeat is not None:
             self.in_repeat.append(repeat)
 
     def out_ref(self):
@@ -183,7 +185,9 @@ class RepeatSigGen(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.istream) > 0)
+        if len(self.istream) > 0:
+            self.block_start = False
+
 
         istream = ''
 
@@ -204,7 +208,7 @@ class RepeatSigGen(Primitive):
 
     # input can either be coordinates or references
     def set_istream(self, istream):
-        if istream != '':
+        if istream != '' and istream is not None:
             self.istream.append(istream)
 
     def out_repeat(self):

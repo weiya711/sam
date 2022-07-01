@@ -71,7 +71,7 @@ class Primitive(ABC):
         self.done = False
         self.debug = debug
         self.done_cycles = 0
-        self.start_cycle = 0
+        self.start_cycle = ''
         self.total_cycles = 0
         self.block_start = True
 
@@ -98,7 +98,7 @@ class Primitive(ABC):
         self.total_cycles += 1
         if not self.done:
             self.done_cycles += 1
-        if not self.block_start and self.start_cycle == 0:
+        if not self.block_start and self.start_cycle == '':
             self.start_cycle = self.total_cycles
 
     def return_statistics(self):

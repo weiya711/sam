@@ -28,7 +28,8 @@ class Array(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.load_addrs) > 0 or len(self.store_vals) > 0)
+        if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
+            self.block_start = False
 
         if self.load_en and len(self.load_addrs) > 0:
             self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
@@ -44,14 +45,14 @@ class Array(Primitive):
             self.store_en = False
 
     def set_load(self, addr):
-        if addr != '':
+        if addr != '' and addr is not None:
             self.load_en = True
             self.load_addrs.append(addr)
         else:
             self.load_en = False
 
     def set_store(self, addr, vals):
-        if addr != '' and vals != '':
+        if addr != '' and vals != '' and addr is not None and vals is not None:
             self.store_en = True
             self.store_vals.append((addr, vals))
         else:

@@ -4,8 +4,8 @@ from .base import *
 class Joiner2(Primitive, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.oref1 = 0
-        self.oref2 = 0
+        self.oref1 = ''
+        self.oref2 = ''
 
     def out_ref1(self):
         return self.oref1
@@ -17,7 +17,7 @@ class Joiner2(Primitive, ABC):
 class CrdJoiner2(Joiner2, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.ocrd = 0
+        self.ocrd = ''
 
         self.in_ref1 = []
         self.in_ref2 = []
@@ -25,12 +25,12 @@ class CrdJoiner2(Joiner2, ABC):
         self.in_crd2 = []
 
     def set_in1(self, in_ref1, in_crd1):
-        if in_ref1 != '' and in_crd1 != '':
+        if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
-        if in_ref2 != '' and in_crd2 != '':
+        if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 
@@ -68,9 +68,9 @@ class Intersect2(CrdJoiner2):
         self.max_diff_in_ref = 0
         self.zero_token_output = 0
 
-        self.ocrd = 0
-        self.oref1 = 0
-        self.oref2 = 0
+        self.ocrd = ''
+        self.oref1 = ''
+        self.oref2 = ''
         self.curr_crd1 = None
         self.curr_crd2 = None
         self.curr_ref1 = None
@@ -113,7 +113,8 @@ class Intersect2(CrdJoiner2):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_crd1) > 0 or len(self.in_crd2) > 0)
+        if (len(self.in_crd1) > 0 or len(self.in_crd2) > 0):
+            self.block_start = False
 
         # Skip list
         self.curr_skip1 = ''
@@ -262,12 +263,14 @@ class Union2(CrdJoiner2):
         self.curr_ref2 = None
 
         self.total_count = 0
+        self.count = 0
         self.one_only_count = 0
         self.two_only_count = 0
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_crd1) > 0 or len(self.in_crd2) > 0)
+        if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
+            self.block_start = False
 
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
@@ -301,6 +304,22 @@ class Union2(CrdJoiner2):
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.total_count += 1
                 self.one_only_count += 1
+            elif is_0tkn(self.curr_crd2):
+                self.ocrd = self.curr_crd1
+                self.oref1 = self.curr_ref1
+                self.oref2 = 'N'
+                self.curr_crd1 = self.in_crd1.pop(0)
+                self.curr_ref1 = self.in_ref1.pop(0)
+                self.total_count += 1
+                self.one_only_count += 1
+            elif is_0tkn(self.curr_crd1):
+                self.ocrd = self.curr_crd2
+                self.oref1 = 'N'
+                self.oref2 = self.curr_ref2
+                self.curr_crd2 = self.in_crd2.pop(0)
+                self.curr_ref2 = self.in_ref2.pop(0)
+                self.total_count += 1
+                self.two_only_count += 1
             elif self.curr_crd1 < self.curr_crd2:
                 self.ocrd = self.curr_crd1
                 self.oref1 = self.curr_ref1
@@ -345,12 +364,12 @@ class Union2(CrdJoiner2):
                   self.return_union_rate())
 
     def set_in1(self, in_ref1, in_crd1):
-        if in_ref1 != '' and in_crd1 != '':
+        if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
-        if in_ref2 != '' and in_crd2 != '':
+        if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 
@@ -424,7 +443,9 @@ class IntersectBV2(BVJoiner2):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_bv1) > 0 or len(self.in_bv2) > 0)
+        if (len(self.in_bv1) > 0 or len(self.in_bv2) > 0):
+            self.block_start = False
+
 
         if self.done:
             self.obv = ''
@@ -508,12 +529,12 @@ class IntersectBV2(BVJoiner2):
                   self.return_intersection_rate())
 
     def set_in1(self, in_ref1, in_bv1):
-        if in_ref1 != '' and in_bv1 != '':
+        if in_ref1 != '' and in_bv1 != '' and in_ref1 is not None and in_bv1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_bv1.append(in_bv1)
 
     def set_in2(self, in_ref2, in_bv2):
-        if in_ref2 != '' and in_bv2 != '':
+        if in_ref2 != '' and in_bv2 != '' and in_ref2 is not None and in_bv2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_bv2.append(in_bv2)
 

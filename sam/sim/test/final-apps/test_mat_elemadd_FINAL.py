@@ -80,45 +80,46 @@ def test_mat_elemadd_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_10.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_10.update()
 
         if len(in_ref_C) > 0:
             fiberlookup_Ci_11.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_11.update()
 
         unioni_9.set_in1(fiberlookup_Bi_10.out_ref(), fiberlookup_Bi_10.out_crd())
         unioni_9.set_in2(fiberlookup_Ci_11.out_ref(), fiberlookup_Ci_11.out_crd())
-        unioni_9.update()
 
         fiberwrite_X0_2.set_input(unioni_9.out_crd())
-        fiberwrite_X0_2.update()
 
         fiberlookup_Bj_7.set_in_ref(unioni_9.out_ref1())
-        fiberlookup_Bj_7.update()
 
         fiberlookup_Cj_8.set_in_ref(unioni_9.out_ref2())
-        fiberlookup_Cj_8.update()
 
         unionj_6.set_in1(fiberlookup_Bj_7.out_ref(), fiberlookup_Bj_7.out_crd())
         unionj_6.set_in2(fiberlookup_Cj_8.out_ref(), fiberlookup_Cj_8.out_crd())
-        unionj_6.update()
 
         fiberwrite_X1_1.set_input(unionj_6.out_crd())
-        fiberwrite_X1_1.update()
 
         arrayvals_B_4.set_load(unionj_6.out_ref1())
-        arrayvals_B_4.update()
 
         arrayvals_C_5.set_load(unionj_6.out_ref2())
-        arrayvals_C_5.update()
 
         add_3.set_in1(arrayvals_B_4.out_val())
         add_3.set_in2(arrayvals_C_5.out_val())
-        add_3.update()
 
         fiberwrite_Xvals_0.set_input(add_3.out_val())
-        fiberwrite_Xvals_0.update()
 
+        fiberlookup_Bi_10.update()
+        fiberlookup_Ci_11.update()
+        unioni_9.update()
+        fiberwrite_X0_2.update()
+        fiberlookup_Bj_7.update()
+        fiberlookup_Cj_8.update()
+        unionj_6.update()
+        fiberwrite_X1_1.update()
+        arrayvals_B_4.update()
+        arrayvals_C_5.update()
+        add_3.update()
+        fiberwrite_Xvals_0.update()
+        
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 

@@ -22,7 +22,9 @@ class CrdDrop(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.outer_crd) > 0 or len(self.inner_crd) > 0)
+        if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
+            self.block_start = False
+
 
         icrd = ""
         if self.debug:
@@ -105,11 +107,11 @@ class CrdDrop(Primitive):
                   "\n Prev Stkn:", self.prev_ocrd_stkn, "\t Get Stkn:", self.get_stkn)
 
     def set_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.outer_crd.append(crd)
 
     def set_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
@@ -145,7 +147,8 @@ class CrdHold(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.outer_crd) > 0 or len(self.inner_crd) > 0)
+        if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
+            self.block_start = False
 
         if self.done:
             self.curr_crd = ''
@@ -173,11 +176,11 @@ class CrdHold(Primitive):
         self.done = self.RSG.done and self.repeat.done
 
     def set_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.outer_crd.append(crd)
 
     def set_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
@@ -212,7 +215,8 @@ class CrdPtConverter(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0)
+        if len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0:
+            self.block_start = False
 
         if self.curr_ocrd != '':
             self.prev_ocrd = self.curr_ocrd
@@ -317,11 +321,11 @@ class CrdPtConverter(Primitive):
                   "\t Curr in val", self.prev_ocrdpt, "\t Emit Tkn: ", self.emit_stkn)
 
     def set_outer_crdpt(self, crdpt):
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.outer_crdpt.append(crdpt)
 
     def set_inner_crdpt(self, crdpt):
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.inner_crdpt.append(crdpt)
 
     def out_crd_outer(self):
