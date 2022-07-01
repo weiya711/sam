@@ -67,7 +67,9 @@ class Intersect2(CrdJoiner2):
         self.difference_in_ref = 0
         self.max_diff_in_ref = 0
         self.zero_token_output = 0
-
+        self.valid_count = 0
+        self.stop_count = 0
+        
         self.ocrd = ''
         self.oref1 = ''
         self.oref2 = ''
@@ -111,7 +113,7 @@ class Intersect2(CrdJoiner2):
 
     def update(self):
         self.update_done()
-        if (len(self.in_crd1) > 0 or len(self.in_crd2) > 0):
+        if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
             self.block_start = False
 
         # Skip list
@@ -197,6 +199,11 @@ class Intersect2(CrdJoiner2):
                 self.oref1 = ''
                 self.oref2 = ''
             self.zero_token_output += 1
+
+        if isinstance(self.ocrd, int):
+            self.valid_count += 1
+        if is_stkn(self.ocrd):
+            self.stop_count += 1
         self.compute_fifos()
 
         if self.debug:
@@ -237,7 +244,7 @@ class Intersect2(CrdJoiner2):
         stat_dict = {"fifos_ref_1": self.size_in_ref1, "fifos_ref_2": self.size_in_ref2,
                      "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
                      "fifo_difference": self.max_run_count, "intersection_rate": self.return_intersection_rate(),
-                     "drop_count": self.zero_token_output, "valid_output": self.total_count - self.zero_token_output,
+                     "drop_count": self.zero_token_output, "valid_output": self.valid_count,
                      "run_count": self.max_run_count}
         stat_dict.update(super().return_statistics())
         return stat_dict
@@ -440,7 +447,6 @@ class IntersectBV2(BVJoiner2):
         self.update_done()
         if (len(self.in_bv1) > 0 or len(self.in_bv2) > 0):
             self.block_start = False
-
 
         if self.done:
             self.obv = ''

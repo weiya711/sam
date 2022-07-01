@@ -184,6 +184,8 @@ class CompressedCrdRdScan(CrdRdScan):
 
         self.begin = True
 
+        self.stop_count = 0
+
     def _emit_stkn_code(self):
         self.end_fiber = True
 
@@ -217,7 +219,7 @@ class CompressedCrdRdScan(CrdRdScan):
                "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
                "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
                "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
-               "intersection_behind_fiber": self.fiber_behind_cnt}
+               "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count}
         dic.update(super().return_statistics())
         return dic
 
@@ -414,6 +416,9 @@ class CompressedCrdRdScan(CrdRdScan):
         # Needed for skip lists
         if isinstance(self.curr_crd, int):
             self.prev_crd = self.curr_crd
+
+        if is_stkn(self.curr_crd):
+            self.stop_count += 1
 
         # Debugging print statements
         if self.debug:
