@@ -222,7 +222,7 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     
     sample_dict = fiberlookup_Bj_9.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberlookup_Bi_9" + "/" + k] = sample_dict[k]
+        extra_info["fiberlookup_Bj_9" + "/" + k] = sample_dict[k]
     
     sample_dict = fiberlookup_Cj_10.return_statistics()
     for k in sample_dict.keys():
