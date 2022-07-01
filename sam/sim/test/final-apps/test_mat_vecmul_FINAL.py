@@ -89,61 +89,64 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bj_11.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bj_11.update()
+
 
         if len(in_ref_c) > 0:
             fiberlookup_cj_12.set_in_ref(in_ref_c.pop(0))
-        fiberlookup_cj_12.update()
 
         intersectj_10.set_in1(fiberlookup_Bj_11.out_ref(), fiberlookup_Bj_11.out_crd())
         intersectj_10.set_in2(fiberlookup_cj_12.out_ref(), fiberlookup_cj_12.out_crd())
-        intersectj_10.update()
 
         fiberlookup_Bi_9.set_in_ref(intersectj_10.out_ref1())
-        fiberlookup_Bi_9.update()
 
         arrayvals_B_4.set_load(fiberlookup_Bi_9.out_ref())
-        arrayvals_B_4.update()
 
         repsiggen_i_7.set_istream(fiberlookup_Bi_9.out_crd())
-        repsiggen_i_7.update()
 
         repeat_ci_6.set_in_ref(intersectj_10.out_ref2())
         repeat_ci_6.set_in_repsig(repsiggen_i_7.out_repsig())
-        repeat_ci_6.update()
+
 
         arrayvals_c_5.set_load(repeat_ci_6.out_ref())
-        arrayvals_c_5.update()
 
         mul_3.set_in1(arrayvals_c_5.out_val())
         mul_3.set_in2(arrayvals_B_4.out_val())
-        mul_3.update()
 
         crdhold.set_outer_crd(intersectj_10.out_crd())
         crdhold.set_inner_crd(fiberlookup_Bi_9.out_crd())
-        crdhold.update()
 
         spaccumulator1_2_drop_crd_outer.set_in_stream(crdhold.out_crd_outer())
-        spaccumulator1_2_drop_crd_outer.update()
         spaccumulator1_2_drop_crd_inner.set_in_stream(crdhold.out_crd_inner())
-        spaccumulator1_2_drop_crd_inner.update()
         spaccumulator1_2_drop_val.set_in_stream(mul_3.out_val())
-        spaccumulator1_2_drop_val.update()
 
         spaccumulator1_2.set_crd_outer(spaccumulator1_2_drop_crd_outer.out_val())
         spaccumulator1_2.set_crd_inner(spaccumulator1_2_drop_crd_inner.out_val())
         spaccumulator1_2.set_val(spaccumulator1_2_drop_val.out_val())
-        spaccumulator1_2.update()
 
         fiberwrite_xvals_0.set_input(spaccumulator1_2.out_val())
-        fiberwrite_xvals_0.update()
 
         out_crdi = spaccumulator1_2.out_crd_inner() if isinstance(spaccumulator1_2.out_crd_inner(),
                                                                   int) else decrement_stkn(
             spaccumulator1_2.out_crd_inner()) \
             if is_stkn(spaccumulator1_2.out_crd_inner()) else 'D' if spaccumulator1_2.out_crd_inner() == 'D' else ''
+
         fiberwrite_x0_1.set_input(out_crdi)
         fiberwrite_x0_1.update()
+        spaccumulator1_2_drop_crd_outer.update()
+        spaccumulator1_2_drop_crd_inner.update()
+        spaccumulator1_2_drop_val.update()
+        spaccumulator1_2.update()
+        fiberwrite_xvals_0.update()
+        fiberlookup_Bj_11.update()
+        fiberlookup_cj_12.update()
+        intersectj_10.update()
+        fiberlookup_Bi_9.update()
+        arrayvals_B_4.update()
+        repsiggen_i_7.update()
+        repeat_ci_6.update()
+        arrayvals_c_5.update()
+        mul_3.update()
+        crdhold.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1

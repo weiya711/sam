@@ -63,11 +63,11 @@ class Flatten(Primitive):
                   )
 
     def set_in_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.in_inner_crd.append(crd)
 
     def set_in_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.in_outer_crd.append(crd)
 
     def out_crd(self):

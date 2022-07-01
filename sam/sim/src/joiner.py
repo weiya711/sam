@@ -25,12 +25,12 @@ class CrdJoiner2(Joiner2, ABC):
         self.in_crd2 = []
 
     def set_in1(self, in_ref1, in_crd1):
-        if in_ref1 != '' and in_crd1 != '':
+        if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
-        if in_ref2 != '' and in_crd2 != '':
+        if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 
@@ -359,12 +359,12 @@ class Union2(CrdJoiner2):
                   self.return_union_rate())
 
     def set_in1(self, in_ref1, in_crd1):
-        if in_ref1 != '' and in_crd1 != '':
+        if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
-        if in_ref2 != '' and in_crd2 != '':
+        if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 
@@ -524,12 +524,12 @@ class IntersectBV2(BVJoiner2):
                   self.return_intersection_rate())
 
     def set_in1(self, in_ref1, in_bv1):
-        if in_ref1 != '' and in_bv1 != '':
+        if in_ref1 != '' and in_bv1 != '' and in_ref1 is not None and in_bv1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_bv1.append(in_bv1)
 
     def set_in2(self, in_ref2, in_bv2):
-        if in_ref2 != '' and in_bv2 != '':
+        if in_ref2 != '' and in_bv2 != '' and in_ref2 is not None and in_bv2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_bv2.append(in_bv2)
 

@@ -107,11 +107,11 @@ class CrdDrop(Primitive):
                   "\n Prev Stkn:", self.prev_ocrd_stkn, "\t Get Stkn:", self.get_stkn)
 
     def set_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.outer_crd.append(crd)
 
     def set_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
@@ -176,11 +176,11 @@ class CrdHold(Primitive):
         self.done = self.RSG.done and self.repeat.done
 
     def set_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.outer_crd.append(crd)
 
     def set_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
@@ -321,11 +321,11 @@ class CrdPtConverter(Primitive):
                   "\t Curr in val", self.prev_ocrdpt, "\t Emit Tkn: ", self.emit_stkn)
 
     def set_outer_crdpt(self, crdpt):
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.outer_crdpt.append(crdpt)
 
     def set_inner_crdpt(self, crdpt):
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.inner_crdpt.append(crdpt)
 
     def out_crd_outer(self):

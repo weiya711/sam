@@ -221,17 +221,17 @@ class SparseCrdPtAccumulator1(Primitive):
 
     def set_inner_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.inner_crdpt.append(crdpt)
 
     def set_outer_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.outer_crdpt.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_outer_crdpt(self):
@@ -339,37 +339,37 @@ class SparseAccumulator1(Primitive):
 
     def set_inner_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
 
     def set_outer_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
 
     def crd_in_inner(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
 
     def crd_in_outer(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
 
     def set_crd_inner(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
 
     def set_crd_outer(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_outer_crd(self):
@@ -530,17 +530,17 @@ class SparseCrdPtAccumulator2(Primitive):
 
     def set_inner_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_crdpt0.append(crdpt)
 
     def set_outer_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_crdpt1.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_outer_crdpt(self):
@@ -649,17 +649,17 @@ class SparseAccumulator2(Primitive):
 
     def set_crd_inner(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in0_crdpt.append(crdpt)
 
     def set_crd_outer(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in1_crdpt.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_crd_outer(self):

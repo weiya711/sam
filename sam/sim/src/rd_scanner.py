@@ -16,7 +16,7 @@ class CrdRdScan(Primitive, ABC):
         self.in_ref = []
 
     def set_in_ref(self, in_ref):
-        if in_ref != '':
+        if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
 
     def out_ref(self):
@@ -566,8 +566,8 @@ class CompressedCrdRdScan(CrdRdScan):
                   "\t end fiber:", self.end_fiber, "\t curr input:", curr_in_ref)
 
     def set_crd_skip(self, in_crd):
-        assert is_valid_crd(in_crd)
-        if in_crd != '':
+        assert in_crd is None or is_valid_crd(in_crd)
+        if in_crd != '' and in_crd is not None:
             if is_stkn(in_crd):
                 idx = last_stkn(self.in_crd_skip)
                 if idx is not None:
@@ -588,7 +588,7 @@ class BVRdScanSuper(Primitive, ABC):
         self.in_ref = []
 
     def set_in_ref(self, in_ref):
-        if in_ref != '':
+        if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
 
     def out_ref(self):
