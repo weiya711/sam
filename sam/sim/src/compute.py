@@ -13,7 +13,7 @@ class Compute2(Primitive, ABC):
         self.cycles_operated = 0
 
     def set_in1(self, in1):
-        if in1 != '':
+        if in1 != '' and in1 is not None:
             self.in1.append(in1)
 
     def set_in2(self, in2):
@@ -36,6 +36,7 @@ class Compute2(Primitive, ABC):
         dic.update(super().return_statistics())
         return dic
 
+
 class Add2(Compute2):
     def __init__(self, neg1=False, neg2=False, **kwargs):
         super().__init__(**kwargs)
@@ -51,7 +52,6 @@ class Add2(Compute2):
 
     def update(self):
         self.update_done()
-        print(self.in1)
         self.block_start |= not self.block_start and (len(self.in1) > 0 or len(self.in2) > 0)
 
         if len(self.in1) > 0 and len(self.in2) > 0:

@@ -10,8 +10,8 @@ class CrdRdScan(Primitive, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.curr_ref = 'S0'
-        self.curr_crd = 'S0'
+        self.curr_ref = ''
+        self.curr_crd = ''
 
         self.in_ref = []
 
@@ -213,7 +213,7 @@ class CompressedCrdRdScan(CrdRdScan):
                "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
                "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
                "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
-               "intersection_behind_fiber": fiber_behind_cnt}
+               "intersection_behind_fiber": self.fiber_behind_cnt}
         dic.update(super().return_statistics())
         return dic
 

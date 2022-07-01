@@ -4,8 +4,8 @@ from .base import *
 class Joiner2(Primitive, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.oref1 = 0
-        self.oref2 = 0
+        self.oref1 = ''
+        self.oref2 = ''
 
     def out_ref1(self):
         return self.oref1
@@ -17,7 +17,7 @@ class Joiner2(Primitive, ABC):
 class CrdJoiner2(Joiner2, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.ocrd = 0
+        self.ocrd = ''
 
         self.in_ref1 = []
         self.in_ref2 = []
@@ -68,9 +68,9 @@ class Intersect2(CrdJoiner2):
         self.max_diff_in_ref = 0
         self.zero_token_output = 0
 
-        self.ocrd = 0
-        self.oref1 = 0
-        self.oref2 = 0
+        self.ocrd = ''
+        self.oref1 = ''
+        self.oref2 = ''
         self.curr_crd1 = None
         self.curr_crd2 = None
         self.curr_ref1 = None
@@ -257,13 +257,14 @@ class Union2(CrdJoiner2):
         self.curr_ref2 = None
 
         self.total_count = 0
+        self.count = 0
         self.one_only_count = 0
         self.two_only_count = 0
 
     def update(self):
         self.update_done()
         self.block_start = not self.block_start and (len(self.in_crd1) > 0 or len(self.in_crd2) > 0)
-
+        print(self.curr_crd1, self.curr_crd2)
         if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
                 assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
@@ -296,6 +297,22 @@ class Union2(CrdJoiner2):
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.total_count += 1
                 self.one_only_count += 1
+            elif is_0tkn(self.curr_crd2):
+                self.ocrd = self.curr_crd1
+                self.oref1 = self.curr_ref1
+                self.oref2 = 'N'
+                self.curr_crd1 = self.in_crd1.pop(0)
+                self.curr_ref1 = self.in_ref1.pop(0)
+                self.total_count += 1
+                self.one_only_count += 1
+            elif is_0tkn(self.curr_crd1):
+                self.ocrd = self.curr_crd2
+                self.oref1 = 'N'
+                self.oref2 = self.curr_ref2
+                self.curr_crd2 = self.in_crd2.pop(0)
+                self.curr_ref2 = self.in_ref2.pop(0)
+                self.total_count += 1
+                self.two_only_count += 1
             elif self.curr_crd1 < self.curr_crd2:
                 self.ocrd = self.curr_crd1
                 self.oref1 = self.curr_ref1
