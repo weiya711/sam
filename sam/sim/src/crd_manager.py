@@ -9,8 +9,6 @@ class CrdDrop(Primitive):
 
         self.outer_crd = []
         self.inner_crd = []
-        self.inner_crd_fifo = 0
-        self.outer_crd_fifo = 0
         self.curr_inner_crd = ''
         self.curr_ocrd = ''
         self.curr_crd = ''
@@ -19,12 +17,16 @@ class CrdDrop(Primitive):
         self.get_stkn = False
         self.get_next_icrd = False
         self.get_next_ocrd = True
+        
+        # statistics info
+        self.inner_crd_fifo = 0
+        self.outer_crd_fifo = 0
+        self.ocrd_drop_cnt = 0
 
     def update(self):
         self.update_done()
         if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
             self.block_start = False
-
 
         icrd = ""
         if self.debug:
@@ -62,6 +64,7 @@ class CrdDrop(Primitive):
             self.has_crd = False
         elif self.get_next_ocrd:
             self.curr_crd = ''
+            self.ocrd_drop_cnt += 1
 
         if len(self.inner_crd) > 0 and self.get_next_icrd:
             self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
@@ -75,6 +78,7 @@ class CrdDrop(Primitive):
             if isinstance(icrd, int):
                 self.has_crd = True
                 self.curr_crd = ''
+                self.ocrd_drop_cnt += 1
                 self.get_next_ocrd = False
                 self.get_next_icrd = True
             elif is_stkn(icrd) and is_stkn(self.curr_ocrd):
@@ -92,11 +96,13 @@ class CrdDrop(Primitive):
                 self.get_next_ocrd = False
             else:
                 self.curr_crd = ''
+                self.ocrd_drop_cnt += 1
                 self.get_next_icrd = False
                 self.get_next_ocrd = True
         elif self.get_next_icrd:
             self.curr_crd = ''
             self.curr_inner_crd = ''
+            self.ocrd_drop_cnt += 1
         else:
             self.curr_inner_crd = ''
 
@@ -125,7 +131,7 @@ class CrdDrop(Primitive):
         print("CrdDrop Outer crd fifo size: ", self.outer_crd_fifo)
 
     def return_statistics(self):
-        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo": self.outer_crd_fifo}
+        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo": self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
         stats_dict.update(super().return_statistics())
         return stats_dict
 
