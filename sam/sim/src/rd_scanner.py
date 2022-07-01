@@ -213,14 +213,13 @@ class CompressedCrdRdScan(CrdRdScan):
                "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
                "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
                "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
-               "intersection_behind_fiber": fiber_behind_cnt}
+               "intersection_behind_fiber": self.fiber_behind_cnt}
         dic.update(super().return_statistics())
         return dic
 
     def update(self):
         self.update_done()
         self.block_start = not self.block_start and (len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0))
-
         # Process skip token first and save
         if len(self.in_crd_skip) > 0 and self.skip_processed:
             self.curr_skip = self.in_crd_skip.pop(0)

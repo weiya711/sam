@@ -97,6 +97,7 @@ class Intersect2(CrdJoiner2):
         self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''  # Skip list
         self.change_crd1 = False
         self.zero_token_output += 1
+        self.total_count += 1
 
     def _inc1(self):
         self.ocrd = ''
@@ -108,6 +109,7 @@ class Intersect2(CrdJoiner2):
         self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''  # Skip list
         self.change_crd2 = False
         self.zero_token_output += 1
+        self.total_count += 1
 
     def update(self):
         self.update_done()
@@ -135,6 +137,7 @@ class Intersect2(CrdJoiner2):
                 self.change_crd1 = True
                 self.change_crd2 = True
                 self.zero_token_output += 1
+                self.total_count += 1
             elif self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
                 assert self.curr_crd1 == self.curr_crd2, "Both coordinates need to be done tokens"
                 self.done = True
@@ -158,7 +161,8 @@ class Intersect2(CrdJoiner2):
                 self.change_crd2 = True
                 self.run_count = 0
                 if self.ocrd != '':
-                    self.count += 1
+                    self.count += 1 
+                self.total_count += 1
                 self.max_run_count = max(self.max_run_count, abs(self.run_count))
             elif is_stkn(self.curr_crd1):
                 self._inc2()
@@ -196,6 +200,7 @@ class Intersect2(CrdJoiner2):
                 self.oref1 = ''
                 self.oref2 = ''
             self.zero_token_output += 1
+            self.total_count += 1
         self.compute_fifos()
 
         if self.debug:
