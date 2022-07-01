@@ -1,3 +1,5 @@
+from abc import ABC
+
 from .base import *
 from sam.sim.src.array import Array
 
@@ -42,7 +44,8 @@ class ValsWrScan(WrScan):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.input) > 0)
+        if (len(self.input) > 0):
+            self.block_start = False
 
         if len(self.input) > 0:
             val = self.input.pop(0)
@@ -87,7 +90,9 @@ class CompressWrScan(WrScan):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.input) > 0)
+        if (len(self.input) > 0):
+            self.block_start = False
+
 
         if len(self.input) > 0:
             in_crd = self.input.pop(0)
@@ -142,7 +147,7 @@ class CompressWrScan(WrScan):
 
 
 # Unique compressed (not from points)
-class UncompressWrScan(WrScan):
+class UncompressWrScan(WrScan, ABC):
     def __init__(self, seg_size=0, level=0, **kwargs):
         super().__init__(**kwargs)
 
@@ -151,7 +156,8 @@ class UncompressWrScan(WrScan):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.input) > 0)
+        if len(self.input) > 0:
+            self.block_start = False
 
         if isinstance(self.input, int):
             self.dim = self.input

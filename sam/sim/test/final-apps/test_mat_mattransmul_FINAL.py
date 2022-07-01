@@ -117,89 +117,92 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_27.update()
 
         if len(in_ref_f) > 0:
             fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
-        fiberlookup_fi_28.update()
+
+
 
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
-        unioni_26.update()
 
         fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
-        fiberlookup_Cj_18.update()
 
         fiberwrite_x0_1.set_input(unioni_26.out_crd())
-        fiberwrite_x0_1.update()
 
         repsiggen_i_24.set_istream(unioni_26.out_crd())
-        repsiggen_i_24.update()
 
         if len(in_ref_b) > 0:
             repeat_bi_20.set_in_ref(in_ref_b.pop(0))
         repeat_bi_20.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_bi_20.update()
 
         if len(in_ref_d) > 0:
             repeat_di_21.set_in_ref(in_ref_d.pop(0))
         repeat_di_21.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_di_21.update()
 
         if len(in_ref_e) > 0:
             repeat_ei_22.set_in_ref(in_ref_e.pop(0))
         repeat_ei_22.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_ei_22.update()
 
         fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref())
-        fiberlookup_dj_19.update()
 
         intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
         intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
-        intersectj_17.update()
 
         repsiggen_j_16.set_istream(intersectj_17.out_crd())
-        repsiggen_j_16.update()
 
         arrayvals_C_7.set_load(intersectj_17.out_ref2())
-        arrayvals_C_7.update()
 
         arrayvals_d_8.set_load(intersectj_17.out_ref1())
-        arrayvals_d_8.update()
 
         repeat_bj_12.set_in_ref(repeat_bi_20.out_ref())
         repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_bj_12.update()
 
         arrayvals_e_10.set_load(repeat_ei_22.out_ref())
-        arrayvals_e_10.update()
 
         arrayvals_f_11.set_load(unioni_26.out_ref2())
-        arrayvals_f_11.update()
 
         mul_9.set_in1(arrayvals_e_10.out_val())
         mul_9.set_in2(arrayvals_f_11.out_val())
-        mul_9.update()
 
         arrayvals_b_6.set_load(repeat_bj_12.out_ref())
-        arrayvals_b_6.update()
 
         mul_5.set_in1(arrayvals_b_6.out_val())
         mul_5.set_in2(arrayvals_C_7.out_val())
-        mul_5.update()
 
         mul_4.set_in1(mul_5.out_val())
         mul_4.set_in2(arrayvals_d_8.out_val())
-        mul_4.update()
 
         reduce_2.set_in_val(mul_4.out_val())
-        reduce_2.update()
 
         add_3.set_in1(reduce_2.out_val())
         add_3.set_in2(mul_9.out_val())
-        add_3.update()
 
         fiberwrite_xvals_0.set_input(add_3.out_val())
+
+        fiberlookup_Ci_27.update()
+        fiberlookup_fi_28.update()
+        unioni_26.update()
+        fiberlookup_Cj_18.update()
+        fiberwrite_x0_1.update()
+        repsiggen_i_24.update()
+        repeat_bi_20.update()
+        repeat_di_21.update()
+        repeat_ei_22.update()
+        fiberlookup_dj_19.update()
+        intersectj_17.update()
+        repsiggen_j_16.update()
+        arrayvals_C_7.update()
+        arrayvals_d_8.update()
+        repeat_bj_12.update()
+        arrayvals_e_10.update()
+        arrayvals_f_11.update()
+        mul_9.update()
+        arrayvals_b_6.update()
+        mul_5.update()
+        mul_4.update()
+        reduce_2.update()
+        add_3.update()
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()

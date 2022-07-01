@@ -23,7 +23,9 @@ class Repeat(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_ref) > 0 or len(self.in_repeat) > 0)
+        if (len(self.in_ref) > 0 or len(self.in_repeat) > 0):
+            self.block_start = False
+
         # if len(self.in_ref) > 0 and self.get_next_ref_union:
         #     next_in = self.in_ref.pop(0)
         #     assert isinstance(next_in, int)
@@ -183,7 +185,9 @@ class RepeatSigGen(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.istream) > 0)
+        if len(self.istream) > 0:
+            self.block_start = False
+
 
         istream = ''
 

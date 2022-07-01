@@ -28,7 +28,8 @@ class Array(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.load_addrs) > 0 or len(self.store_vals) > 0)
+        if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
+            self.block_start = False
 
         if self.load_en and len(self.load_addrs) > 0:
             self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))

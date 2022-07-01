@@ -41,9 +41,12 @@ class UncompressCrdRdScan(CrdRdScan):
         self.end_fiber = False
         self.emit_tkn = False
 
+        self.begin = True
+
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_ref) > 0)
+        if len(self.in_ref) > 0:
+            self.block_start = False
 
         if self.emit_tkn and len(self.in_ref) > 0:
             next_in = self.in_ref[0]
@@ -88,11 +91,8 @@ class UncompressCrdRdScan(CrdRdScan):
             self.curr_ref = ''
             return
 
-        # run out of coordinates, move to next input reference
-        if self.curr_crd == '' or self.curr_crd == 'D':
-            self.curr_crd = ''
-            self.curr_ref = ''
-        elif is_stkn(self.curr_crd):
+        if is_stkn(self.curr_crd) or self.begin:
+            self.begin = False
             if len(self.in_ref) > 0:
                 self.curr_in_ref = self.in_ref.pop(0)
                 if self.curr_in_ref == 'D':
@@ -107,6 +107,10 @@ class UncompressCrdRdScan(CrdRdScan):
                 self.curr_crd = ''
                 self.curr_ref = ''
                 self.end_fiber = True
+        # run out of coordinates, move to next input reference
+        elif self.curr_crd == '' or self.curr_crd == 'D':
+            self.curr_crd = ''
+            self.curr_ref = ''
         elif self.curr_crd >= self.meta_dim - 1:
             if len(self.in_ref) > 0:
                 next_in = self.in_ref[0]
@@ -219,7 +223,8 @@ class CompressedCrdRdScan(CrdRdScan):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0))
+        if len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0):
+            self.block_start = False
 
         # Process skip token first and save
         if len(self.in_crd_skip) > 0 and self.skip_processed:
@@ -620,7 +625,8 @@ class BVRdScan(BVRdScanSuper):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_ref) > 0)
+        if len(self.in_ref) > 0:
+            self.block_start = False
 
         curr_in_ref = None
         if self.curr_bv == 'D' or self.curr_ref == 'D' or self.done:

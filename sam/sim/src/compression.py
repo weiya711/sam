@@ -12,7 +12,8 @@ class Compression(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_val) > 0 or len(self.in_crd) > 0)
+        if (len(self.in_val) > 0 or len(self.in_crd) > 0):
+            self.block_start = False
 
         icrd = ""
 

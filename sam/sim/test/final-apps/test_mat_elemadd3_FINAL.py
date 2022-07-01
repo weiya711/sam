@@ -102,76 +102,83 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     done = False
     time_cnt = 0
 
+    temp = []
+    temp1 = []
+    temp2 = []
+    temp3 = []
+    temp4 = []
+    temp5 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_13.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_13.update()
 
         if len(in_ref_C) > 0:
             fiberlookup_Ci_14.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_14.update()
 
         if len(in_ref_D) > 0:
             fiberlookup_Di_15.set_in_ref(in_ref_D.pop(0))
-        fiberlookup_Di_15.update()
 
         unioni1_12.set_in1(fiberlookup_Bi_13.out_ref(), fiberlookup_Bi_13.out_crd())
         unioni1_12.set_in2(fiberlookup_Ci_14.out_ref(), fiberlookup_Ci_14.out_crd())
-        unioni1_12.update()
 
         unioni2_12.set_in1(fiberlookup_Di_15.out_ref(), fiberlookup_Di_15.out_crd())
         unioni2_12.set_in2(unioni1_12.out_ref1(), unioni1_12.out_crd())
-        unioni2_12.update()
 
         unioni3_12.set_in1(fiberlookup_Di_15.out_ref(), fiberlookup_Di_15.out_crd())
         unioni3_12.set_in2(unioni1_12.out_ref2(), unioni1_12.out_crd())
-        unioni3_12.update()
 
         fiberwrite_X0_2.set_input(unioni2_12.out_crd())
-        fiberwrite_X0_2.update()
 
         fiberlookup_Bj_9.set_in_ref(unioni2_12.out_ref2())
-        fiberlookup_Bj_9.update()
 
         fiberlookup_Cj_10.set_in_ref(unioni3_12.out_ref2())
-        fiberlookup_Cj_10.update()
 
         fiberlookup_Dj_11.set_in_ref(unioni3_12.out_ref1())
-        fiberlookup_Dj_11.update()
 
         unionj1_8.set_in1(fiberlookup_Bj_9.out_ref(), fiberlookup_Bj_9.out_crd())
         unionj1_8.set_in2(fiberlookup_Cj_10.out_ref(), fiberlookup_Cj_10.out_crd())
-        unionj1_8.update()
 
         unionj2_8.set_in1(fiberlookup_Dj_11.out_ref(), fiberlookup_Dj_11.out_crd())
         unionj2_8.set_in2(unionj1_8.out_ref1(), unionj1_8.out_crd())
-        unionj2_8.update()
 
         unionj3_8.set_in1(fiberlookup_Dj_11.out_ref(), fiberlookup_Dj_11.out_crd())
         unionj3_8.set_in2(unionj1_8.out_ref2(), unionj1_8.out_crd())
-        unionj3_8.update()
 
         fiberwrite_X1_1.set_input(unionj3_8.out_crd())
-        fiberwrite_X1_1.update()
 
         arrayvals_B_5.set_load(unionj2_8.out_ref2())
-        arrayvals_B_5.update()
 
         arrayvals_C_6.set_load(unionj3_8.out_ref2())
-        arrayvals_C_6.update()
 
         arrayvals_D_7.set_load(unionj3_8.out_ref1())
-        arrayvals_D_7.update()
 
         add_4.set_in1(arrayvals_B_5.out_val())
         add_4.set_in2(arrayvals_C_6.out_val())
-        add_4.update()
 
         add_3.set_in1(add_4.out_val())
         add_3.set_in2(arrayvals_D_7.out_val())
-        add_3.update()
 
         fiberwrite_Xvals_0.set_input(add_3.out_val())
+
+        fiberlookup_Bi_13.update()
+        fiberlookup_Ci_14.update()
+        fiberlookup_Di_15.update()
+        unioni1_12.update()
+        unioni2_12.update()
+        unioni3_12.update()
+        fiberwrite_X0_2.update()
+        fiberlookup_Bj_9.update()
+        fiberlookup_Cj_10.update()
+        fiberlookup_Dj_11.update()
+        unionj1_8.update()
+        unionj2_8.update()
+        unionj3_8.update()
+        fiberwrite_X1_1.update()
+        arrayvals_B_5.update()
+        arrayvals_C_6.update()
+        arrayvals_D_7.update()
+        add_4.update()
+        add_3.update()
         fiberwrite_Xvals_0.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
@@ -211,23 +218,23 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = fiberlookup_Bi_13.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bi_13" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Ci_14.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Ci_14" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Di_15.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Di_15" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Bj_9.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bj_9" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Cj_10.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Cj_10" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Dj_11.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Dj_11" + "/" + k] = sample_dict[k]
@@ -235,11 +242,11 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = unioni1_12.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni1_12" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = unioni2_12.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni2_12" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = unioni3_12.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni3_12" + "/" + k] = sample_dict[k]

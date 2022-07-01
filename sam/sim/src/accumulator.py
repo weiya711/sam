@@ -24,7 +24,8 @@ class Reduce(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_val) > 0)
+        if (len(self.in_val) > 0):
+            self.block_start = False
 
         curr_in_val = ""
         if self.done:
@@ -68,7 +69,7 @@ class Reduce(Primitive):
                   "\t Sum:", self.sum)
 
     def set_in_val(self, val):
-        if val != '':
+        if val != '' and val is not None:
             self.num_inputs += 1
             self.in_val.append(val)
 
@@ -131,7 +132,9 @@ class SparseCrdPtAccumulator1(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0)
+        if len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0:
+            self.block_start = False
+
         self.out_crd_fifo = max(self.out_crd_fifo, len(self.outer_crdpt))
         self.in_crd_fifo = max(self.in_crd_fifo, len(self.inner_crdpt))
         self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
@@ -288,7 +291,8 @@ class SparseAccumulator1(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_outer_crdpt) > 0 or len(self.in_inner_crdpt) > 0)
+        if len(self.in_outer_crdpt) > 0 or len(self.in_inner_crdpt) > 0:
+            self.block_start = False
 
         # What to do for drop tokens?
         self.in_outer_crd_pt_fifo = max(self.in_outer_crd_pt_fifo, len(self.in_outer_crdpt))
@@ -434,7 +438,8 @@ class SparseCrdPtAccumulator2(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in_crdpt0) > 0 or len(self.in_crdpt0) > 0 or len(self.in_val) > 0)
+        if len(self.in_crdpt0) > 0 or len(self.in_crdpt0) > 0 or len(self.in_val) > 0:
+            self.block_start = False
 
         if self.done:
             self.curr_crdpt0 = ''
@@ -595,8 +600,8 @@ class SparseAccumulator2(Primitive):
 
     def update(self):
         self.update_done()
-        self.block_start = not self.block_start and (len(self.in1_crdpt) > 0 or len(self.in0_crdpt) > 0 or
-                                                     len(self.in_val) > 0)
+        if (len(self.in1_crdpt) > 0 or len(self.in0_crdpt) > 0 or len(self.in_val) > 0):
+            self.block_start = False
         self.compute_fifo()
 
         if len(self.in1_crdpt) > 0:
