@@ -57,13 +57,13 @@ def plot_reorder(test_dfs, test_names, legend):
 
 def create_FUSION_plots(df):
     # print(df.to_string())
-    small_df = df.filter(items=['cycles', 'vectype', 'sparsity', 'split_factor', 'test_name', 'block_size', 'run_length'])
+    small_df = df.filter(items=['name', 'cycles', 'test_name'])
 
     test_dfs = {}
 
-    fusion_names = ['test_mat_sddmm_coiter_fused',
-                    'test_mat_sddmm_locate_fused',
-                    'test_mat_sddmm_unfused']
+    fusion_names = ['sddmm_coiter_fused',
+                    'sddmm_locate_fused',
+                    'sddmm_unfused']
 
     fusion_legend = ['sddmm_coiter_fused',
                      'sddmm_locate_fused',
@@ -73,7 +73,7 @@ def create_FUSION_plots(df):
 
         # t_df = small_df.filter(like='test')
         # t_df = small_df[small_df['test_name'] == test]
-        t_df = small_df[test in small_df['name']]
+        t_df = small_df[small_df['test_name'] == test]
         test_dfs[test] = t_df
         # print(t_df)
 
@@ -85,6 +85,7 @@ def plot_fusion(test_dfs, test_names, legend):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test]
+        print(t_df)
         # plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
         plt.bar(t_df['test_name'], t_df['cycles'])
     plt.legend(legend, **legend_keywords)
@@ -197,6 +198,8 @@ def create_ASPLOS_plots(csv_path, name=None):
 
     assert name is not None
     df = pd.read_csv(csv_path)
+
+    print(df)
 
     if name == "ACCEL":
         create_ACCEL_plots(df)
