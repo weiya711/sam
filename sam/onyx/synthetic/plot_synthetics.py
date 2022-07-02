@@ -48,9 +48,9 @@ def plot_reorder(test_dfs, test_names, legend):
     # plt.yscale('log', base=2)
     # plt.xscale('logit', base=2)
     # plt.xscale('logit')
-    plt.xlabel('Sparsity (% nonzeros)', **xlabel_keywords)
+    plt.xlabel('Reordering', **xlabel_keywords)
     plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Sparsity (random)', **title_keywords)
+    plt.title('Simulator Cycles vs Loop Reordering', **title_keywords)
     fig.set_size_inches(16, 12)
     plt.savefig('reorder.pdf')
 
@@ -85,14 +85,15 @@ def plot_fusion(test_dfs, test_names, legend):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test]
-        plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        # plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        plt.bar(t_df['test_name'], t_df['cycles'])
     plt.legend(legend, **legend_keywords)
-    plt.yscale('log', base=2)
+    # plt.yscale('log', base=2)
     # plt.xscale('logit', base=2)
-    plt.xscale('logit')
-    plt.xlabel('Sparsity (% nonzeros)', **xlabel_keywords)
+    # plt.xscale('logit')
+    plt.xlabel('Loop Fusion (sddmm)', **xlabel_keywords)
     plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Sparsity (random)', **title_keywords)
+    plt.title('Simulator Cycles vs Loop Fusion (sddmm)', **title_keywords)
     fig.set_size_inches(16, 12)
     plt.savefig('fusion.pdf')
 
