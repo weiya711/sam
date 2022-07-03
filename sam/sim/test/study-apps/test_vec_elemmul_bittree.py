@@ -268,7 +268,8 @@ def test_vec_elemmul_bv_split(samBench, run_length, vectype, sparsity, sf, debug
         time.sleep(0.0001)
 
     extra_info = dict()
-    extra_info["cycles"] = time1 + time2
+    extra_info["cycles_reformat"] = time1
+    extra_info["cycles"] = time2
     extra_info["vectype"] = vectype
     extra_info["sparsity"] = sparsity
     extra_info["run_length"] = run_length
