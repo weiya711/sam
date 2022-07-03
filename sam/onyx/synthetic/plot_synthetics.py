@@ -49,10 +49,10 @@ def plot_reorder(test_dfs, test_names, legend):
     # plt.xscale('logit', base=2)
     # plt.xscale('logit')
     plt.xlabel('Reordering', **xlabel_keywords)
-    plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Loop Reordering', **title_keywords)
+    plt.ylabel('Cycles', **ylabel_keywords)
+    plt.title('Cycles vs Loop Reordering', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('reorder.pdf')
+    plt.savefig('reorder.svg')
 
 
 def create_FUSION_plots(df):
@@ -93,10 +93,10 @@ def plot_fusion(test_dfs, test_names, legend):
     # plt.xscale('logit', base=2)
     # plt.xscale('logit')
     plt.xlabel('Loop Fusion (sddmm)', **xlabel_keywords)
-    plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Loop Fusion (sddmm)', **title_keywords)
+    plt.ylabel('Cycles', **ylabel_keywords)
+    plt.title('Cycles vs Loop Fusion (sddmm)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('fusion.pdf')
+    plt.savefig('fusion.svg')
 
 
 def create_ACCEL_plots(df):
@@ -112,12 +112,12 @@ def create_ACCEL_plots(df):
                   'test_vec_elemmul_bv_split',
                   'test_vec_elemmul_bv']
 
-    test_names_legend = ['compressed',
-                         'dense',
-                         'compressed_skip',
-                         'compressed_split',
-                         'bitvector_split',
-                         'bitvector']
+    test_names_legend = ['Compressed Coordinates (Crd)',
+                         'Uncompressed (dense)',
+                         'Crd w/ skip',
+                         'Crd w/ split',
+                         'Bitvector w/ split',
+                         'Bitvector']
 
     for test in test_names:
 
@@ -140,14 +140,14 @@ def plot_urandom_const_sf(test_dfs, test_names, legend):
                               ((test_dfs[test]['split_factor'] == 1) | (test_dfs[test]['split_factor'] == 64))]
         plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
     plt.legend(legend, **legend_keywords)
-    plt.yscale('log', base=2)
+    plt.yscale('log')
     # plt.xscale('logit', base=2)
     plt.xscale('logit')
     plt.xlabel('Sparsity (% nonzeros)', **xlabel_keywords)
-    plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Sparsity (random)', **title_keywords)
+    plt.ylabel('Cycles', **ylabel_keywords)
+    plt.title('Cycles vs Sparsity (random)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('urandom_const_sf.pdf')
+    plt.savefig('urandom_const_sf.svg')
 
 
 def plot_urandom_sf_const_sp(test_dfs, test_names, legend):
@@ -157,11 +157,13 @@ def plot_urandom_sf_const_sp(test_dfs, test_names, legend):
         print(t_df)
         plt.plot(t_df['split_factor'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
     plt.legend(legend, **legend_keywords)
+    # plt.xscale('log')
     plt.xlabel('Split Factor', **xlabel_keywords)
-    plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Split Factor (random)', **title_keywords)
+    plt.yscale('log')
+    plt.ylabel('Cycles', **ylabel_keywords)
+    plt.title('Cycles vs Split Factor (random)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('urandom_const_sp.pdf')
+    plt.savefig('urandom_const_sp.svg')
 
 
 def plot_runs_sf(test_dfs, test_names, legend):
@@ -172,11 +174,13 @@ def plot_runs_sf(test_dfs, test_names, legend):
         print(t_df)
         plt.plot(t_df['run_length'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
     plt.legend(legend, **legend_keywords)
+    plt.xscale('log')
     plt.xlabel('Run Length', **xlabel_keywords)
-    plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Split Factor (runs)', **title_keywords)
+    plt.yscale('log')
+    plt.ylabel('Cycles', **ylabel_keywords)
+    plt.title('Cycles vs Split Factor (runs)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('runs_sf.pdf')
+    plt.savefig('runs_sf.svg')
 
 
 def plot_blocks_sf(test_dfs, test_names, legend):
@@ -187,11 +191,13 @@ def plot_blocks_sf(test_dfs, test_names, legend):
         print(t_df)
         plt.plot(t_df['block_size'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
     plt.legend(legend, **legend_keywords)
+    plt.xscale('log')
     plt.xlabel('Block Size', **xlabel_keywords)
-    plt.ylabel('Simulator Cycles', **ylabel_keywords)
-    plt.title('Simulator Cycles vs Split Factor (blocks)', **title_keywords)
+    plt.yscale('log')
+    plt.ylabel('Cycles', **ylabel_keywords)
+    plt.title('Cycles vs Split Factor (blocks)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('blocks_sf.pdf')
+    plt.savefig('blocks_sf.svg')
 
 
 def create_ASPLOS_plots(csv_path, name=None):

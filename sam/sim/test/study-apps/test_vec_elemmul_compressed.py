@@ -134,6 +134,7 @@ def test_unit_vec_elemmul_c_c_c(samBench, run_length, vectype, sparsity, vecname
         time.sleep(0.0001)
 
     extra_info = dict()
+    extra_info["cycles_reformat"] = ""
     extra_info["cycles"] = time1
     extra_info["vectype"] = vectype
     extra_info["sparsity"] = sparsity
