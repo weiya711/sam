@@ -27,8 +27,9 @@ do
         blocks)
             for bs in 1 2 5 10 20 30 40 50 75 100 200 300 400
             do
-                python ${SRC_PATH}/generate_blocks.py --seed 0 --output_dir ${SYNTHETIC_PATH}/${vectype}/compressed/ --number_nonzeros 400 --len_blocks $bs --shape 2000 --output_format CSF
-                python ${SRC_PATH}/generate_blocks.py --seed 0 --output_dir ${SYNTHETIC_PATH}/${vectype}/uncompressed/ --number_nonzeros 400 --len_blocks $bs --shape 2000 --output_format UNC
+                nnz=400
+                python ${SRC_PATH}/generate_blocks.py --seed 0 --output_dir ${SYNTHETIC_PATH}/${vectype}/compressed/ --number_nonzeros $nnz --len_blocks $bs --shape 2000 --output_format CSF
+                python ${SRC_PATH}/generate_blocks.py --seed 0 --output_dir ${SYNTHETIC_PATH}/${vectype}/uncompressed/ --number_nonzeros $nnz --len_blocks $bs --shape 2000 --output_format UNC
                 # python ${SRC_PATH}/generate_blocks.py --seed 0 --output_dir ${SYNTHETIC_PATH}/${vectype}/compressed/ --shape 2000 --output_format CSF
                 # python ${SRC_PATH}/generate_blocks.py --seed 0 --output_dir ${SYNTHETIC_PATH}/${vectype}/uncompressed/ --shape 2000 --output_format UNC
             done
