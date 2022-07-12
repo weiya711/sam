@@ -48,21 +48,21 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'buffet_to_rd_scan': [
                     # rd rsp
-                    ([(buffet, "rd_rsp_data"), (rd_scan, "rd_rsp_data_in")], 16),
+                    ([(buffet, "rd_rsp_data"), (rd_scan, "rd_rsp_data_in")], 17),
                     # ([(rd_scan, "rd_rsp_ready_out"), (buffet, "rd_rsp_ready")], 1),
                     # ([(buffet, "rd_rsp_valid"), (rd_scan, "rd_rsp_valid_in")], 1),
                     # addr
-                    ([(rd_scan, "addr_out"), (buffet, "rd_addr")], 16),
+                    ([(rd_scan, "addr_out"), (buffet, "rd_addr")], 17),
                     # ([(buffet, "rd_addr_ready"), (rd_scan, "addr_out_ready_in")], 1),
                     # ([(rd_scan, "addr_out_valid_out"), (buffet, "rd_addr_valid")], 1),
 
                     # op
-                    ([(rd_scan, "op_out"), (buffet, "rd_op")], 16),
+                    ([(rd_scan, "op_out"), (buffet, "rd_op")], 17),
                     # ([(buffet, "rd_op_ready"), (rd_scan, "op_out_ready_in")], 1),
                     # ([(rd_scan, "op_out_valid_out"), (buffet, "rd_op_valid")], 1),
 
                     # id
-                    ([(rd_scan, "ID_out"), (buffet, "rd_ID")], 16),
+                    ([(rd_scan, "ID_out"), (buffet, "rd_ID")], 17),
                     # ([(buffet, "rd_ID_ready"), (rd_scan, "ID_out_ready_in")], 1),
                     # ([(rd_scan, "ID_out_valid_out"), (buffet, "rd_ID_valid")], 1),
                 ]

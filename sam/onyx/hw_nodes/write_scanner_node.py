@@ -37,12 +37,12 @@ class WriteScannerNode(HWNode):
                     # ([(buffet, "wr_data_ready"), (wr_scan, "data_out_ready")], 1),
                     # ([(wr_scan, "data_out_valid"), (buffet, "wr_data_valid")], 1),
                     # addr
-                    ([(wr_scan, "addr_out"), (buffet, "wr_addr")], 16),
+                    ([(wr_scan, "addr_out"), (buffet, "wr_addr")], 17),
                     # ([(buffet, "wr_addr_ready"), (wr_scan, "addr_out_ready")], 1),
                     # ([(wr_scan, "addr_out_valid"), (buffet, "wr_addr_valid")], 1),
 
                     # id
-                    ([(wr_scan, "ID_out"), (buffet, "wr_ID")], 16),
+                    ([(wr_scan, "ID_out"), (buffet, "wr_ID")], 17),
                     # ([(buffet, "wr_ID_ready"), (wr_scan, "ID_out_ready")], 1),
                     # ([(wr_scan, "ID_out_valid"), (buffet, "wr_ID_valid")], 1),
                 ]
@@ -100,9 +100,10 @@ class WriteScannerNode(HWNode):
             block_mode = 0
 
         # block_mode = int(attributes['type'].strip('"') == 'fiberlookup')
-        cfg_tuple = (inner_offset, compressed, lowest_level, stop_lvl, block_mode)
+        # cfg_tuple = (inner_offset, compressed, lowest_level, stop_lvl, block_mode)
+        cfg_tuple = (compressed, lowest_level, stop_lvl, block_mode)
         cfg_kwargs = {
-            'inner_offset': inner_offset,
+            # 'inner_offset': inner_offset,
             'compressed': compressed,
             'lowest_level': lowest_level,
             'stop_lvl': stop_lvl,

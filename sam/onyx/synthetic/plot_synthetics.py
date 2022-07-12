@@ -198,6 +198,7 @@ def plot_blocks_sf(test_dfs, test_names, legend):
     plt.title('Cycles vs Split Factor (blocks)', **title_keywords)
     fig.set_size_inches(16, 12)
     plt.savefig('blocks_sf.svg')
+    plt.savefig('blocks_sf.pdf')
 
 
 def create_ASPLOS_plots(csv_path, name=None):
