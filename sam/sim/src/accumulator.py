@@ -322,7 +322,7 @@ class SparseAccumulator1(Primitive):
 
         if self.val_stkn:
             self.curr_val = self.crdpt_spacc_out_val.pop(0) if isinstance(self.curr_inner_crd, int) and \
-                                                               len(self.crdpt_spacc_out_val) > 0 else self.curr_inner_crd
+                len(self.crdpt_spacc_out_val) > 0 else self.curr_inner_crd
         else:
             self.curr_val = self.crdpt_spacc_out_val.pop(0) if len(self.crdpt_spacc_out_val) > 0 else ''
 
@@ -627,7 +627,7 @@ class SparseAccumulator2(Primitive):
 
         if self.val_stkn:
             self.curr_val = self.crdpt_spacc_out_val.pop(0) if isinstance(self.curr_0_crd, int) and \
-                                                               len(self.crdpt_spacc_out_val) > 0 else self.curr_0_crd
+                len(self.crdpt_spacc_out_val) > 0 else self.curr_0_crd
         else:
             self.curr_val = self.crdpt_spacc_out_val.pop(0) if len(self.crdpt_spacc_out_val) > 0 else ''
 

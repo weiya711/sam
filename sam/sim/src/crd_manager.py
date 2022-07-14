@@ -17,7 +17,7 @@ class CrdDrop(Primitive):
         self.get_stkn = False
         self.get_next_icrd = False
         self.get_next_ocrd = True
-        
+
         # statistics info
         self.inner_crd_fifo = 0
         self.outer_crd_fifo = 0
@@ -25,7 +25,7 @@ class CrdDrop(Primitive):
 
     def update(self):
         self.update_done()
-        if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
+        if len(self.outer_crd) > 0 or len(self.inner_crd) > 0:
             self.block_start = False
 
         icrd = ""

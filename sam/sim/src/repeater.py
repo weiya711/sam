@@ -84,7 +84,8 @@ class Repeat(Primitive):
                     self.curr_out_ref = self.curr_in_ref
                     self.emit_stkn = True
                 else:
-                    assert is_0tkn(self.curr_in_ref), "Next ref should only be int or 0tkn but is " + str(self.curr_in_ref)
+                    assert is_0tkn(self.curr_in_ref), "Next ref should only be int or 0tkn but is " + str(
+                        self.curr_in_ref)
                     if len(self.in_ref) > 0:
                         next_in = self.in_ref[0]
                         if is_stkn(next_in):
@@ -187,7 +188,6 @@ class RepeatSigGen(Primitive):
         self.update_done()
         if len(self.istream) > 0:
             self.block_start = False
-
 
         istream = ''
 

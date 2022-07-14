@@ -2,6 +2,7 @@ import argparse
 import os
 import csv
 
+
 def write_csv(path, outpath):
     with open(outpath, 'w+', newline='') as outcsv:
         writer = csv.writer(outcsv)
@@ -14,8 +15,8 @@ def write_csv(path, outpath):
                 ss01_len = ''
                 if os.path.isfile(filename, 'r'):
                     with open(filename) as f:
-                            last_line = f.readlines()[-1]
-                            ss01_len = last_line
+                        last_line = f.readlines()[-1]
+                        ss01_len = last_line
 
                 ss10_len = ''
                 filename = os.path.join(tensor_dirname, "orig", "ss10", "B1_seg.txt")
@@ -32,6 +33,3 @@ parser.add_argument('target_directory', type=str, help="Directory containing sui
 parser.add_argument('output_csv_name', type=str, help="Name of the CSV to generate")
 args = parser.parse_args()
 write_csv(args.target_directory, args.output_csv_name)
-
-
-

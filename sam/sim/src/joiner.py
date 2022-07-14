@@ -69,7 +69,7 @@ class Intersect2(CrdJoiner2):
         self.zero_token_output = 0
         self.valid_count = 0
         self.stop_count = 0
-        
+
         self.ocrd = ''
         self.oref1 = ''
         self.oref2 = ''
@@ -162,7 +162,7 @@ class Intersect2(CrdJoiner2):
                 self.change_crd2 = True
                 self.run_count = 0
                 if self.ocrd != '':
-                    self.count += 1 
+                    self.count += 1
                 self.max_run_count = max(self.max_run_count, abs(self.run_count))
             elif is_stkn(self.curr_crd1):
                 self._inc2()
