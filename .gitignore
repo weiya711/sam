@@ -24,3 +24,4 @@ compiler/benchmark/
 cmake-build-*/
 
 *.out
+*.svg
