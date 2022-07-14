@@ -41,6 +41,7 @@ class SAMDotGraph():
             for mode, tf_subspec in enumerate(tensor_format[0:len(tensor_format) // 2]):
                 actual_mode = int(tensor_format[mode + len(tensor_format) // 2])
                 self.mode_map[tensor_name][actual_mode] = (mode, tf_subspec)
+                print(self.mode_map)
         self.mode_map_list = []
         self.tensor_list = []
         for tensor, mappings in self.mode_map.items():

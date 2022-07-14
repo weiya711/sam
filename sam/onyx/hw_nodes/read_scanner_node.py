@@ -195,10 +195,14 @@ class ReadScannerNode(HWNode):
         return new_conns
 
     def configure(self, attributes):
+        print(attributes)
         inner_offset = 0
         max_outer_dim = 0
         strides = [0]
         ranges = [1]
+        dense = 0
+        dim_size = 1
+        # This is a fiberwrite's opposing read scanner for comms with GLB
         if attributes['type'].strip('"') == 'fiberwrite':
             # in fiberwrite case, we are in block mode
             mode = attributes['mode'].strip('"')
@@ -210,6 +214,10 @@ class ReadScannerNode(HWNode):
             is_root = 0
         else:
             is_root = int(attributes['root'].strip('"') == 'true')
+            if attributes['format'].strip('"') == 'dense':
+                print("FOUND DENSE")
+                dense = 1
+                dim_size = 10
         do_repeat = 0
         repeat_outer = 0
         repeat_factor = 0
@@ -241,6 +249,8 @@ class ReadScannerNode(HWNode):
             lookup = 0
 
         cfg_kwargs = {
+            'dense': dense,
+            'dim_size': dim_size,
             'inner_offset': inner_offset,
             'max_out': max_outer_dim,
             'strides': strides,
