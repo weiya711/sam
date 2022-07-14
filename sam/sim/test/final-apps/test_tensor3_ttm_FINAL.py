@@ -244,7 +244,7 @@ def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, debug_sim, fill=0):
     sample_dict = fiberlookup_Bi_22.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bi_22" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Bj_18.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bj_18" + "/" + k] = sample_dict[k]

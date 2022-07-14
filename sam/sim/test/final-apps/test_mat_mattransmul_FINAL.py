@@ -121,8 +121,6 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
         if len(in_ref_f) > 0:
             fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
 
-
-
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
 
@@ -239,15 +237,15 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = fiberlookup_Ci_27.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Ci_27" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_fi_28.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_fi_28" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Cj_18.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Cj_18" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_dj_19.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_dj_19" + "/" + k] = sample_dict[k]
@@ -255,7 +253,7 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = unioni_26.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni_26" + "/" + k] = sample_dict[k]
- 
+
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_x0_1" + "/" + k] = sample_dict[k]

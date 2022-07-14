@@ -212,7 +212,7 @@ def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, debug_sim, fi
     sample_dict = fiberlookup_Bi_14.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bi_14" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Ci_15.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Ci_15" + "/" + k] = sample_dict[k]
@@ -232,7 +232,7 @@ def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, debug_sim, fi
     sample_dict = fiberlookup_Ck_9.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Ck_9" + "/" + k] = sample_dict[k]
- 
+
     if check_gold:
         print("Checking gold...")
         check_gold_tensor3_innerprod(frosttname, debug_sim, out_crds, out_segs, out_vals, "none")

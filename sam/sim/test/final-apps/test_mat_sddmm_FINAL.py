@@ -189,7 +189,6 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, debug_sim, fill=0)
     extra_info["result/vals_size"] = len(out_vals)
     extra_info["result/nnz"] = len([x for x in out_vals if x != 0])
 
-
     sample_dict = fiberwrite_X0_2.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_X0_2" + "/" + k] = sample_dict[k]

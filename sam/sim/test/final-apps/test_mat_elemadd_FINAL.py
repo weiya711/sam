@@ -119,7 +119,7 @@ def test_mat_elemadd_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_C_5.update()
         add_3.update()
         fiberwrite_Xvals_0.update()
-        
+
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 

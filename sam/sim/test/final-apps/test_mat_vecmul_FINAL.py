@@ -90,7 +90,6 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
         if len(in_ref_B) > 0:
             fiberlookup_Bj_11.set_in_ref(in_ref_B.pop(0))
 
-
         if len(in_ref_c) > 0:
             fiberlookup_cj_12.set_in_ref(in_ref_c.pop(0))
 
@@ -105,7 +104,6 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
 
         repeat_ci_6.set_in_ref(intersectj_10.out_ref2())
         repeat_ci_6.set_in_repsig(repsiggen_i_7.out_repsig())
-
 
         arrayvals_c_5.set_load(repeat_ci_6.out_ref())
 
@@ -207,15 +205,15 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = fiberlookup_Bj_11.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bi_11" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_cj_12.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_ci_12" + "/" + k] = sample_dict[k]
-    
+
     sample_dict = fiberlookup_Bi_9.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bi_9" + "/" + k] = sample_dict[k]
- 
+
     if check_gold:
         print("Checking gold...")
         check_gold_mat_vecmul_ji(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
