@@ -39,7 +39,7 @@ class IntersectNode(HWNode):
         elif other_type == ReadScannerNode:
             rd_scan = other.get_name()
             out_conn = 0
-            print(edge)
+            # print(edge)
             comment = edge.get_attributes()['comment'].strip('"')
             if "C" in comment or "c" in comment:
                 out_conn = 1
@@ -80,12 +80,12 @@ class IntersectNode(HWNode):
             merge_outer = other.get_outer()
             merge_inner = other.get_inner()
             conn = 0
-            print(edge)
-            print("INTERSECT TO MERGE")
+            # print(edge)
+            # print("INTERSECT TO MERGE")
             comment = edge.get_attributes()['comment'].strip('"')
-            print(comment)
-            print(merge_outer)
-            print(merge_inner)
+            # print(comment)
+            # print(merge_outer)
+            # print(merge_inner)
             if merge_outer in comment:
                 conn = 1
             new_conns = {
@@ -119,8 +119,8 @@ class IntersectNode(HWNode):
         return self.num_inputs_connected
 
     def configure(self, attributes):
-        print("INTERSECT CONFIGURE")
-        print(attributes)
+        # print("INTERSECT CONFIGURE")
+        # print(attributes)
         cmrg_enable = 0
         cmrg_stop_lvl = 0
         type_op = attributes['type'].strip('"')

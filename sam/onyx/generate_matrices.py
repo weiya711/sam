@@ -37,7 +37,6 @@ class MatrixGenerator():
                     ret = os.remove(self.dump_dir + "/" + filename)
         else:
             self.dump_dir = tempfile.gettempdir()
-            # print(f"Using temporary directory - {self.dump_dir}")
 
         if tensor is not None:
             self.array = tensor
@@ -67,12 +66,9 @@ class MatrixGenerator():
 
         # Transpose it first if necessary
         if tpose is True:
-            # print("TPOSING")
-            # print(self.array)
             self.array = numpy.transpose(self.array)
             self.shape = self.array.shape
             self.fiber_tree = FiberTree(tensor=self.array)
-            # print(self.array)
 
         if format is not None:
             self.format = format
@@ -85,9 +81,6 @@ class MatrixGenerator():
             seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
             self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg")
             self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd")
-            # print("SEG/CRD DEPTH 0")
-            # print(seg_arr)
-            # print(coord_arr)
 
             at_vals = False
             i = 1
@@ -106,16 +99,11 @@ class MatrixGenerator():
                 tmp_lvl_list = next_tmp_lvl_list
                 if at_vals:
                     # If at vals, we don't need to dump csf, we have the level
-                    # print(f"VALS DEPTH {i}")
-                    # print(tmp_lvl_list)
                     self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals")
                 else:
                     seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
                     self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg")
                     self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd")
-                    # print(f"SEG/CRD DEPTH {i}")
-                    # print(seg_arr)
-                    # print(coord_arr)
                 i = i + 1
         elif format == "UNC":
             flat_array = []
@@ -205,7 +193,6 @@ def get_runs(v1, v2):
     for idx, val in numpy.ndenumerate(v1):
         v2_val = v2[idx]
         idx = idx[0]
-        # print(f"{idx}: {val}\t{v2_val}")
         if (val == 0 and v2_val != 0) or (val != 0 and v2_val == 0):
             # If run side is 0 and val is 0, we continue,
             if not on_run:
@@ -406,14 +393,9 @@ if __name__ == "__main__":
     numpy.random.seed(seed)
     vec1 = MatrixGenerator(name=name, shape=shape, dump_dir=dump_dir, sparsity=sparsity)
     vec2 = MatrixGenerator(name=f"{name}_alt", shape=shape, dump_dir=dump_dir, sparsity=sparsity)
-    print(vec1)
-    print(vec2)
 
     run_list = get_runs(vec1.get_matrix(), vec2.get_matrix())
-    # print(len(mg.get_matrix().shape))
-    # print(mg)
     # mg.dump_outputs()
-    print(run_list)
 
     avg1 = sum(run_list[0]) / len(run_list[0])
     avg2 = sum(run_list[1]) / len(run_list[1])

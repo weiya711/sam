@@ -100,9 +100,9 @@ class ReadScannerNode(HWNode):
             # Send both....
             isect = other.get_name()
             isect_conn = 0
-            print(edge)
-            print("CHECKING READ TENSOR - INTERSECT")
-            print(self.get_tensor())
+            # print(edge)
+            # print("CHECKING READ TENSOR - INTERSECT")
+            # print(self.get_tensor())
             # comment = edge.get_attributes()['comment'].strip('"')
             if self.get_tensor() == 'C' or self.get_tensor() == 'c':
                 isect_conn = 1
@@ -160,9 +160,9 @@ class ReadScannerNode(HWNode):
         elif other_type == ComputeNode:
             compute = other.get_name()
             compute_conn = 0
-            print(edge)
-            print("CHECKING READ TENSOR - COMPUTE")
-            print(self.get_tensor())
+            # print(edge)
+            # print("CHECKING READ TENSOR - COMPUTE")
+            # print(self.get_tensor())
             if self.get_tensor() == 'C' or self.get_tensor() == 'c':
                 compute_conn = 1
             new_conns = {

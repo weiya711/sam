@@ -36,14 +36,11 @@ class SAMDotGraph():
             tensor_name = tensor.split("=")[0]
             self.mode_map[tensor_name] = {}
             tensor_format = tensor.split("=")[1]
-            print(tensor_name)
-            print(tensor_format)
             if tensor_format == 'none':
                 continue
             for mode, tf_subspec in enumerate(tensor_format[0:len(tensor_format) // 2]):
                 actual_mode = int(tensor_format[mode + len(tensor_format) // 2])
                 self.mode_map[tensor_name][actual_mode] = (mode, tf_subspec)
-        print(self.mode_map)
         self.mode_map_list = []
         self.tensor_list = []
         for tensor, mappings in self.mode_map.items():
@@ -57,8 +54,6 @@ class SAMDotGraph():
 
         for tensor, mappings in self.mode_map.items():
             self.remaining[tensor] = tuple(mappings.items())
-        # print(self.tensor_list)
-        # print(self.mode_map_list)
         # return self.tensor_list, self.mode_map_list
         # return self.mode_map
         return self.remaining
@@ -73,7 +68,6 @@ class SAMDotGraph():
             if 'hwnode' not in node.get_attributes():
                 node.create_attribute_methods(node.get_attributes())
                 n_type = node.get_type().strip('"')
-                # print(n_type)
                 assert n_type != "fiberwrite", "fiberwrite should have been rewritten out..."
                 assert n_type != "fiberlookup", "fiberlookup should have been rewritten out..."
                 assert n_type != "arrayvals", "arrayvals should have been rewritten out..."
@@ -111,7 +105,6 @@ class SAMDotGraph():
         '''
         nodes_to_proc = []
         for node in self.graph.get_nodes():
-            # print(node)
             if 'broadcast' in node.get_attributes()['type'].strip('"'):
                 nodes_to_proc.append(node.get_name())
         # Now we have the broadcast node - want to find the incoming edge and redirect to the destinations
@@ -156,7 +149,6 @@ class SAMDotGraph():
         '''
         nodes_to_proc = []
         for node in self.graph.get_nodes():
-            # print(node)
             if 'repsiggen' in node.get_attributes()['type'].strip('"'):
                 nodes_to_proc.append(node)
         # Now we have the rep sig gen - want to find the incoming edge from the broadcast node
@@ -168,17 +160,14 @@ class SAMDotGraph():
             # Find the upstream broadcast node
             broadcast_nodes = []
             for edge in self.graph.get_edges():
-                # print(edge)
                 source_node = edge.get_source()
                 source_node = self.graph.get_node(source_node)[0]
-                # print(source_node)
                 if "broadcast" in source_node.get_attributes()['type'].strip('"') and \
                         edge.get_destination() == rsg_node.get_name():
                     broadcast_nodes.append(source_node)
 
             # Leave early.
             if len(broadcast_nodes) == 0:
-                # print(f"NO BROADCAST NODES?")
                 return
             bc_node = broadcast_nodes[0]
             # Now that we have the broadcast node, get the incoming edge and other outgoing edge
@@ -194,14 +183,9 @@ class SAMDotGraph():
 
             # Now delete the broadcast and all original edge
             ret = self.graph.del_edge(incoming_edge.get_source(), incoming_edge.get_destination())
-            # print(f"DELETED EDGE0? : {ret}")
             ret = self.graph.del_edge(outgoing_edge.get_source(), outgoing_edge.get_destination())
-            # print(f"DELETED EDGE1? : {ret}")
             ret = self.graph.del_edge(other_outgoing_edge.get_source(), other_outgoing_edge.get_destination())
-            # print(f"DELETED EDGE2? : {ret}")
             ret = self.graph.del_node(bc_node)
-
-            # print(f"DELETED NODE? : {ret}")
 
             # ...and add in the new edges
             self.graph.add_edge(og_to_rsg)
@@ -265,7 +249,6 @@ class SAMDotGraph():
                     self.graph.add_edge(mem_to_buff)
                 # Now inject the read scanner to other nodes...
                 rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(), **crd_out_edge.get_attributes())
-                # print(rd_to_down_crd)
                 rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(), **ref_out_edge.get_attributes())
                 self.graph.add_edge(rd_to_down_crd)
                 self.graph.add_edge(rd_to_down_ref)
@@ -382,7 +365,6 @@ class SAMDotGraph():
                 self.graph.add_edge(mem_to_buff)
             # Now inject the read scanner to other nodes...
             # rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(), **crd_out_edge.get_attributes())
-            # print(rd_to_down_crd)
             rd_to_down_val = pydot.Edge(src=rd_scan, dst=val_out_edge.get_destination(), **val_out_edge.get_attributes())
             self.graph.add_edge(rd_to_down_val)
             up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, **ref_in_edge.get_attributes())
