@@ -18,6 +18,7 @@ KERNEL_NAMES=(
   mat_elemmul
   mat_elemadd
   mat_identity
+  mat_identity_dense
   mat_vecmul_ij
   mat_vecmul_ji
   vec_elemmul
@@ -26,6 +27,7 @@ KERNEL_NAMES=(
   vec_scalar_mul
   tensor3_elemmul
   tensor3_identity
+  tensor3_identity_dense
   tensor3_elemadd
   tensor3_innerprod
   tensor3_ttv
@@ -48,6 +50,7 @@ TACO_ARGS=(
   "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss"
   "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss"
   "X(i,j)=B(i,j) -f=X:ss -f=B:ss"
+  "X(i,j)=B(i,j) -f=X:dd -f=B:dd"
   "x(i)=B(i,j)*c(j) -f=x:s -f=B:ss -f=c:s"
   "x(i)=B(i,j)*c(j) -f=x:s -f=B:ss:1,0 -f=c:s -s=reorder(j,i)"
   "x(i)=b(i)*c(i) -f=x:s -f=b:s -f=c:s"
@@ -56,6 +59,7 @@ TACO_ARGS=(
   "x(i)=b*c(i) -f=x:s -f=c:s"
   "X(i,j,k)=B(i,j,k)*C(i,j,k) -f=X:sss -f=B:sss -f=C:sss"
   "X(i,j,k)=B(i,j,k) -f=X:sss -f=B:sss"
+  "X(i,j,k)=B(i,j,k) -f=X:ddd -f=B:ddd"
   "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss"
   "x=B(i,j,k)*C(i,j,k) -f=B:sss -f=C:sss"
   "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"
