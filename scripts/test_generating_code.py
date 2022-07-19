@@ -343,7 +343,10 @@ def output_check_nodes(f, root_nodes):
     f.write(tab(1) + "time_cnt = 0\n")
 
 
-def finish_outputs(f, elements):
+def finish_outputs(f, elements, nodes_completed):
+    for i in nodes_completed:
+        f.write(i)
+    f.write("\n")
     output_list = ""
     # Write done statement
     f.write(tab(2) + "done = ")
@@ -569,6 +572,7 @@ for apath in file_paths:
     root_nodes = []
     output_nodes = {}
     tensor_information = {}
+    nodes_updating_list = []
 
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
@@ -702,13 +706,13 @@ for apath in file_paths:
     intersect_dataset = defaultdict(dict)
     data = CodeGenerationdatasets()
     data.build_datasets(networkx_graph)
-
     for u in networkx_graph.nodes():
         if d[u]["type"] == "fiberlookup" and u not in data.get_if_done():
             if d[u]["root"] == "true":
                 f.write(tab(2) + "if len(in_ref_" + d[u]["tensor"] + ") > 0:\n")
                 f.write(tab(3) + d[u]["object"] + ".set_in_ref(in_ref_" + d[u]["tensor"] + ".pop(0))\n")
-                f.write(tab(2) + d[u]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[u]["object"] + ".update()\n\n")
+                # f.write(tab(2) + d[u]["object"] + ".update()\n\n")
                 data.add_done(u)
 
     for i in range(10):
@@ -725,7 +729,8 @@ for apath in file_paths:
                         f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
                                 d[u_]["object"] + ".out_" +
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
 
             if d[v]["type"] == "repsiggen" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -733,7 +738,8 @@ for apath in file_paths:
                 for u_ in data.get_parents()[v]:
                     f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u_]["object"]).strip('"') +
                             ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "repeat" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -752,7 +758,8 @@ for apath in file_paths:
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) +
                                 "(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")        
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "arrayvals" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -763,7 +770,8 @@ for apath in file_paths:
                                 str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
                     else:
                         f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"] + ".out_ref" + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "intersect" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -775,7 +783,8 @@ for apath in file_paths:
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
                             d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
                     intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "union" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -787,7 +796,8 @@ for apath in file_paths:
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
                             d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
                     intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "crddrop" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -798,7 +808,8 @@ for apath in file_paths:
                         f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     if index_value == d[v]["outer"]:
                         f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "crdhold" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -813,7 +824,8 @@ for apath in file_paths:
                     if index_value == d[v]["outer"]:
                         f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] +
                                 ".out_" + local_edge + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n")
                 data.add_done(v)
 
             if d[v]["type"] == "spaccumulator" and d[v]["order"] == "1" and parents_done(networkx_graph,
@@ -830,7 +842,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
                                 d[u_]["object"] + ".out_val())\n")
-                    f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                 for i in range(len(data.get_parents()[v])):
                     u_ = data.get_parents()[v][i]
@@ -843,7 +856,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
                                 d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "spaccumulator" and d[v]["order"] == "2" and parents_done(networkx_graph,
@@ -860,7 +874,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
                                 d[u_]["object"] + ".out_val())\n")
-                    f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge +  ".update()\n")
+                    #f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                 for i in range(len(data.get_parents()[v])):
                     u_ = data.get_parents()[v][i]
@@ -873,7 +888,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
                                 d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "mul" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -882,7 +898,8 @@ for apath in file_paths:
                     u_ = data.get_parents()[v][i]
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
                             d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "add" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -890,7 +907,8 @@ for apath in file_paths:
                 for u_ in data.get_parents()[v]:
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
                             d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "reduce" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -899,7 +917,8 @@ for apath in file_paths:
                     f.write(tab(2) + d[v]["object"] + ".set_in_" +
                             str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "(" + d[u_]["object"] +
                             ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -917,12 +936,14 @@ for apath in file_paths:
                     if d[v]["mode"] == "vals":
                         f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_info(v, i)) + "())\n")
-                        f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                        # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     else:
                         # print(apath, " ", str(data.get_edge_data()[v][i]))
                         f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_info(v, i)) + "())\n")
-                        f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                        # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
     output_tensor = ""
@@ -933,7 +954,7 @@ for apath in file_paths:
         ct += 1
 
     sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
-    output_list = finish_outputs(f, sorted_nodes)
+    output_list = finish_outputs(f, sorted_nodes, nodes_updating_list)
 
     generate_benchmarking_code(f, tensor_format_parse, out_name[num])
     generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
