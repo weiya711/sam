@@ -15,6 +15,8 @@ class HWNodeType(Enum):
     Compute = 11
     Broadcast = 12
     RepSigGen = 13
+    CrdHold = 14
+    SpAccumulator = 15
 
 
 class HWNode():

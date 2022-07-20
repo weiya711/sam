@@ -90,7 +90,12 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.Intersect"
                 elif n_type == "crddrop":
                     hw_nt = f"HWNodeType.Merge"
+                elif n_type == "crdhold":
+                    hw_nt = f"HWNodeType.CrdHold"
+                elif n_type == "spaccumulator":
+                    hw_nt = f"HWNodeType.SpAccumulator"
                 else:
+                    print(n_type)
                     raise SAMDotGraphLoweringError(f"Node is of type {n_type}")
 
                 node.get_attributes()['hwnode'] = hw_nt
@@ -380,6 +385,29 @@ class SAMDotGraph():
         return self.graph
 
 
+def parse_graph(graph):
+    type_cnt = {}
+    hwnode_cnt = {}
+    for node in graph.get_nodes():
+        attr = node.get_attributes()
+        # print(node)
+        prim_type = attr['type']
+        if prim_type not in type_cnt:
+            type_cnt[prim_type] = 1
+        else:
+            type_cnt[prim_type] += 1
+
+        prim_hwnode = attr['hwnode']
+        if prim_type not in prim_hwnode:
+            hwnode_cnt[prim_type] = 1
+        else:
+            hwnode_cnt[prim_type] += 1
+
+    print("type", type_cnt)
+    print("hwnode", hwnode_cnt)
+    return type_cnt, hwnode_cnt
+
+
 if __name__ == "__main__":
     matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "tensor3_elemmul.gv"
     # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
@@ -388,6 +416,7 @@ if __name__ == "__main__":
     sdg = SAMDotGraph(filename=matmul_dot, use_fork=True)
     graph = sdg.get_graph()
     print(graph)
+    # parse_graph(graph)
     graph.write_png('output.png')
     output_graphviz = graph.create_dot()
     graph.write_dot(temp_out)
