@@ -105,7 +105,7 @@ class MatrixGenerator():
                     self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg")
                     self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd")
                 i = i + 1
-        elif format == "UNC":
+        elif self.format == "UNC":
             flat_array = []
             for val in numpy.nditer(self.array):
                 flat_array.append(val)

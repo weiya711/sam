@@ -86,7 +86,8 @@ class IntersectNode(HWNode):
             # print(comment)
             # print(merge_outer)
             # print(merge_inner)
-            if merge_outer in comment:
+            mapped_to_conn = comment.split("-")[1]
+            if merge_outer in mapped_to_conn:
                 conn = 1
             new_conns = {
                 f'isect_to_merger_{conn}': [
