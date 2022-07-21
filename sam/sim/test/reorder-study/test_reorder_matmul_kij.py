@@ -28,11 +28,9 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-# @pytest.mark.suitesparse
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
-# def test_matmul_kij(samBench, ssname, check_gold, debug_sim, fill=0):
-def test_matmul_kij(samBench, sparsity, check_gold, debug_sim, fill=0):
+def test_reorder_matmul_kij(samBench, sparsity, check_gold, debug_sim, fill=0):
 
     # DCSC
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSC/B_random_sp_{sparsity}/")

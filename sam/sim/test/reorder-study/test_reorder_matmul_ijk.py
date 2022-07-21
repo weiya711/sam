@@ -33,7 +33,7 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
 # def test_matmul_ijk(samBench, ssname, check_gold, debug_sim, fill=0):
-def test_matmul_ijk(samBench, sparsity, check_gold, debug_sim, fill=0):
+def test_reorder_matmul_ijk(samBench, sparsity, check_gold, debug_sim, fill=0):
 
     # DCSR
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
