@@ -298,6 +298,7 @@ def check_gold_mat_vecmul(ssname, debug_sim, out_crds, out_segs, out_val, format
         out_tup = remove_zeros(out_tup)
         assert (check_point_tuple(out_tup, gold_tup))
 
+
 def check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")

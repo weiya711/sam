@@ -758,7 +758,7 @@ for apath in file_paths:
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) +
                                 "(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")        
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                 # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
@@ -874,8 +874,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
                                 d[u_]["object"] + ".out_val())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge +  ".update()\n")
-                    #f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                 for i in range(len(data.get_parents()[v])):
                     u_ = data.get_parents()[v][i]

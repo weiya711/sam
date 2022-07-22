@@ -47,7 +47,7 @@ def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
                     labelIdx = header.index("label", 0)
                 for row in reader:
                     # if taco and "SKIPPED" not in row[labelIdx]:
-                        # validLabels.add(row[labelIdx])
+                    #   validLabels.add(row[labelIdx])
                     row.append(fname)
                     writer.writerow(row)
     # Write out the set of valid labels.

@@ -1,6 +1,7 @@
 from .base import *
 from .repeater import RepeatSigGen, Repeat
 
+
 class CrdDrop(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -129,7 +130,8 @@ class CrdDrop(Primitive):
         print("CrdDrop Outer crd fifo size: ", self.outer_crd_fifo)
 
     def return_statistics(self):
-        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo": self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
+        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo":
+                self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
         stats_dict.update(super().return_statistics())
         return stats_dict
 
