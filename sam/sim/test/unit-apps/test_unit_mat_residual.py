@@ -79,7 +79,7 @@ arr_dict5 = {"shape": [16, 16],
 
 
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
-def test_unit_mat_residual_direct(samBench, arrs, check_gold, debug_sim, fill=0):
+def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, fill=0):
     C_shape = copy.deepcopy(arrs["shape"])
 
     C_seg0 = copy.deepcopy(arrs["mi_seg"])

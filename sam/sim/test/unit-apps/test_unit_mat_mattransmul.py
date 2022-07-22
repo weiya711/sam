@@ -54,7 +54,7 @@ arr_dict2 = {"vi_seg": [0, 5],
     reason='CI lacks datasets',
 )
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2])
-def test_mat_mattransmul_direct(samBench, arrs, check_gold, debug_sim, fill=0):
+def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
     C_shape = (16, 16)
 
     C_seg1 = copy.deepcopy(arrs["mi_seg"])
