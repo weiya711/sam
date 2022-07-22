@@ -433,19 +433,19 @@ class FormatWriter:
 
         filename = os.path.join(dcsc_dir, tensorname + "1_seg.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.seg1))
+            ofile.write(array_newline_str(dcsc.seg0))
 
         filename = os.path.join(dcsc_dir, tensorname + "1_crd.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.crd1))
+            ofile.write(array_newline_str(dcsc.crd0))
 
         filename = os.path.join(dcsc_dir, tensorname + "0_seg.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.seg0))
+            ofile.write(array_newline_str(dcsc.seg1))
 
         filename = os.path.join(dir_path, tensorname + "0_crd.txt")
         with open(filename, "w") as ofile:
-            ofile.write(array_newline_str(dcsc.crd0))
+            ofile.write(array_newline_str(dcsc.crd1))
             os.symlink(filename, os.path.join(dcsc_dir, tensorname + "0_crd.txt"))
             os.symlink(filename, os.path.join(csc_dir, tensorname + "0_crd.txt"))
 
@@ -591,7 +591,7 @@ def parse_taco_format(infilename, outdir, tensorname, format_str):
 
                     if level_done:
                         # This is a values array
-                        valfile = os.path.join(outdir, tensorname + '_val.txt')
+                        valfile = os.path.join(outdir, tensorname + '_vals.txt')
                         with open(valfile, 'w+') as valf:
                             valf.write(array_newline_str(line))
                     else:

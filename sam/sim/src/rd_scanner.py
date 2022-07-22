@@ -10,13 +10,13 @@ class CrdRdScan(Primitive, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.curr_ref = 'S0'
-        self.curr_crd = 'S0'
+        self.curr_ref = ''
+        self.curr_crd = ''
 
         self.in_ref = []
 
     def set_in_ref(self, in_ref):
-        if in_ref != '':
+        if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
 
     def out_ref(self):
@@ -38,23 +38,17 @@ class UncompressCrdRdScan(CrdRdScan):
 
         self.meta_dim = dim
 
-    def update(self):
+        self.end_fiber = False
+        self.emit_tkn = False
 
-        # run out of coordinates, move to next input reference
-        if self.curr_crd == '' or self.curr_crd == 'D':
-            self.curr_crd = ''
-            self.curr_ref = ''
-        elif is_stkn(self.curr_crd):
-            self.curr_in_ref = self.in_ref.pop(0)
-            if self.curr_in_ref == 'D':
-                self.curr_crd = 'D'
-                self.curr_ref = 'D'
-                self.done = True
-                return
-            else:
-                self.curr_crd = 0
-                self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
-        elif self.curr_crd >= self.meta_dim - 1:
+        self.begin = True
+
+    def update(self):
+        self.update_done()
+        if len(self.in_ref) > 0:
+            self.block_start = False
+
+        if self.emit_tkn and len(self.in_ref) > 0:
             next_in = self.in_ref[0]
             if is_stkn(next_in):
                 self.in_ref.pop(0)
@@ -63,13 +57,82 @@ class UncompressCrdRdScan(CrdRdScan):
                 stkn = 'S0'
             self.curr_crd = stkn
             self.curr_ref = stkn
+            self.emit_tkn = False
+            return
+        elif self.end_fiber and len(self.in_ref) > 0:
+            self.curr_in_ref = self.in_ref.pop(0)
+            if self.curr_in_ref == 'D':
+                self.curr_crd = 'D'
+                self.curr_ref = 'D'
+                self.done = True
+                self.end_fiber = False
+                return
+            elif is_stkn(self.curr_in_ref):
+                if len(self.in_ref) > 0:
+                    next_in = self.in_ref[0]
+                    if is_stkn(next_in):
+                        self.in_ref.pop(0)
+                        stkn = increment_stkn(next_in)
+                    else:
+                        stkn = 'S0'
+                    self.curr_crd = stkn
+                    self.curr_ref = stkn
+                else:
+                    self.curr_crd = ''
+                    self.curr_ref = ''
+                    self.emit_tkn = True
+            else:
+                self.curr_crd = 0
+                self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
+                self.end_fiber = False
+                return
+        elif self.end_fiber or self.emit_tkn:
+            self.curr_crd = ''
+            self.curr_ref = ''
+            return
+
+        if is_stkn(self.curr_crd) or self.begin:
+            self.begin = False
+            if len(self.in_ref) > 0:
+                self.curr_in_ref = self.in_ref.pop(0)
+                if self.curr_in_ref == 'D':
+                    self.curr_crd = 'D'
+                    self.curr_ref = 'D'
+                    self.done = True
+                    return
+                else:
+                    self.curr_crd = 0
+                    self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
+            else:
+                self.curr_crd = ''
+                self.curr_ref = ''
+                self.end_fiber = True
+        # run out of coordinates, move to next input reference
+        elif self.curr_crd == '' or self.curr_crd == 'D':
+            self.curr_crd = ''
+            self.curr_ref = ''
+        elif self.curr_crd >= self.meta_dim - 1:
+            if len(self.in_ref) > 0:
+                next_in = self.in_ref[0]
+                if is_stkn(next_in):
+                    self.in_ref.pop(0)
+                    stkn = increment_stkn(next_in)
+                else:
+                    stkn = 'S0'
+                self.curr_crd = stkn
+                self.curr_ref = stkn
+            else:
+                self.curr_crd = ''
+                self.curr_ref = ''
+                self.emit_tkn = True
         else:
             self.curr_crd += 1
             self.curr_ref = self.curr_crd + self.curr_in_ref * self.meta_dim
 
         if self.debug:
             print("DEBUG: U RD SCAN: \t "
-                  "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
+                  "Curr inref:", self.curr_in_ref, "\tEmit tkn:", self.emit_tkn, "\tEnd Fiber", self.end_fiber,
+                  "\nCurr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
 
 
 def last_stkn(skiplist):
@@ -110,7 +173,18 @@ class CompressedCrdRdScan(CrdRdScan):
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
 
+        # Statistics
+        self.unique_refs = []
+        self.unique_crds = []
+        self.total_outputs = 0
+        self.elements_skipped = 0
+        self.skip_cnt = 0
+        self.intersection_behind_cnt = 0
+        self.fiber_behind_cnt = 0
+
         self.begin = True
+
+        self.stop_count = 0
 
     def _emit_stkn_code(self):
         self.end_fiber = True
@@ -134,8 +208,26 @@ class CompressedCrdRdScan(CrdRdScan):
     def _set_curr(self):
         self.curr_ref = self.curr_addr
         self.curr_crd = self.crd_arr[self.curr_addr]
+        if self.curr_ref not in self.unique_refs:
+            self.unique_refs.append(self.curr_ref)
+        if self.curr_crd not in self.unique_crds:
+            self.unique_crds.append(self.curr_crd)
+        self.total_outputs += 1
+
+    def return_statistics(self):
+        dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
+               "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
+               "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
+               "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
+               "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count}
+        dic.update(super().return_statistics())
+        return dic
 
     def update(self):
+        self.update_done()
+        if len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0):
+            self.block_start = False
+
         # Process skip token first and save
         if len(self.in_crd_skip) > 0 and self.skip_processed:
             self.curr_skip = self.in_crd_skip.pop(0)
@@ -143,9 +235,11 @@ class CompressedCrdRdScan(CrdRdScan):
                     and self.curr_skip < self.prev_crd:
                 # ignore the skip if it's too small
                 self.skip_processed = True
+                self.intersection_behind_cnt += 1
             elif self.skip_stkn_cnt < self.out_stkn_cnt:
                 # ignore the skip if it's a fiber behind
                 self.skip_processed = True
+                self.fiber_behind_cnt += 1
             else:
                 self.skip_processed = False
 
@@ -203,7 +297,13 @@ class CompressedCrdRdScan(CrdRdScan):
 
             # See 'N' 0-token which immediately emits a stop token and ends the fiber
             elif is_0tkn(curr_in_ref):
-                self._emit_stkn_code()
+                self.curr_crd = 'N'
+                self.curr_ref = 'N'
+                self.end_fiber = True
+                self.emit_fiber_stkn = True
+                self.curr_addr = 0
+                self.stop_addr = 0
+                self.start_addr = 0
 
             # Default case where input reference is an integer value
             # which means to get the segment
@@ -230,16 +330,22 @@ class CompressedCrdRdScan(CrdRdScan):
                             if self.curr_skip in curr_range:
                                 self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
                                 self._set_curr()
+                                self.elements_skipped += curr_range.index(self.curr_skip) + 1
+                                self.skip_cnt += 1
 
                             # Else emit smallest coordinate larger than the one provided by skip
                             else:
                                 larger = [i for i in curr_range if i > self.curr_skip]
                                 if not larger:
                                     self._emit_stkn_code()
+                                    self.elements_skipped += len(curr_range)
+                                    self.skip_cnt += 1
                                 else:
                                     val_larger = min(larger)
                                     self.curr_addr = curr_range.index(val_larger) + self.start_addr
                                     self._set_curr()
+                                    self.elements_skipped += curr_range.index(val_larger) + 1
+                                    self.skip_cnt += 1
 
                         # Early exit from skip
                         elif is_stkn(self.curr_skip):
@@ -268,16 +374,22 @@ class CompressedCrdRdScan(CrdRdScan):
                     if self.curr_skip in curr_range:
                         self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
                         self._set_curr()
+                        self.elements_skipped += curr_range.index(self.curr_skip) + 1
+                        self.skip_cnt += 1
 
                     # Else emit smallest coordinate larger than the one provided by skip
                     else:
                         larger = [i for i in curr_range if i > self.curr_skip]
                         if not larger:
                             self._emit_stkn_code()
+                            self.elements_skipped += len(curr_range)
+                            self.skip_cnt += 1
                         else:
                             val_larger = min(larger)
                             self.curr_addr = curr_range.index(val_larger) + self.start_addr
                             self._set_curr()
+                            self.elements_skipped += curr_range.index(val_larger) + 1
+                            self.skip_cnt += 1
 
                     default_behavior = False
                 elif is_stkn(self.curr_skip):
@@ -304,6 +416,9 @@ class CompressedCrdRdScan(CrdRdScan):
         # Needed for skip lists
         if isinstance(self.curr_crd, int):
             self.prev_crd = self.curr_crd
+
+        if is_stkn(self.curr_crd):
+            self.stop_count += 1
 
         # Debugging print statements
         if self.debug:
@@ -456,8 +571,8 @@ class CompressedCrdRdScan(CrdRdScan):
                   "\t end fiber:", self.end_fiber, "\t curr input:", curr_in_ref)
 
     def set_crd_skip(self, in_crd):
-        assert is_valid_crd(in_crd)
-        if in_crd != '':
+        assert in_crd is None or is_valid_crd(in_crd)
+        if in_crd != '' and in_crd is not None:
             if is_stkn(in_crd):
                 idx = last_stkn(self.in_crd_skip)
                 if idx is not None:
@@ -478,7 +593,7 @@ class BVRdScanSuper(Primitive, ABC):
         self.in_ref = []
 
     def set_in_ref(self, in_ref):
-        if in_ref != '':
+        if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
 
     def out_ref(self):
@@ -514,6 +629,10 @@ class BVRdScan(BVRdScanSuper):
         return bits
 
     def update(self):
+        self.update_done()
+        if len(self.in_ref) > 0:
+            self.block_start = False
+
         curr_in_ref = None
         if self.curr_bv == 'D' or self.curr_ref == 'D' or self.done:
             self.curr_addr = 0

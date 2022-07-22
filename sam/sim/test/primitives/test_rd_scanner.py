@@ -9,6 +9,7 @@ from sam.sim.src.base import remove_emptystr
 ########################################
 # Uncompressed Read Scanner Unit Tests #
 ########################################
+
 @pytest.mark.parametrize("dim", [1, 2, 4, 16, 32, 100])
 def test_rd_scan_u_direct_1d(dim, debug_sim):
     gold_crd = [x for x in range(dim)]
@@ -172,17 +173,17 @@ def test_rd_scan_c_direct_nd(arrs, debug_sim):
 
 
 arr_dict1 = {"seg": [0, 2, 3, 4], "crd": [0, 1, 2, 3], "in_ref": [0, 1, 'N', 2, 'N', 'S0', 'D'],
-             "out_crd": [0, 1, 'S0', 2, 'S0', 'S0', 3, 'S0', 'S1', 'D'],
-             "out_ref": [0, 1, 'S0', 2, 'S0', 'S0', 3, 'S0', 'S1', 'D']}
+             "out_crd": [0, 1, 'S0', 2, 'S0', 'N', 'S0', 3, 'S0', 'N', 'S1', 'D'],
+             "out_ref": [0, 1, 'S0', 2, 'S0', 'N', 'S0', 3, 'S0', 'N', 'S1', 'D']}
 arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 'N', 1, 'N', 2, 'S0', 'D'],
-             "out_crd": [0, 2, 3, 'S0', 'S0', 0, 'S0', 'S0', 2, 3, 'S1', 'D'],
-             "out_ref": [0, 1, 2, 'S0', 'S0', 3, 'S0', 'S0', 4, 5, 'S1', 'D']}
+             "out_crd": [0, 2, 3, 'S0', 'N', 'S0', 0, 'S0', 'N', 'S0', 2, 3, 'S1', 'D'],
+             "out_ref": [0, 1, 2, 'S0', 'N', 'S0', 3, 'S0', 'N', 'S0', 4, 5, 'S1', 'D']}
 arr_dict3 = {"seg": [0, 4, 5, 5, 7, 10, 11], "crd": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
              "in_ref": [0, 1, 'N', 'N', 'S0', 2, 3, 'S0', 'N', 'N', 'S0', 4, 5, 'S0', 'N', 'N', 'S1', 'D'],
-             "out_crd": [0, 1, 2, 3, 'S0', 4, 'S0', 'S0', 'S1', 'S0', 5, 6, 'S1', 'S0', 'S1', 7, 8, 9, 'S0', 10,
-                         'S1', 'S0', 'S2', 'D'],
-             "out_ref": [0, 1, 2, 3, 'S0', 4, 'S0', 'S0', 'S1', 'S0', 5, 6, 'S1', 'S0', 'S1', 7, 8, 9, 'S0', 10,
-                         'S1', 'S0', 'S2', 'D']}
+             "out_crd": [0, 1, 2, 3, 'S0', 4, 'S0', 'N', 'S0', 'N', 'S1', 'S0', 5, 6, 'S1', 'N', 'S0', 'N', 'S1',
+                         7, 8, 9, 'S0', 10, 'S1', 'N', 'S0', 'N', 'S2', 'D'],
+             "out_ref": [0, 1, 2, 3, 'S0', 4, 'S0', 'N', 'S0', 'N', 'S1', 'S0', 5, 6, 'S1', 'N', 'S0', 'N', 'S1',
+                         7, 8, 9, 'S0', 10, 'S1', 'N', 'S0', 'N', 'S2', 'D']}
 
 
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3])

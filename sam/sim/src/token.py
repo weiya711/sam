@@ -11,6 +11,10 @@ class StknDrop(Primitive):
         self.curr_out = ''
 
     def update(self):
+        self.update_done()
+        if len(self.in_stream) > 0:
+            self.block_start = False
+
         ival = ''
 
         if self.done:
@@ -30,7 +34,7 @@ class StknDrop(Primitive):
             print("Curr InnerCrd:", ival, "\t Curr OutputCrd:", self.curr_out)
 
     def set_in_stream(self, val):
-        if val != '':
+        if val != '' and val is not None:
             self.in_stream.append(val)
 
     def out_val(self):
@@ -52,6 +56,10 @@ class EmptyFiberStknDrop(Primitive):
         self.curr_out = ''
 
     def update(self):
+        self.update_done()
+        if len(self.in_stream) > 0:
+            self.block_start = False
+
         ival = ''
 
         if self.done:
@@ -97,7 +105,7 @@ class EmptyFiberStknDrop(Primitive):
 
     # This can be both val or crd
     def set_in_stream(self, val):
-        if val != '':
+        if val != '' and val is not None:
             self.in_stream.append(val)
 
     def out_val(self):

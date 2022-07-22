@@ -2,6 +2,7 @@ import copy
 import random
 import numpy as np
 from functools import reduce
+import math
 
 from sam.sim.src.wr_scanner import WrScan, CompressWrScan
 from sam.sim.src.array import Array
@@ -217,6 +218,48 @@ def gen_val_arr(size=4, max_val=100, min_val=-100):
     return result
 
 
+def round_sparse(x):
+    if 0.0 <= x < 1:
+        return 1
+    elif 0.0 > x > -1:
+        return -1
+    elif x >= 0.0:
+        return math.floor(x + 0.5)
+    else:
+        return math.ceil(x - 0.5)
+
+
+class TnsFileLoader:
+    def __init__(self, cast_int=True):
+        self.cast = cast_int
+
+    def load(self, path):
+        coordinates = []
+        values = []
+        dims = []
+        first = True
+        with open(path, 'r') as f:
+            for line in f:
+                data = line[:-1].split(' ')
+                if first:
+                    first = False
+                    dims = [0] * (len(data) - 1)
+                    for i in range(len(data) - 1):
+                        coordinates.append([])
+                data = [elem for elem in data if elem != '']
+
+                for i in range(len(data) - 1):
+                    coordinates[i].append(int(data[i]) - 1)
+                    dims[i] = max(dims[i], coordinates[i][-1] + 1)
+                # TODO (rohany): What if we want this to be an integer?
+                if self.cast:
+                    val = round_sparse(float(data[-1]))
+                    values.append(val)
+                else:
+                    values.append(float(data[-1]))
+        return dims, coordinates, values
+
+
 def read_combined_inputs(filename, formatlist):
     return_list = []
     with open(filename) as file:
@@ -248,11 +291,17 @@ def read_combined_inputs(filename, formatlist):
     return return_list
 
 
-def read_inputs(filename, intype=int):
+def read_inputs(filename, intype=int, base=10, early_terminate=None):
     return_list = []
     with open(filename) as f:
         for line in f:
-            return_list.append(intype(line))
+            if early_terminate is not None:
+                if early_terminate in line:
+                    break
+            if base == 16:
+                return_list.append(intype(line, base))
+            else:
+                return_list.append(intype(line))
     return return_list
 
 

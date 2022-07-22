@@ -4,7 +4,7 @@
 outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 
 DATASET_NAMES=(
-  bcsstm04
+#  bcsstm04
   bcsstm02
   bcsstm03
   lpi_bgprtr
@@ -14,14 +14,14 @@ DATASET_NAMES=(
   GD95_b
   Hamrle1
   LF10
+  lpi_itest2
+  lp_scsd1
 )
 
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-export SUITESPARSE_FORMATTED_PATH=$outdir
 
 mkdir -p $outdir
 cd ./sam/sim
@@ -31,11 +31,11 @@ for i in ${!DATASET_NAMES[@]}; do
 
     echo "Testing $name..."
 
-    pytest -k test_matmul_ --ssname $name -s  #--debug-sim 
+    pytest ./test/final-apps --ssname $name -s --check-gold #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 
-      errors+=("${name} matmul_ijk")
+      errors+=("${name}")
     fi
  
 

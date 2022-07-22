@@ -20,10 +20,17 @@ class Array(Primitive):
         self.store_vals_size = 0
         self.load_en = False
         self.store_en = False
+        self.address_seen = []
+
+        self.valid_loads = 0
 
         self.curr_load = ''
 
     def update(self):
+        self.update_done()
+        if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
+            self.block_start = False
+
         if self.load_en and len(self.load_addrs) > 0:
             self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
             self.curr_load = self.load(self.load_addrs.pop(0))
@@ -38,14 +45,14 @@ class Array(Primitive):
             self.store_en = False
 
     def set_load(self, addr):
-        if addr != '':
+        if addr != '' and addr is not None:
             self.load_en = True
             self.load_addrs.append(addr)
         else:
             self.load_en = False
 
     def set_store(self, addr, vals):
-        if addr != '' and vals != '':
+        if addr != '' and vals != '' and addr is not None and vals is not None:
             self.store_en = True
             self.store_vals.append((addr, vals))
         else:
@@ -74,7 +81,10 @@ class Array(Primitive):
             raise Exception("Address (" + str(addr) + ") is out of array size (" +
                             str(self.size) + ") bounds, please resize")
         else:
+            if addr not in self.address_seen:
+                self.address_seen.append(addr)
             val = self.arr[addr]
+            self.valid_loads += 1
 
         if self.debug:
             print("DEBUG: ARRAY LD:", "\t Addr:", addr, "\t Val:", val)
@@ -92,8 +102,10 @@ class Array(Primitive):
             self.done = True
             return
         elif addr >= self.size:
-            raise Exception("Address (" + str(addr) + ") is out of array size (" +
-                            str(self.size) + ") bounds, please resize")
+            self.resize(addr * 2)
+            self.arr[addr] = val
+            # raise Exception("Address (" + str(addr) + ") is out of array size (" +
+            #                 str(self.size) + ") bounds, please resize")
         else:
             self.arr[addr] = val
 
@@ -116,7 +128,9 @@ class Array(Primitive):
         self.arr = [fill for _ in range(self.size)]
 
     def return_statistics(self):
-        stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size}
+        stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size,
+                      "elements_touched": len(self.address_seen), "valid_loads": self.valid_loads}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
     def print_fifos(self):

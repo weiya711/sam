@@ -16,7 +16,8 @@ import os
 import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -24,8 +25,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ssname, "orig", "s0")
+def test_vec_elemadd(samBench, vecname, check_gold, debug_sim, fill=0):
+    b_dirname = os.path.join(formatted_dir, vecname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
 
@@ -37,7 +38,7 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "shift", "s0")
+    c_dirname = os.path.join(formatted_dir, vecname, "shift", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -72,8 +73,6 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberlookup_ci_7.update()
 
         unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
-        unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
-        unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
         unioni_5.update()
 
@@ -102,31 +101,32 @@ def test_vec_elemadd(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
+
     def bench():
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = vecname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_b_shape"] = b_shape
     extra_info["tensor_c_shape"] = c_shape
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_b_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_b_3" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_b_3" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_c_4.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_c_4" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_c_4" + "_" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")
-        check_gold_vec_elemadd(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_vec_elemadd(vecname, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

@@ -40,6 +40,9 @@ else ifeq ("$(LANKA)", "ON")
 	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
 	export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
 	export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
+	export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
+	export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
+	export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
 else
 	CMD := LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
 endif
@@ -104,7 +107,7 @@ suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
 	set -e && ./scripts/generate_suitesparse_formats.sh
 
-frostt-formats: env taco/build guard-FROSTT_FORMATTED_PATH guard-FROSTT_PATH
+frostt-formats: taco/build guard-FROSTT_FORMATTED_PATH guard-FROSTT_PATH
 	./scripts/generate_frostt_formats.sh
 
 .PHONY: env

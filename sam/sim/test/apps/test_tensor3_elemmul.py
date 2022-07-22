@@ -16,7 +16,7 @@ import os
 import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -24,8 +24,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "sss012")
+def test_tensor3_elemmul(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -47,7 +47,7 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "shift", "sss012")
+    C_dirname = os.path.join(formatted_dir, frosttname, "shift", "sss012")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -82,7 +82,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
     arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
     crddrop_7 = CrdDrop(debug=debug_sim)
-    fiberwrite_X2_1 = CompressWrScan(seg_size=B_shape[0] * B_shape[1] + 1, size=B_shape[0] * B_shape[1] * B_shape[2], fill=fill, debug=debug_sim)
+    fiberwrite_X2_1 = CompressWrScan(seg_size=B_shape[0] * B_shape[1] + 1,
+                                     size=B_shape[0] * B_shape[1] * B_shape[2], fill=fill, debug=debug_sim)
     mul_4 = Multiply2(debug=debug_sim)
     fiberwrite_X0_3 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
     fiberwrite_X1_2 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
@@ -127,6 +128,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
         crddrop_8.set_outer_crd(intersectj_12.out_crd())
         crddrop_8.set_inner_crd(intersectk_9.out_crd())
+        crddrop_8.update()
+
         arrayvals_B_5.set_load(intersectk_9.out_ref1())
         arrayvals_B_5.update()
 
@@ -142,6 +145,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
         crddrop_7.set_outer_crd(intersecti_15.out_crd())
         crddrop_7.set_inner_crd(crddrop_8.out_crd())
+        crddrop_7.update()
+
         fiberwrite_X0_3.set_input(crddrop_7.out_crd_outer())
         fiberwrite_X0_3.update()
 
@@ -151,7 +156,8 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_X2_1.set_input(crddrop_8.out_crd_inner())
         fiberwrite_X2_1.update()
 
-        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_X2_1.out_done() and fiberwrite_X0_3.out_done() and \
+            fiberwrite_X1_2.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 
     fiberwrite_X0_3.autosize()
@@ -162,59 +168,60 @@ def test_tensor3_elemmul(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr(), fiberwrite_X2_1.get_arr()]
     out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr(), fiberwrite_X2_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+
     def bench():
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
     sample_dict = intersecti_15.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersecti_15" + "_" + k] =  sample_dict[k]
+        extra_info["intersecti_15" + "_" + k] = sample_dict[k]
 
     sample_dict = crddrop_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["crddrop_7" + "_" + k] =  sample_dict[k]
+        extra_info["crddrop_7" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_X0_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X0_3" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_X0_3" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_X1_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X1_2" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_X1_2" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectj_12.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_12" + "_" + k] =  sample_dict[k]
+        extra_info["intersectj_12" + "_" + k] = sample_dict[k]
 
     sample_dict = crddrop_8.return_statistics()
     for k in sample_dict.keys():
-        extra_info["crddrop_8" + "_" + k] =  sample_dict[k]
+        extra_info["crddrop_8" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_X2_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X2_1" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_X2_1" + "_" + k] = sample_dict[k]
 
     sample_dict = intersectk_9.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectk_9" + "_" + k] =  sample_dict[k]
+        extra_info["intersectk_9" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_B_5.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_B_5" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_B_5" + "_" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_Xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
 
     sample_dict = arrayvals_C_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_C_6" + "_" + k] =  sample_dict[k]
+        extra_info["arrayvals_C_6" + "_" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_elemmul(ssname, debug_sim, out_crds, out_segs, out_vals, "sss012")
+        check_gold_tensor3_elemmul(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
     samBench(bench, extra_info)

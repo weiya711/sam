@@ -19,6 +19,10 @@ class Flatten(Primitive):
         self.split_factor = split_factor
 
     def update(self):
+        self.update_done()
+        if len(self.in_inner_crd) > 0 or len(self.in_outer_crd) > 0:
+            self.block_start = False
+
         if self.done:
             self.curr_crd = ''
             return
@@ -59,11 +63,11 @@ class Flatten(Primitive):
                   )
 
     def set_in_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.in_inner_crd.append(crd)
 
     def set_in_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.in_outer_crd.append(crd)
 
     def out_crd(self):

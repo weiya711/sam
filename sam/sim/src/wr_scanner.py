@@ -1,3 +1,5 @@
+from abc import ABC
+
 from .base import *
 from sam.sim.src.array import Array
 
@@ -14,9 +16,9 @@ class WrScan(Primitive, ABC):
 
     def set_input(self, val):
         # Make sure streams have correct token type
-        assert (isinstance(val, int) or isinstance(val, float) or val in valid_tkns)
+        assert (isinstance(val, int) or isinstance(val, float) or val in valid_tkns or val is None)
 
-        if val != '':
+        if val != '' and val is not None:
             self.input.append(val)
 
     def clear_arr(self):
@@ -41,6 +43,10 @@ class ValsWrScan(WrScan):
         self.curr_addr = 0
 
     def update(self):
+        self.update_done()
+        if (len(self.input) > 0):
+            self.block_start = False
+
         if len(self.input) > 0:
             val = self.input.pop(0)
 
@@ -60,8 +66,8 @@ class ValsWrScan(WrScan):
         self.resize_arr(self.curr_addr)
 
     def return_statistics(self):
-        stats_dict = {}
-        stats_dict["size"] = self.curr_addr
+        stats_dict = {"size": self.curr_addr}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -82,6 +88,10 @@ class CompressWrScan(WrScan):
         self.seg_arr = Array(size=self.seg_size, fill=0, debug=self.debug)
 
     def update(self):
+        self.update_done()
+        if len(self.input) > 0:
+            self.block_start = False
+
         if len(self.input) > 0:
             in_crd = self.input.pop(0)
 
@@ -130,11 +140,12 @@ class CompressWrScan(WrScan):
         stats_dict = {}
         stats_dict["seg_size"] = self.seg_size
         stats_dict["arr_size"] = self.size
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
 # Unique compressed (not from points)
-class UncompressWrScan(WrScan):
+class UncompressWrScan(WrScan, ABC):
     def __init__(self, seg_size=0, level=0, **kwargs):
         super().__init__(**kwargs)
 
@@ -142,6 +153,10 @@ class UncompressWrScan(WrScan):
         self.dim = ''
 
     def update(self):
+        self.update_done()
+        if len(self.input) > 0:
+            self.block_start = False
+
         if isinstance(self.input, int):
             self.dim = self.input
         elif self.input == 'D':
