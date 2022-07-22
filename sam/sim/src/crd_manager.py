@@ -131,7 +131,7 @@ class CrdDrop(Primitive):
 
     def return_statistics(self):
         stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo":
-                self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
+                      self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
         stats_dict.update(super().return_statistics())
         return stats_dict
 
