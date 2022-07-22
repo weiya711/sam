@@ -9,8 +9,11 @@ frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_el
 suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
                     "matmul_jki", "mat_vecmul_ij", "mat_vecmul_ji", "matmul_kji", "mat_elemadd3", "mat_sddmm.gv",
                     "mat_elemadd", "mat_mattransmul", "mat_residual", "mat_sddmm"]
-vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "mat_vecmul_ij", "mat_vecmul_ji", "vec_identity",
+vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
             "vec_scalar_mul"]
+
+other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij",
+              "mat_vecmul_ji"]
 
 
 class TensorFormat:
@@ -150,8 +153,13 @@ def generate_header(f, out_name):
     f.write("import os\n")
     f.write("import csv\n")
     f.write("cwd = os.getcwd()\n")
-    f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
-    f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
+    if out_name in suitesparse_list:
+        f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
+    elif out_name in frostt_list:
+        f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
+    if out_name in other_list:
+        f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n")
+
     f.write("# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
@@ -163,15 +171,34 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-    f.write("def test_" + out_name + "(samBench, ssname, check_gold, debug_sim, fill=0):\n")
+
+    f.write("def test_" + out_name + "(samBench, ")
+    if out_name in frostt_list:
+        f.write("frosttname, ")
+    elif out_name in suitesparse_list:
+        f.write("ssname, ")
+    elif out_name in vec_list:
+        f.write("vecname, ")
+    f.write("check_gold, debug_sim, fill=0):\n")
 
 
-def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse):
+def get_dataset_name(test_name):
+    if test_name in frostt_list:
+        return "frosttname, "
+    elif test_name in suitesparse_list:
+        return "ssname, "
+    elif test_name in vec_list:
+        return "vecname, "
+    else:
+        return ", "
+
+
+def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name):
     # Assuming tje format is csr and csc:
     for ten in tensor_format_parse.return_all_tensors():
         if tensor_format_parse.get_location(ten) == 0:
             continue
-        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname, \"" +
+        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + "\"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(
             tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
@@ -295,16 +322,17 @@ def gen_data_formats(size, app_name, path):
         if "elemadd" in app_name:
             ans_list = ["orig", "shift"]
             return ans_list
-        if "vecmul" in app_name:
+        if "innerprod" in app_name:
             ans_list = ["orig", "shift"]
             return ans_list
-        else:
-            ans_list = ["dummy", "dummy"]
 
-            return ans_list
+        ans_list = ["orig", "other"]
+
+        return ans_list
     else:
-        for i in range(size - 1):
-            ans_list.append("dummy")
+        ans_list = ["orig"]
+        for i in range(size - 2):
+            ans_list.append("other")
         return ans_list
 
 
@@ -315,7 +343,10 @@ def output_check_nodes(f, root_nodes):
     f.write(tab(1) + "time_cnt = 0\n")
 
 
-def finish_outputs(f, elements):
+def finish_outputs(f, elements, nodes_completed):
+    for i in nodes_completed:
+        f.write(i)
+    f.write("\n")
     output_list = ""
     # Write done statement
     f.write(tab(2) + "done = ")
@@ -382,11 +413,11 @@ def finish_outputs(f, elements):
     return output_list
 
 
-def generate_benchmarking_code(f, tensor_format_parse):
+def generate_benchmarking_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
     f.write(tab(1) + "extra_info = dict()\n")
-    f.write(tab(1) + "extra_info[\"dataset\"] = ssname\n")
+    f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name)[:-2] + "\n")
     f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
     ct = 0
     output_tensor = ""
@@ -405,14 +436,14 @@ def generate_benchmarking_code(f, tensor_format_parse):
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
 
 
-def generate_check_against_gold_code(f, tensor_format_parse):
+def generate_check_against_gold_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "if check_gold:\n")
     f.write(tab(2) + "print(\"Checking gold...\")\n")
     f.write(tab(2) + "check_gold_")
     check = out_name[num]
     if "matmul" in check:
         check = check[:-4]
-    f.write(check + "(ssname, debug_sim, out_crds, out_segs, out_vals, \"" +
+    f.write(check + "(" + get_dataset_name(test_name) + "debug_sim, out_crds, out_segs, out_vals, \"" +
             tensor_format_parse.get_format(output_tensor) + "\")\n")
     f.write(tab(1) + "samBench(bench, extra_info)")
 
@@ -541,6 +572,7 @@ for apath in file_paths:
     root_nodes = []
     output_nodes = {}
     tensor_information = {}
+    nodes_updating_list = []
 
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
@@ -558,7 +590,7 @@ for apath in file_paths:
             tens_fmt[k] = {}
             tens_fmt[k]["information"] = data_formats[ct - 1]
         ct += 1
-    generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse)
+    generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         d[u] = node_info
@@ -651,17 +683,18 @@ for apath in file_paths:
                         array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
-                print(node_info)
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
+                # print(node_info)
+                # f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
+                #        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
+                #        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
+                continue
             if node_info["sink"] == "true":
                 output_nodes[d[u]["object"]] = node_info["mode"]
         else:
             invalid_flag = 1
             print("Error invalid node detected", node_info["type"], "\n")
-    if invalid_flag == 1 or "mat_residual" in apath:
+    if invalid_flag == 1:
         os.system("rm " + out_name[num] + ".py")
         print(out_name[num] + " failed\n")
         num += 1
@@ -673,13 +706,13 @@ for apath in file_paths:
     intersect_dataset = defaultdict(dict)
     data = CodeGenerationdatasets()
     data.build_datasets(networkx_graph)
-
     for u in networkx_graph.nodes():
         if d[u]["type"] == "fiberlookup" and u not in data.get_if_done():
             if d[u]["root"] == "true":
                 f.write(tab(2) + "if len(in_ref_" + d[u]["tensor"] + ") > 0:\n")
                 f.write(tab(3) + d[u]["object"] + ".set_in_ref(in_ref_" + d[u]["tensor"] + ".pop(0))\n")
-                f.write(tab(2) + d[u]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[u]["object"] + ".update()\n\n")
+                # f.write(tab(2) + d[u]["object"] + ".update()\n\n")
                 data.add_done(u)
 
     for i in range(10):
@@ -696,7 +729,8 @@ for apath in file_paths:
                         f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
                                 d[u_]["object"] + ".out_" +
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                    f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
 
             if d[v]["type"] == "repsiggen" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -704,7 +738,8 @@ for apath in file_paths:
                 for u_ in data.get_parents()[v]:
                     f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u_]["object"]).strip('"') +
                             ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "repeat" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -723,7 +758,8 @@ for apath in file_paths:
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) +
                                 "(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")        
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "arrayvals" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -734,7 +770,8 @@ for apath in file_paths:
                                 str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
                     else:
                         f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"] + ".out_ref" + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "intersect" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -746,17 +783,21 @@ for apath in file_paths:
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
                             d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
                     intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "union" and parents_done(networkx_graph, data.get_if_done(), v) and \
                     data.get_if_node_done(v) == 0:
                 for i in range(len(data.get_parents()[v])):
+                    if i % 2 == 1:
+                        continue
                     u_ = data.get_parents()[v][i]
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
                             d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
                     intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "crddrop" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -767,7 +808,8 @@ for apath in file_paths:
                         f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     if index_value == d[v]["outer"]:
                         f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "crdhold" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -782,7 +824,8 @@ for apath in file_paths:
                     if index_value == d[v]["outer"]:
                         f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] +
                                 ".out_" + local_edge + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n")
                 data.add_done(v)
 
             if d[v]["type"] == "spaccumulator" and d[v]["order"] == "1" and parents_done(networkx_graph,
@@ -799,7 +842,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
                                 d[u_]["object"] + ".out_val())\n")
-                    f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                 for i in range(len(data.get_parents()[v])):
                     u_ = data.get_parents()[v][i]
@@ -812,7 +856,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
                                 d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "spaccumulator" and d[v]["order"] == "2" and parents_done(networkx_graph,
@@ -829,7 +874,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
                                 d[u_]["object"] + ".out_val())\n")
-                    f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge +  ".update()\n")
+                    #f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                 for i in range(len(data.get_parents()[v])):
                     u_ = data.get_parents()[v][i]
@@ -842,7 +888,8 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
                                 d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "mul" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -851,7 +898,8 @@ for apath in file_paths:
                     u_ = data.get_parents()[v][i]
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
                             d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "add" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -859,7 +907,8 @@ for apath in file_paths:
                 for u_ in data.get_parents()[v]:
                     f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
                             d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "reduce" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -868,7 +917,8 @@ for apath in file_paths:
                     f.write(tab(2) + d[v]["object"] + ".set_in_" +
                             str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "(" + d[u_]["object"] +
                             ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
             if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, data.get_if_done(), v) and \
@@ -886,12 +936,14 @@ for apath in file_paths:
                     if d[v]["mode"] == "vals":
                         f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_info(v, i)) + "())\n")
-                        f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                        # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     else:
                         # print(apath, " ", str(data.get_edge_data()[v][i]))
                         f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_info(v, i)) + "())\n")
-                        f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                        # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
     output_tensor = ""
@@ -902,10 +954,10 @@ for apath in file_paths:
         ct += 1
 
     sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
-    output_list = finish_outputs(f, sorted_nodes)
+    output_list = finish_outputs(f, sorted_nodes, nodes_updating_list)
 
-    generate_benchmarking_code(f, tensor_format_parse)
-    generate_check_against_gold_code(f, tensor_format_parse)
+    generate_benchmarking_code(f, tensor_format_parse, out_name[num])
+    generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
 
     f.close()
     os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")

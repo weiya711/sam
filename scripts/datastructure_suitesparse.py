@@ -8,7 +8,7 @@ from pathlib import Path
 from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 
 cwd = os.getcwd()
-SS_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(cwd, 'suitesparse'))
+SS_PATH = os.getenv('SUITESPARSE_TENSOR_PATH', default=os.path.join(cwd, 'suitesparse'))
 
 out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -60,7 +60,8 @@ if args.name is None:
     print("Please enter a matrix name")
     exit()
 
-tensor = SuiteSparseTensor(os.path.join(SS_PATH, args.name))
+print(SS_PATH)
+tensor = SuiteSparseTensor(SS_PATH)
 
 if args.format is not None:
     assert args.format in formats

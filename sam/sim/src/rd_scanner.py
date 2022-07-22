@@ -44,6 +44,9 @@ class UncompressCrdRdScan(CrdRdScan):
         self.begin = True
 
     def update(self):
+        self.update_done()
+        if len(self.in_ref) > 0:
+            self.block_start = False
 
         if self.emit_tkn and len(self.in_ref) > 0:
             next_in = self.in_ref[0]
@@ -221,9 +224,9 @@ class CompressedCrdRdScan(CrdRdScan):
         return dic
 
     def update(self):
-        # self.update_done()
-        # if len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0):
-        #     self.block_start = False
+        self.update_done()
+        if len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0):
+            self.block_start = False
 
         # Process skip token first and save
         if len(self.in_crd_skip) > 0 and self.skip_processed:
@@ -626,9 +629,9 @@ class BVRdScan(BVRdScanSuper):
         return bits
 
     def update(self):
-        # self.update_done()
-        # if len(self.in_ref) > 0:
-        #     self.block_start = False
+        self.update_done()
+        if len(self.in_ref) > 0:
+            self.block_start = False
 
         curr_in_ref = None
         if self.curr_bv == 'D' or self.curr_ref == 'D' or self.done:

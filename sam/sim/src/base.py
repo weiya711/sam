@@ -51,8 +51,11 @@ def increment_stkn(elem):
 
 
 def decrement_stkn(elem):
-    assert (stkn_order(elem) > 0)
-    return 'S' + str(stkn_order(elem) - 1)
+    assert (stkn_order(elem) >= 0)
+    if stkn_order(elem) > 0:
+        return 'S' + str(stkn_order(elem) - 1)
+    else:
+        return ''
 
 
 def smaller_stkn(a, b):
@@ -67,6 +70,10 @@ class Primitive(ABC):
     def __init__(self, debug=False, **kwargs):
         self.done = False
         self.debug = debug
+        self.done_cycles = 0
+        self.start_cycle = ''
+        self.total_cycles = 0
+        self.block_start = True
 
     def out_done(self):
         return self.done
@@ -80,6 +87,22 @@ class Primitive(ABC):
 
     def reset(self):
         self.done = False
+
+    def get_done_cycle(self):
+        if self.done:
+            return self.done_cycles
+        else:
+            return ''
+
+    def update_done(self):
+        self.total_cycles += 1
+        if not self.done:
+            self.done_cycles += 1
+        if not self.block_start and self.start_cycle == '':
+            self.start_cycle = self.total_cycles
+
+    def return_statistics(self):
+        return {"done_cycles": self.done_cycles, "start_cycle": self.start_cycle}
 
 
 def remove_emptystr(stream):

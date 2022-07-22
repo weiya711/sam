@@ -19,8 +19,14 @@ class Reduce(Primitive):
         self.stop_token_out = 0
         self.drop_token_out = 0
         self.valid_token_out = 0
+        self.zero_out = 0
+        self.nonzero_out = 0
 
     def update(self):
+        self.update_done()
+        if (len(self.in_val) > 0):
+            self.block_start = False
+
         curr_in_val = ""
         if self.done:
             self.curr_out = ""
@@ -45,11 +51,16 @@ class Reduce(Primitive):
                 self.curr_out = ""
         else:
             self.curr_out = ""
+
         if self.curr_out == "":
             self.drop_token_out += 1
         elif is_stkn(self.curr_out):
             self.stop_token_out += 1
         else:
+            if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
+                self.zero_out += 1
+            else:
+                self.nonzero_out += 1
             self.valid_token_out += 1
 
         self.compute_fifos()
@@ -58,7 +69,7 @@ class Reduce(Primitive):
                   "\t Sum:", self.sum)
 
     def set_in_val(self, val):
-        if val != '':
+        if val != '' and val is not None:
             self.num_inputs += 1
             self.in_val.append(val)
 
@@ -76,14 +87,18 @@ class Reduce(Primitive):
 
     def return_statistics(self):
         stats_dict = {"red_count": self.reduction_count, "total_inputs": self.num_inputs,
-                      "total_outputs": self.num_outputs, "stpkn_outs": self.stop_token_out,
-                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out}
+                      "total_outputs": self.num_outputs, "stkn_outs": self.stop_token_out,
+                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
 class SparseCrdPtAccumulator1(Primitive):
     def __init__(self, maxdim=100, valtype=float, **kwargs):
         super().__init__(**kwargs)
+        self.hits_tracker = {}
+
         self.outer_crdpt = []
         self.inner_crdpt = []
         self.in_val = []
@@ -109,17 +124,27 @@ class SparseCrdPtAccumulator1(Primitive):
         self.storage = dict()
         self.valtype = valtype
 
+        self.stop_token_out = 0
+        self.drop_token_out = 0
+        self.valid_token_out = 0
+        self.zero_out = 0
+        self.nonzero_out = 0
+
     def update(self):
+        self.update_done()
+        if len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0:
+            self.block_start = False
+
         self.out_crd_fifo = max(self.out_crd_fifo, len(self.outer_crdpt))
         self.in_crd_fifo = max(self.in_crd_fifo, len(self.inner_crdpt))
         self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
-        if self.done:
-            self.curr_outer_crd = ''
-            self.curr_inner_crd = ''
+
         if self.done:
             self.curr_outer_crdpt = ''
             self.curr_inner_crdpt = ''
             self.curr_val = ''
+
+            self.drop_token_out += 1
             return
 
         if len(self.in_val) > 0 and len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0:
@@ -134,9 +159,13 @@ class SparseCrdPtAccumulator1(Primitive):
 
             if self.curr_in_outer_crdpt in self.storage.keys():
                 inner_dict = self.storage[self.curr_in_outer_crdpt]
+                for k in inner_dict.keys():
+                    self.hits_tracker[k] = 1
                 if self.curr_in_inner_crdpt in inner_dict.keys():
+                    self.hits_tracker[self.curr_in_inner_crdpt] += 1
                     inner_dict[self.curr_in_inner_crdpt] += self.valtype(self.curr_in_val)
                 else:
+                    self.hits_tracker[self.curr_in_inner_crdpt] = 1
                     inner_dict[self.curr_in_inner_crdpt] = self.valtype(self.curr_in_val)
             # If a done token is seen, cannot emit done until all coordinates have been written out
             elif self.curr_in_outer_crdpt == 'D':
@@ -170,6 +199,17 @@ class SparseCrdPtAccumulator1(Primitive):
             self.curr_inner_crdpt = ''
             self.curr_val = ''
 
+        if self.curr_val == "":
+            self.drop_token_out += 1
+        elif is_stkn(self.curr_val):
+            self.stop_token_out += 1
+        else:
+            if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
+                self.zero_out += 1
+            else:
+                self.nonzero_out += 1
+            self.valid_token_out += 1
+
         if self.debug:
             print("Done:", self.out_done(),
                   "\n Curr in ocrd: ", self.curr_in_outer_crdpt, "\t Curr in icrd", self.curr_in_inner_crdpt,
@@ -181,17 +221,17 @@ class SparseCrdPtAccumulator1(Primitive):
 
     def set_inner_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.inner_crdpt.append(crdpt)
 
     def set_outer_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.outer_crdpt.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_outer_crdpt(self):
@@ -202,6 +242,25 @@ class SparseCrdPtAccumulator1(Primitive):
 
     def out_val(self):
         return self.curr_val
+
+    def return_statistics(self):
+        stats_dict = {"stkn_outs": self.stop_token_out,
+                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        stats_dict.update(super().return_statistics())
+        return stats_dict
+
+    def return_hits(self):
+        i = 0
+        cnt_gt_zero = 0
+        cnt_total = 0
+        for k in self.hits_tracker.keys():
+            if self.hits_tracker[k] > i:
+                i = self.hits_tracker[k]
+            if self.hits_tracker[k] > 1:
+                cnt_gt_zero += 1
+            cnt_total += 1
+        return i, cnt_gt_zero, cnt_total
 
 
 # Accumulation into a vector
@@ -231,6 +290,10 @@ class SparseAccumulator1(Primitive):
         self.val_stkn = val_stkn
 
     def update(self):
+        self.update_done()
+        if len(self.in_outer_crdpt) > 0 or len(self.in_inner_crdpt) > 0:
+            self.block_start = False
+
         # What to do for drop tokens?
         self.in_outer_crd_pt_fifo = max(self.in_outer_crd_pt_fifo, len(self.in_outer_crdpt))
         self.in_inner_crd_pt_fifo = max(self.in_inner_crd_pt_fifo, len(self.in_inner_crdpt))
@@ -276,37 +339,37 @@ class SparseAccumulator1(Primitive):
 
     def set_inner_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
 
     def set_outer_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
 
     def crd_in_inner(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
 
     def crd_in_outer(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
 
     def set_crd_inner(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
 
     def set_crd_outer(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_outer_crd(self):
@@ -329,6 +392,12 @@ class SparseAccumulator1(Primitive):
         stats_dict["in_outer_fifo"] = self.in_outer_crd_pt_fifo
         stats_dict["in_inner_fifo"] = self.in_inner_crd_pt_fifo
         stats_dict["in_val_fifo"] = self.in_val_fifo
+        hits_info = self.crdpt_spacc.return_hits()
+        stats_dict["max_hits"] = hits_info[0]
+        stats_dict["hits_gt_one"] = hits_info[1]
+        stats_dict["total_elems"] = hits_info[2]
+        stats_dict.update(self.crdpt_spacc.return_statistics())
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
     def print_fifos(self):
@@ -360,11 +429,24 @@ class SparseCrdPtAccumulator2(Primitive):
         self.storage = dict()
         self.valtype = valtype
 
+        self.hits_tracker = {}
+        self.stop_token_out = 0
+        self.drop_token_out = 0
+        self.valid_token_out = 0
+        self.zero_out = 0
+        self.nonzero_out = 0
+
     def update(self):
+        self.update_done()
+        if len(self.in_crdpt0) > 0 or len(self.in_crdpt0) > 0 or len(self.in_val) > 0:
+            self.block_start = False
+
         if self.done:
             self.curr_crdpt0 = ''
             self.curr_crdpt1 = ''
             self.curr_val = ''
+
+            self.drop_token_out += 1
             return
 
         if len(self.in_val) > 0 and len(self.in_crdpt1) > 0 and len(self.in_crdpt0) > 0:
@@ -381,9 +463,13 @@ class SparseCrdPtAccumulator2(Primitive):
             else:
                 if self.curr_in1_crdpt in self.storage.keys():
                     inner_dict = self.storage[self.curr_in1_crdpt]
+                    for k in inner_dict.keys():
+                        self.hits_tracker[k] = 1
                     if self.curr_in0_crdpt in inner_dict.keys():
+                        self.hits_tracker[self.curr_in0_crdpt] += 1
                         inner_dict[self.curr_in0_crdpt] += self.valtype(self.curr_in_val)
                     else:
+                        self.hits_tracker[self.curr_in0_crdpt] = 1
                         inner_dict[self.curr_in0_crdpt] = self.valtype(self.curr_in_val)
                 else:
                     self.storage[self.curr_in1_crdpt] = {self.curr_in0_crdpt: self.valtype(self.curr_in_val)}
@@ -420,6 +506,17 @@ class SparseCrdPtAccumulator2(Primitive):
             self.curr_crdpt1 = ''
             self.curr_val = ''
 
+        if self.curr_val == "":
+            self.drop_token_out += 1
+        elif is_stkn(self.curr_val):
+            self.stop_token_out += 1
+        else:
+            if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
+                self.zero_out += 1
+            else:
+                self.nonzero_out += 1
+            self.valid_token_out += 1
+
         if self.debug:
             print("Done:", self.out_done(),
                   "\n Curr in crd1: ", self.curr_in1_crdpt,
@@ -433,17 +530,17 @@ class SparseCrdPtAccumulator2(Primitive):
 
     def set_inner_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_crdpt0.append(crdpt)
 
     def set_outer_crdpt(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in_crdpt1.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_outer_crdpt(self):
@@ -454,6 +551,25 @@ class SparseCrdPtAccumulator2(Primitive):
 
     def out_val(self):
         return self.curr_val
+
+    def return_hits(self):
+        i = 0
+        cnt_gt_zero = 0
+        cnt_total = 0
+        for k in self.hits_tracker.keys():
+            if self.hits_tracker[k] > i:
+                i = self.hits_tracker[k]
+            if self.hits_tracker[k] > 1:
+                cnt_gt_zero += 1
+            cnt_total += 1
+        return i, cnt_gt_zero, cnt_total
+
+    def return_statistics(self):
+        stats_dict = {"stkn_outs": self.stop_token_out,
+                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+        stats_dict.update(super().return_statistics())
+        return stats_dict
 
 
 # Accumulation into a matrix (2D)
@@ -483,6 +599,9 @@ class SparseAccumulator2(Primitive):
         self.val_stkn = val_stkn
 
     def update(self):
+        self.update_done()
+        if (len(self.in1_crdpt) > 0 or len(self.in0_crdpt) > 0 or len(self.in_val) > 0):
+            self.block_start = False
         self.compute_fifo()
 
         if len(self.in1_crdpt) > 0:
@@ -530,17 +649,17 @@ class SparseAccumulator2(Primitive):
 
     def set_crd_inner(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in0_crdpt.append(crdpt)
 
     def set_crd_outer(self, crdpt):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.in1_crdpt.append(crdpt)
 
     def set_val(self, val):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def out_crd_outer(self):
@@ -553,6 +672,10 @@ class SparseAccumulator2(Primitive):
         return self.curr_val
 
     def return_statistics(self):
+        hits_info = self.crdpt_spacc.return_hits()
         stats_dict = {"in1_fifo": self.in1_fifo, "in0_fifo": self.in0_fifo,
-                      "inval_fifo": self.inval_fifo}
+                      "inval_fifo": self.inval_fifo, "max_hits": hits_info[0], "gt_one": hits_info[1],
+                      "total_elems": hits_info[2]}
+        stats_dict.update(self.crdpt_spacc.return_statistics())
+        stats_dict.update(super().return_statistics())
         return stats_dict

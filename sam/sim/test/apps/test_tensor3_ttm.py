@@ -15,9 +15,9 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
+other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -25,8 +25,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_ttm(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "sss012")
+def test_tensor3_ttm(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -48,7 +48,12 @@ def test_tensor3_ttm(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    C_dirname = os.path.join(formatted_dir, frosttname, "other")
+    C_fname = [f for f in os.listdir(C_dirname) if frosttname + "-mat_mode2_ttm" in f]
+    assert len(C_fname) == 1, "Should only have one 'other' folder that matches"
+    C_fname = C_fname[0]
+    C_dirname = os.path.join(C_dirname, C_fname)
+
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -176,7 +181,7 @@ def test_tensor3_ttm(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
@@ -226,5 +231,5 @@ def test_tensor3_ttm(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_ttm(ssname, debug_sim, out_crds, out_segs, out_vals, "sss012")
+        check_gold_tensor3_ttm(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
     samBench(bench, extra_info)

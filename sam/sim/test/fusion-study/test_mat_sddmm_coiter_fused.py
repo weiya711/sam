@@ -33,10 +33,8 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-# @pytest.mark.suitesparse
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
-# def test_mat_sddmm_coiter_fused(samBench, ssname, check_gold, debug_sim, fill=0):
 def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=0):
 
     # DCSR
@@ -57,22 +55,6 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    # B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
-    # B_shape = read_inputs(B_shape_filename)
-
-    # B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
-    # B_seg0 = read_inputs(B0_seg_filename)
-    # B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
-    # B_crd0 = read_inputs(B0_crd_filename)
-
-    # B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
-    # B_seg1 = read_inputs(B1_seg_filename)
-    # B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
-    # B_crd1 = read_inputs(B1_crd_filename)
-
-    # B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
-    # B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
     C_vals = np.arange(math.prod(C_shape)).tolist()

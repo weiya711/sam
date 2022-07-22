@@ -25,8 +25,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_identity(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "sss012")
+def test_tensor3_identity(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -104,7 +104,7 @@ def test_tensor3_identity(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     sample_dict = fiberwrite_X0_3.return_statistics()
@@ -129,5 +129,5 @@ def test_tensor3_identity(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_identity(ssname, debug_sim, out_crds, out_segs, out_vals, "sss012")
+        check_gold_tensor3_identity(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
     samBench(bench, extra_info)

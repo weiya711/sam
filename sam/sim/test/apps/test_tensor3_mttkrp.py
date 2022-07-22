@@ -15,9 +15,9 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
+other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -25,8 +25,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "sss012")
+def test_tensor3_mttkrp(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -48,7 +48,12 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
+    C_dirname = os.path.join(formatted_dir, frosttname, "other")
+    C_fname = [f for f in os.listdir(C_dirname) if frosttname + "-mat_mode1_mttkrp" in f]
+    assert len(C_fname) == 1, "Should only have one 'other' folder that matches"
+    C_fname = C_fname[0]
+    C_dirname = os.path.join(C_dirname, C_fname)
+
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -65,21 +70,26 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    D_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss01")
-    D_shape_filename = os.path.join(D_dirname, "D_shape.txt")
+    D_dirname = os.path.join(formatted_dir, frosttname, "other")
+    D_fname = [f for f in os.listdir(D_dirname) if frosttname + "-mat_mode2_mttkrp" in f]
+    assert len(D_fname) == 1, "Should only have one 'other' folder that matches"
+    D_fname = D_fname[0]
+    D_dirname = os.path.join(D_dirname, D_fname)
+
+    D_shape_filename = os.path.join(D_dirname, "C_shape.txt")
     D_shape = read_inputs(D_shape_filename)
 
-    D0_seg_filename = os.path.join(D_dirname, "D0_seg.txt")
+    D0_seg_filename = os.path.join(D_dirname, "C0_seg.txt")
     D_seg0 = read_inputs(D0_seg_filename)
-    D0_crd_filename = os.path.join(D_dirname, "D0_crd.txt")
+    D0_crd_filename = os.path.join(D_dirname, "C0_crd.txt")
     D_crd0 = read_inputs(D0_crd_filename)
 
-    D1_seg_filename = os.path.join(D_dirname, "D1_seg.txt")
+    D1_seg_filename = os.path.join(D_dirname, "C1_seg.txt")
     D_seg1 = read_inputs(D1_seg_filename)
-    D1_crd_filename = os.path.join(D_dirname, "D1_crd.txt")
+    D1_crd_filename = os.path.join(D_dirname, "C1_crd.txt")
     D_crd1 = read_inputs(D1_crd_filename)
 
-    D_vals_filename = os.path.join(D_dirname, "D_vals.txt")
+    D_vals_filename = os.path.join(D_dirname, "C_vals.txt")
     D_vals = read_inputs(D_vals_filename, float)
 
     fiberlookup_Bi_31 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
@@ -233,7 +243,7 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
@@ -304,5 +314,5 @@ def test_tensor3_mttkrp(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_mttkrp(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

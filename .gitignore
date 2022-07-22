@@ -1,8 +1,11 @@
 __pycache__/
-.DS_store
+*.pyc
+
 *.swp
 *.swo
 *.txt
+
+.DS_store
 .idea/
 
 *.png
@@ -21,3 +24,4 @@ compiler/benchmark/
 cmake-build-*/
 
 *.out
+*.svg

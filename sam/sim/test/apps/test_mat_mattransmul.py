@@ -18,6 +18,7 @@ cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
+other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -26,60 +27,59 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.suitesparse
 def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
-    b_dirname = os.path.join(formatted_dir, ssname, "dummy", "none")
-    b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
-    b_shape = read_inputs(b_shape_filename)
-
-    b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
-    b_vals = read_inputs(b_vals_filename, float)
-
-    C_dirname = os.path.join(formatted_dir, ssname, "dummy", "ss10")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
+    C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
+    C0_seg_filename = os.path.join(C_dirname, "B0_seg.txt")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
+    C0_crd_filename = os.path.join(C_dirname, "B0_crd.txt")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
+    C1_seg_filename = os.path.join(C_dirname, "B1_seg.txt")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
+    C1_crd_filename = os.path.join(C_dirname, "B1_crd.txt")
     C_crd1 = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    d_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
-    d_shape_filename = os.path.join(d_dirname, "d_shape.txt")
-    d_shape = read_inputs(d_shape_filename)
+    d_dirname = os.path.join(formatted_dir, ssname, "other")
+    d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode0" in f]
+    assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
+    d_fname = d_fname[0]
+    d_dirname = os.path.join(d_dirname, d_fname)
 
-    d0_seg_filename = os.path.join(d_dirname, "d0_seg.txt")
+    d_shape = [C_shape[0]]
+
+    d0_seg_filename = os.path.join(d_dirname, "C0_seg.txt")
     d_seg0 = read_inputs(d0_seg_filename)
-    d0_crd_filename = os.path.join(d_dirname, "d0_crd.txt")
+    d0_crd_filename = os.path.join(d_dirname, "C0_crd.txt")
     d_crd0 = read_inputs(d0_crd_filename)
 
-    d_vals_filename = os.path.join(d_dirname, "d_vals.txt")
+    d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
     d_vals = read_inputs(d_vals_filename, float)
+    
+    f_dirname = os.path.join(formatted_dir, ssname, "other")
+    f_fname = [f for f in os.listdir(f_dirname) if ssname + "-vec_mode1" in f]
+    assert len(f_fname) == 1, "Should only have one 'other' folder that matches"
+    f_fname = f_fname[0]
+    f_dirname = os.path.join(f_dirname, f_fname)
+    f_shape = [C_shape[1]]
 
-    e_dirname = os.path.join(formatted_dir, ssname, "dummy", "none")
-    e_shape_filename = os.path.join(e_dirname, "e_shape.txt")
-    e_shape = read_inputs(e_shape_filename)
-
-    e_vals_filename = os.path.join(e_dirname, "e_vals.txt")
-    e_vals = read_inputs(e_vals_filename, float)
-
-    f_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
-    f_shape_filename = os.path.join(f_dirname, "f_shape.txt")
-    f_shape = read_inputs(f_shape_filename)
-
-    f0_seg_filename = os.path.join(f_dirname, "f0_seg.txt")
+    f0_seg_filename = os.path.join(f_dirname, "C0_seg.txt")
     f_seg0 = read_inputs(f0_seg_filename)
-    f0_crd_filename = os.path.join(f_dirname, "f0_crd.txt")
+    f0_crd_filename = os.path.join(f_dirname, "C0_crd.txt")
     f_crd0 = read_inputs(f0_crd_filename)
 
-    f_vals_filename = os.path.join(f_dirname, "f_vals.txt")
+    f_vals_filename = os.path.join(f_dirname, "C_vals.txt")
     f_vals = read_inputs(f_vals_filename, float)
+    
+    e_vals = [2]
+    e_shape = [0]
+
+    b_shape = [0]
+    b_vals = [2]
 
     fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
     fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim)
@@ -95,9 +95,9 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim)
-    repeat_bj_12 = Repeat(debug=debug_sim)
-    repeat_ej_13 = Repeat(debug=debug_sim)
-    repeat_fj_14 = Repeat(debug=debug_sim)
+    repeat_bj_12 = Repeat(debug=debug_sim, union=True)
+    repeat_ej_13 = Repeat(debug=debug_sim, union=True)
+    repeat_fj_14 = Repeat(debug=debug_sim, union=True)
     arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim)
     arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim)
     arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim)
@@ -115,6 +115,13 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
     done = False
     time_cnt = 0
 
+    temp1 = []
+    temp2 = []
+    temp3 = []
+    temp4 = []
+    temp5 = []
+    temp6 = []
+    temp7 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
@@ -124,14 +131,19 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
             fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
         fiberlookup_fi_28.update()
 
+        temp1.append(fiberlookup_fi_28.out_crd())
+        temp2.append(fiberlookup_Ci_27.out_crd())
+
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
-        unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
-        unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
         unioni_26.update()
 
+        temp3.append(unioni_26.out_crd())
         fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
         fiberlookup_Cj_18.update()
+
+        temp4.append(fiberlookup_Cj_18.out_crd())
+        temp5.append(fiberlookup_dj_19.out_crd())
 
         fiberwrite_x0_1.set_input(unioni_26.out_crd())
         fiberwrite_x0_1.update()
@@ -160,6 +172,8 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
         intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
         intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
         intersectj_17.update()
+
+        temp7.append(intersectj_17.out_crd())
 
         repsiggen_j_16.set_istream(intersectj_17.out_crd())
         repsiggen_j_16.update()

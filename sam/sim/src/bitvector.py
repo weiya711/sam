@@ -23,6 +23,10 @@ class ChunkBV(Primitive):
         self.count = 0
 
     def update(self):
+        self.update_done()
+        if (len(self.in_bv) > 0):
+            self.block_start = False
+
         # bin(bv)   # gives 0bx number
         if self.done:
             self.curr_bv = ''
@@ -65,7 +69,7 @@ class ChunkBV(Primitive):
                   "\t EmitChunk:", self.emit_chunk)
 
     def set_in_bv(self, bv):
-        if bv != '':
+        if bv != '' and bv is not None:
             self.in_bv.append(bv)
 
     def out_bv_int(self):
@@ -92,6 +96,10 @@ class BV(Primitive):
         self.emit_stkn = False
 
     def update(self):
+        self.update_done()
+        if (len(self.in_crd) > 0):
+            self.block_start = False
+
         # bin(bv)   # gives 0bx number
         if self.done:
             self.curr_bv = ''
@@ -115,7 +123,7 @@ class BV(Primitive):
             self.curr_bv = ''
 
     def set_in_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.in_crd.append(crd)
 
     def out_bv_int(self):
@@ -136,11 +144,11 @@ class BVDropSuper(Primitive, ABC):
         self.curr_obv = ''
 
     def set_outer_bv(self, bv):
-        if bv != '':
+        if bv != '' and bv is not None:
             self.outer_bv.append(bv)
 
     def set_inner_bv(self, bv):
-        if bv != '':
+        if bv != '' and bv is not None:
             self.inner_bv.append(bv)
 
     def out_bv_outer(self):
@@ -164,6 +172,10 @@ class BVDropOnly(BVDropSuper):
         self.get_next_obv = True
 
     def update(self):
+        self.update_done()
+        if (len(self.inner_bv) > 0 or len(self.outer_bv) > 0):
+            self.block_start = False
+
         ibv = ""
         if self.debug:
             print("Outer BV:", self.outer_bv)
@@ -251,6 +263,10 @@ class BVDrop(BVDropSuper):
         self.curr_ibv = ''
 
     def update(self):
+        self.update_done()
+        if (len(self.outer_bv) > 0 or len(self.inner_bv) > 0):
+            self.block_start = False
+
         if len(self.outer_bv) > 0:
             self.bv_drop.set_outer_bv(self.outer_bv.pop(0))
 

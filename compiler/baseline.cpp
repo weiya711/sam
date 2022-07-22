@@ -16,7 +16,7 @@
 
 using namespace taco;
 
-#define DIM_EXTRA 256
+#define DIM_EXTRA 10 
 
 template<int I, class...Ts>
 decltype(auto) get(Ts &&... ts) {
@@ -65,6 +65,7 @@ struct TensorInputCache {
         this->lastPath = path;
         this->inputTensor = castToType<int64_t>("B", this->lastLoaded);
         this->otherTensor = shiftLastMode<int64_t, int64_t>("C", this->inputTensor);
+
         if (countNNZ) {
             this->nnz = 0;
             for (auto &it: iterate<int64_t>(this->inputTensor)) {
@@ -81,25 +82,35 @@ struct TensorInputCache {
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
             this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
         } else if (includeVec) {
-            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
+            std::vector<int32_t> firstDim;
+            std::vector<int32_t> lastDim;
+            if (this->inputTensor.getOrder() == 2) {
+                firstDim.push_back(this->inputTensor.getDimension(0));
+                lastDim.push_back(this->inputTensor.getDimension(1));
+            } else {
+                firstDim.push_back(this->inputTensor.getDimension(0));
+                lastDim.push_back(this->inputTensor.getDimension(2));
+            }
+
+            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor, firstDim);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
+            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastDim, lastMode);
         }
 
         if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
-            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
-            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
         } else if (this->inputTensor.getOrder() > 2 and includeMat) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
-            this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, 1);
-            this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, 2);
+            this->otherMatTTM = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+            this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+            this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
         }
         return std::make_pair(this->inputTensor, this->otherTensor);
     }

@@ -11,6 +11,10 @@ class Compression(Primitive):
         self.curr_crd = ''
 
     def update(self):
+        self.update_done()
+        if len(self.in_val) > 0 or len(self.in_crd) > 0:
+            self.block_start = False
+
         icrd = ""
 
         if self.done:
@@ -25,11 +29,11 @@ class Compression(Primitive):
                   "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd)
 
     def set_val(self, val):
-        if val != '':
+        if val != '' and val is not None:
             self.in_val.append(val)
 
     def set_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.in_crd.append(crd)
 
     def out_crd(self):

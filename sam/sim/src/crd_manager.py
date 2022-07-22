@@ -7,8 +7,6 @@ class CrdDrop(Primitive):
 
         self.outer_crd = []
         self.inner_crd = []
-        self.inner_crd_fifo = 0
-        self.outer_crd_fifo = 0
         self.curr_inner_crd = ''
         self.curr_ocrd = ''
         self.curr_crd = ''
@@ -18,7 +16,16 @@ class CrdDrop(Primitive):
         self.get_next_icrd = False
         self.get_next_ocrd = True
 
+        # statistics info
+        self.inner_crd_fifo = 0
+        self.outer_crd_fifo = 0
+        self.ocrd_drop_cnt = 0
+
     def update(self):
+        self.update_done()
+        if len(self.outer_crd) > 0 or len(self.inner_crd) > 0:
+            self.block_start = False
+
         icrd = ""
         if self.debug:
             print("OuterCrds:", self.outer_crd)
@@ -55,6 +62,7 @@ class CrdDrop(Primitive):
             self.has_crd = False
         elif self.get_next_ocrd:
             self.curr_crd = ''
+            self.ocrd_drop_cnt += 1
 
         if len(self.inner_crd) > 0 and self.get_next_icrd:
             self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
@@ -68,6 +76,7 @@ class CrdDrop(Primitive):
             if isinstance(icrd, int):
                 self.has_crd = True
                 self.curr_crd = ''
+                self.ocrd_drop_cnt += 1
                 self.get_next_ocrd = False
                 self.get_next_icrd = True
             elif is_stkn(icrd) and is_stkn(self.curr_ocrd):
@@ -85,11 +94,13 @@ class CrdDrop(Primitive):
                 self.get_next_ocrd = False
             else:
                 self.curr_crd = ''
+                self.ocrd_drop_cnt += 1
                 self.get_next_icrd = False
                 self.get_next_ocrd = True
         elif self.get_next_icrd:
             self.curr_crd = ''
             self.curr_inner_crd = ''
+            self.ocrd_drop_cnt += 1
         else:
             self.curr_inner_crd = ''
 
@@ -100,11 +111,11 @@ class CrdDrop(Primitive):
                   "\n Prev Stkn:", self.prev_ocrd_stkn, "\t Get Stkn:", self.get_stkn)
 
     def set_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.outer_crd.append(crd)
 
     def set_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
@@ -118,7 +129,8 @@ class CrdDrop(Primitive):
         print("CrdDrop Outer crd fifo size: ", self.outer_crd_fifo)
 
     def return_statistics(self):
-        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo": self.outer_crd_fifo}
+        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo": self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
+        stats_dict.update(super().return_statistics())
         return stats_dict
 
 
@@ -138,6 +150,10 @@ class CrdHold(Primitive):
         self.repeat = Repeat(debug=self.debug)
 
     def update(self):
+        self.update_done()
+        if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
+            self.block_start = False
+
         if self.done:
             self.curr_crd = ''
             return
@@ -164,11 +180,11 @@ class CrdHold(Primitive):
         self.done = self.RSG.done and self.repeat.done
 
     def set_outer_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.outer_crd.append(crd)
 
     def set_inner_crd(self, crd):
-        if crd != '':
+        if crd != '' and crd is not None:
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
@@ -202,6 +218,9 @@ class CrdPtConverter(Primitive):
         self.inner_last_level = last_level
 
     def update(self):
+        self.update_done()
+        if len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0:
+            self.block_start = False
 
         if self.curr_ocrd != '':
             self.prev_ocrd = self.curr_ocrd
@@ -306,11 +325,11 @@ class CrdPtConverter(Primitive):
                   "\t Curr in val", self.prev_ocrdpt, "\t Emit Tkn: ", self.emit_stkn)
 
     def set_outer_crdpt(self, crdpt):
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.outer_crdpt.append(crdpt)
 
     def set_inner_crdpt(self, crdpt):
-        if crdpt != '':
+        if crdpt != '' and crdpt is not None:
             self.inner_crdpt.append(crdpt)
 
     def out_crd_outer(self):

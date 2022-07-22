@@ -15,9 +15,9 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
+other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -25,8 +25,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_ttv(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "dummy", "sss012")
+def test_tensor3_ttv(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -48,16 +48,21 @@ def test_tensor3_ttv(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "dummy", "s0")
-    c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
+    c_dirname = os.path.join(formatted_dir, frosttname, "other")
+    c_fname = [f for f in os.listdir(c_dirname) if frosttname+"-vec_mode2" in f]
+    assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
+    c_fname = c_fname[0]
+    c_dirname = os.path.join(c_dirname, c_fname)
+
+    c_shape_filename = os.path.join(c_dirname, "C_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
-    c0_seg_filename = os.path.join(c_dirname, "c0_seg.txt")
+    c0_seg_filename = os.path.join(c_dirname, "C0_seg.txt")
     c_seg0 = read_inputs(c0_seg_filename)
-    c0_crd_filename = os.path.join(c_dirname, "c0_crd.txt")
+    c0_crd_filename = os.path.join(c_dirname, "C0_crd.txt")
     c_crd0 = read_inputs(c0_crd_filename)
 
-    c_vals_filename = os.path.join(c_dirname, "c_vals.txt")
+    c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
     fiberlookup_Bi_17 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
@@ -151,7 +156,7 @@ def test_tensor3_ttv(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_c_shape"] = c_shape
@@ -193,5 +198,5 @@ def test_tensor3_ttv(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_ttv(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_tensor3_ttv(frosttname, debug_sim, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

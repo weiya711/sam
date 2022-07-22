@@ -9,8 +9,8 @@ DATASET_NAMES=(
   fb1k
   fb10k
   facebook
-  nell-1
   nell-2
+  nell-1
 )
 
 cwd=$(pwd)
