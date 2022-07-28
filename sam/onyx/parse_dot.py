@@ -20,6 +20,10 @@ class SAMDotGraph():
         self.seq = 0
         self.local_mems = local_mems
         self.use_fork = use_fork
+
+        # Rewrite each 3-input joiners to 3 2-input joiners
+        self.rewrite_tri_to_binary()
+
         # Passes to lower to CGRA
         self.rewrite_lookup()
         self.rewrite_arrays()
@@ -104,6 +108,143 @@ class SAMDotGraph():
         ret = self.seq
         self.seq += 1
         return ret
+
+    def rewrite_tri_to_binary(self):
+        '''
+        Rewrites any 3-input joiner node into three binary joiner nodes
+        '''
+        joiner_ninputs = dict()
+        nodes_to_proc = []
+        for node in self.graph.get_nodes():
+            if "intersect" in node.get_attributes()['type'].strip('"') or \
+                    "union" in node.get_attributes()['type'].strip('"'):
+                joiner_ninputs[node.get_name()] = 0
+                nodes_to_proc.append(node)
+        for edge in self.graph.get_edges():
+            if edge.get_destination() in joiner_ninputs and "crd" in edge.get_attributes()['type'].strip('"'):
+                joiner_ninputs[edge.get_destination()] += 1
+
+        # Only tri_to_binary implemented. Not n_to_binary...
+        assert all([v <= 3 for k, v in joiner_ninputs.items()])
+
+        nodes_to_proc = [n for n in nodes_to_proc if joiner_ninputs[n.get_name()] == 3]
+        print("NODES TO REWRITE FOR BINARY", [n.get_name() for n in nodes_to_proc])
+
+        for node in nodes_to_proc:
+            attrs = node.get_attributes()
+            og_label = attrs['label']
+            del attrs['label']
+            name = "intersect" if "intersect" in attrs['type'].strip('"') else "union"
+
+            joiner12 = pydot.Node(f"{name}_{self.get_next_seq()}",
+                                 **attrs, label=f"{og_label}_12",  hwnode=f"{HWNodeType.Intersect}")
+            joiner13 = pydot.Node(f"{name}_{self.get_next_seq()}",
+                                 **attrs, label=f"{og_label}_13", hwnode=f"{HWNodeType.Intersect}")
+            joiner23 = pydot.Node(f"{name}_{self.get_next_seq()}",
+                                 **attrs, label=f"{og_label}_23", hwnode=f"{HWNodeType.Intersect}")
+
+            input_crd_edges = dict()
+            input_ref_edges = dict()
+            output_ref_edges = dict()
+            output_crd_edge = 0
+            for edge in self.graph.get_edges():
+                if edge.get_destination() == node.get_name():
+                    edge_name = edge.get_attributes()['comment'].strip('"').split('-')[1]
+                    edge_type = edge.get_attributes()['type'].strip('"')
+                    if 'crd' in edge_type:
+                        input_crd_edges[edge_name] = edge
+                    elif 'ref' in edge_type:
+                        input_ref_edges[edge_name] = edge
+                elif edge.get_source() == node.get_name():
+                    edge_type = edge.get_attributes()['type'].strip('"')
+                    if 'crd' in edge_type:
+                        output_crd_edge = edge
+                    elif 'ref' in edge_type:
+                        edge_name = edge.get_attributes()['comment'].strip('"').split('-')[1]
+                        output_ref_edges[edge_name] = edge
+
+
+            # Add in the new joiner nodes
+            self.graph.add_node(joiner12)
+            self.graph.add_node(joiner23)
+            self.graph.add_node(joiner13)
+
+            # Rewire the edges
+            assert set(input_crd_edges.keys()) == set(input_ref_edges.keys()) and set(input_ref_edges.keys()) == set(output_ref_edges.keys())
+            keys = sorted(input_crd_edges.keys())
+
+            joiner12_crd1_edge_tmp = pydot.Edge(src=input_crd_edges[keys[0]].get_source(), dst=joiner12,
+                                           **input_crd_edges[keys[0]].get_attributes())
+            joiner12_ref1_edge_tmp = pydot.Edge(src=input_ref_edges[keys[0]].get_source(), dst=joiner12,
+                                           **input_ref_edges[keys[0]].get_attributes())
+            joiner12_crd2_edge_tmp = pydot.Edge(src=input_crd_edges[keys[1]].get_source(), dst=joiner12,
+                                           **input_crd_edges[keys[1]].get_attributes())
+            joiner12_ref2_edge_tmp = pydot.Edge(src=input_ref_edges[keys[1]].get_source(), dst=joiner12,
+                                           **input_ref_edges[keys[1]].get_attributes())
+
+            self.graph.add_edge(joiner12_crd1_edge_tmp)
+            self.graph.add_edge(joiner12_ref1_edge_tmp)
+            self.graph.add_edge(joiner12_crd2_edge_tmp)
+            self.graph.add_edge(joiner12_ref2_edge_tmp)
+
+            joiner13_crd1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner13,
+                                                **input_crd_edges[keys[0]].get_attributes()
+                                                )
+            joiner13_ref1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner13,
+                                                **input_ref_edges[keys[0]].get_attributes())
+            joiner13_crd2_edge_tmp = pydot.Edge(src=input_crd_edges[keys[2]].get_source(), dst=joiner13,
+                                                **input_crd_edges[keys[2]].get_attributes())
+            joiner13_ref2_edge_tmp = pydot.Edge(src=input_ref_edges[keys[2]].get_source(), dst=joiner13,
+                                                **input_ref_edges[keys[2]].get_attributes())
+
+            joiner13_ref1_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_ref_edges[keys[0]].get_destination(),
+                                                **output_ref_edges[keys[0]].get_attributes())
+            joiner13_ref2_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_ref_edges[keys[2]].get_destination(),
+                                                **output_ref_edges[keys[2]].get_attributes())
+            joiner13_crd_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_crd_edge.get_destination(),
+                                                **output_crd_edge.get_attributes())
+
+            self.graph.add_edge(joiner13_crd1_edge_tmp)
+            self.graph.add_edge(joiner13_ref1_edge_tmp)
+            self.graph.add_edge(joiner13_crd2_edge_tmp)
+            self.graph.add_edge(joiner13_ref2_edge_tmp)
+            self.graph.add_edge(joiner13_ref1_out_edge_tmp)
+            self.graph.add_edge(joiner13_ref2_out_edge_tmp)
+            self.graph.add_edge(joiner13_crd_out_edge_tmp)
+
+            joiner23_crd1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner23,
+                                                **input_crd_edges[keys[1]].get_attributes())
+            joiner23_ref1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner23,
+                                                **input_ref_edges[keys[1]].get_attributes())
+            joiner23_crd2_edge_tmp = pydot.Edge(src=input_crd_edges[keys[2]].get_source(), dst=joiner23,
+                                                **input_crd_edges[keys[2]].get_attributes())
+            joiner23_ref2_edge_tmp = pydot.Edge(src=input_ref_edges[keys[2]].get_source(), dst=joiner23,
+                                                **input_ref_edges[keys[2]].get_attributes())
+
+            joiner23_ref1_out_edge_tmp = pydot.Edge(src=joiner23, dst=output_ref_edges[keys[1]].get_destination(),
+                                                    **output_ref_edges[keys[1]].get_attributes())
+            joiner23_ref2_out_edge_tmp = pydot.Edge(src=joiner23, dst=output_ref_edges[keys[2]].get_destination(),
+                                                    **output_ref_edges[keys[2]].get_attributes())
+
+            self.graph.add_edge(joiner23_crd1_edge_tmp)
+            self.graph.add_edge(joiner23_ref1_edge_tmp)
+            self.graph.add_edge(joiner23_crd2_edge_tmp)
+            self.graph.add_edge(joiner23_ref2_edge_tmp)
+            self.graph.add_edge(joiner23_ref1_out_edge_tmp)
+            self.graph.add_edge(joiner23_ref2_out_edge_tmp)
+
+            # Delete original edges and nodes
+            for k, v in input_crd_edges.items():
+                self.graph.del_edge(v.get_source(), v.get_destination())
+            for k, v in input_ref_edges.items():
+                self.graph.del_edge(v.get_source(), v.get_destination())
+            for k, v in output_ref_edges.items():
+                self.graph.del_edge(v.get_source(), v.get_destination())
+            self.graph.del_edge(output_crd_edge.get_source(), output_crd_edge.get_destination())
+            self.graph.del_node(node)
+
+    def rewrite_n_to_binary(self):
+        raise NotImplementedError
 
     def rewrite_broadcast(self):
         '''
