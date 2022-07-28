@@ -20,6 +20,7 @@ class WriteScannerNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         wr_scan = self.get_name()
 
@@ -70,6 +71,8 @@ class WriteScannerNode(HWNode):
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
         elif other_type == RepSigGenNode:
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
+        elif other_type == CrdHoldNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
 

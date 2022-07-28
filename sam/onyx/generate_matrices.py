@@ -110,6 +110,23 @@ class MatrixGenerator():
             for val in numpy.nditer(self.array):
                 flat_array.append(val)
             self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals")
+        elif self.format == "COO":
+            crd_dict = dict()
+            order = len(self.array.shape)
+            for i in range(order + 1):
+                crd_dict[i] = []
+            it = np.nditer(self.array, flags=['multi_index'])
+            while not it.finished:
+                crd_dict[order].append(it[0])
+                point = it.multi_index
+                for i in range(order):
+                    crd_dict[i].append(point[i])
+                is_not_finished = it.iternext()
+            for key in crd_dict:
+                if key == order:
+                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_vals")
+                else:
+                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_{key}_crd")
 
         if dump_shape:
             self.write_array(self.array.shape, name=f"shape")
