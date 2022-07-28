@@ -137,11 +137,11 @@ class SAMDotGraph():
             name = "intersect" if "intersect" in attrs['type'].strip('"') else "union"
 
             joiner12 = pydot.Node(f"{name}_{self.get_next_seq()}",
-                                 **attrs, label=f"{og_label}_12",  hwnode=f"{HWNodeType.Intersect}")
+                                  **attrs, label=f"{og_label}_12", hwnode=f"{HWNodeType.Intersect}")
             joiner13 = pydot.Node(f"{name}_{self.get_next_seq()}",
-                                 **attrs, label=f"{og_label}_13", hwnode=f"{HWNodeType.Intersect}")
+                                  **attrs, label=f"{og_label}_13", hwnode=f"{HWNodeType.Intersect}")
             joiner23 = pydot.Node(f"{name}_{self.get_next_seq()}",
-                                 **attrs, label=f"{og_label}_23", hwnode=f"{HWNodeType.Intersect}")
+                                  **attrs, label=f"{og_label}_23", hwnode=f"{HWNodeType.Intersect}")
 
             input_crd_edges = dict()
             input_ref_edges = dict()
@@ -163,24 +163,24 @@ class SAMDotGraph():
                         edge_name = edge.get_attributes()['comment'].strip('"').split('-')[1]
                         output_ref_edges[edge_name] = edge
 
-
             # Add in the new joiner nodes
             self.graph.add_node(joiner12)
             self.graph.add_node(joiner23)
             self.graph.add_node(joiner13)
 
             # Rewire the edges
-            assert set(input_crd_edges.keys()) == set(input_ref_edges.keys()) and set(input_ref_edges.keys()) == set(output_ref_edges.keys())
+            assert set(input_crd_edges.keys()) == set(input_ref_edges.keys()) and set(input_ref_edges.keys()) == set(
+                output_ref_edges.keys())
             keys = sorted(input_crd_edges.keys())
 
             joiner12_crd1_edge_tmp = pydot.Edge(src=input_crd_edges[keys[0]].get_source(), dst=joiner12,
-                                           **input_crd_edges[keys[0]].get_attributes())
+                                                **input_crd_edges[keys[0]].get_attributes())
             joiner12_ref1_edge_tmp = pydot.Edge(src=input_ref_edges[keys[0]].get_source(), dst=joiner12,
-                                           **input_ref_edges[keys[0]].get_attributes())
+                                                **input_ref_edges[keys[0]].get_attributes())
             joiner12_crd2_edge_tmp = pydot.Edge(src=input_crd_edges[keys[1]].get_source(), dst=joiner12,
-                                           **input_crd_edges[keys[1]].get_attributes())
+                                                **input_crd_edges[keys[1]].get_attributes())
             joiner12_ref2_edge_tmp = pydot.Edge(src=input_ref_edges[keys[1]].get_source(), dst=joiner12,
-                                           **input_ref_edges[keys[1]].get_attributes())
+                                                **input_ref_edges[keys[1]].get_attributes())
 
             self.graph.add_edge(joiner12_crd1_edge_tmp)
             self.graph.add_edge(joiner12_ref1_edge_tmp)
@@ -198,11 +198,11 @@ class SAMDotGraph():
                                                 **input_ref_edges[keys[2]].get_attributes())
 
             joiner13_ref1_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_ref_edges[keys[0]].get_destination(),
-                                                **output_ref_edges[keys[0]].get_attributes())
+                                                    **output_ref_edges[keys[0]].get_attributes())
             joiner13_ref2_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_ref_edges[keys[2]].get_destination(),
-                                                **output_ref_edges[keys[2]].get_attributes())
+                                                    **output_ref_edges[keys[2]].get_attributes())
             joiner13_crd_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_crd_edge.get_destination(),
-                                                **output_crd_edge.get_attributes())
+                                                   **output_crd_edge.get_attributes())
 
             self.graph.add_edge(joiner13_crd1_edge_tmp)
             self.graph.add_edge(joiner13_ref1_edge_tmp)
@@ -321,8 +321,9 @@ class SAMDotGraph():
             incoming_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == bc_node.get_name()][0]
             outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
                              edge.get_destination() == rsg_node.get_name()][0]
-            other_outgoing_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
-                                   edge.get_destination() != rsg_node.get_name()][0]
+            other_outgoing_edge = \
+                [edge for edge in self.graph.get_edges() if edge.get_source() == bc_node.get_name() and
+                 edge.get_destination() != rsg_node.get_name()][0]
             # Now, connect the original source to the rsg and the rsg to the original other branch
             og_to_rsg = pydot.Edge(src=incoming_edge.get_source(), dst=rsg_node, **incoming_edge.get_attributes())
             rsg_to_branch = pydot.Edge(src=rsg_node, dst=other_outgoing_edge.get_destination(),
@@ -383,7 +384,8 @@ class SAMDotGraph():
                 if self.local_mems is False:
                     self.graph.add_node(memory)
                 # Glb to WR
-                glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}", style="bold")
+                glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}",
+                                       style="bold")
                 self.graph.add_edge(glb_to_wr)
                 # write + read to buffet
                 wr_to_buff = pydot.Edge(src=wr_scan, dst=buffet, label=f'wr_to_buff_{self.get_next_seq()}')
@@ -395,8 +397,10 @@ class SAMDotGraph():
                     mem_to_buff = pydot.Edge(src=buffet, dst=memory, label=f'mem_to_buff_{self.get_next_seq()}')
                     self.graph.add_edge(mem_to_buff)
                 # Now inject the read scanner to other nodes...
-                rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(), **crd_out_edge.get_attributes())
-                rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(), **ref_out_edge.get_attributes())
+                rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(),
+                                            **crd_out_edge.get_attributes())
+                rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(),
+                                            **ref_out_edge.get_attributes())
                 self.graph.add_edge(rd_to_down_crd)
                 self.graph.add_edge(rd_to_down_ref)
                 if ref_in_edge is not None:
@@ -445,7 +449,8 @@ class SAMDotGraph():
                 if self.local_mems is False:
                     self.graph.add_node(memory)
                 # RD to GLB
-                rd_to_glb = pydot.Edge(src=rd_scan, dst=glb_read, label=f"glb_to_wr_{self.get_next_seq()}", style="bold")
+                rd_to_glb = pydot.Edge(src=rd_scan, dst=glb_read, label=f"glb_to_wr_{self.get_next_seq()}",
+                                       style="bold")
                 self.graph.add_edge(rd_to_glb)
                 # write + read to buffet
                 wr_to_buff = pydot.Edge(src=wr_scan, dst=buffet, label=f'wr_to_buff_{self.get_next_seq()}')
@@ -512,7 +517,8 @@ class SAMDotGraph():
                 self.graph.add_edge(mem_to_buff)
             # Now inject the read scanner to other nodes...
             # rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(), **crd_out_edge.get_attributes())
-            rd_to_down_val = pydot.Edge(src=rd_scan, dst=val_out_edge.get_destination(), **val_out_edge.get_attributes())
+            rd_to_down_val = pydot.Edge(src=rd_scan, dst=val_out_edge.get_destination(),
+                                        **val_out_edge.get_attributes())
             self.graph.add_edge(rd_to_down_val)
             up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, **ref_in_edge.get_attributes())
             self.graph.add_edge(up_to_ref)
