@@ -79,7 +79,9 @@ class WriteScannerNode(HWNode):
     def configure(self, attributes):
         inner_offset = 0
         # compressed = int(attributes['format'] == 'compressed')
-        if 'format' in attributes:
+        if 'format' in attributes and 'vals' in attributes['format'].strip('"'):
+            compressed = 1
+        elif 'format' in attributes:
             compressed = int(attributes['format'].strip('"') == 'compressed')
         # elif attributes['type'].strip('"') == 'arrayvals':
         else:
@@ -89,7 +91,7 @@ class WriteScannerNode(HWNode):
         if attributes['type'].strip('"') == 'arrayvals':
             lowest_level = 1
             stop_lvl = 0
-        elif attributes['mode'].strip('"') == 'vals':
+        elif attributes['mode'].strip('"') == 'vals' or attributes['format'].strip('"') == 'vals':
             lowest_level = 1
             stop_lvl = 0
         else:
