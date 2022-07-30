@@ -16,7 +16,8 @@ import os
 import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -83,12 +84,12 @@ def test_tensor3_elemadd(samBench, frosttname, check_gold, debug_sim, fill=0):
     fiberlookup_Ck_9 = CompressedCrdRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim)
     unionk_7 = Union2(debug=debug_sim)
 
-    fiberwrite_X2_1 = CompressWrScan(seg_size=B_shape[0] * B_shape[1] + 1, size=5804660*2, fill=fill, debug=debug_sim)
+    fiberwrite_X2_1 = CompressWrScan(seg_size=B_shape[0] * B_shape[1] + 1, size=5804660 * 2, fill=fill, debug=debug_sim)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
     arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
     print("add done")
     add_4 = Add2(debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=5804660*2, fill=fill, debug=debug_sim)
+    fiberwrite_Xvals_0 = ValsWrScan(size=5804660 * 2, fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False

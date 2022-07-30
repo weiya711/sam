@@ -1,3 +1,4 @@
+import argparse
 from numpy import broadcast
 import pydot
 from sam.onyx.hw_nodes.hw_node import HWNodeType
@@ -556,14 +557,26 @@ def parse_graph(graph):
 
 
 if __name__ == "__main__":
-    matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "tensor3_elemmul.gv"
-    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_identity.gv"
-    # matmul_dot = "/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/" + "mat_elemmul.gv"
-    temp_out = "/home/max/Documents/SPARSE/sam/mek.gv"
-    sdg = SAMDotGraph(filename=matmul_dot, use_fork=True)
+
+    parser = argparse.ArgumentParser(description='SAM DOT Parser')
+    parser.add_argument('--sam_graph',
+                        type=str,
+                        default="/home/max/Documents/SPARSE/sam/compiler/sam-outputs/dot/mat_identity.gv")
+    parser.add_argument('--output_png',
+                        type=str,
+                        default="output.png")
+    parser.add_argument('--output_graph',
+                        type=str,
+                        default="/home/max/Documents/SPARSE/sam/mek.gv")
+    args = parser.parse_args()
+
+    sam_graph = args.sam_graph
+    output_png = args.output_png
+    output_graph = args.output_graph
+    sdg = SAMDotGraph(filename=sam_graph, use_fork=True)
     graph = sdg.get_graph()
     print(graph)
     # parse_graph(graph)
-    graph.write_png('output.png')
+    graph.write_png(output_png)
     output_graphviz = graph.create_dot()
-    graph.write_dot(temp_out)
+    graph.write_dot(output_graph)

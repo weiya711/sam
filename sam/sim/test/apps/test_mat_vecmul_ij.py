@@ -20,6 +20,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
+
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
@@ -97,7 +98,6 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         repeat_ci_9.set_in_repsig(repsiggen_i_10.out_repsig())
         repeat_ci_9.update()
 
-
         fiberlookup_cj_8.set_in_ref(repeat_ci_9.out_ref())
         fiberlookup_cj_8.update()
 
@@ -125,8 +125,10 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         time_cnt += 1
 
         if time_cnt % 100 == 0:
-            print(fiberwrite_xvals_0.out_done(), reduce_2.out_done(), mul_3.out_done(), arrayvals_c_5.out_done(), arrayvals_B_4.out_done(),
-                  intersectj_6.out_done(), fiberlookup_cj_8.out_done(), repeat_ci_9.out_done(), fiberlookup_Bj_7.out_done())
+            print(fiberwrite_xvals_0.out_done(), reduce_2.out_done(),
+                  mul_3.out_done(), arrayvals_c_5.out_done(), arrayvals_B_4.out_done(),
+                  intersectj_6.out_done(), fiberlookup_cj_8.out_done(),
+                  repeat_ci_9.out_done(), fiberlookup_Bj_7.out_done())
             print("TIME:", time_cnt)
 
     fiberwrite_x0_1.autosize()
