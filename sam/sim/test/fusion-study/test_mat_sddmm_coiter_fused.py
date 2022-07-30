@@ -55,7 +55,6 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-
     C_shape = (B_shape[0], KDIM)
     C_vals = np.arange(math.prod(C_shape)).tolist()
     for idx in range(len(C_vals)):

@@ -15,9 +15,10 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -49,7 +50,7 @@ def test_tensor3_ttv(samBench, frosttname, check_gold, debug_sim, fill=0):
     B_vals = read_inputs(B_vals_filename, float)
 
     c_dirname = os.path.join(formatted_dir, frosttname, "other")
-    c_fname = [f for f in os.listdir(c_dirname) if frosttname+"-vec_mode2" in f]
+    c_fname = [f for f in os.listdir(c_dirname) if frosttname + "-vec_mode2" in f]
     assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
     c_fname = c_fname[0]
     c_dirname = os.path.join(c_dirname, c_fname)

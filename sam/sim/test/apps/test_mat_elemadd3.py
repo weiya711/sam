@@ -71,7 +71,7 @@ def test_mat_elemadd3(samBench, ssname, check_gold, debug_sim, fill=0):
     D_crd1 = [x + 1 if (x + 1) < D_shape[1] else 0 for x in D_crd1]
     for i in range(len(D_seg1) - 1):
         start = D_seg1[i]
-        end = D_seg1[i+1]
+        end = D_seg1[i + 1]
         D_crd1[start:end] = sorted(D_crd1[start:end])
 
     D_vals = copy.deepcopy(C_vals)

@@ -16,6 +16,7 @@ import os
 import csv
 cwd = os.getcwd()
 
+
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
