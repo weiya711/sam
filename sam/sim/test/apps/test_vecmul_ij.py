@@ -113,7 +113,7 @@ def test_vecmul_ij(samBench, vecname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = 
+    extra_info["dataset"] = vecname 
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_c_shape"] = c_shape
