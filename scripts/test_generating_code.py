@@ -629,12 +629,12 @@ for apath in file_paths:
                     " = Repeat(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "intersect":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim,
-                    statistics=report_stats)\n")
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim, " +
+                    "statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "union":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim,
-                    statistics=report_stats)\n")
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim, " +
+                    "statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
             # invalid_flag = 1
         elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
