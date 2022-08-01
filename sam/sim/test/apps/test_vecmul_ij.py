@@ -20,8 +20,9 @@ cwd = os.getcwd()
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-def test_vecmul_ij(samBench, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, , "orig", "ss01")
+@pytest.mark.vec
+def test_vecmul_ij(samBench, vecname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, vecname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -38,7 +39,7 @@ def test_vecmul_ij(samBench, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, , "other", "s0")
+    c_dirname = os.path.join(formatted_dir, vecname, "other", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
