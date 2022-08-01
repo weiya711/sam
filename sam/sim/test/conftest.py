@@ -7,6 +7,8 @@ def pytest_addoption(parser):
     parser.addoption("--debug-sim", action="store_true", default=False,
                      help="Emit debug print statements. Use with `-s`")
     parser.addoption("--ssname", action="store", help="Suitesparse name for the end-to-end test")
+    parser.addoption("--report-stats", action="store_true", default=False,
+                     help="Flag that enables statistics reporting")
     parser.addoption("--frosttname", action="store", help="Frostt name for the end-to-end test")
     parser.addoption("--vecname", action="store", help="Vector name for the end-to-end test")
     parser.addoption("--check-gold", action="store_true", default=False,
@@ -58,6 +60,10 @@ def debug_sim(request):
 @pytest.fixture
 def check_gold(request):
     return request.config.getoption("--check-gold")
+
+@pytest.fixture
+def report_stats(request):
+    return request.config.getoption("--report-stats")
 
 
 @pytest.fixture

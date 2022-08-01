@@ -15,17 +15,13 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+def test_vecmul_ij(samBench, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, , "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -42,7 +38,7 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "other", "s0")
+    c_dirname = os.path.join(formatted_dir, , "other", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -116,7 +112,7 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = 
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_c_shape"] = c_shape
@@ -162,5 +158,5 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_vecmul_ij(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_vecmul_ij(, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

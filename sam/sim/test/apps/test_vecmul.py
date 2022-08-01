@@ -15,24 +15,15 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+def test_vecmul(samBench, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, , "orig", "ds01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
-
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
-    B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
-    B_crd0 = read_inputs(B0_crd_filename)
 
     B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
     B_seg1 = read_inputs(B1_seg_filename)
@@ -42,7 +33,7 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, ssname, "other", "s0")
+    c_dirname = os.path.join(formatted_dir, , "other", "s0")
     c_shape_filename = os.path.join(c_dirname, "c_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
@@ -54,9 +45,9 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
     c_vals_filename = os.path.join(c_dirname, "c_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
-    fiberlookup_Bi_12 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
+    fiberlookup_Bi_12 = UncompressCrdRdScan(dim=B_shape[0], debug=debug_sim)
     fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_x0_0 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
     repsiggen_i_10 = RepeatSigGen(debug=debug_sim)
     repeat_ci_9 = Repeat(debug=debug_sim)
     fiberlookup_cj_8 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
@@ -65,7 +56,7 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
     arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim)
     mul_3 = Multiply2(debug=debug_sim)
     reduce_2 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim)
+    fiberwrite_xvals_1 = ValsWrScan(size=B_shape[0], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
     in_ref_c = [0, 'D']
     done = False
@@ -75,7 +66,7 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         if len(in_ref_B) > 0:
             fiberlookup_Bi_12.set_in_ref(in_ref_B.pop(0))
         fiberlookup_Bj_7.set_in_ref(fiberlookup_Bi_12.out_ref())
-        fiberwrite_x0_1.set_input(fiberlookup_Bi_12.out_crd())
+        fiberwrite_x0_0.set_input(fiberlookup_Bi_12.out_crd())
         repsiggen_i_10.set_istream(fiberlookup_Bi_12.out_crd())
         if len(in_ref_c) > 0:
             repeat_ci_9.set_in_ref(in_ref_c.pop(0))
@@ -88,11 +79,11 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         mul_3.set_in1(arrayvals_B_4.out_val())
         mul_3.set_in2(arrayvals_c_5.out_val())
         reduce_2.set_in_val(mul_3.out_val())
-        fiberwrite_xvals_0.set_input(reduce_2.out_val())
+        fiberwrite_xvals_1.set_input(reduce_2.out_val())
         fiberlookup_Bi_12.update()
 
         fiberlookup_Bj_7.update()
-        fiberwrite_x0_1.update()
+        fiberwrite_x0_0.update()
         repsiggen_i_10.update()
         repeat_ci_9.update()
         fiberlookup_cj_8.update()
@@ -101,22 +92,22 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_c_5.update()
         mul_3.update()
         reduce_2.update()
-        fiberwrite_xvals_0.update()
+        fiberwrite_xvals_1.update()
 
-        done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
+        done = fiberwrite_x0_0.out_done() and fiberwrite_xvals_1.out_done()
         time_cnt += 1
 
-    fiberwrite_x0_1.autosize()
-    fiberwrite_xvals_0.autosize()
+    fiberwrite_x0_0.autosize()
+    fiberwrite_xvals_1.autosize()
 
-    out_crds = [fiberwrite_x0_1.get_arr()]
-    out_segs = [fiberwrite_x0_1.get_seg_arr()]
-    out_vals = fiberwrite_xvals_0.get_arr()
+    out_crds = [fiberwrite_x0_0.get_arr()]
+    out_segs = [fiberwrite_x0_0.get_seg_arr()]
+    out_vals = fiberwrite_xvals_1.get_arr()
     def bench():
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = 
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_c_shape"] = c_shape
@@ -124,9 +115,9 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bi_12" + "_" + k] =  sample_dict[k]
 
-    sample_dict = fiberwrite_x0_1.return_statistics()
+    sample_dict = fiberwrite_x0_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_x0_0" + "_" + k] =  sample_dict[k]
 
     sample_dict = repeat_ci_9.return_statistics()
     for k in sample_dict.keys():
@@ -148,9 +139,9 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
     for k in sample_dict.keys():
         extra_info["reduce_2" + "_" + k] =  sample_dict[k]
 
-    sample_dict = fiberwrite_xvals_0.return_statistics()
+    sample_dict = fiberwrite_xvals_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
+        extra_info["fiberwrite_xvals_1" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_c_5.return_statistics()
     for k in sample_dict.keys():
@@ -162,5 +153,5 @@ def test_mat_vecmul_ij(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_vecmul_ij(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_vecmul(, debug_sim, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

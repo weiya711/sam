@@ -25,7 +25,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -76,26 +76,26 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
 
     D_vals = copy.deepcopy(C_vals)
 
-    fiberlookup_Bi_13 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberlookup_Ci_14 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
-    fiberlookup_Di_15 = CompressedCrdRdScan(crd_arr=D_crd0, seg_arr=D_seg0, debug=debug_sim)
-    unioni1_12 = Union2(debug=debug_sim)
-    unioni2_12 = Union2(debug=debug_sim)
-    unioni3_12 = Union2(debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=3 * len(B_crd0), fill=fill, debug=debug_sim)
-    fiberlookup_Bj_9 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberlookup_Cj_10 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    fiberlookup_Dj_11 = CompressedCrdRdScan(crd_arr=D_crd1, seg_arr=D_seg1, debug=debug_sim)
-    unionj1_8 = Union2(debug=debug_sim)
-    unionj2_8 = Union2(debug=debug_sim)
-    unionj3_8 = Union2(debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=3 * len(B_crd0) + 1, size=3 * len(B_vals), fill=fill, debug=debug_sim)
-    arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
-    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
-    arrayvals_D_7 = Array(init_arr=D_vals, debug=debug_sim)
-    add_4 = Add2(debug=debug_sim)
-    add_3 = Add2(debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=3 * len(B_vals), fill=fill, debug=debug_sim)
+    fiberlookup_Bi_13 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics = report_stats)
+    fiberlookup_Ci_14 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics = report_stats)
+    fiberlookup_Di_15 = CompressedCrdRdScan(crd_arr=D_crd0, seg_arr=D_seg0, debug=debug_sim, statistics = report_stats)
+    unioni1_12 = Union2(debug=debug_sim, statistics = report_stats)
+    unioni2_12 = Union2(debug=debug_sim, statistics = report_stats)
+    unioni3_12 = Union2(debug=debug_sim, statistics = report_stats)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=3 * len(B_crd0), fill=fill, debug=debug_sim, statistics = report_stats)
+    fiberlookup_Bj_9 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics = report_stats)
+    fiberlookup_Cj_10 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics = report_stats)
+    fiberlookup_Dj_11 = CompressedCrdRdScan(crd_arr=D_crd1, seg_arr=D_seg1, debug=debug_sim, statistics = report_stats)
+    unionj1_8 = Union2(debug=debug_sim, statistics = report_stats)
+    unionj2_8 = Union2(debug=debug_sim, statistics = report_stats)
+    unionj3_8 = Union2(debug=debug_sim, statistics = report_stats)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=3 * len(B_crd0) + 1, size=3 * len(B_vals), fill=fill, debug=debug_sim, statistics = report_stats)
+    arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics = report_stats)
+    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim, statistics = report_stats)
+    arrayvals_D_7 = Array(init_arr=D_vals, debug=debug_sim, statistics = report_stats)
+    add_4 = Add2(debug=debug_sim, statistics = report_stats)
+    add_3 = Add2(debug=debug_sim, statistics = report_stats)
+    fiberwrite_Xvals_0 = ValsWrScan(size=3 * len(B_vals), fill=fill, debug=debug_sim, statistics = report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_D = [0, 'D']

@@ -15,8 +15,7 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
 
 # FIXME: Figureout formats
 @pytest.mark.skipif(
@@ -93,56 +92,43 @@ def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_14.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_14.update()
-
         if len(in_ref_C) > 0:
             fiberlookup_Ci_15.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_15.update()
-
         intersecti_13.set_in1(fiberlookup_Bi_14.out_ref(), fiberlookup_Bi_14.out_crd())
         intersecti_13.set_in2(fiberlookup_Ci_15.out_ref(), fiberlookup_Ci_15.out_crd())
-        intersecti_13.update()
-
         fiberlookup_Bj_11.set_in_ref(intersecti_13.out_ref1())
-        fiberlookup_Bj_11.update()
-
         fiberlookup_Cj_12.set_in_ref(intersecti_13.out_ref2())
-        fiberlookup_Cj_12.update()
-
         intersectj_10.set_in1(fiberlookup_Bj_11.out_ref(), fiberlookup_Bj_11.out_crd())
         intersectj_10.set_in2(fiberlookup_Cj_12.out_ref(), fiberlookup_Cj_12.out_crd())
-        intersectj_10.update()
-
         fiberlookup_Bk_8.set_in_ref(intersectj_10.out_ref1())
-        fiberlookup_Bk_8.update()
-
         fiberlookup_Ck_9.set_in_ref(intersectj_10.out_ref2())
-        fiberlookup_Ck_9.update()
-
         intersectk_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd())
         intersectk_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd())
-        intersectk_7.update()
-
         arrayvals_B_5.set_load(intersectk_7.out_ref1())
-        arrayvals_B_5.update()
-
         arrayvals_C_6.set_load(intersectk_7.out_ref2())
-        arrayvals_C_6.update()
-
         mul_4.set_in1(arrayvals_B_5.out_val())
         mul_4.set_in2(arrayvals_C_6.out_val())
-        mul_4.update()
-
         reduce_3.set_in_val(mul_4.out_val())
-        reduce_3.update()
-
         reduce_2.set_in_val(reduce_3.out_val())
-        reduce_2.update()
-
         reduce_1.set_in_val(reduce_2.out_val())
-        reduce_1.update()
-
         fiberwrite_xvals_0.set_input(reduce_1.out_val())
+        fiberlookup_Bi_14.update()
+
+        fiberlookup_Ci_15.update()
+
+        intersecti_13.update()
+        fiberlookup_Bj_11.update()
+        fiberlookup_Cj_12.update()
+        intersectj_10.update()
+        fiberlookup_Bk_8.update()
+        fiberlookup_Ck_9.update()
+        intersectk_7.update()
+        arrayvals_B_5.update()
+        arrayvals_C_6.update()
+        mul_4.update()
+        reduce_3.update()
+        reduce_2.update()
+        reduce_1.update()
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_xvals_0.out_done()
@@ -153,7 +139,6 @@ def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
     out_crds = []
     out_segs = []
     out_vals = fiberwrite_xvals_0.get_arr()
-
     def bench():
         time.sleep(0.01)
 
@@ -162,41 +147,65 @@ def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
+    sample_dict = fiberlookup_Bi_14.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_14" + "_" + k] =  sample_dict[k]
+
     sample_dict = intersecti_13.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersecti_13" + "_" + k] = sample_dict[k]
+        extra_info["intersecti_13" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Bj_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bj_11" + "_" + k] =  sample_dict[k]
 
     sample_dict = intersectj_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_10" + "_" + k] = sample_dict[k]
+        extra_info["intersectj_10" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Bk_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bk_8" + "_" + k] =  sample_dict[k]
 
     sample_dict = intersectk_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectk_7" + "_" + k] = sample_dict[k]
+        extra_info["intersectk_7" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_B_5.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_B_5" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_B_5" + "_" + k] =  sample_dict[k]
 
     sample_dict = reduce_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_3" + "_" + k] = sample_dict[k]
+        extra_info["reduce_3" + "_" + k] =  sample_dict[k]
 
     sample_dict = reduce_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_2" + "_" + k] = sample_dict[k]
+        extra_info["reduce_2" + "_" + k] =  sample_dict[k]
 
     sample_dict = reduce_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_1" + "_" + k] = sample_dict[k]
+        extra_info["reduce_1" + "_" + k] =  sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_C_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_C_6" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_C_6" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Ck_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ck_9" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Cj_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_12" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Ci_15.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_15" + "_" + k] =  sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

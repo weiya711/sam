@@ -16,9 +16,6 @@ import os
 import csv
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
-
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
@@ -91,89 +88,67 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_25.update()
-
         if len(in_ref_C) > 0:
             fiberlookup_Ci_26.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_26.update()
-
         intersecti_24.set_in1(fiberlookup_Bi_25.out_ref(), fiberlookup_Bi_25.out_crd())
         intersecti_24.set_in2(fiberlookup_Ci_26.out_ref(), fiberlookup_Ci_26.out_crd())
-        intersecti_24.update()
-
         fiberlookup_Bj_19.set_in_ref(intersecti_24.out_ref1())
-        fiberlookup_Bj_19.update()
-
         repsiggen_i_22.set_istream(intersecti_24.out_crd())
-        repsiggen_i_22.update()
-
         if len(in_ref_D) > 0:
             repeat_Di_21.set_in_ref(in_ref_D.pop(0))
         repeat_Di_21.set_in_repsig(repsiggen_i_22.out_repsig())
-        repeat_Di_21.update()
-
         fiberlookup_Dj_20.set_in_ref(repeat_Di_21.out_ref())
-        fiberlookup_Dj_20.update()
-
         intersectj_18.set_in1(fiberlookup_Dj_20.out_ref(), fiberlookup_Dj_20.out_crd())
         intersectj_18.set_in2(fiberlookup_Bj_19.out_ref(), fiberlookup_Bj_19.out_crd())
-        intersectj_18.update()
-
         fiberlookup_Dk_14.set_in_ref(intersectj_18.out_ref1())
-        fiberlookup_Dk_14.update()
-
         crddrop_9.set_outer_crd(intersecti_24.out_crd())
         crddrop_9.set_inner_crd(intersectj_18.out_crd())
-        crddrop_9.update()
-
         repsiggen_j_16.set_istream(intersectj_18.out_crd())
-        repsiggen_j_16.update()
-
         repeat_Cj_15.set_in_ref(intersecti_24.out_ref2())
         repeat_Cj_15.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_Cj_15.update()
-
         fiberlookup_Ck_13.set_in_ref(repeat_Cj_15.out_ref())
-        fiberlookup_Ck_13.update()
-
         intersectk_12.set_in1(fiberlookup_Ck_13.out_ref(), fiberlookup_Ck_13.out_crd())
         intersectk_12.set_in2(fiberlookup_Dk_14.out_ref(), fiberlookup_Dk_14.out_crd())
-        intersectk_12.update()
-
         repsiggen_k_11.set_istream(intersectk_12.out_crd())
-        repsiggen_k_11.update()
-
         arrayvals_C_7.set_load(intersectk_12.out_ref1())
-        arrayvals_C_7.update()
-
         arrayvals_D_8.set_load(intersectk_12.out_ref2())
-        arrayvals_D_8.update()
-
         repeat_Bk_10.set_in_ref(intersectj_18.out_ref2())
         repeat_Bk_10.set_in_repsig(repsiggen_k_11.out_repsig())
-        repeat_Bk_10.update()
-
         arrayvals_B_6.set_load(repeat_Bk_10.out_ref())
-        arrayvals_B_6.update()
-
         mul_5.set_in1(arrayvals_B_6.out_val())
         mul_5.set_in2(arrayvals_C_7.out_val())
-        mul_5.update()
-
         mul_4.set_in1(mul_5.out_val())
         mul_4.set_in2(arrayvals_D_8.out_val())
-        mul_4.update()
-
         reduce_3.set_in_val(mul_4.out_val())
-        reduce_3.update()
-
         fiberwrite_Xvals_0.set_input(reduce_3.out_val())
-        fiberwrite_Xvals_0.update()
-
         fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer())
-        fiberwrite_X0_2.update()
-
         fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner())
+        fiberlookup_Bi_25.update()
+
+        fiberlookup_Ci_26.update()
+
+        intersecti_24.update()
+        fiberlookup_Bj_19.update()
+        repsiggen_i_22.update()
+        repeat_Di_21.update()
+        fiberlookup_Dj_20.update()
+        intersectj_18.update()
+        fiberlookup_Dk_14.update()
+        crddrop_9.update()
+        repsiggen_j_16.update()
+        repeat_Cj_15.update()
+        fiberlookup_Ck_13.update()
+        intersectk_12.update()
+        repsiggen_k_11.update()
+        arrayvals_C_7.update()
+        arrayvals_D_8.update()
+        repeat_Bk_10.update()
+        arrayvals_B_6.update()
+        mul_5.update()
+        mul_4.update()
+        reduce_3.update()
+        fiberwrite_Xvals_0.update()
+        fiberwrite_X0_2.update()
         fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
@@ -186,7 +161,6 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
     out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
-
     def bench():
         time.sleep(0.01)
 
@@ -196,61 +170,85 @@ def test_mat_sddmm(samBench, ssname, check_gold, debug_sim, fill=0):
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
     extra_info["tensor_D_shape"] = D_shape
+    sample_dict = fiberlookup_Bi_25.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_25" + "_" + k] =  sample_dict[k]
+
     sample_dict = intersecti_24.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersecti_24" + "_" + k] = sample_dict[k]
+        extra_info["intersecti_24" + "_" + k] =  sample_dict[k]
 
     sample_dict = crddrop_9.return_statistics()
     for k in sample_dict.keys():
-        extra_info["crddrop_9" + "_" + k] = sample_dict[k]
+        extra_info["crddrop_9" + "_" + k] =  sample_dict[k]
 
     sample_dict = fiberwrite_X0_2.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X0_2" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_X0_2" + "_" + k] =  sample_dict[k]
 
     sample_dict = fiberwrite_X1_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_X1_1" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_X1_1" + "_" + k] =  sample_dict[k]
 
     sample_dict = repeat_Di_21.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Di_21" + "_" + k] = sample_dict[k]
+        extra_info["repeat_Di_21" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Dj_20.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Dj_20" + "_" + k] =  sample_dict[k]
 
     sample_dict = intersectj_18.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectj_18" + "_" + k] = sample_dict[k]
+        extra_info["intersectj_18" + "_" + k] =  sample_dict[k]
 
     sample_dict = repeat_Cj_15.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Cj_15" + "_" + k] = sample_dict[k]
+        extra_info["repeat_Cj_15" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Ck_13.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ck_13" + "_" + k] =  sample_dict[k]
 
     sample_dict = intersectk_12.return_statistics()
     for k in sample_dict.keys():
-        extra_info["intersectk_12" + "_" + k] = sample_dict[k]
+        extra_info["intersectk_12" + "_" + k] =  sample_dict[k]
 
     sample_dict = repeat_Bk_10.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_Bk_10" + "_" + k] = sample_dict[k]
+        extra_info["repeat_Bk_10" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_B_6.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_B_6" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_B_6" + "_" + k] =  sample_dict[k]
 
     sample_dict = reduce_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["reduce_3" + "_" + k] = sample_dict[k]
+        extra_info["reduce_3" + "_" + k] =  sample_dict[k]
 
     sample_dict = fiberwrite_Xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_Xvals_0" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_C_7.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_C_7" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_C_7" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_D_8.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_D_8" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_D_8" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Dk_14.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Dk_14" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Bj_19.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bj_19" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_Ci_26.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_26" + "_" + k] =  sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

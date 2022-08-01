@@ -15,10 +15,6 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-
-
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
@@ -66,30 +62,25 @@ def test_vec_elemadd(samBench, vecname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_b) > 0:
             fiberlookup_bi_6.set_in_ref(in_ref_b.pop(0))
-        fiberlookup_bi_6.update()
-
         if len(in_ref_c) > 0:
             fiberlookup_ci_7.set_in_ref(in_ref_c.pop(0))
-        fiberlookup_ci_7.update()
-
         unioni_5.set_in1(fiberlookup_bi_6.out_ref(), fiberlookup_bi_6.out_crd())
         unioni_5.set_in2(fiberlookup_ci_7.out_ref(), fiberlookup_ci_7.out_crd())
-        unioni_5.update()
-
         fiberwrite_x0_1.set_input(unioni_5.out_crd())
-        fiberwrite_x0_1.update()
-
         arrayvals_b_3.set_load(unioni_5.out_ref1())
-        arrayvals_b_3.update()
-
         arrayvals_c_4.set_load(unioni_5.out_ref2())
-        arrayvals_c_4.update()
-
         add_2.set_in1(arrayvals_b_3.out_val())
         add_2.set_in2(arrayvals_c_4.out_val())
-        add_2.update()
-
         fiberwrite_xvals_0.set_input(add_2.out_val())
+        fiberlookup_bi_6.update()
+
+        fiberlookup_ci_7.update()
+
+        unioni_5.update()
+        fiberwrite_x0_1.update()
+        arrayvals_b_3.update()
+        arrayvals_c_4.update()
+        add_2.update()
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
@@ -101,7 +92,6 @@ def test_vec_elemadd(samBench, vecname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
-
     def bench():
         time.sleep(0.01)
 
@@ -110,21 +100,29 @@ def test_vec_elemadd(samBench, vecname, check_gold, debug_sim, fill=0):
     extra_info["cycles"] = time_cnt
     extra_info["tensor_b_shape"] = b_shape
     extra_info["tensor_c_shape"] = c_shape
+    sample_dict = fiberlookup_bi_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_bi_6" + "_" + k] =  sample_dict[k]
+
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_b_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_b_3" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_b_3" + "_" + k] =  sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_c_4.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_c_4" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_c_4" + "_" + k] =  sample_dict[k]
+
+    sample_dict = fiberlookup_ci_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_ci_7" + "_" + k] =  sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

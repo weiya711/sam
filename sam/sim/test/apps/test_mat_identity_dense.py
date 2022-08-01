@@ -15,35 +15,21 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.suitesparse
-def test_mat_identity(samBench, ssname, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+def test_mat_identity_dense(samBench, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, , "orig", "dd01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
-
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
-    B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
-    B_crd0 = read_inputs(B0_crd_filename)
-
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
-    B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
-    B_crd1 = read_inputs(B1_crd_filename)
 
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    fiberlookup_Bi_5 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
-    fiberlookup_Bj_4 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberlookup_Bi_5 = UncompressCrdRdScan(dim=B_shape[0], debug=debug_sim)
+    fiberlookup_Bj_4 = UncompressCrdRdScan(dim=B_shape[1], debug=debug_sim)
     arrayvals_B_3 = Array(init_arr=B_vals, debug=debug_sim)
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
@@ -66,21 +52,19 @@ def test_mat_identity(samBench, ssname, check_gold, debug_sim, fill=0):
         arrayvals_B_3.update()
         fiberwrite_Xvals_0.update()
 
-        done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 
-    fiberwrite_X0_2.autosize()
-    fiberwrite_X1_1.autosize()
     fiberwrite_Xvals_0.autosize()
 
-    out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
-    out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
+    out_crds = []
+    out_segs = []
     out_vals = fiberwrite_Xvals_0.get_arr()
     def bench():
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = ssname
+    extra_info["dataset"] = 
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     sample_dict = fiberlookup_Bi_5.return_statistics()
@@ -109,5 +93,5 @@ def test_mat_identity(samBench, ssname, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_identity(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_mat_identity_dense(, debug_sim, out_crds, out_segs, out_vals, "dd01")
     samBench(bench, extra_info)

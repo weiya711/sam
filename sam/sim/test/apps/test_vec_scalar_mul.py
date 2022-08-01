@@ -15,8 +15,6 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-
-
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
@@ -59,30 +57,24 @@ def test_vec_scalar_mul(samBench, vecname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_c) > 0:
             fiberlookup_ci_8.set_in_ref(in_ref_c.pop(0))
-        fiberlookup_ci_8.update()
-
         arrayvals_c_4.set_load(fiberlookup_ci_8.out_ref())
-        arrayvals_c_4.update()
-
         fiberwrite_x0_1.set_input(fiberlookup_ci_8.out_crd())
-        fiberwrite_x0_1.update()
-
         repsiggen_i_6.set_istream(fiberlookup_ci_8.out_crd())
-        repsiggen_i_6.update()
-
         if len(in_ref_b) > 0:
             repeat_bi_5.set_in_ref(in_ref_b.pop(0))
         repeat_bi_5.set_in_repsig(repsiggen_i_6.out_repsig())
-        repeat_bi_5.update()
-
         arrayvals_b_3.set_load(repeat_bi_5.out_ref())
-        arrayvals_b_3.update()
-
         mul_2.set_in1(arrayvals_b_3.out_val())
         mul_2.set_in2(arrayvals_c_4.out_val())
-        mul_2.update()
-
         fiberwrite_xvals_0.set_input(mul_2.out_val())
+        fiberlookup_ci_8.update()
+
+        arrayvals_c_4.update()
+        fiberwrite_x0_1.update()
+        repsiggen_i_6.update()
+        repeat_bi_5.update()
+        arrayvals_b_3.update()
+        mul_2.update()
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
@@ -94,7 +86,6 @@ def test_vec_scalar_mul(samBench, vecname, check_gold, debug_sim, fill=0):
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
     out_vals = fiberwrite_xvals_0.get_arr()
-
     def bench():
         time.sleep(0.01)
 
@@ -103,25 +94,29 @@ def test_vec_scalar_mul(samBench, vecname, check_gold, debug_sim, fill=0):
     extra_info["cycles"] = time_cnt
     extra_info["tensor_b_shape"] = b_shape
     extra_info["tensor_c_shape"] = c_shape
+    sample_dict = fiberlookup_ci_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_ci_8" + "_" + k] =  sample_dict[k]
+
     sample_dict = fiberwrite_x0_1.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_x0_1" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_x0_1" + "_" + k] =  sample_dict[k]
 
     sample_dict = repeat_bi_5.return_statistics()
     for k in sample_dict.keys():
-        extra_info["repeat_bi_5" + "_" + k] = sample_dict[k]
+        extra_info["repeat_bi_5" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_b_3.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_b_3" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_b_3" + "_" + k] =  sample_dict[k]
 
     sample_dict = fiberwrite_xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberwrite_xvals_0" + "_" + k] = sample_dict[k]
+        extra_info["fiberwrite_xvals_0" + "_" + k] =  sample_dict[k]
 
     sample_dict = arrayvals_c_4.return_statistics()
     for k in sample_dict.keys():
-        extra_info["arrayvals_c_4" + "_" + k] = sample_dict[k]
+        extra_info["arrayvals_c_4" + "_" + k] =  sample_dict[k]
 
     if check_gold:
         print("Checking gold...")

@@ -427,7 +427,7 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
         if ct != 0:
             f.write(tab(1) + "extra_info[\"tensor_" + k + "_shape\"] = " + k + "_shape\n")
         ct += 1
-    statistic_available = ["reduce", "spaccumulator", "crddrop", "repeat", "repeatsiggen", "intersect", "fiberwrite",
+    statistic_available = ["fiberlookup", "reduce", "spaccumulator", "crddrop", "repeat", "repeatsiggen", "intersect", "fiberwrite",
                            "arrayvals"]
     for u in networkx_graph.nodes():
         if d[u]["type"] in statistic_available:
@@ -592,8 +592,10 @@ for apath in file_paths:
         ct += 1
     generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
     for u in list(nx.topological_sort(networkx_graph)):
-        node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
+        node_info = breakup_node_info(networkx_graph.nodes[u]["comment"]) 
         d[u] = node_info
+        #if "matmul_kij" in apath:
+        #    print(d[u])
         if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
             root_nodes.append(node_info["tensor"])
         if node_info["type"] == "fiberlookup":
@@ -683,10 +685,6 @@ for apath in file_paths:
                         array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
-                # print(node_info)
-                # f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                #        " = UnCompressWrScan(seg_size=" + array_size_computation(node_info["size"]) + ", size=" +
-                #        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
                 continue
             if node_info["sink"] == "true":
@@ -712,7 +710,6 @@ for apath in file_paths:
                 f.write(tab(2) + "if len(in_ref_" + d[u]["tensor"] + ") > 0:\n")
                 f.write(tab(3) + d[u]["object"] + ".set_in_ref(in_ref_" + d[u]["tensor"] + ".pop(0))\n")
                 nodes_updating_list.append(tab(2) + d[u]["object"] + ".update()\n\n")
-                # f.write(tab(2) + d[u]["object"] + ".update()\n\n")
                 data.add_done(u)
 
     for i in range(10):
@@ -928,6 +925,7 @@ for apath in file_paths:
                     if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
                             in d[u_]["object"]:
                         local_index = data.get_edge_data()[v][i][-1]
+                        print(d[u_], " ", local_index, " ", apath)
                         if d[u_]["in0"] == local_index:
                             local_cord = "_inner"
                         else:
@@ -937,13 +935,10 @@ for apath in file_paths:
                         f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_info(v, i)) + "())\n")
                         nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                        # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     else:
-                        # print(apath, " ", str(data.get_edge_data()[v][i]))
                         f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                 str(data.get_edge_info(v, i)) + "())\n")
                         nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                        # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
 
     output_tensor = ""
