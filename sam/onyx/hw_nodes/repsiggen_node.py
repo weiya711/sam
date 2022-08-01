@@ -19,6 +19,7 @@ class RepSigGenNode(HWNode):
         from sam.onyx.hw_nodes.lookup_node import LookupNode
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         rsg = self.get_name()
         new_conns = None
@@ -69,6 +70,8 @@ class RepSigGenNode(HWNode):
         elif other_type == BroadcastNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == RepSigGenNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')

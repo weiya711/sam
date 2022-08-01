@@ -110,6 +110,23 @@ class MatrixGenerator():
             for val in numpy.nditer(self.array):
                 flat_array.append(val)
             self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals")
+        elif self.format == "COO":
+            crd_dict = dict()
+            order = len(self.array.shape)
+            for i in range(order + 1):
+                crd_dict[i] = []
+            it = np.nditer(self.array, flags=['multi_index'])
+            while not it.finished:
+                crd_dict[order].append(it[0])
+                point = it.multi_index
+                for i in range(order):
+                    crd_dict[i].append(point[i])
+                is_not_finished = it.iternext()
+            for key in crd_dict:
+                if key == order:
+                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_vals")
+                else:
+                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_{key}_crd")
 
         if dump_shape:
             self.write_array(self.array.shape, name=f"shape")
@@ -326,30 +343,38 @@ def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
     return mg
 
 
-def get_tensor_from_files(name, files_dir, shape, base=10, early_terminate=None) -> MatrixGenerator:
+def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_terminate=None) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
-    segs = []
-    crds = []
-    scalar = False
-    if dims == 1 and shape[0] == 1:
-        scalar = True
-    vals = None
-    if not scalar:
+
+    # Get vals first since all formats will have vals
+    val_f = [fil for fil in all_files if name in fil and f'mode_vals' in fil][0]
+    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate)
+
+    mg = None
+    if dims == 1 and shape[0] == 1:     # scalar
+        mat_sc = numpy.zeros([1])
+        mat_sc[0] = vals[0]
+        mg = MatrixGenerator(name=name, shape=shape, tensor=mat_sc)
+    elif format == 'CSF':
+        segs = []
+        crds = []
         for mode in range(dims):
             seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
             crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
             segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate))
             crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
-    val_f = [fil for fil in all_files if name in fil and f'mode_vals' in fil][0]
-    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate)
 
-    if scalar:
-        mat_sc = numpy.zeros([1])
-        mat_sc[0] = vals[0]
-        mg = MatrixGenerator(name=name, shape=shape, tensor=mat_sc)
-    else:
         pt_list = get_point_list(crds, segs, val_arr=vals)
+        mg = create_matrix_from_point_list(name, pt_list, shape)
+    elif format == 'COO':
+        crds = []
+        for mode in range(dims):
+            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
+            crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
+
+        pt_list = copy.deepcopy(crds)
+        pt_list.append(vals)
         mg = create_matrix_from_point_list(name, pt_list, shape)
 
     return mg

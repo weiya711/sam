@@ -24,6 +24,7 @@ class ReadScannerNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         new_conns = None
         rd_scan = self.get_name()
@@ -159,6 +160,26 @@ class ReadScannerNode(HWNode):
                     ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 17),
                 ]
             }
+            return new_conns
+        elif other_type == CrdHoldNode:
+            crdhold = other.get_name()
+            # Use inner to process outer
+            crdhold_outer = other.get_outer()
+            crdhold_inner = other.get_inner()
+            conn = 0
+            print(edge)
+            print("RDSCAN TO CRDHOLD")
+            comment = edge.get_attributes()['comment'].strip('"')
+            print(comment)
+            mapped_to_conn = comment
+            if crdhold_outer in mapped_to_conn:
+                conn = 1
+            new_conns = {
+                f'rd_scan_to_crdhold_{conn}': [
+                    ([(rd_scan, "coord_out"), (crdhold, f"cmrg_coord_in_{conn}")], 17),
+                ]
+            }
+
             return new_conns
         else:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
