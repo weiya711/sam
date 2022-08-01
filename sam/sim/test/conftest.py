@@ -61,6 +61,7 @@ def debug_sim(request):
 def check_gold(request):
     return request.config.getoption("--check-gold")
 
+
 @pytest.fixture
 def report_stats(request):
     return request.config.getoption("--report-stats")

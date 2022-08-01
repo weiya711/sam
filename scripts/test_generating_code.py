@@ -427,7 +427,8 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
         if ct != 0:
             f.write(tab(1) + "extra_info[\"tensor_" + k + "_shape\"] = " + k + "_shape\n")
         ct += 1
-    statistic_available = ["fiberlookup", "reduce", "spaccumulator", "crddrop", "repeat", "repeatsiggen", "intersect", "fiberwrite",
+    statistic_available = ["fiberlookup", "reduce", "spaccumulator", "crddrop",
+                           "repeat", "repeatsiggen", "intersect", "fiberwrite",
                            "arrayvals"]
     for u in networkx_graph.nodes():
         if d[u]["type"] in statistic_available:
@@ -592,7 +593,7 @@ for apath in file_paths:
         ct += 1
     generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
     for u in list(nx.topological_sort(networkx_graph)):
-        node_info = breakup_node_info(networkx_graph.nodes[u]["comment"]) 
+        node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         d[u] = node_info
         if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
             root_nodes.append(node_info["tensor"])
@@ -628,10 +629,12 @@ for apath in file_paths:
                     " = Repeat(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "intersect":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim, statistics=report_stats)\n")
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim,
+                    statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "union":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim, statistics=report_stats)\n")
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim,
+                    statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
             # invalid_flag = 1
         elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
@@ -680,7 +683,8 @@ for apath in file_paths:
             elif node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                         " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim, statistics=report_stats)\n")
+                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim,
+                        statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
