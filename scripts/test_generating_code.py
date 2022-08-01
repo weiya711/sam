@@ -179,7 +179,7 @@ def generate_header(f, out_name):
         f.write("ssname, ")
     elif out_name in vec_list:
         f.write("vecname, ")
-    f.write("check_gold, debug_sim, fill=0):\n")
+    f.write("check_gold, debug_sim, report_stats, fill=0):\n")
 
 
 def get_dataset_name(test_name):
@@ -600,19 +600,19 @@ for apath in file_paths:
             if node_info["format"] == "dense":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] +
                         node_info["index"] + "_" + str(u) + " = UncompressCrdRdScan(dim=" + node_info["tensor"] +
-                        "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim)\n")
+                        "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
             if node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
                         "_" + str(u) + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
                         "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
-                        "_seg" + node_info["mode"] + ", debug=debug_sim)\n")
+                        "_seg" + node_info["mode"] + ", debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "arrayvals":
             f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + " = Array(init_arr=" +
-                    node_info["tensor"] + "_vals, " + "debug=debug_sim)\n")
+                    node_info["tensor"] + "_vals, " + "debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u)
 
         elif "broadcast" in networkx_graph.nodes[u]['comment']:
@@ -620,67 +620,67 @@ for apath in file_paths:
 
         elif node_info["type"] == "repsiggen":
             f.write(tab(1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) +
-                    " = RepeatSigGen(debug=debug_sim)\n")
+                    " = RepeatSigGen(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u)
 
         elif node_info["type"] == "repeat":
             f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) +
-                    " = Repeat(debug=debug_sim)\n")
+                    " = Repeat(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "intersect":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
         elif node_info["type"] == "union":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
             # invalid_flag = 1
         elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + " = SparseAccumulator1(debug=debug_sim)\n")
+                u) + " = SparseAccumulator1(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_inner" + " = StknDrop(debug=debug_sim)\n")
+                u) + "_drop_crd_inner" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_outer" + " = StknDrop(debug=debug_sim)\n")
+                u) + "_drop_crd_outer" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_val" + " = StknDrop(debug=debug_sim)\n")
+                u) + "_drop_val" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
         elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + " = SparseAccumulator2(debug=debug_sim)\n")
+                u) + " = SparseAccumulator2(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_inner" + " = StknDrop(debug=debug_sim)\n")
+                u) + "_drop_crd_inner" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_outer" + " = StknDrop(debug=debug_sim)\n")
+                u) + "_drop_crd_outer" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
             # f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
             #    u) + "_drop_crd_in_2" + " = StknDrop(debug=debug_sim)\n")
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_val" + " = StknDrop(debug=debug_sim)\n")
+                u) + "_drop_val" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
         elif node_info["type"] == "crddrop":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "crdhold":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "mul":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "add":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Add2(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Add2(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "reduce":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Reduce(debug=debug_sim)\n")
+            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Reduce(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "fiberwrite":
             if node_info["mode"] == "vals":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                         " = ValsWrScan(size=" + array_size_computation(node_info["size"]) +
-                        ", fill=fill, debug=debug_sim)\n")
+                        ", fill=fill, debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             elif node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                         " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim)\n")
+                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)

@@ -23,7 +23,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'m
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
+def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, report_stats, fill=0):
     B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -68,22 +68,22 @@ def test_tensor3_innerprod(samBench, frosttname, check_gold, debug_sim, fill=0):
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_14 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberlookup_Ci_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
-    intersecti_13 = Intersect2(debug=debug_sim)
-    fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    intersectj_10 = Intersect2(debug=debug_sim)
-    fiberlookup_Bk_8 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim)
-    fiberlookup_Ck_9 = CompressedCrdRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim)
-    intersectk_7 = Intersect2(debug=debug_sim)
-    arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
-    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
-    mul_4 = Multiply2(debug=debug_sim)
-    reduce_3 = Reduce(debug=debug_sim)
-    reduce_2 = Reduce(debug=debug_sim)
-    reduce_1 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1, fill=fill, debug=debug_sim)
+    fiberlookup_Bi_14 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Ci_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
+    intersecti_13 = Intersect2(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
+    intersectj_10 = Intersect2(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bk_8 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Ck_9 = CompressedCrdRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim, statistics=report_stats)
+    intersectk_7 = Intersect2(debug=debug_sim, statistics=report_stats)
+    arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
+    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
+    mul_4 = Multiply2(debug=debug_sim, statistics=report_stats)
+    reduce_3 = Reduce(debug=debug_sim, statistics=report_stats)
+    reduce_2 = Reduce(debug=debug_sim, statistics=report_stats)
+    reduce_1 = Reduce(debug=debug_sim, statistics=report_stats)
+    fiberwrite_xvals_0 = ValsWrScan(size=1, fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False

@@ -21,7 +21,7 @@ cwd = os.getcwd()
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vec_identity(samBench, vecname, check_gold, debug_sim, fill=0):
+def test_vec_identity(samBench, vecname, check_gold, debug_sim, report_stats, fill=0):
     b_dirname = os.path.join(formatted_dir, vecname, "orig", "s0")
     b_shape_filename = os.path.join(b_dirname, "b_shape.txt")
     b_shape = read_inputs(b_shape_filename)
@@ -34,10 +34,10 @@ def test_vec_identity(samBench, vecname, check_gold, debug_sim, fill=0):
     b_vals_filename = os.path.join(b_dirname, "b_vals.txt")
     b_vals = read_inputs(b_vals_filename, float)
 
-    fiberlookup_bi_3 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim)
-    arrayvals_b_2 = Array(init_arr=b_vals, debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim)
+    fiberlookup_bi_3 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim, statistics=report_stats)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
+    arrayvals_b_2 = Array(init_arr=b_vals, debug=debug_sim, statistics=report_stats)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_b = [0, 'D']
     done = False
     time_cnt = 0

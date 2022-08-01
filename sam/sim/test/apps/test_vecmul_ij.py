@@ -21,7 +21,7 @@ cwd = os.getcwd()
     reason='CI lacks datasets',
 )
 @pytest.mark.vec
-def test_vecmul_ij(samBench, vecname, check_gold, debug_sim, fill=0):
+def test_vecmul_ij(samBench, vecname, check_gold, debug_sim, report_stats, fill=0):
     B_dirname = os.path.join(formatted_dir, vecname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -51,18 +51,18 @@ def test_vecmul_ij(samBench, vecname, check_gold, debug_sim, fill=0):
     c_vals_filename = os.path.join(c_dirname, "c_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
-    fiberlookup_Bi_12 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
-    repsiggen_i_10 = RepeatSigGen(debug=debug_sim)
-    repeat_ci_9 = Repeat(debug=debug_sim)
-    fiberlookup_cj_8 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
-    intersectj_6 = Intersect2(debug=debug_sim)
-    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim)
-    arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim)
-    mul_3 = Multiply2(debug=debug_sim)
-    reduce_2 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim)
+    fiberlookup_Bi_12 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
+    repsiggen_i_10 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_ci_9 = Repeat(debug=debug_sim, statistics=report_stats)
+    fiberlookup_cj_8 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim, statistics=report_stats)
+    intersectj_6 = Intersect2(debug=debug_sim, statistics=report_stats)
+    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
+    arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim, statistics=report_stats)
+    mul_3 = Multiply2(debug=debug_sim, statistics=report_stats)
+    reduce_2 = Reduce(debug=debug_sim, statistics=report_stats)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_c = [0, 'D']
     done = False

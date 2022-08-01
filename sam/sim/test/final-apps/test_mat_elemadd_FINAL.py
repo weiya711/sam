@@ -60,18 +60,19 @@ def test_mat_elemadd_FINAL(samBench, ssname, check_gold, report_stats, debug_sim
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_10 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics = report_stats)
-    fiberlookup_Ci_11 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics = report_stats)
-    unioni_9 = Union2(debug=debug_sim, statistics = report_stats)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim, statistics = report_stats)
-    fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics = report_stats)
-    fiberlookup_Cj_8 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics = report_stats)
-    unionj_6 = Union2(debug=debug_sim, statistics = report_stats)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=2 * len(B_crd0) + 1, size=2 * len(B_vals), fill=fill, debug=debug_sim, statistics = report_stats)
-    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim, statistics = report_stats)
-    arrayvals_C_5 = Array(init_arr=C_vals, debug=debug_sim, statistics = report_stats)
-    add_3 = Add2(debug=debug_sim, statistics = report_stats)
-    fiberwrite_Xvals_0 = ValsWrScan(size=2 * len(B_vals), fill=fill, debug=debug_sim, statistics = report_stats)
+    fiberlookup_Bi_10 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Ci_11 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
+    unioni_9 = Union2(debug=debug_sim, statistics=report_stats)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Cj_8 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
+    unionj_6 = Union2(debug=debug_sim, statistics=report_stats)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=2 * len(B_crd0) + 1, size=2 * len(B_vals), fill=fill,
+                                     debug=debug_sim, statistics=report_stats)
+    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
+    arrayvals_C_5 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
+    add_3 = Add2(debug=debug_sim, statistics=report_stats)
+    fiberwrite_Xvals_0 = ValsWrScan(size=2 * len(B_vals), fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False

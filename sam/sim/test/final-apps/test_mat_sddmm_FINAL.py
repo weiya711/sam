@@ -53,30 +53,31 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, report_stats, debu
     D_shape = (KDIM, B_shape[1])
     D_vals = np.arange(math.prod(D_shape)).tolist()
 
-    fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics = report_stats)
-    fiberlookup_Bj_19 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics = report_stats)
-    repsiggen_k_11 = RepeatSigGen(debug=debug_sim, statistics = report_stats)
-    repeat_Bk_10 = Repeat(debug=debug_sim, statistics = report_stats)
+    fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bj_19 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
+    repsiggen_k_11 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_Bk_10 = Repeat(debug=debug_sim, statistics=report_stats)
 
-    repsiggen_i_22 = RepeatSigGen(debug=debug_sim, statistics = report_stats)
-    repeat_Di_21 = Repeat(debug=debug_sim, statistics = report_stats)
-    fiberlookup_Dk_14 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim, statistics = report_stats)
+    repsiggen_i_22 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_Di_21 = Repeat(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Dk_14 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim, statistics=report_stats)
 
-    repsiggen_j_16 = RepeatSigGen(debug=debug_sim, statistics = report_stats)
-    repeat_Cj_15 = Repeat(debug=debug_sim, statistics = report_stats)
-    fiberlookup_Ck_13 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim, statistics = report_stats)
+    repsiggen_j_16 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_Cj_15 = Repeat(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Ck_13 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim, statistics=report_stats)
 
-    intersectk_12 = Intersect2(debug=debug_sim, statistics = report_stats)
+    intersectk_12 = Intersect2(debug=debug_sim, statistics=report_stats)
 
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=len(B_crd0), fill=fill, debug=debug_sim, statistics = report_stats)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=len(B_crd0) + 1, size=len(B_vals), fill=fill, debug=debug_sim, statistics = report_stats)
-    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, statistics = report_stats)
-    arrayvals_D_8 = Array(init_arr=D_vals, debug=debug_sim, statistics = report_stats)
-    arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim, statistics = report_stats)
-    mul_5 = Multiply2(debug=debug_sim, statistics = report_stats)
-    mul_4 = Multiply2(debug=debug_sim, statistics = report_stats)
-    reduce_3 = Reduce(debug=debug_sim, statistics = report_stats)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * len(B_vals), fill=fill, debug=debug_sim, statistics = report_stats)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=len(B_crd0) + 1, size=len(B_vals), fill=fill,
+                                     debug=debug_sim, statistics=report_stats)
+    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
+    arrayvals_D_8 = Array(init_arr=D_vals, debug=debug_sim, statistics=report_stats)
+    arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
+    mul_5 = Multiply2(debug=debug_sim, statistics=report_stats)
+    mul_4 = Multiply2(debug=debug_sim, statistics=report_stats)
+    reduce_3 = Reduce(debug=debug_sim, statistics=report_stats)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * len(B_vals), fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_D = [0, 'D']

@@ -22,7 +22,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_identity_dense(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_identity_dense(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "dd01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -30,10 +30,10 @@ def test_mat_identity_dense(samBench, ssname, check_gold, debug_sim, fill=0):
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    fiberlookup_Bi_5 = UncompressCrdRdScan(dim=B_shape[0], debug=debug_sim)
-    fiberlookup_Bj_4 = UncompressCrdRdScan(dim=B_shape[1], debug=debug_sim)
-    arrayvals_B_3 = Array(init_arr=B_vals, debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberlookup_Bi_5 = UncompressCrdRdScan(dim=B_shape[0], debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bj_4 = UncompressCrdRdScan(dim=B_shape[1], debug=debug_sim, statistics=report_stats)
+    arrayvals_B_3 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     done = False
     time_cnt = 0

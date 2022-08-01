@@ -24,7 +24,7 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_vecmul_ji(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -54,21 +54,21 @@ def test_mat_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
     c_vals_filename = os.path.join(c_dirname, "c_vals.txt")
     c_vals = read_inputs(c_vals_filename, float)
 
-    fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberlookup_cj_12 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim)
-    intersectj_10 = Intersect2(debug=debug_sim)
-    fiberlookup_Bi_9 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim)
-    repsiggen_i_7 = RepeatSigGen(debug=debug_sim)
-    repeat_ci_6 = Repeat(debug=debug_sim)
-    arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim)
-    mul_3 = Multiply2(debug=debug_sim)
-    spaccumulator1_2 = SparseAccumulator1(debug=debug_sim)
-    spaccumulator1_2_drop_crd_inner = StknDrop(debug=debug_sim)
-    spaccumulator1_2_drop_crd_outer = StknDrop(debug=debug_sim)
-    spaccumulator1_2_drop_val = StknDrop(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
+    fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
+    fiberlookup_cj_12 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim, statistics=report_stats)
+    intersectj_10 = Intersect2(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bi_9 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
+    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
+    repsiggen_i_7 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_ci_6 = Repeat(debug=debug_sim, statistics=report_stats)
+    arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim, statistics=report_stats)
+    mul_3 = Multiply2(debug=debug_sim, statistics=report_stats)
+    spaccumulator1_2 = SparseAccumulator1(debug=debug_sim, statistics=report_stats)
+    spaccumulator1_2_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats)
+    spaccumulator1_2_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats)
+    spaccumulator1_2_drop_val = StknDrop(debug=debug_sim, statistics=report_stats)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_c = [0, 'D']
     done = False
