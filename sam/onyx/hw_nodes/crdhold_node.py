@@ -1,7 +1,7 @@
 from sam.onyx.hw_nodes.hw_node import *
 
 
-class MergeNode(HWNode):
+class CrdHoldNode(HWNode):
     def __init__(self, name=None, outer=None, inner=None) -> None:
         super().__init__(name=name)
         self.outer = outer
@@ -15,7 +15,7 @@ class MergeNode(HWNode):
 
     def connect(self, other, edge):
 
-        merge = self.get_name()
+        crdhold = self.get_name()
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -29,30 +29,30 @@ class MergeNode(HWNode):
         from sam.onyx.hw_nodes.lookup_node import LookupNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
-        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.merge_node import MergeNode
 
         new_conns = None
         other_type = type(other)
 
         if other_type == GLBNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == BuffetNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == MemoryNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == ReadScannerNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == WriteScannerNode:
             wr_scan = other.get_name()
             conn = 0
             comment = edge.get_attributes()['comment'].strip('"')
-            print("MERGE TO WR SCAN")
+            print("CRDHOLD TO WR SCAN")
             print(comment)
             if 'outer' in comment:
                 conn = 1
             new_conns = {
-                f'merge_{conn}_to_wr_scan': [
-                    ([(merge, f"cmrg_coord_out_{conn}"), (wr_scan, f"data_in")], 17),
+                f'crdhold_{conn}_to_wr_scan': [
+                    ([(crdhold, f"cmrg_coord_out_{conn}"), (wr_scan, f"data_in")], 17),
                     # ([(merge, f"cmrg_eos_out_{conn}"), (wr_scan, f"eos_in_0")], 1),
                     # ([(wr_scan, f"ready_out_0"), (merge, f"cmrg_ready_in_{conn}")], 1),
                     # ([(merge, f"cmrg_valid_out_{conn}"), (wr_scan, f"valid_in_0")], 1),
@@ -61,55 +61,50 @@ class MergeNode(HWNode):
 
             return new_conns
         elif other_type == IntersectNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == ReduceNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == LookupNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == MergeNode:
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
+        elif other_type == CrdHoldNode:
             out_conn = 1
             in_conn = 1
 
-            other_merge = other.get_name()
+            other_crdhold = other.get_name()
             # Use inner to process outer
-            merge_outer = other.get_outer()
-            merge_inner = other.get_inner()
+            hold_outer = other.get_outer()
+            hold_inner = other.get_inner()
             conn = 0
             print(edge)
-            print("INTERSECT TO MERGE")
+            print("CRDHOLD TO CRDHOLD")
             comment = edge.get_attributes()['comment'].strip('"')
             print(comment)
-            print(merge_outer)
-            print(merge_inner)
-            if merge_outer in comment:
+            print(hold_outer)
+            print(hold_inner)
+            if hold_outer in comment:
                 conn = 1
             new_conns = {
-                f'isect_to_merger_{conn}': [
-                    # Send isect row and isect col to merger inside isect_col
-                    ([(merge, f"cmrg_coord_out_{out_conn}"), (other_merge, f"cmrg_coord_in_{in_conn}")], 17),
-                    # ([(isect, "eos_out_0"), (merge, f"cmrg_eos_in_{conn}")], 1),
-                    # ([(merge, f"cmrg_ready_out_{conn}"), (isect, "ready_in_0")], 1),
-                    # ([(isect, "valid_out_0"), (merge, f"cmrg_valid_in_{conn}")], 1),
+                f'crdhold_to_crdhold_{conn}': [
+                    ([(crdhold, f"cmrg_coord_out_{out_conn}"), (other_crdhold, f"cmrg_coord_in_{in_conn}")], 17),
                 ]
             }
-
         elif other_type == RepeatNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == ComputeNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == BroadcastNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == RepSigGenNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
-        elif other_type == CrdHoldNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         else:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
 
         return new_conns
 
     def configure(self, attributes):
-        print("MERGE CONFIGURE")
+        print("CRDHOLD CONFIGURE")
         print(attributes)
         cmrg_enable = 1
         # TODO what is this supposed to be?

@@ -25,3 +25,5 @@ cmake-build-*/
 
 *.out
 *.svg
+
+*.gv

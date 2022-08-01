@@ -19,6 +19,7 @@ class RepeatNode(HWNode):
         from sam.onyx.hw_nodes.lookup_node import LookupNode
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         repeat = self.get_name()
         new_conns = None
@@ -69,6 +70,8 @@ class RepeatNode(HWNode):
             raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == RepSigGenNode:
             raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
+        elif other_type == CrdHoldNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
 

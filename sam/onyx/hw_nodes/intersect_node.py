@@ -24,6 +24,7 @@ class IntersectNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         new_conns = None
         isect = self.get_name()
@@ -108,6 +109,8 @@ class IntersectNode(HWNode):
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == RepSigGenNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+        elif other_type == CrdHoldNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
 
