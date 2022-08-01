@@ -15,13 +15,16 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
+formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))
+
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-def test_tensor3_identity_dense(samBench, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, , "orig", "ddd012")
+@pytest.mark.frostt
+def test_tensor3_identity_dense(samBench, frosttname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "ddd012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -69,7 +72,7 @@ def test_tensor3_identity_dense(samBench, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = 
+    extra_info["dataset"] = frosttname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     sample_dict = fiberlookup_Bi_7.return_statistics()
@@ -106,5 +109,5 @@ def test_tensor3_identity_dense(samBench, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_identity_dense(, debug_sim, out_crds, out_segs, out_vals, "ddd012")
+        check_gold_tensor3_identity_dense(frosttname, debug_sim, out_crds, out_segs, out_vals, "ddd012")
     samBench(bench, extra_info)

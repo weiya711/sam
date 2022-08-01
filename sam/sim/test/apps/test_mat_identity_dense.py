@@ -15,13 +15,15 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
+formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-def test_mat_identity_dense(samBench, check_gold, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, , "orig", "dd01")
+@pytest.mark.suitesparse
+def test_mat_identity_dense(samBench, ssname, check_gold, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, ssname, "orig", "dd01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -64,7 +66,7 @@ def test_mat_identity_dense(samBench, check_gold, debug_sim, fill=0):
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = 
+    extra_info["dataset"] = ssname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     sample_dict = fiberlookup_Bi_5.return_statistics()
@@ -93,5 +95,5 @@ def test_mat_identity_dense(samBench, check_gold, debug_sim, fill=0):
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_identity_dense(, debug_sim, out_crds, out_segs, out_vals, "dd01")
+        check_gold_mat_identity_dense(ssname, debug_sim, out_crds, out_segs, out_vals, "dd01")
     samBench(bench, extra_info)
