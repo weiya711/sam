@@ -156,11 +156,11 @@ def generate_header(f, out_name):
     if out_name in suitesparse_list:
         f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
     elif out_name in frostt_list:
-        f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default = os.path.join(cwd,'mode-formats'))\n\n")
+        f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
     if out_name in other_list:
-        f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n\n")
+        f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
 
-    f.write("# FIXME: Figureout formats\n")
+    f.write("\n\n# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
     f.write(tab(1) + "reason='CI lacks datasets',\n")
@@ -414,7 +414,7 @@ def finish_outputs(f, elements, nodes_completed):
 
 
 def generate_benchmarking_code(f, tensor_format_parse, test_name):
-    f.write(tab(1) + "def bench():\n")
+    f.write("\n" + tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
     f.write(tab(1) + "extra_info = dict()\n")
     f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name)[:-2] + "\n")
@@ -434,7 +434,7 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
         if d[u]["type"] in statistic_available:
             f.write(tab(1) + "sample_dict = " + d[u]["object"] + ".return_statistics()\n")
             f.write(tab(1) + "for k in sample_dict.keys():\n")
-            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] =  sample_dict[k]\n\n")
+            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] = sample_dict[k]\n\n")
 
 
 def generate_check_against_gold_code(f, tensor_format_parse, test_name):
@@ -446,7 +446,7 @@ def generate_check_against_gold_code(f, tensor_format_parse, test_name):
         check = check[:-4]
     f.write(check + "(" + get_dataset_name(test_name) + "debug_sim, out_crds, out_segs, out_vals, \"" +
             tensor_format_parse.get_format(output_tensor) + "\")\n")
-    f.write(tab(1) + "samBench(bench, extra_info)")
+    f.write(tab(1) + "samBench(bench, extra_info)\n")
 
 
 def size_computation_write(a):
