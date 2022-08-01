@@ -594,8 +594,6 @@ for apath in file_paths:
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"]) 
         d[u] = node_info
-        #if "matmul_kij" in apath:
-        #    print(d[u])
         if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
             root_nodes.append(node_info["tensor"])
         if node_info["type"] == "fiberlookup":
