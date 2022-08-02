@@ -138,11 +138,16 @@ class SAMDotGraph():
             name = "intersect" if "intersect" in attrs['type'].strip('"') else "union"
 
             joiner12 = pydot.Node(f"{name}_{self.get_next_seq()}",
-                                  **attrs, label=f"{og_label}_12", hwnode=f"{HWNodeType.Intersect}")
+                                  **attrs, label=f"{og_label}_12")
             joiner13 = pydot.Node(f"{name}_{self.get_next_seq()}",
-                                  **attrs, label=f"{og_label}_13", hwnode=f"{HWNodeType.Intersect}")
+                                  **attrs, label=f"{og_label}_13")
             joiner23 = pydot.Node(f"{name}_{self.get_next_seq()}",
-                                  **attrs, label=f"{og_label}_23", hwnode=f"{HWNodeType.Intersect}")
+                                  **attrs, label=f"{og_label}_23")
+
+            broadcast3_crd = pydot.Node(f"broadcast_crd_{self.get_next_seq()}",
+                                  label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
+            broadcast3_ref = pydot.Node(f"broadcast_ref_{self.get_next_seq()}",
+                                  label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
 
             input_crd_edges = dict()
             input_ref_edges = dict()
@@ -164,10 +169,13 @@ class SAMDotGraph():
                         edge_name = edge.get_attributes()['comment'].strip('"').split('-')[1]
                         output_ref_edges[edge_name] = edge
 
+
             # Add in the new joiner nodes
             self.graph.add_node(joiner12)
             self.graph.add_node(joiner23)
             self.graph.add_node(joiner13)
+            self.graph.add_node(broadcast3_crd)
+            self.graph.add_node(broadcast3_ref)
 
             # Rewire the edges
             assert set(input_crd_edges.keys()) == set(input_ref_edges.keys()) and set(input_ref_edges.keys()) == set(
@@ -188,14 +196,21 @@ class SAMDotGraph():
             self.graph.add_edge(joiner12_crd2_edge_tmp)
             self.graph.add_edge(joiner12_ref2_edge_tmp)
 
+
+            broadcast3_input_crd = pydot.Edge(src=input_crd_edges[keys[2]].get_source(), dst=broadcast3_crd,
+                                              label=f"crd")
+            broadcast3_input_ref = pydot.Edge(src=input_ref_edges[keys[2]].get_source(), dst=broadcast3_ref,
+                                              label=f"ref")
+
             joiner13_crd1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner13,
-                                                **input_crd_edges[keys[0]].get_attributes()
-                                                )
+                                                **input_crd_edges[keys[0]].get_attributes())
             joiner13_ref1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner13,
                                                 **input_ref_edges[keys[0]].get_attributes())
-            joiner13_crd2_edge_tmp = pydot.Edge(src=input_crd_edges[keys[2]].get_source(), dst=joiner13,
+
+
+            joiner13_crd2_edge_tmp = pydot.Edge(src=broadcast3_crd, dst=joiner13,
                                                 **input_crd_edges[keys[2]].get_attributes())
-            joiner13_ref2_edge_tmp = pydot.Edge(src=input_ref_edges[keys[2]].get_source(), dst=joiner13,
+            joiner13_ref2_edge_tmp = pydot.Edge(src=broadcast3_ref, dst=joiner13,
                                                 **input_ref_edges[keys[2]].get_attributes())
 
             joiner13_ref1_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_ref_edges[keys[0]].get_destination(),
@@ -205,6 +220,8 @@ class SAMDotGraph():
             joiner13_crd_out_edge_tmp = pydot.Edge(src=joiner13, dst=output_crd_edge.get_destination(),
                                                    **output_crd_edge.get_attributes())
 
+            self.graph.add_edge(broadcast3_input_crd)
+            self.graph.add_edge(broadcast3_input_ref)
             self.graph.add_edge(joiner13_crd1_edge_tmp)
             self.graph.add_edge(joiner13_ref1_edge_tmp)
             self.graph.add_edge(joiner13_crd2_edge_tmp)
@@ -217,22 +234,23 @@ class SAMDotGraph():
                                                 **input_crd_edges[keys[1]].get_attributes())
             joiner23_ref1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner23,
                                                 **input_ref_edges[keys[1]].get_attributes())
-            joiner23_crd2_edge_tmp = pydot.Edge(src=input_crd_edges[keys[2]].get_source(), dst=joiner23,
+
+            joiner23_crd2_edge_tmp = pydot.Edge(src=broadcast3_crd, dst=joiner23,
                                                 **input_crd_edges[keys[2]].get_attributes())
-            joiner23_ref2_edge_tmp = pydot.Edge(src=input_ref_edges[keys[2]].get_source(), dst=joiner23,
+            joiner23_ref2_edge_tmp = pydot.Edge(src=broadcast3_ref, dst=joiner23,
                                                 **input_ref_edges[keys[2]].get_attributes())
 
             joiner23_ref1_out_edge_tmp = pydot.Edge(src=joiner23, dst=output_ref_edges[keys[1]].get_destination(),
                                                     **output_ref_edges[keys[1]].get_attributes())
-            joiner23_ref2_out_edge_tmp = pydot.Edge(src=joiner23, dst=output_ref_edges[keys[2]].get_destination(),
-                                                    **output_ref_edges[keys[2]].get_attributes())
+            # joiner23_ref2_out_edge_tmp = pydot.Edge(src=joiner23, dst=output_ref_edges[keys[2]].get_destination(),
+            #                                         **output_ref_edges[keys[2]].get_attributes())
 
             self.graph.add_edge(joiner23_crd1_edge_tmp)
             self.graph.add_edge(joiner23_ref1_edge_tmp)
             self.graph.add_edge(joiner23_crd2_edge_tmp)
             self.graph.add_edge(joiner23_ref2_edge_tmp)
             self.graph.add_edge(joiner23_ref1_out_edge_tmp)
-            self.graph.add_edge(joiner23_ref2_out_edge_tmp)
+            # self.graph.add_edge(joiner23_ref2_out_edge_tmp)
 
             # Delete original edges and nodes
             for k, v in input_crd_edges.items():

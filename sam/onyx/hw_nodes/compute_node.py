@@ -68,9 +68,9 @@ class ComputeNode(HWNode):
             isect = other.get_name()
             pe = self.get_name()
             # isect_conn = other.get_num_inputs()
-            isect_conn = 0
-            if edge.get_tensor() == "C":
-                isect_conn = 1
+
+            isect_conn = other.get_connection_from_tensor(edge.get_tensor())
+
             new_conns = {
                 f'pe_to_isect_{in_str}_{isect_conn}': [
                     # send output to rd scanner
