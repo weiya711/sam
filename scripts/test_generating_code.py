@@ -683,7 +683,7 @@ for apath in file_paths:
             elif node_info["format"] == "compressed":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                         " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill=fill, debug=debug_sim, " +
+                        array_size_computation(node_info["crdsize"]) + ", fill=fill," + " debug=debug_sim, " +
                         "statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
             else:
