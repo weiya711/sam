@@ -178,7 +178,7 @@ class CompressedCrdRdScan(CrdRdScan):
             self.skip_cnt = 0
             self.intersection_behind_cnt = 0
             self.fiber_behind_cnt = 0
-            self.stop_count = 0
+        self.stop_count = 0
         self.skip_stkn_cnt = 0
         self.out_stkn_cnt = 0
 
@@ -419,8 +419,7 @@ class CompressedCrdRdScan(CrdRdScan):
 
         # Needed for skip lists
         if is_stkn(self.curr_crd):
-            if self.get_stats:
-                self.out_stkn_cnt += 1
+            self.out_stkn_cnt += 1
         # Needed for skip lists
         if self.skip_stkn_cnt < self.out_stkn_cnt:
             # ignore the skip if it's a fiber behind
@@ -430,7 +429,6 @@ class CompressedCrdRdScan(CrdRdScan):
             self.prev_crd = self.curr_crd
 
         if is_stkn(self.curr_crd):
-            if self.get_stats:
                 self.stop_count += 1
 
         # Debugging print statements
