@@ -45,11 +45,16 @@ class IntersectNode(HWNode):
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == ReadScannerNode:
             rd_scan = other.get_name()
-            out_conn = 0
-            # print(edge)
             comment = edge.get_attributes()['comment'].strip('"')
-            if "C" in comment or "c" in comment:
-                out_conn = 1
+            try:
+                tensor = comment.split("-")[1]
+            except Exception:
+                try:
+                    tensor = comment.split("_")[1]
+                except Exception:
+                    tensor = comment
+            out_conn = self.get_connection_from_tensor(tensor)
+
             new_conns = {
                 f'isect_to_rd_scan': [
                     # send output to rd scanner
@@ -75,8 +80,42 @@ class IntersectNode(HWNode):
             }
             return new_conns
         elif other_type == IntersectNode:
-            # TODO
-            raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+            comment = edge.get_attributes()['comment'].strip('"')
+            try:
+                tensor = comment.split("-")[1]
+            except Exception:
+                try:
+                    tensor = comment.split("_")[1]
+                except Exception:
+                    tensor = comment
+
+            other_isect = other.get_name()
+            isect_conn = self.get_connection_from_tensor(tensor)
+            other_isect_conn = other.get_connection_from_tensor(tensor)
+
+            edge_type = edge.get_attributes()['type'].strip('"')
+
+            if 'crd' in edge_type:
+                new_conns = {
+                    f'isect_to_isect': [
+                        # send output to rd scanner
+                        ([(isect, f"coord_out"), (other_isect, f"coord_in_{other_isect_conn}")], 17),
+                        # ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
+                        # ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
+                        # ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
+                    ]
+                }
+            elif 'ref' in edge_type:
+                new_conns = {
+                    f'isect_to_isect': [
+                        # send output to rd scanner
+                        ([(isect, f"pos_out_{isect_conn}"), (other_isect, f"pos_in_{other_isect_conn}")], 17),
+                        # ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
+                        # ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
+                        # ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
+                    ]
+                }
+            return new_conns
         elif other_type == ReduceNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == LookupNode:
@@ -97,10 +136,10 @@ class IntersectNode(HWNode):
             # okay this is dumb, stopgap until we can have super consistent output
             try:
                 mapped_to_conn = comment.split("-")[1]
-            except:
+            except Exception:
                 try:
                     mapped_to_conn = comment.split("_")[1]
-                except:
+                except Exception:
                     mapped_to_conn = comment
             if merge_outer in mapped_to_conn:
                 conn = 1
