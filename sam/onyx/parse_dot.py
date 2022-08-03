@@ -145,9 +145,9 @@ class SAMDotGraph():
                                   **attrs, label=f"{og_label}_23")
 
             broadcast3_crd = pydot.Node(f"broadcast_crd_{self.get_next_seq()}",
-                                  label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
+                                        label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
             broadcast3_ref = pydot.Node(f"broadcast_ref_{self.get_next_seq()}",
-                                  label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
+                                        label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
 
             input_crd_edges = dict()
             input_ref_edges = dict()
@@ -168,7 +168,6 @@ class SAMDotGraph():
                     elif 'ref' in edge_type:
                         edge_name = edge.get_attributes()['comment'].strip('"').split('-')[1]
                         output_ref_edges[edge_name] = edge
-
 
             # Add in the new joiner nodes
             self.graph.add_node(joiner12)
@@ -196,7 +195,6 @@ class SAMDotGraph():
             self.graph.add_edge(joiner12_crd2_edge_tmp)
             self.graph.add_edge(joiner12_ref2_edge_tmp)
 
-
             broadcast3_input_crd = pydot.Edge(src=input_crd_edges[keys[2]].get_source(), dst=broadcast3_crd,
                                               label=f"crd")
             broadcast3_input_ref = pydot.Edge(src=input_ref_edges[keys[2]].get_source(), dst=broadcast3_ref,
@@ -206,7 +204,6 @@ class SAMDotGraph():
                                                 **input_crd_edges[keys[0]].get_attributes())
             joiner13_ref1_edge_tmp = pydot.Edge(src=joiner12, dst=joiner13,
                                                 **input_ref_edges[keys[0]].get_attributes())
-
 
             joiner13_crd2_edge_tmp = pydot.Edge(src=broadcast3_crd, dst=joiner13,
                                                 **input_crd_edges[keys[2]].get_attributes())
@@ -575,7 +572,6 @@ def parse_graph(graph):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description='SAM DOT Parser')
     parser.add_argument('--sam_graph',
                         type=str,

@@ -48,10 +48,10 @@ class IntersectNode(HWNode):
             comment = edge.get_attributes()['comment'].strip('"')
             try:
                 tensor = comment.split("-")[1]
-            except:
+            except Exception:
                 try:
                     tensor = comment.split("_")[1]
-                except:
+                except Exception:
                     tensor = comment
             out_conn = self.get_connection_from_tensor(tensor)
 
@@ -83,10 +83,10 @@ class IntersectNode(HWNode):
             comment = edge.get_attributes()['comment'].strip('"')
             try:
                 tensor = comment.split("-")[1]
-            except:
+            except Exception:
                 try:
                     tensor = comment.split("_")[1]
-                except:
+                except Exception:
                     tensor = comment
 
             other_isect = other.get_name()
@@ -136,10 +136,10 @@ class IntersectNode(HWNode):
             # okay this is dumb, stopgap until we can have super consistent output
             try:
                 mapped_to_conn = comment.split("-")[1]
-            except:
+            except Exception:
                 try:
                     mapped_to_conn = comment.split("_")[1]
-                except:
+                except Exception:
                     mapped_to_conn = comment
             if merge_outer in mapped_to_conn:
                 conn = 1
