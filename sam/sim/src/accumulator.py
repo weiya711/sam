@@ -13,7 +13,7 @@ class Reduce(Primitive):
         self.emit_stkn = False
         self.curr_in_val = None
 
-        if self.get_stats == True:
+        if self.get_stats:
             self.reduction_count = 0
             self.num_inputs = 0
             self.num_outputs = 0
@@ -47,13 +47,13 @@ class Reduce(Primitive):
                 self.done = True
                 self.curr_out = 'D'
             else:
-                if self.get_stats == True:
+                if self.get_stats:
                     self.reduction_count += 1
                 self.sum += self.curr_in_val
                 self.curr_out = ""
         else:
             self.curr_out = ""
-        
+
         if self.get_stats:
             if self.curr_out == "":
                 self.drop_token_out += 1
@@ -65,7 +65,7 @@ class Reduce(Primitive):
                 else:
                     self.nonzero_out += 1
                 self.valid_token_out += 1
-        
+
         if self.get_stats:
             self.compute_fifos()
         if self.debug:
@@ -87,13 +87,13 @@ class Reduce(Primitive):
         self.in_val_size = max(self.in_val_size, len(self.in_val))
 
     def print_fifos(self):
-        if self.get_stats == True:
+        if self.get_stats:
             print("Reduction counts- total inputs ", self.num_inputs, " total outputs ", self.num_outputs,
-              " reduction values ", self.reduction_count)
+                  " reduction values ", self.reduction_count)
             print("FiFO Val size for Reduce block: ", self.in_val_size)
 
     def return_statistics(self):
-        if self.get_stats == True:
+        if self.get_stats:
             stats_dict = {"red_count": self.reduction_count, "total_inputs": self.num_inputs,
                           "total_outputs": self.num_outputs, "stkn_outs": self.stop_token_out,
                           "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
@@ -140,7 +140,6 @@ class SparseCrdPtAccumulator1(Primitive):
             self.out_crd_fifo = 0
             self.in_crd_fifo = 0
             self.in_val_fifo = 0
-
 
     def update(self):
         self.update_done()
@@ -305,11 +304,10 @@ class SparseAccumulator1(Primitive):
 
         self.val_stkn = val_stkn
 
-        if self.get_stats: 
+        if self.get_stats:
             self.in_outer_crd_pt_fifo = 0
             self.in_inner_crd_pt_fifo = 0
             self.in_val_fifo = 0
-
 
     def update(self):
         self.update_done()
@@ -627,12 +625,10 @@ class SparseAccumulator2(Primitive):
         self.inner_crdpt = []
 
         self.val_stkn = val_stkn
-        
         if self.get_stats:
             self.in1_fifo = 0
             self.in0_fifo = 0
             self.inval_fifo = 0
-
 
     def update(self):
         self.update_done()

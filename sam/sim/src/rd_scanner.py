@@ -170,7 +170,7 @@ class CompressedCrdRdScan(CrdRdScan):
         self.meta_slen = len(seg_arr)
 
         # Statistics
-        if self.get_stats == True: 
+        if self.get_stats:
             self.unique_refs = []
             self.unique_crds = []
             self.total_outputs = 0
@@ -183,7 +183,6 @@ class CompressedCrdRdScan(CrdRdScan):
         self.out_stkn_cnt = 0
 
         self.begin = True
-
 
     def _emit_stkn_code(self):
         self.end_fiber = True
@@ -429,7 +428,7 @@ class CompressedCrdRdScan(CrdRdScan):
             self.prev_crd = self.curr_crd
 
         if is_stkn(self.curr_crd):
-                self.stop_count += 1
+            self.stop_count += 1
 
         # Debugging print statements
         if self.debug:

@@ -7,7 +7,6 @@ class Flatten(Primitive):
 
         self.in_outer_crd = []
         self.in_inner_crd = []
-        
         if self.get_stats:
             self.in_inner_crd_size = 0
             self.in_outer_crd_size = 0

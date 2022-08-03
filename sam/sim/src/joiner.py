@@ -58,7 +58,6 @@ class BVJoiner2(Joiner2):
 class Intersect2(CrdJoiner2):
     def __init__(self, skip=True, **kwargs):
         super().__init__(**kwargs)
-        
         if self.get_stats:
             self.size_in_ref1 = 0
             self.size_in_ref2 = 0
@@ -143,7 +142,7 @@ class Intersect2(CrdJoiner2):
                 self.change_crd2 = True
                 if self.get_stats:
                     self.zero_token_output += 1
-            
+
             elif self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
                 assert self.curr_crd1 == self.curr_crd2, "Both coordinates need to be done tokens"
                 self.done = True
@@ -262,7 +261,7 @@ class Intersect2(CrdJoiner2):
                          "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
                          "fifo_difference": self.max_run_count, "intersection_rate": self.return_intersection_rate(),
                          "drop_count": self.zero_token_output, "valid_output": self.valid_count,
-                        "run_count": self.max_run_count}
+                         "run_count": self.max_run_count}
             stat_dict.update(super().return_statistics())
         else:
             stat_dict = {}
@@ -272,8 +271,6 @@ class Intersect2(CrdJoiner2):
 class Union2(CrdJoiner2):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-
         self.curr_crd1 = None
         self.curr_crd2 = None
         self.curr_ref1 = None
@@ -422,7 +419,7 @@ class Union2(CrdJoiner2):
     def return_union_rate(self):
         if self.get_stats:
             return self.count / self.total_count if self.total_count != 0 else 0
-        else: 
+        else:
             return 0
 
     def print_union_rate(self):

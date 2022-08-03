@@ -7,7 +7,7 @@ class Compute2(Primitive, ABC):
 
         self.in1 = []
         self.in2 = []
-        
+
         if self.get_stats:
             self.in1_size = 0
             self.in2_size = 0
