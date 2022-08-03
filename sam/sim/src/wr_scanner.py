@@ -66,8 +66,11 @@ class ValsWrScan(WrScan):
         self.resize_arr(self.curr_addr)
 
     def return_statistics(self):
-        stats_dict = {"size": self.curr_addr}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"size": self.curr_addr}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
 
@@ -137,10 +140,13 @@ class CompressWrScan(WrScan):
         self.resize_arr(self.curr_crd_cnt)
 
     def return_statistics(self):
-        stats_dict = {}
-        stats_dict["seg_size"] = self.seg_size
-        stats_dict["arr_size"] = self.size
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {}
+            stats_dict["seg_size"] = self.seg_size
+            stats_dict["arr_size"] = self.size
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
 
