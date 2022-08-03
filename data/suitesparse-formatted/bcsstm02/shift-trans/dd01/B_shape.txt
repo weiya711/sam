@@ -1,0 +1,1 @@
+/home/oliviahsu/Documents/research/datasets/suitesparse-formatted/bcsstm02/shift-trans/ds10/C0_seg.txt
