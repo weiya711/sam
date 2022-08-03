@@ -249,8 +249,7 @@ class CompressedCrdRdScan(CrdRdScan):
                 self.skip_processed = False
 
             if is_stkn(self.curr_skip):
-                if self.get_stats:
-                    self.skip_stkn_cnt += 1
+                self.skip_stkn_cnt += 1
 
         curr_in_ref = None
         # After Done token has been seen and outputted, do nothing
