@@ -1,1 +1,2 @@
-/home/oliviahsu/Documents/research/datasets/suitesparse-formatted/bcsstm02/orig/ds10/B0_seg.txt
+66
+66
