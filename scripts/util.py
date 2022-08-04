@@ -1,6 +1,6 @@
 import scipy.sparse
 import scipy.io
-import sparse
+#import sparse
 import os
 import glob
 import numpy
@@ -498,7 +498,7 @@ class InputCacheTensor:
             self.lastLoaded = tensor.load()
             self.lastName = str(tensor)
             if cast:
-                self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
+                self.tensor = safeCastScipyTensorToInts(self.lastLoaded)
             else:
                 self.tensor = self.lastLoaded
             return self.tensor
@@ -549,7 +549,7 @@ class TensorCollectionSuiteSparse:
 
 # safeCastPydataTensorToInts casts a floating point tensor to integers
 # in a way that preserves the sparsity pattern.
-def safeCastPydataTensorToInts(tensor):
+def safeCastScipyTensorToInts(tensor):
     data = numpy.zeros(len(tensor.data), dtype='int64')
     for i in range(len(data)):
         # If the cast would turn a value into 0, instead write a 1. This preserves
@@ -559,7 +559,7 @@ def safeCastPydataTensorToInts(tensor):
         # else:
         #     data[i] = int(tensor.data[i])
         data[i] = round_sparse(tensor.data[i])
-    return sparse.COO(tensor.coords, data, tensor.shape)
+    return scipy.sparse.coo_matrix(data, tensor.coords, tensor.shape)
 
 
 def parse_taco_format(infilename, outdir, tensorname, format_str):

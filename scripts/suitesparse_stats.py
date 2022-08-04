@@ -7,9 +7,10 @@ import dataclasses
 import numpy
 
 from pathlib import Path
+from util import FormatWriter
 
 from util import TensorCollectionSuiteSparse, ScipyTensorShifter, \
-    ScipyMatrixMarketTensorLoader, SuiteSparseTensor, safeCastPydataTensorToInts
+    ScipyMatrixMarketTensorLoader, SuiteSparseTensor, safeCastScipyTensorToInts
 
 SS_PATH = os.getenv('SUITESPARSE_PATH')
 
@@ -18,6 +19,9 @@ ssMtx = dataclasses.make_dataclass("SS", [("name", str), ("nnz", int),
                                           ("sparsity", float), ("seg_size", int),
                                           ("crd_size", int)])
 
+fiber_data = dataclasses.make_dataclass("FIBER", [("name", str), ("dcsr0", [int]),
+                                          ("dcsr1", [int]), ("dcsc0", [int]),
+                                          ("dcsc1", [int]), ])
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
@@ -26,6 +30,9 @@ class UfuncInputCache:
         self.lastLoaded = None
         self.lastName = None
         self.tensor = None
+        self.other = None
+
+        self.shifter = ScipyTensorShifter()
 
     def load(self, tensor, suitesparse, cast):
         if self.lastName == str(tensor):
@@ -37,10 +44,13 @@ class UfuncInputCache:
                 self.lastLoaded = tensor.load()
             self.lastName = str(tensor)
             if cast:
-                self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
+                self.tensor = safeCastScipyTensorToInts(self.lastLoaded)
             else:
                 self.tensor = self.lastLoaded
-            return self.tensor
+
+            self.other = self.shifter.shiftLastMode(self.lastLoaded)
+
+            return self.tensor, self.other
 
 
 inputCache = UfuncInputCache()
@@ -90,6 +100,44 @@ def stats_tile(filename, args):
         tile_out_filepath.parent.mkdir(parents=True, exist_ok=True)
         dfss.to_csv(tile_out_filepath)
 
+def block_mat_tapeout(tensor, glb_size=131072, memtile_size=1024):
+    pass
+
+def fiber_stats(ss_tensor, tensor_coo, other_coo, args):
+    print("Getting fiber stats...")
+    formatWriter = FormatWriter(True)
+    print(tensor_coo)
+    dcsr = formatWriter.convert_format(tensor_coo, "dcsr")
+    dcsc = formatWriter.convert_format(tensor_coo, "dcsc")
+
+    fiber_data_list = []
+    fiber_data_list.append([dcsr.seg0[x + 1] - dcsr.seg0[x] for x in range(len(dcsr.seg0)-1)])
+    fiber_data_list.append([dcsr.seg1[x + 1] - dcsr.seg1[x] for x in range(len(dcsr.seg1)-1)])
+    fiber_data_list.append([dcsc.seg0[x + 1] - dcsc.seg0[x] for x in range(len(dcsc.seg0)-1)])
+    fiber_data_list.append([dcsc.seg1[x + 1] - dcsc.seg1[x] for x in range(len(dcsc.seg1)-1)])
+    fiber_data(ss_tensor, fiber_data_list[0], fiber_data_list[1], fiber_data_list[2], fiber_data_list[3])
+
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
+
+    counter = 0
+    for i in range(2):
+        for j in range(2):
+
+            ax = axes[i][j]
+
+            # Plot when we have data
+            if counter < len(fiber_data_list):
+
+                ax.hist(fiber_data[counter], color='blue', alpha=0.5,
+                        label='{}'.format(counter))
+
+            # Remove axis when we no longer have data
+            else:
+                ax.set_axis_off()
+
+            counter += 1
+
+    plt.show()
 
 def stats_overall(args):
     print("Processing Overall Stats")
@@ -130,10 +178,14 @@ def stats_overall(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Process some suitesparse matrix statistics")
+    parser.add_argument('-n', '--name', metavar='ssname', type=str, action='store',
+                        help='tensor name to run tile analysis on one SS tensor')
     parser.add_argument('--overall', action='store_true',
-                        help='Get overall statistics on all matrices (overall). By defalt false')
+                        help='Get overall statistics on all matrices (overall). By default false')
     parser.add_argument('--tile', action='store_true',
                         help='Get tile statistics on one or all matrices. By default false')
+    parser.add_argument('--fiber', action='store_true',
+                        help='Get fiber size statistics on one matrix. By default false')
     parser.add_argument('-nstart', '--num', metavar='N', type=int, action='store',
                         help='Start number of SS matrices to process (--overall=true)')
     parser.add_argument('-nstop', '--numstop', metavar='N', type=int, action='store',
@@ -142,8 +194,7 @@ def main():
                         help='Size of width (1st) tile dimension')
     parser.add_argument('-th', '--tileheight', metavar='N', type=int, action='store', default=64,
                         help='Size of height (2nd) tile dimension')
-    parser.add_argument('-t', '--tensor', metavar='ssname', type=str, action='store',
-                        help='tensor name to run tile analysis on one SS tensor')
+
     parser.add_argument('-g', '--debug', action='store_true', help='Print debug statements')
 
     args = parser.parse_args()
@@ -152,10 +203,9 @@ def main():
     log_path.mkdir(parents=True, exist_ok=True)
     if args.overall:
         stats_overall(args)
-
-    if args.tile:
+    else:
         print("Processing Tile Stats")
-        if args.tensor is None:
+        if args.name is None:
             filenames = sorted([f for f in os.listdir(SS_PATH) if f.endswith(".mtx")])
             if args.num is not None:
                 filenames = filenames[:args.num]
@@ -165,9 +215,20 @@ def main():
                 pbar.set_description("Processing %s" % filename)
                 stats_tile(filename, args)
         else:
-            filename = args.tensor + ".mtx"
+            filename = args.name + ".mtx"
             print("Processing %s" % filename)
-            stats_tile(filename, args)
+
+            ss_tensor = SuiteSparseTensor(os.path.join(SS_PATH, filename))
+            tensor_coo, other_coo = inputCache.load(ss_tensor, True, False)
+
+            if not isinstance(ss_tensor, numpy.ndarray):
+                if args.tile:
+                    stats_tile(filename, args)
+                elif args.fiber:
+                    fiber_stats(ss_tensor, tensor_coo, other_coo, args)
+            else:
+                print("Error: suitesparse file is not a matrix")
+
 
 
 if __name__ == '__main__':
