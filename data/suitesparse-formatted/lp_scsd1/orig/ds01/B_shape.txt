@@ -1,1 +1,2 @@
-/home/oliviahsu/Documents/research/datasets/suitesparse-formatted/lp_scsd1/orig/B_shape.txt
+77
+760

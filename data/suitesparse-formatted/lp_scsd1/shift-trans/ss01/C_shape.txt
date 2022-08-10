@@ -1,1 +1,2 @@
-/home/oliviahsu/Documents/research/datasets/suitesparse-formatted/lp_scsd1/shift-trans/C_shape.txt
+760
+77

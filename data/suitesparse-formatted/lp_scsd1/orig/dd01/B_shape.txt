@@ -1,1 +1,2 @@
-/home/oliviahsu/Documents/research/datasets/suitesparse-formatted/lp_scsd1/orig/ds10/B0_seg.txt
+77
+760
