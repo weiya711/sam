@@ -20,6 +20,7 @@ class WriteScannerNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         wr_scan = self.get_name()
 
@@ -70,13 +71,17 @@ class WriteScannerNode(HWNode):
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
         elif other_type == RepSigGenNode:
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
+        elif other_type == CrdHoldNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
 
     def configure(self, attributes):
         inner_offset = 0
         # compressed = int(attributes['format'] == 'compressed')
-        if 'format' in attributes:
+        if 'format' in attributes and 'vals' in attributes['format'].strip('"'):
+            compressed = 1
+        elif 'format' in attributes:
             compressed = int(attributes['format'].strip('"') == 'compressed')
         # elif attributes['type'].strip('"') == 'arrayvals':
         else:
@@ -86,7 +91,7 @@ class WriteScannerNode(HWNode):
         if attributes['type'].strip('"') == 'arrayvals':
             lowest_level = 1
             stop_lvl = 0
-        elif attributes['mode'].strip('"') == 'vals':
+        elif attributes['mode'].strip('"') == 'vals' or attributes['format'].strip('"') == 'vals':
             lowest_level = 1
             stop_lvl = 0
         else:

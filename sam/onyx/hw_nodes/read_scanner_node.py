@@ -24,6 +24,7 @@ class ReadScannerNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         new_conns = None
         rd_scan = self.get_name()
@@ -36,10 +37,7 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'rd_scan_to_glb': [
                     # send output to rd scanner
-                    # ([(rd_scan, "coord_out"), (other_data, "f2io_16")], 17),
                     ([(rd_scan, "coord_out"), (other_data, "f2io_17")], 17),
-                    # ([(other_ready, "io2f_1"), (rd_scan, "coord_out_ready")], 1),
-                    # ([(rd_scan, "coord_out_valid"), (other_valid, "f2io_1")], 1),
                 ]
             }
             return new_conns
@@ -49,22 +47,12 @@ class ReadScannerNode(HWNode):
                 'buffet_to_rd_scan': [
                     # rd rsp
                     ([(buffet, "rd_rsp_data"), (rd_scan, "rd_rsp_data_in")], 17),
-                    # ([(rd_scan, "rd_rsp_ready_out"), (buffet, "rd_rsp_ready")], 1),
-                    # ([(buffet, "rd_rsp_valid"), (rd_scan, "rd_rsp_valid_in")], 1),
                     # addr
                     ([(rd_scan, "addr_out"), (buffet, "rd_addr")], 17),
-                    # ([(buffet, "rd_addr_ready"), (rd_scan, "addr_out_ready_in")], 1),
-                    # ([(rd_scan, "addr_out_valid_out"), (buffet, "rd_addr_valid")], 1),
-
                     # op
                     ([(rd_scan, "op_out"), (buffet, "rd_op")], 17),
-                    # ([(buffet, "rd_op_ready"), (rd_scan, "op_out_ready_in")], 1),
-                    # ([(rd_scan, "op_out_valid_out"), (buffet, "rd_op_valid")], 1),
-
                     # id
                     ([(rd_scan, "ID_out"), (buffet, "rd_ID")], 17),
-                    # ([(buffet, "rd_ID_ready"), (rd_scan, "ID_out_ready_in")], 1),
-                    # ([(rd_scan, "ID_out_valid_out"), (buffet, "rd_ID_valid")], 1),
                 ]
             }
             return new_conns
@@ -99,26 +87,18 @@ class ReadScannerNode(HWNode):
         elif other_type == IntersectNode:
             # Send both....
             isect = other.get_name()
-            isect_conn = 0
-            # print(edge)
-            # print("CHECKING READ TENSOR - INTERSECT")
-            # print(self.get_tensor())
-            # comment = edge.get_attributes()['comment'].strip('"')
-            if self.get_tensor() == 'C' or self.get_tensor() == 'c':
-                isect_conn = 1
+
+            isect_conn = other.get_connection_from_tensor(self.get_tensor())
+
+            # isect_conn = 0
+            # if self.get_tensor() == 'C' or self.get_tensor() == 'c':
+            #     isect_conn = 1
             e_type = edge.get_attributes()['type'].strip('"')
             if "crd" in e_type:
                 new_conns = {
                     f'rd_scan_to_isect_{isect_conn}_crd': [
                         # send output to rd scanner
-                        # ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 16),
-                        # ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn * 2}")], 1),
-                        # ([(isect, f"ready_out_{isect_conn * 2}"), (rd_scan, "ready_in_0")], 1),
-                        # ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn * 2}")], 1),
                         ([(rd_scan, "coord_out"), (isect, f"coord_in_{isect_conn}")], 17),
-                        # ([(rd_scan, "eos_out_0"), (isect, f"eos_in_{isect_conn}")], 1),
-                        # ([(isect, f"ready_out_{isect_conn}"), (rd_scan, "ready_in_0")], 1),
-                        # ([(rd_scan, "valid_out_0"), (isect, f"valid_in_{isect_conn}")], 1),
                     ]
                 }
             elif 'ref' in e_type:
@@ -126,13 +106,6 @@ class ReadScannerNode(HWNode):
                     f'rd_scan_to_isect_{isect_conn}_pos': [
                         # send output to rd scanner
                         ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 17),
-                        # ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn + 2}")], 1),
-                        # ([(isect, f"ready_out_{isect_conn + 2}"), (rd_scan, "ready_in_1")], 1),
-                        # ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn + 2}")], 1),
-                        # ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 16),
-                        # ([(rd_scan, "eos_out_1"), (isect, f"eos_in_{isect_conn * 2 + 1}")], 1),
-                        # ([(isect, f"ready_out_{isect_conn * 2 + 1}"), (rd_scan, "ready_in_1")], 1),
-                        # ([(rd_scan, "valid_out_1"), (isect, f"valid_in_{isect_conn * 2 + 1}")], 1),
                     ]
                 }
             else:
@@ -151,29 +124,31 @@ class ReadScannerNode(HWNode):
                 'rd_scan_to_repeat': [
                     # send output to rd scanner
                     ([(rd_scan, "pos_out"), (repeat, "proc_data_in")], 17),
-                    # ([(rd_scan, "eos_out_1"), (repeat, "proc_eos_in")], 1),
-                    # ([(repeat, "proc_ready_out"), (rd_scan, "ready_in_1")], 1),
-                    # ([(rd_scan, "valid_out_1"), (repeat, "proc_valid_in")], 1),
                 ]
             }
             return new_conns
         elif other_type == ComputeNode:
             compute = other.get_name()
-            compute_conn = 0
-            # print(edge)
-            # print("CHECKING READ TENSOR - COMPUTE")
-            # print(self.get_tensor())
-            if self.get_tensor() == 'C' or self.get_tensor() == 'c':
-                compute_conn = 1
+            # compute_conn = 0
+            print("CHECKING READ TENSOR - COMPUTE")
+            print(edge)
+            print(self.get_tensor())
+            # if self.get_tensor() == 'C' or self.get_tensor() == 'c':
+            #     compute_conn = 1
+
+            # Can use dynamic information to assign inputs to compute nodes
+            # since add/mul are commutative
+            compute_conn = other.get_num_inputs()
+
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [
                     # send output to rd scanner
                     ([(rd_scan, "coord_out"), (compute, f"data_in_{compute_conn}")], 17),
-                    # ([(rd_scan, "eos_out_0"), (compute, f"eos_in_{compute_conn}")], 1),
-                    # ([(compute, f"ready_out_{compute_conn}"), (rd_scan, "ready_in_0")], 1),
-                    # ([(rd_scan, "valid_out_0"), (compute, f"valid_in_{compute_conn}")], 1),
                 ]
             }
+            # Now update the PE/compute to use the next connection next time
+            other.update_input_connections()
+
             return new_conns
 
         elif other_type == BroadcastNode:
@@ -183,11 +158,28 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 f'rd_scan_to_rsg': [
                     ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 17),
-                    # ([(rd_scan, "eos_out_0"), (rsg, f"base_eos_in")], 1),
-                    # ([(rsg, f"base_ready_out"), (rd_scan, "ready_in_0")], 1),
-                    # ([(rd_scan, "valid_out_0"), (rsg, f"base_valid_in")], 1),
                 ]
             }
+            return new_conns
+        elif other_type == CrdHoldNode:
+            crdhold = other.get_name()
+            # Use inner to process outer
+            crdhold_outer = other.get_outer()
+            crdhold_inner = other.get_inner()
+            conn = 0
+            print(edge)
+            print("RDSCAN TO CRDHOLD")
+            comment = edge.get_attributes()['comment'].strip('"')
+            print(comment)
+            mapped_to_conn = comment
+            if crdhold_outer in mapped_to_conn:
+                conn = 1
+            new_conns = {
+                f'rd_scan_to_crdhold_{conn}': [
+                    ([(rd_scan, "coord_out"), (crdhold, f"cmrg_coord_in_{conn}")], 17),
+                ]
+            }
+
             return new_conns
         else:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')

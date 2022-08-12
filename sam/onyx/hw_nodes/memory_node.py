@@ -20,6 +20,7 @@ class MemoryNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         # Return false if already connected...
         if self._connected_to_buffet:
@@ -70,6 +71,8 @@ class MemoryNode(HWNode):
             raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
         elif other_type == RepSigGenNode:
             raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
+        elif other_type == CrdHoldNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect MemoryNode to {other_type}')
 

@@ -20,6 +20,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
+
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
@@ -134,9 +135,10 @@ def test_mat_vecmul_ji(samBench, ssname, check_gold, debug_sim, fill=0):
         fiberwrite_xvals_0.set_input(spaccumulator1_2.out_val())
         fiberwrite_xvals_0.update()
 
-        out_crdi = spaccumulator1_2.out_crd_inner() if isinstance(spaccumulator1_2.out_crd_inner(), int) else decrement_stkn(spaccumulator1_2.out_crd_inner()) \
+        out_crdi = spaccumulator1_2.out_crd_inner() if isinstance(spaccumulator1_2.out_crd_inner(), int) else \
+            decrement_stkn(spaccumulator1_2.out_crd_inner()) \
             if is_stkn(spaccumulator1_2.out_crd_inner()) else 'D' if spaccumulator1_2.out_crd_inner() == 'D' else ''
-        fiberwrite_x0_1.set_input(out_crdi )
+        fiberwrite_x0_1.set_input(out_crdi)
         fiberwrite_x0_1.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()

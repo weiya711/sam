@@ -3,12 +3,18 @@ from lake.modules.intersect import JoinerOp
 
 
 class IntersectNode(HWNode):
-    def __init__(self, name=None) -> None:
+    def __init__(self, name=None, conn_to_tensor=None) -> None:
         super().__init__(name=name)
         self.num_inputs = 2
         self.num_inputs_connected = 0
         self.num_outputs = 3
         self.num_outputs_connected = 0
+
+        assert conn_to_tensor is not None
+        self.conn_to_tensor = conn_to_tensor
+        self.tensor_to_conn = {}
+        for conn, tensor in self.conn_to_tensor.items():
+            self.tensor_to_conn[tensor] = conn
 
     def connect(self, other, edge):
 
@@ -24,6 +30,7 @@ class IntersectNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         new_conns = None
         isect = self.get_name()
@@ -38,11 +45,16 @@ class IntersectNode(HWNode):
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == ReadScannerNode:
             rd_scan = other.get_name()
-            out_conn = 0
-            # print(edge)
             comment = edge.get_attributes()['comment'].strip('"')
-            if "C" in comment or "c" in comment:
-                out_conn = 1
+            try:
+                tensor = comment.split("-")[1]
+            except Exception:
+                try:
+                    tensor = comment.split("_")[1]
+                except Exception:
+                    tensor = comment
+            out_conn = self.get_connection_from_tensor(tensor)
+
             new_conns = {
                 f'isect_to_rd_scan': [
                     # send output to rd scanner
@@ -68,8 +80,42 @@ class IntersectNode(HWNode):
             }
             return new_conns
         elif other_type == IntersectNode:
-            # TODO
-            raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+            comment = edge.get_attributes()['comment'].strip('"')
+            try:
+                tensor = comment.split("-")[1]
+            except Exception:
+                try:
+                    tensor = comment.split("_")[1]
+                except Exception:
+                    tensor = comment
+
+            other_isect = other.get_name()
+            isect_conn = self.get_connection_from_tensor(tensor)
+            other_isect_conn = other.get_connection_from_tensor(tensor)
+
+            edge_type = edge.get_attributes()['type'].strip('"')
+
+            if 'crd' in edge_type:
+                new_conns = {
+                    f'isect_to_isect': [
+                        # send output to rd scanner
+                        ([(isect, f"coord_out"), (other_isect, f"coord_in_{other_isect_conn}")], 17),
+                        # ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
+                        # ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
+                        # ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
+                    ]
+                }
+            elif 'ref' in edge_type:
+                new_conns = {
+                    f'isect_to_isect': [
+                        # send output to rd scanner
+                        ([(isect, f"pos_out_{isect_conn}"), (other_isect, f"pos_in_{other_isect_conn}")], 17),
+                        # ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
+                        # ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
+                        # ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
+                    ]
+                }
+            return new_conns
         elif other_type == ReduceNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == LookupNode:
@@ -80,34 +126,60 @@ class IntersectNode(HWNode):
             merge_outer = other.get_outer()
             merge_inner = other.get_inner()
             conn = 0
-            # print(edge)
             # print("INTERSECT TO MERGE")
+            # print(edge)
+            # print(edge.get_attributes())
             comment = edge.get_attributes()['comment'].strip('"')
             # print(comment)
             # print(merge_outer)
             # print(merge_inner)
-            mapped_to_conn = comment.split("-")[1]
+            # okay this is dumb, stopgap until we can have super consistent output
+            try:
+                mapped_to_conn = comment.split("-")[1]
+            except Exception:
+                try:
+                    mapped_to_conn = comment.split("_")[1]
+                except Exception:
+                    mapped_to_conn = comment
             if merge_outer in mapped_to_conn:
                 conn = 1
             new_conns = {
                 f'isect_to_merger_{conn}': [
                     # Send isect row and isect col to merger inside isect_col
                     ([(isect, "coord_out"), (merge, f"cmrg_coord_in_{conn}")], 17),
-                    # ([(isect, "eos_out_0"), (merge, f"cmrg_eos_in_{conn}")], 1),
-                    # ([(merge, f"cmrg_ready_out_{conn}"), (isect, "ready_in_0")], 1),
-                    # ([(isect, "valid_out_0"), (merge, f"cmrg_valid_in_{conn}")], 1),
                 ]
             }
 
             return new_conns
         elif other_type == RepeatNode:
-            raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+            repeat = other.get_name()
+            print("INTERSECT TO REPEAT EDGE!")
+            out_conn = 0
+            print(edge)
+            comment = edge.get_attributes()['comment'].strip('"')
+            if "C" in comment or "c" in comment:
+                out_conn = 1
+            new_conns = {
+                'intersect_to_repeat': [
+                    # send output to rd scanner
+                    ([(isect, f"pos_out_{out_conn}"), (repeat, "proc_data_in")], 17),
+                ]
+            }
+            return new_conns
         elif other_type == ComputeNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == BroadcastNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == RepSigGenNode:
-            raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+            rsg = other.get_name()
+            new_conns = {
+                f'intersect_to_rsg': [
+                    ([(isect, "coord_out"), (rsg, f"base_data_in")], 17),
+                ]
+            }
+            return new_conns
+        elif other_type == CrdHoldNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
 
@@ -118,6 +190,12 @@ class IntersectNode(HWNode):
 
     def get_num_inputs(self):
         return self.num_inputs_connected
+
+    def get_connection_from_tensor(self, tensor):
+        return self.tensor_to_conn[tensor]
+
+    def get_tensor_from_connection(self, conn):
+        return self.conn_to_tensor[conn]
 
     def configure(self, attributes):
         # print("INTERSECT CONFIGURE")

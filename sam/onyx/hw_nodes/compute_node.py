@@ -23,6 +23,7 @@ class ComputeNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         other_type = type(other)
 
@@ -67,9 +68,9 @@ class ComputeNode(HWNode):
             isect = other.get_name()
             pe = self.get_name()
             # isect_conn = other.get_num_inputs()
-            isect_conn = 0
-            if edge.get_tensor() == "C":
-                isect_conn = 1
+
+            isect_conn = other.get_connection_from_tensor(edge.get_tensor())
+
             new_conns = {
                 f'pe_to_isect_{in_str}_{isect_conn}': [
                     # send output to rd scanner
@@ -122,6 +123,8 @@ class ComputeNode(HWNode):
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
         elif other_type == RepSigGenNode:
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
+        elif other_type == CrdHoldNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
 

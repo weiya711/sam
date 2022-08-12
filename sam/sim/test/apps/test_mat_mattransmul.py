@@ -20,6 +20,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
+
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
@@ -59,7 +60,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
     d_vals = read_inputs(d_vals_filename, float)
-    
+
     f_dirname = os.path.join(formatted_dir, ssname, "other")
     f_fname = [f for f in os.listdir(f_dirname) if ssname + "-vec_mode1" in f]
     assert len(f_fname) == 1, "Should only have one 'other' folder that matches"
@@ -74,7 +75,7 @@ def test_mat_mattransmul(samBench, ssname, check_gold, debug_sim, fill=0):
 
     f_vals_filename = os.path.join(f_dirname, "C_vals.txt")
     f_vals = read_inputs(f_vals_filename, float)
-    
+
     e_vals = [2]
     e_shape = [0]
 

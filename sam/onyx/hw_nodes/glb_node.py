@@ -4,7 +4,7 @@ from sam.onyx.hw_nodes.hw_node import *
 class GLBNode(HWNode):
     def __init__(self, name=None, data=None, valid=None, ready=None,
                  direction=None, num_blocks=None, file_number=None, tx_size=None, IO_id=0,
-                 bespoke=False, tensor=None, mode=None) -> None:
+                 bespoke=False, tensor=None, mode=None, format=None) -> None:
         super().__init__(name=name)
 
         self.data = data
@@ -17,6 +17,7 @@ class GLBNode(HWNode):
         self.IO_id = IO_id
         self.tensor = tensor
         self.mode = mode
+        self.format = format
         # If bespoke is set, the data/ready/valid are now ports of a kratos gen
         # instead of string names
         self.bespoke = bespoke
@@ -54,6 +55,9 @@ class GLBNode(HWNode):
     def get_mode(self):
         return self.mode
 
+    def get_format(self):
+        return self.format
+
     def connect(self, other, edge):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
@@ -68,6 +72,7 @@ class GLBNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
+        from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
 
         other_type = type(other)
 
@@ -106,6 +111,8 @@ class GLBNode(HWNode):
         elif other_type == BroadcastNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == RepSigGenNode:
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
