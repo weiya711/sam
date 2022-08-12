@@ -20,8 +20,9 @@ ssMtx = dataclasses.make_dataclass("SS", [("name", str), ("nnz", int),
                                           ("crd_size", int)])
 
 fiber_data = dataclasses.make_dataclass("FIBER", [("name", str), ("dcsr0", [int]),
-                                          ("dcsr1", [int]), ("dcsc0", [int]),
-                                          ("dcsc1", [int]), ])
+                                                  ("dcsr1", [int]), ("dcsc0", [int]),
+                                                  ("dcsc1", [int]), ])
+
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
@@ -100,8 +101,10 @@ def stats_tile(filename, args):
         tile_out_filepath.parent.mkdir(parents=True, exist_ok=True)
         dfss.to_csv(tile_out_filepath)
 
+
 def block_mat_tapeout(tensor, glb_size=131072, memtile_size=1024):
     pass
+
 
 def fiber_stats(ss_tensor, tensor_coo, other_coo, args):
     print("Getting fiber stats...")
@@ -111,10 +114,10 @@ def fiber_stats(ss_tensor, tensor_coo, other_coo, args):
     dcsc = formatWriter.convert_format(tensor_coo, "dcsc")
 
     fiber_data_list = []
-    fiber_data_list.append([dcsr.seg0[x + 1] - dcsr.seg0[x] for x in range(len(dcsr.seg0)-1)])
-    fiber_data_list.append([dcsr.seg1[x + 1] - dcsr.seg1[x] for x in range(len(dcsr.seg1)-1)])
-    fiber_data_list.append([dcsc.seg0[x + 1] - dcsc.seg0[x] for x in range(len(dcsc.seg0)-1)])
-    fiber_data_list.append([dcsc.seg1[x + 1] - dcsc.seg1[x] for x in range(len(dcsc.seg1)-1)])
+    fiber_data_list.append([dcsr.seg0[x + 1] - dcsr.seg0[x] for x in range(len(dcsr.seg0) - 1)])
+    fiber_data_list.append([dcsr.seg1[x + 1] - dcsr.seg1[x] for x in range(len(dcsr.seg1) - 1)])
+    fiber_data_list.append([dcsc.seg0[x + 1] - dcsc.seg0[x] for x in range(len(dcsc.seg0) - 1)])
+    fiber_data_list.append([dcsc.seg1[x + 1] - dcsc.seg1[x] for x in range(len(dcsc.seg1) - 1)])
     fiber_data(ss_tensor, fiber_data_list[0], fiber_data_list[1], fiber_data_list[2], fiber_data_list[3])
 
     fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 10))
@@ -138,6 +141,7 @@ def fiber_stats(ss_tensor, tensor_coo, other_coo, args):
             counter += 1
 
     plt.show()
+
 
 def stats_overall(args):
     print("Processing Overall Stats")
@@ -228,7 +232,6 @@ def main():
                     fiber_stats(ss_tensor, tensor_coo, other_coo, args)
             else:
                 print("Error: suitesparse file is not a matrix")
-
 
 
 if __name__ == '__main__':

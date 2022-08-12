@@ -25,3 +25,6 @@ cmake-build-*/
 
 *.out
 *.svg
+
+.ipynb_checkpoints
+*.egg-info
