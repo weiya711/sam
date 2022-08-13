@@ -50,12 +50,10 @@ def write_glb_single(b, out_dir, out_name, memtile_size, hexadecimal=True):
         output_lines.append(fiber_size)
         for i in range(start_pos, stop_pos):
             output_lines.append(b_crdi[i])
-        output_lines.append
 
     if hexadecimal:
         # Get rid of 0x for readmemh compatibility
         output_lines = list(map(lambda x: str(hex(int(x)))[2:] + "\n", output_lines))
-
     else:
         output_lines = list(map(lambda x: str(x) + "\n", output_lines))
 
@@ -65,14 +63,14 @@ def write_glb_single(b, out_dir, out_name, memtile_size, hexadecimal=True):
 
 
 # Sizes are in elements. Each element is 2B
-def block_vecscalarmul(b, tensor_name, glb_size=131072, memtile_size=1024, memtile_crd_space=True):
+def block_vecscalarmul(b, tensor_name, glb_size=131072, memtile_size=1024, memtile_crd_space=True, pack=False):
     print("Blocking vec scalar mul for", tensor_name + "...")
 
     b_shape = b["shape"]
     b_segi = b["tensor_b_mode_0_seg"]
     b_crdi = b["tensor_b_mode_0_crd"]
 
-    print(b_segi)
+    # print(b_segi)
 
     b_segi_new = []
 
@@ -97,18 +95,19 @@ def block_vecscalarmul(b, tensor_name, glb_size=131072, memtile_size=1024, memti
 
             if memtile_crd_space:
                 b_segi_new.append(start_pos)
-                print(fiber[0], fiber[-1])
-                print(fiber)
                 for crd in range(0, fiber[-1], memtile_size):
                     pos = start_pos + get_position(fiber, crd)
                     b_segi_new.append(pos)
             else:
-                raise NotImplemented
+                raise NotImplementedError
         else:
             b_segi_new.append(stop_pos)
 
-    b_segi_new.append(b_segi[i + 1])
-    print(b_segi_new)
+    b_segi_new.append(b_segi[-1])
+
+    if pack:
+        raise NotImplementedError    
+    # print(b_segi_new)
     b_new = b.copy()
     b_new["tensor_b_mode_0_seg"] = b_segi_new
     return b_new
