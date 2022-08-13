@@ -106,7 +106,7 @@ def block_vecscalarmul(b, tensor_name, glb_size=131072, memtile_size=1024, memti
     b_segi_new.append(b_segi[-1])
 
     if pack:
-        raise NotImplementedError    
+        raise NotImplementedError 
     # print(b_segi_new)
     b_new = b.copy()
     b_new["tensor_b_mode_0_seg"] = b_segi_new
