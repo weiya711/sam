@@ -143,7 +143,8 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [
                     # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (compute, f"data_in_{compute_conn}")], 17),
+                    # ([(rd_scan, "coord_out"), (compute, f"data_in_{compute_conn}")], 17),
+                    ([(rd_scan, "coord_out"), (compute, f"data{compute_conn}")], 17),
                 ]
             }
             # Now update the PE/compute to use the next connection next time

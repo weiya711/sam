@@ -58,11 +58,18 @@ class MatrixGenerator():
     def _create_fiber_tree(self):
         self.fiber_tree = FiberTree(tensor=self.array)
 
-    def dump_outputs(self, format=None, tpose=False, dump_shape=True):
+    def dump_outputs(self, format=None, tpose=False, dump_shape=True, glb_override=False, glb_dump_dir=None):
         '''
         Dump the matrix into many files depending on matrix format
         '''
-        print(f"Using dump directory - {self.dump_dir}")
+
+        use_dir = self.dump_dir
+        print_hex = False
+        if glb_override:
+            use_dir = glb_dump_dir
+            print_hex = True
+
+        print(f"Using dump directory - {use_dir}")
 
         # Transpose it first if necessary
         if tpose is True:
@@ -79,8 +86,12 @@ class MatrixGenerator():
             tmp_lvl_list.append(self.fiber_tree.get_root())
 
             seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
-            self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg")
-            self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd")
+            if glb_override:
+                lines = [len(seg_arr), *seg_arr, len(coord_arr), *coord_arr]
+                self.write_array(lines, name=f"tensor_{self.name}_mode_0", dump_dir=use_dir, hex=print_hex)
+            else:
+                self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg", dump_dir=use_dir, hex=print_hex)
+                self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd", dump_dir=use_dir, hex=print_hex)
 
             at_vals = False
             i = 1
@@ -99,17 +110,30 @@ class MatrixGenerator():
                 tmp_lvl_list = next_tmp_lvl_list
                 if at_vals:
                     # If at vals, we don't need to dump csf, we have the level
-                    self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals")
+                    if glb_override:
+                        lines = [len(tmp_lvl_list), *tmp_lvl_list]
+                        # self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals" dump_dir=use_dir)
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                    else:
+                        self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
                 else:
                     seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
-                    self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg")
-                    self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd")
+                    if glb_override:
+                        lines = [len(seg_arr), *seg_arr, len(coord_arr), *coord_arr]
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_{i}", dump_dir=use_dir, hex=print_hex)
+                    else:
+                        self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd", dump_dir=use_dir, hex=print_hex)
                 i = i + 1
         elif self.format == "UNC":
             flat_array = []
             for val in numpy.nditer(self.array):
                 flat_array.append(val)
-            self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals")
+            if glb_override:
+                lines = [len(flat_array), *flat_array]
+                self.write_array(lines, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+            else:
+                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
         elif self.format == "COO":
             crd_dict = dict()
             order = len(self.array.shape)
@@ -124,12 +148,20 @@ class MatrixGenerator():
                 is_not_finished = it.iternext()
             for key in crd_dict:
                 if key == order:
-                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_vals")
+                    if glb_override:
+                        lines = [len(crd_dict[key]), *crd_dict[key]]
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                    else:
+                        self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
                 else:
-                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_{key}_crd")
+                    if glb_override:
+                        lines = [len(crd_dict[key]), *crd_dict[key]]
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_{key}_crd", dump_dir=use_dir, hex=print_hex)
+                    else:
+                        self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_{key}_crd", dump_dir=use_dir, hex=print_hex)
 
         if dump_shape:
-            self.write_array(self.array.shape, name=f"shape")
+            self.write_array(self.array.shape, name=f"shape", dump_dir=use_dir, hex=print_hex)
 
         # Transpose it back
         if tpose is True:
@@ -158,17 +190,23 @@ class MatrixGenerator():
 
         return seg_arr, coord_arr
 
-    def write_array(self, str_list, name):
+    def write_array(self, str_list, name, dump_dir=None, hex=False):
         """Write an array/list to a file
 
         Args:
             list (list): array/list of values
             name (str): name of file
         """
-        full_path = self.dump_dir + "/" + name
+        if dump_dir is None:
+            dump_dir = self.dump_dir
+
+        full_path = dump_dir + "/" + name
         with open(full_path, "w+") as wr_file:
             for item in str_list:
-                wr_file.write(f"{item}\n")
+                if hex:
+                    wr_file.write(f"{item:04X}\n")
+                else:
+                    wr_file.write(f"{item}\n")
 
     def get_matrix(self):
         return self.array
