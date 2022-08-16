@@ -158,7 +158,10 @@ class MatrixGenerator():
                         lines = [len(crd_dict[key]), *crd_dict[key]]
                         self.write_array(lines, name=f"tensor_{self.name}_mode_{key}_crd", dump_dir=use_dir, hex=print_hex)
                     else:
-                        self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_{key}_crd", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(crd_dict[key],
+                                         name=f"tensor_{self.name}_mode_{key}_crd",
+                                         dump_dir=use_dir,
+                                         hex=print_hex)
 
         if dump_shape:
             self.write_array(self.array.shape, name=f"shape", dump_dir=use_dir, hex=print_hex)
