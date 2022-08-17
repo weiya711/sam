@@ -30,3 +30,5 @@ cmake-build-*/
 *.egg-info
 
 *.gv
+
+tensor_*_mode_*
