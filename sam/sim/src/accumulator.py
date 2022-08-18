@@ -504,7 +504,7 @@ class SparseCrdPtAccumulator2(Primitive):
 
         if len(self.emit_output) > 0:
             fiber = self.emit_output.pop(0)
-
+            #
             key1 = min(
                 [item for item in self.storage.keys() if item > fiber[0]])
             key0 = min(
