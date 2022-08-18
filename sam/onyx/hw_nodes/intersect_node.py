@@ -121,6 +121,8 @@ class IntersectNode(HWNode):
         elif other_type == LookupNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == MergeNode:
+            print("INTERSECT TO MERGE")
+            print(edge)
             merge = other.get_name()
             # Use inner to process outer
             merge_outer = other.get_outer()
@@ -143,6 +145,7 @@ class IntersectNode(HWNode):
                     mapped_to_conn = comment
             if merge_outer in mapped_to_conn:
                 conn = 1
+            print(f"CONN: {conn}")
             new_conns = {
                 f'isect_to_merger_{conn}': [
                     # Send isect row and isect col to merger inside isect_col

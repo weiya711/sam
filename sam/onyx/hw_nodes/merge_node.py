@@ -1,3 +1,4 @@
+from dis import code_info
 from sam.onyx.hw_nodes.hw_node import *
 
 
@@ -50,6 +51,7 @@ class MergeNode(HWNode):
             print(comment)
             if 'outer' in comment:
                 conn = 1
+            print(conn)
             new_conns = {
                 f'merge_{conn}_to_wr_scan': [
                     ([(merge, f"cmrg_coord_out_{conn}"), (wr_scan, f"data_in")], 17),
@@ -67,24 +69,24 @@ class MergeNode(HWNode):
         elif other_type == LookupNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == MergeNode:
-            out_conn = 1
-            in_conn = 1
-
             other_merge = other.get_name()
             # Use inner to process outer
-            merge_outer = other.get_outer()
-            merge_inner = other.get_inner()
-            conn = 0
-            print(edge)
-            print("INTERSECT TO MERGE")
             comment = edge.get_attributes()['comment'].strip('"')
-            print(comment)
-            print(merge_outer)
-            print(merge_inner)
-            if merge_outer in comment:
-                conn = 1
+            tensor_lvl = None
+            if self.get_inner() in comment:
+                out_conn = 0
+                tensor_lvl = self.get_inner()
+            else:
+                out_conn = 1
+                tensor_lvl = self.get_outer()
+
+            if tensor_lvl in other.get_inner():
+                in_conn = 0
+            else:
+                in_conn = 1
+
             new_conns = {
-                f'isect_to_merger_{conn}': [
+                f'merger_to_merger_{out_conn}_to_{in_conn}': [
                     # Send isect row and isect col to merger inside isect_col
                     ([(merge, f"cmrg_coord_out_{out_conn}"), (other_merge, f"cmrg_coord_in_{in_conn}")], 17),
                     # ([(isect, "eos_out_0"), (merge, f"cmrg_eos_in_{conn}")], 1),
