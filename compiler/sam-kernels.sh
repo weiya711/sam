@@ -8,7 +8,7 @@ dot_dir=$dir/dot
 png_dir=$dir/png
 taco_exe=./taco/build/bin/taco
 
-KERNEL_NAMES=(
+GEN_KERNEL_NAMES=(
   matmul_kij
   matmul_kji
   matmul_ikj
@@ -39,6 +39,10 @@ KERNEL_NAMES=(
   tensor3_mttkrp
 )
 
+HAND_KERNEL_NAMES=(
+  mat_residual
+  mat_mattransmul
+)
 
 TACO_ARGS=(
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"
@@ -75,11 +79,18 @@ mkdir -p $dir
 mkdir -p $dot_dir
 mkdir -p $png_dir
 
-for i in ${!KERNEL_NAMES[@]}; do
-    name=${KERNEL_NAMES[$i]}
+for i in ${!GEN_KERNEL_NAMES[@]}; do
+    name=${GEN_KERNEL_NAMES[$i]}
     args=${TACO_ARGS[$i]}
 
     $taco_exe $args --print-sam-graph="$dot_dir/$name.gv"
+    dot -Tpng $dot_dir/$name.gv -o $png_dir/$name.png
+    echo "Generating sam for $name to $dir"
+done
+
+for i in ${!HAND_KERNEL_NAMES[@]}; do
+    name=${HAND_KERNEL_NAMES[$i]}
+
     dot -Tpng $dot_dir/$name.gv -o $png_dir/$name.png
     echo "Generating sam for $name to $dir"
 done
