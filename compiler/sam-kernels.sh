@@ -33,8 +33,8 @@ KERNEL_NAMES=(
   tensor3_ttv
   tensor3_ttm
   mat_sddmm
-  mat_mattransmul
-  mat_residual
+  mat_mattransmul_WRONG
+  mat_residual_WRONG
   mat_elemadd3
   tensor3_mttkrp
 )
