@@ -3,12 +3,30 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class ReadScannerNode(HWNode):
-    def __init__(self, name=None, tensor=None) -> None:
+    def __init__(self, name=None, tensor=None,
+                 mode=None, dim_size=None, index=None,
+                 format=None) -> None:
         super().__init__(name=name)
         self.tensor = tensor
+        self.mode = mode
+        self.dim_size = dim_size
+        self.index = index
+        self.format = format
 
     def get_tensor(self):
         return self.tensor
+
+    def get_mode(self):
+        return self.mode
+
+    def get_dim_size(self):
+        return self.dim_size
+
+    def get_index(self):
+        return self.index
+
+    def get_format(self):
+        return self.format
 
     def connect(self, other, edge):
 
@@ -210,7 +228,7 @@ class ReadScannerNode(HWNode):
             if attributes['format'].strip('"') == 'dense':
                 print("FOUND DENSE")
                 dense = 1
-                dim_size = 10
+                dim_size = self.dim_size
         do_repeat = 0
         repeat_outer = 0
         repeat_factor = 0

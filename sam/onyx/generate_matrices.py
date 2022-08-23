@@ -215,6 +215,12 @@ class MatrixGenerator():
                 else:
                     wr_file.write(f"{item}\n")
 
+    def get_shape(self):
+        return self.shape
+
+    def get_name(self):
+        return self.name
+
     def get_matrix(self):
         return self.array
 

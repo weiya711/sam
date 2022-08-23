@@ -160,8 +160,9 @@ class IntersectNode(HWNode):
             out_conn = 0
             print(edge)
             comment = edge.get_attributes()['comment'].strip('"')
-            if "C" in comment or "c" in comment:
-                out_conn = 1
+            cmt_tnsr = comment.split("-")[1]
+            assert cmt_tnsr in self.tensor_to_conn
+            out_conn = self.tensor_to_conn[cmt_tnsr]
             new_conns = {
                 'intersect_to_repeat': [
                     # send output to rd scanner
