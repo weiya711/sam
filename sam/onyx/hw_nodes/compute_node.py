@@ -139,12 +139,15 @@ class ComputeNode(HWNode):
         print("PE CONFIGURE")
         print(attributes)
         c_op = attributes['type'].strip('"')
+        comment = attributes['comment'].strip('"')
         print(c_op)
         op_code = 0
         if c_op == 'mul':
             op_code = 1
-        elif c_op == 'add':
+        elif c_op == 'add' and 'sub' not in comment:
             op_code = 0
+        elif c_op == 'add' and 'sub' in comment:
+            op_code = 2
         cfg_kwargs = {
             'op': op_code
         }
