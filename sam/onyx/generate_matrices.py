@@ -98,8 +98,10 @@ class MatrixGenerator():
                 else:
                     fake_lines_val = []
                 for mode in range(len(self.array.shape)):
-                    self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg", dump_dir=use_dir, hex=print_hex)
-                    self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd", dump_dir=use_dir, hex=print_hex)
+                    self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg",
+                                     dump_dir=use_dir, hex=print_hex)
+                    self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd",
+                                     dump_dir=use_dir, hex=print_hex)
                 self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
 
                 return
