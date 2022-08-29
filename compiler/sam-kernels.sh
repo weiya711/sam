@@ -37,11 +37,17 @@ GEN_KERNEL_NAMES=(
   mat_residual_WRONG
   mat_elemadd3
   tensor3_mttkrp
+  vec_spacc_simple
+  mat_spacc_simple
+  vec_sd_compression_WRONG
+  vec_ds_compression_WRONG
 )
 
 HAND_KERNEL_NAMES=(
   mat_residual
   mat_mattransmul
+  vec_sd_compression
+  vec_ds_compression
 )
 
 TACO_ARGS=(
@@ -73,6 +79,10 @@ TACO_ARGS=(
   "x(i)=b(i)-C(i,j)*d(j) -f=x:s -f=C:ss -f=b:s -f=d:s"
   "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss"
   "X(i,j)=B(i,k,l)*C(j,k)*D(j,l) -f=X:ss -f=B:sss -f=C:ss -f=D:ss" 
+  "x(j)=B(i,j) -f=x:s -f=B:ss"
+  "X(j,k)=B(i,j,k) -f=X:ss -f=B:sss"
+  "x(i)=b(i) -f=b:s -f=x:d"
+  "x(i)=b(i) -f=b:d -f=x:s"
 )
 
 mkdir -p $dir
