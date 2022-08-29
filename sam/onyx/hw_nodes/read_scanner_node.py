@@ -55,7 +55,8 @@ class ReadScannerNode(HWNode):
             new_conns = {
                 'rd_scan_to_glb': [
                     # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (other_data, "f2io_17")], 17),
+                    # ([(rd_scan, "coord_out"), (other_data, "f2io_17")], 17),
+                    ([(rd_scan, "block_rd_out"), (other_data, "f2io_17")], 17),
                 ]
             }
             return new_conns
@@ -206,6 +207,7 @@ class ReadScannerNode(HWNode):
         return new_conns
 
     def configure(self, attributes):
+        print("SCANNER CONFIG")
         print(attributes)
         inner_offset = 0
         max_outer_dim = 0
@@ -256,8 +258,6 @@ class ReadScannerNode(HWNode):
 
             lookup = 0
         block_mode = int(attributes['type'].strip('"') == 'fiberwrite')
-        if attributes['type'].strip('"') == 'fiberwrite':
-            lookup = 0
 
         cfg_kwargs = {
             'dense': dense,

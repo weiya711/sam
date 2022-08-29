@@ -144,9 +144,9 @@ class ComputeNode(HWNode):
         op_code = 0
         if c_op == 'mul':
             op_code = 1
-        elif c_op == 'add' and 'sub' not in comment:
+        elif c_op == 'add' and 'sub=1' not in comment:
             op_code = 0
-        elif c_op == 'add' and 'sub' in comment:
+        elif c_op == 'add' and 'sub=1' in comment:
             op_code = 2
         cfg_kwargs = {
             'op': op_code

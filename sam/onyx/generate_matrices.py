@@ -75,6 +75,8 @@ class MatrixGenerator():
 
         print(f"Using dump directory - {use_dir}")
 
+        all_zeros = not np.any(self.array)
+
         # Transpose it first if necessary
         if tpose is True:
             self.array = numpy.transpose(self.array)
@@ -85,6 +87,23 @@ class MatrixGenerator():
             self.format = format
 
         if self.format == 'CSF':
+            # Handle the all zeros case...
+            if all_zeros:
+                fake_lines_seg = ["0000",
+                                  "0000"]
+                fake_lines_crd = []
+                # If it's a scalar/length 1 vec
+                if len(self.shape) == 1 and self.shape[0] == 1:
+                    fake_lines_val = ["0000"]
+                else:
+                    fake_lines_val = []
+                for mode in range(len(self.array.shape)):
+                    self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg", dump_dir=use_dir, hex=print_hex)
+                    self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd", dump_dir=use_dir, hex=print_hex)
+                self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+
+                return
+
             # In CSF format, need to iteratively create seg/coord arrays
             tmp_lvl_list = []
             tmp_lvl_list.append(self.fiber_tree.get_root())
