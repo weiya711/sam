@@ -117,7 +117,8 @@ class CompressWrScan(WrScan):
 
         if self.debug:
             print("DEBUG: WR SCAN: \t "
-                  "Curr crd addr:", self.curr_addr, "\t curr crd cnt:", self.curr_crd_cnt, "\t curr seg addr:",
+                    "name: ", self.name,
+                   "\t Curr crd addr:", self.curr_addr, "\t curr crd cnt:", self.curr_crd_cnt, "\t curr seg addr:",
                   self.curr_seg_addr,
                   "\t end fiber:", self.end_fiber)
 

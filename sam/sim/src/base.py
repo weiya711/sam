@@ -67,7 +67,8 @@ def larger_stkn(a, b):
 
 
 class Primitive(ABC):
-    def __init__(self, debug=False, statistics=False, **kwargs):
+    def __init__(self, debug=False, statistics=False, name="", **kwargs):
+        self.name = name
         self.done = False
         self.debug = debug
         self.done_cycles = 0
@@ -103,7 +104,7 @@ class Primitive(ABC):
             self.start_cycle = self.total_cycles
 
     def return_statistics(self):
-        return {"done_cycles": self.done_cycles, "start_cycle": self.start_cycle}
+        return {"done_cycles": self.done_cycles, "start_cycle": self.start_cycle, "total_cycle": self.total_cycles}
 
 
 def remove_emptystr(stream):
