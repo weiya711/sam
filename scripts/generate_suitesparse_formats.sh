@@ -8,9 +8,9 @@ basedir=$(pwd)
 
 DATASET_NAMES=(
 #  bcsstm04
-  bcsstm02
-  lpi_itest2
-  bcsstk35
+#  bcsstm02
+#  lpi_itest2
+#  bcsstk35
 #  bcsstm03
 #  lpi_bgprtr
 #  cage4
@@ -19,6 +19,7 @@ DATASET_NAMES=(
 #  GD95_b
 #  Hamrle1
 #  LF10
+testbig
 )
 
 mkdir -p $outdir
@@ -32,5 +33,5 @@ for i in ${!DATASET_NAMES[@]}; do
     sspath=${SUITESPARSE_PATH}/$name
     SUITESPARSE_TENSOR_PATH=$sspath $basedir/compiler/taco/build/bin/taco-test sam.pack_other_ss    
     python $basedir/scripts/datastructure_frostt.py -n $name -f ss01 --other -ss
-    chmod -R 775 $outdir
+    #chmod -R 775 $outdir
 done
