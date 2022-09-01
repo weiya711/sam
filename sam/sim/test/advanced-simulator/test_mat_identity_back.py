@@ -73,6 +73,7 @@ def test_mat_identity_back(samBench, ssname, check_gold, debug_sim, report_stats
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
 
+    print(time_cnt)
     fiberwrite_X0_2.autosize()
     fiberwrite_X1_1.autosize()
     fiberwrite_Xvals_0.autosize()

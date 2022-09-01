@@ -31,6 +31,11 @@ class WrScan(Primitive, ABC):
     def get_arr(self):
         return self.arr.get_arr()
 
+    def fifo_available(self):
+        if len(self.input) > 1:
+            return False
+        return True
+
     @abstractmethod
     def reset(self):
         pass
@@ -120,7 +125,7 @@ class CompressWrScan(WrScan):
                     "name: ", self.name,
                    "\t Curr crd addr:", self.curr_addr, "\t curr crd cnt:", self.curr_crd_cnt, "\t curr seg addr:",
                   self.curr_seg_addr,
-                  "\t end fiber:", self.end_fiber)
+                  "\t end fiber:", self.end_fiber, "\t", self.input)
 
     def reset(self):
         self.curr_addr = 0

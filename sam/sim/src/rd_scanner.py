@@ -14,7 +14,9 @@ class CrdRdScan(Primitive, ABC):
         self.curr_crd = ''
 
         self.in_ref = []
+        
         self.backpressure = []
+        self.branches = []
 
     def set_in_ref(self, in_ref):
         if in_ref != '' and in_ref is not None:
@@ -30,14 +32,18 @@ class CrdRdScan(Primitive, ABC):
             self.backpressure.append(child)
         return self.curr_crd
 
-    def add_child(self, child):
+    def add_child(self, child, branch = ""):
         if child != None:
             self.backpressure.append(child)
+            self.branches.append(branch)
 
-    def fifo_available(self):
+    def fifo_available(self, br=""):
         if len(self.in_ref) > 1:
             return False
         return True
+    
+    def fifo_debug(self):
+        print("Crd rd: ", self.in_ref)
 
 
 # TODO: figure out how uncompressed read scans work with 'N' tokens
@@ -634,6 +640,8 @@ class CompressedCrdRdScan_back(CrdRdScan):
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
         self.curr_in_crd = 0
+        self.data_ready = True
+
         # Statistics
         if self.get_stats:
             self.unique_refs = []
@@ -649,9 +657,18 @@ class CompressedCrdRdScan_back(CrdRdScan):
         self.begin = True
 
     def set_in_ref(self, in_ref):
-        if in_ref != '' and in_ref is not None and self.fifo_available():
+        if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
 
+    def out_ref(self, child= None):
+        if self.data_ready:
+            return self.curr_ref
+        return
+
+    def out_crd(self, child=None):
+        if self.data_ready:
+            return self.curr_crd
+        return
 
     def _emit_stkn_code(self):
         self.end_fiber = True
@@ -696,15 +713,21 @@ class CompressedCrdRdScan_back(CrdRdScan):
 
 
     def check_backpressure(self):
+        j = 0
         for i in self.backpressure:
-            if not i.fifo_available():
+            #print("\n\n\n", i, i.fifo_debug(),  "\n\n\n")
+            if not i.fifo_available(self.branches[j]):
+                #print("\nChrecked: ", i.in_ref, "\n")
                 return False
+            j += 1
         return True
 
 
     def update(self):
         self.update_done()
+        self.data_ready = False
         if self.check_backpressure():
+            self.data_ready = True
             if len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0):
                 self.block_start = False
 
@@ -918,7 +941,7 @@ class CompressedCrdRdScan_back(CrdRdScan):
                       "\n end fiber:", self.end_fiber, "\t curr input:", curr_in_ref,
                       "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
                       self.prev_crd,
-                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt,  "\t Bakcpressure: ", self.check_backpressure(), "\t backpressure_len: ", len(self.backpressure))
+                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt,  "\t Bakcpressure: ", self.check_backpressure(), "\t backpressure_len: ", self.backpressure, " ", self.branches, " :: ", self.data_ready)
 
         else:
             # Debugging print statements
@@ -929,8 +952,8 @@ class CompressedCrdRdScan_back(CrdRdScan):
                       "\t Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref,
                       "\n curr addr:", self.curr_addr, "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
                       "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
-                  self.prev_crd,
-                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt,  "\t Bakcpressure: ", self.check_backpressure(), "\t backpressure_len: ", len(self.backpressure))
+                      self.prev_crd,
+                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt,  "\t Bakcpressure: ", self.check_backpressure(), "\t backpressure_len: ", self.backpressure, " ", self.branches, " :: ", self.data_ready)
 
 
 

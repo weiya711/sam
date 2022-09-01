@@ -104,6 +104,140 @@ class Reduce(Primitive):
         return stats_dict
 
 
+class Reduce_back(Primitive):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.in_val = []
+        self.curr_out = ""
+        self.in_val_size = 0
+        self.sum = 0
+        self.emit_stkn = False
+        self.curr_in_val = None
+
+        if self.get_stats:
+            self.reduction_count = 0
+            self.num_inputs = 0
+            self.num_outputs = 0
+            self.stop_token_out = 0
+            self.drop_token_out = 0
+            self.valid_token_out = 0
+            self.zero_out = 0
+            self.nonzero_out = 0
+
+        self.backpressure = []
+        self.data_ready = True
+        self.branch = []
+
+    def check_backpressure(self):
+        j = 0
+        for i in self.backpressure:
+            if not i.fifo_available(self.branch[j]):
+                return False
+            j+=1
+        return True
+
+    def fifo_available(self, br = ""):
+        if len(self.in_val) > 1:
+            return False
+        return True
+
+    def add_child(self, child= None, branch = ""):
+        if child != None:
+            self.backpressure.append(child)
+            self.branch.append(branch)
+
+    def update(self):
+        self.update_done()
+        self.data_ready = False
+        if self.check_backpressure():
+            self.data_ready = True
+            if (len(self.in_val) > 0):
+                self.block_start = False
+
+            curr_in_val = ""
+            if self.done:
+                self.curr_out = ""
+            elif self.emit_stkn:
+                self.curr_out = decrement_stkn(self.curr_in_val)
+                self.emit_stkn = False
+            elif len(self.in_val) > 0:
+                self.curr_in_val = self.in_val.pop(0)
+                if is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) == 0:
+                    self.curr_out = self.sum
+                    self.sum = 0
+                elif is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) > 0:
+                    self.curr_out = self.sum
+                    self.sum = 0
+                    self.emit_stkn = True
+                elif self.curr_in_val == 'D':
+                    self.done = True
+                    self.curr_out = 'D'
+                else:
+                    if self.get_stats:
+                        self.reduction_count += 1
+                    self.sum += self.curr_in_val
+                    self.curr_out = ""
+            else:
+                self.curr_out = ""
+
+            if self.get_stats:
+                if self.curr_out == "":
+                    self.drop_token_out += 1
+                elif is_stkn(self.curr_out):
+                    self.stop_token_out += 1
+                else:
+                    if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
+                        self.zero_out += 1
+                    else:
+                        self.nonzero_out += 1
+                    self.valid_token_out += 1
+
+            if self.get_stats:
+                self.compute_fifos()
+            if self.debug:
+                print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
+                      "\t Sum:", self.sum)
+        else:
+            if self.debug:
+                print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
+                      "\t Sum:", self.sum) 
+
+    def set_in_val(self, val):
+        if val != '' and val is not None:
+            if self.get_stats:
+                self.num_inputs += 1
+            self.in_val.append(val)
+
+    def out_val(self):
+        if self.get_stats:
+            self.num_outputs += 1
+        return self.curr_out
+
+    def compute_fifos(self):
+        self.in_val_size = max(self.in_val_size, len(self.in_val))
+
+    def print_fifos(self):
+        if self.get_stats:
+            print("Reduction counts- total inputs ", self.num_inputs, " total outputs ", self.num_outputs,
+                  " reduction values ", self.reduction_count)
+            print("FiFO Val size for Reduce block: ", self.in_val_size)
+
+    def return_statistics(self):
+        if self.get_stats:
+            stats_dict = {"red_count": self.reduction_count, "total_inputs": self.num_inputs,
+                          "total_outputs": self.num_outputs, "stkn_outs": self.stop_token_out,
+                          "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                          "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
+        return stats_dict
+
+
+
+
+
 class SparseCrdPtAccumulator1(Primitive):
     def __init__(self, maxdim=100, valtype=float, **kwargs):
         super().__init__(**kwargs)
