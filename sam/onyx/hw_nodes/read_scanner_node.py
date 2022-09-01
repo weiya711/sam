@@ -106,13 +106,13 @@ class ReadScannerNode(HWNode):
         elif other_type == IntersectNode:
             # Send both....
             isect = other.get_name()
-
             isect_conn = other.get_connection_from_tensor(self.get_tensor())
 
+            e_attr = edge.get_attributes()
             # isect_conn = 0
             # if self.get_tensor() == 'C' or self.get_tensor() == 'c':
             #     isect_conn = 1
-            e_type = edge.get_attributes()['type'].strip('"')
+            e_type = e_attr['type'].strip('"')
             if "crd" in e_type:
                 new_conns = {
                     f'rd_scan_to_isect_{isect_conn}_crd': [
@@ -121,10 +121,16 @@ class ReadScannerNode(HWNode):
                     ]
                 }
             elif 'ref' in e_type:
+
+                rd_scan_out_port = "pos_out"
+
+                if 'val' in e_attr and e_attr['val'].strip('"') == 'true':
+                    rd_scan_out_port = "coord_out"
+
                 new_conns = {
                     f'rd_scan_to_isect_{isect_conn}_pos': [
                         # send output to rd scanner
-                        ([(rd_scan, "pos_out"), (isect, f"pos_in_{isect_conn}")], 17),
+                        ([(rd_scan, rd_scan_out_port), (isect, f"pos_in_{isect_conn}")], 17),
                     ]
                 }
             else:
@@ -215,6 +221,15 @@ class ReadScannerNode(HWNode):
         ranges = [1]
         dense = 0
         dim_size = 1
+        stop_lvl = 0
+
+        if 'spacc' in attributes:
+            spacc_mode = 1
+            assert 'stop_lvl' in attributes
+            stop_lvl = int(attributes['stop_lvl'].strip('"'))
+        else:
+            spacc_mode = 0
+
         # This is a fiberwrite's opposing read scanner for comms with GLB
         if attributes['type'].strip('"') == 'fiberwrite':
             # in fiberwrite case, we are in block mode
@@ -235,26 +250,26 @@ class ReadScannerNode(HWNode):
         repeat_outer = 0
         repeat_factor = 0
         if attributes['type'].strip('"') == 'arrayvals':
-            stop_lvl = 0
+            # stop_lvl = 0
             lookup = 1
         elif attributes['mode'].strip('"') == 'vals':
-            stop_lvl = 0
+            # stop_lvl = 0
             lookup = 1
         else:
-            stop_lvl = int(attributes['mode'].strip('"'))
+            # stop_lvl = int(attributes['mode'].strip('"'))
 
             # Do some hex
-            tensor = attributes['tensor'].strip('"')
-            index = attributes['index'].strip('"')
+            # tensor = attributes['tensor'].strip('"')
+            # index = attributes['index'].strip('"')
 
-            if tensor == 'B' and index == 'i':
-                stop_lvl = 0
-            elif tensor == 'B' and index == 'k':
-                stop_lvl = 2
-            elif tensor == 'C' and index == 'j':
-                stop_lvl = 1
-            elif tensor == 'C' and index == 'k':
-                stop_lvl = 2
+            # if tensor == 'B' and index == 'i':
+            #     stop_lvl = 0
+            # elif tensor == 'B' and index == 'k':
+            #     stop_lvl = 2
+            # elif tensor == 'C' and index == 'j':
+            #     stop_lvl = 1
+            # elif tensor == 'C' and index == 'k':
+            #     stop_lvl = 2
 
             lookup = 0
         block_mode = int(attributes['type'].strip('"') == 'fiberwrite')
@@ -272,8 +287,9 @@ class ReadScannerNode(HWNode):
             'repeat_factor': repeat_factor,
             'stop_lvl': stop_lvl,
             'block_mode': block_mode,
-            'lookup': lookup
+            'lookup': lookup,
+            'spacc_mode': spacc_mode
         }
 
         return (inner_offset, max_outer_dim, strides, ranges, is_root, do_repeat,
-                repeat_outer, repeat_factor, stop_lvl, block_mode, lookup), cfg_kwargs
+                repeat_outer, repeat_factor, stop_lvl, block_mode, lookup, spacc_mode), cfg_kwargs

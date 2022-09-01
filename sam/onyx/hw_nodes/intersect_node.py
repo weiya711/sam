@@ -171,7 +171,24 @@ class IntersectNode(HWNode):
             }
             return new_conns
         elif other_type == ComputeNode:
-            raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+            # Could be doing a sparse accum
+            compute = other
+            compute_name = other.get_name()
+            print("INTERSECT TO COMPUTE EDGE!")
+            print(edge)
+            print(edge.get_attributes())
+            edge_comment = edge.get_attributes()['comment'].strip('"')
+            tensor = edge_comment.split('-')[1]
+            out_conn = self.tensor_to_conn[tensor]
+            compute_conn = compute.get_num_inputs()
+            new_conns = {
+                'intersect_to_repeat': [
+                    # send output to rd scanner
+                    ([(isect, f"pos_out_{out_conn}"), (compute_name, f"data{compute_conn}")], 17),
+                ]
+            }
+            compute.update_input_connections()
+            return new_conns
         elif other_type == BroadcastNode:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
         elif other_type == RepSigGenNode:
