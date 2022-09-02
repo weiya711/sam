@@ -23,13 +23,9 @@ class CrdRdScan(Primitive, ABC):
             self.in_ref.append(in_ref)
 
     def out_ref(self, child= None):
-        if child != None:
-            self.backpressure.append(child)
         return self.curr_ref
 
     def out_crd(self, child=None):
-        if child != None:
-            self.backpressure.append(child)
         return self.curr_crd
 
     def add_child(self, child, branch = ""):
@@ -38,7 +34,7 @@ class CrdRdScan(Primitive, ABC):
             self.branches.append(branch)
 
     def fifo_available(self, br=""):
-        if len(self.in_ref) > 1:
+        if len(self.in_ref) > depth:
             return False
         return True
     
@@ -615,7 +611,7 @@ class CompressedCrdRdScan(CrdRdScan):
 # --------------- Backpressure --------------------#
 
 class CompressedCrdRdScan_back(CrdRdScan):
-    def __init__(self, crd_arr=[], seg_arr=[], skip=True, **kwargs):
+    def __init__(self, crd_arr=[], seg_arr=[], skip=True, depth=1, **kwargs):
         super().__init__(**kwargs)
 
         # Used for skip list
@@ -656,6 +652,13 @@ class CompressedCrdRdScan_back(CrdRdScan):
         self.out_stkn_cnt = 0
         self.begin = True
 
+        self.depth = depth
+
+    def fifo_available(self, br=""):
+        if len(self.in_ref) > self.depth:
+            return False
+        return True
+ 
     def set_in_ref(self, in_ref):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)

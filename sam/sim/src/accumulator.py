@@ -105,7 +105,7 @@ class Reduce(Primitive):
 
 
 class Reduce_back(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=1, **kwargs):
         super().__init__(**kwargs)
 
         self.in_val = []
@@ -128,6 +128,7 @@ class Reduce_back(Primitive):
         self.backpressure = []
         self.data_ready = True
         self.branch = []
+        self.depth = depth
 
     def check_backpressure(self):
         j = 0
@@ -138,7 +139,7 @@ class Reduce_back(Primitive):
         return True
 
     def fifo_available(self, br = ""):
-        if len(self.in_val) > 1:
+        if len(self.in_val) > self.depth:
             return False
         return True
 

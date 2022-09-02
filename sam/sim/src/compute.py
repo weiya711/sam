@@ -2,7 +2,7 @@ from .base import *
 
 
 class Compute2(Primitive, ABC):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=1, **kwargs):
         super().__init__(**kwargs)
 
         self.in1 = []
@@ -17,6 +17,7 @@ class Compute2(Primitive, ABC):
         self.backpressure = []
         self.data_ready = True
         self.branches = []
+        self.depth = depth
 
     def check_backpressure(self):
         j =0
@@ -27,9 +28,9 @@ class Compute2(Primitive, ABC):
         return True
 
     def fifo_available(self, br = ""):
-        if br == "in1" and len(self.in1) > 1:
+        if br == "in1" and len(self.in1) > self.depth:
             return False
-        if br == "in2" and len(self.in2) > 1:
+        if br == "in2" and len(self.in2) > self.depth:
             return False
         #if len(self.in1) > 1 or len(self.in2) > 1:
         #    return False

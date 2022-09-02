@@ -238,7 +238,7 @@ class RepeatSigGen(Primitive):
 
 
 class Repeat_back(Primitive):
-    def __init__(self, union=False, **kwargs):
+    def __init__(self, depth=1, union=False, **kwargs):
         super().__init__(**kwargs)
 
         self.in_ref = []
@@ -260,7 +260,7 @@ class Repeat_back(Primitive):
         self.backpressure = []
         self.data_ready = True
         self.branches = []
-
+        self.depth = depth
 
     def check_backpressure(self):
         j = 0
@@ -274,9 +274,9 @@ class Repeat_back(Primitive):
         print("Repeater: ", self.in_ref, " ", self.in_repeat)
 
     def fifo_available(self, br=""):
-        if br == "ref" and len(self.in_ref) > 1:
+        if br == "ref" and len(self.in_ref) > self.depth:
             return False
-        if len(self.in_repeat) > 1 and (br == "repeat" or br == "repsig"):
+        if len(self.in_repeat) > self.depth and (br == "repeat" or br == "repsig"):
             return False
         return True
 
@@ -456,11 +456,12 @@ class Repeat_back(Primitive):
 # It essentially snoops on the crd stream
 
 class RepeatSigGen_back(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.backpressure = []
         self.data_ready = True
         self.branches = []
+        self.depth = depth
 
         self.istream = []
         self.curr_repeat = ''
@@ -489,10 +490,10 @@ class RepeatSigGen_back(Primitive):
                 self.curr_repeat = ''
             self.compute_fifos()
             if self.debug:
-                print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat, "\t Instream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready)
+                print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat, "\t Instream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure, " ", self.branches)
         else:
             if self.debug:
-                print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready)
+                print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure, " ", self.branches)
 
 
     def check_backpressure(self):
@@ -507,7 +508,7 @@ class RepeatSigGen_back(Primitive):
         print("Repeat sig : ", self.istream)
 
     def fifo_available(self, br = ""):
-        if len(self.istream) > 1:
+        if len(self.istream) > self.depth:
             return False
         return True
 

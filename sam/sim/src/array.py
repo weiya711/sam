@@ -152,7 +152,7 @@ class Array(Primitive):
 
 
 class Array_back(Primitive):
-    def __init__(self, init_arr=None, size=1024, fill=0, **kwargs):
+    def __init__(self, init_arr=None, size=1024, fill=0, depth=1, **kwargs):
         super().__init__(**kwargs)
 
         self.fill = fill
@@ -171,6 +171,7 @@ class Array_back(Primitive):
         self.backpressure = []
         self.data_ready = True
         self.branch = []
+        self.depth = depth
         
         if self.get_stats:
             self.valid_loads = 0
@@ -218,7 +219,7 @@ class Array_back(Primitive):
             self.data_ready = False
 
     def fifo_available(self, br=""):
-        if len(self.load_addrs) > 1:
+        if len(self.load_addrs) > self.depth:
             return False
         return True
     

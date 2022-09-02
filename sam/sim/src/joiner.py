@@ -15,7 +15,7 @@ class Joiner2(Primitive, ABC):
 
 
 class CrdJoiner2(Joiner2, ABC):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.ocrd = ''
 
@@ -27,6 +27,7 @@ class CrdJoiner2(Joiner2, ABC):
         self.backpressure = []
         self.data_ready = True
         self.branches = []
+        self.depth = depth
 
     def check_backpressure(self):
         j =0
@@ -40,9 +41,9 @@ class CrdJoiner2(Joiner2, ABC):
         print("Crd Joiner2 : ", self.in_ref1, " ", self.in_ref2)
 
     def fifo_available(self, br = ""):
-        if br == "in1" and len(self.in_ref1) > 1:
+        if br == "in1" and len(self.in_ref1) > self.depth:
             return False
-        if br == "in2" and len(self.in_ref2) > 1:
+        if br == "in2" and len(self.in_ref2) > self.depth:
             return False
         return True
 
@@ -52,11 +53,13 @@ class CrdJoiner2(Joiner2, ABC):
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
+            print(in_ref1, " ", in_crd1)
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
         if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
+            print(in_ref2, " ", in_crd2)
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 
@@ -252,7 +255,7 @@ class Intersect2(CrdJoiner2):
                   "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
                   "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
                   "\n Intersection rate: ",
-                  self.return_intersection_rate())
+                  self.return_intersection_rate(), " ", self.in_ref1, self.in_ref2, self.in_crd1, self.in_crd2)
 
     def out_crd_skip1(self):
         return self.curr_skip1 if self.skip else ''
@@ -364,12 +367,12 @@ class Intersect2_back(CrdJoiner2):
             self.zero_token_output += 1
 
     def update(self):
-        self.update_done()
-        if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
-            self.block_start = False
-        
         self.data_ready = False
         if self.check_backpressure():
+            self.update_done()
+            if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
+                self.block_start = False
+ 
             self.data_ready = True
             if self.get_stats:
                 self.total_count += 1
@@ -481,7 +484,7 @@ class Intersect2_back(CrdJoiner2):
                       "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
                       "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
                       "\n Intersection rate: ",
-                      self.return_intersection_rate(), " Backpressure ", self.backpressure, " ", self.branches )
+                      self.return_intersection_rate(), " Backpressure ",self.in_ref1, " ", self.in_ref2, " ", self.in_crd1, " ", self.in_crd2 )
         
         else:
             if self.debug:
@@ -492,7 +495,7 @@ class Intersect2_back(CrdJoiner2):
                       "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
                       "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
                       "\n Intersection rate: ",
-                      self.return_intersection_rate(), " Backpressure ",  self.backpressure, " ", self.branches )
+                      self.return_intersection_rate(), " Backpressure ", self.in_ref1, " ", self.in_ref2, " ", self.in_crd1, " ", self.in_crd2  )
 
     def out_crd_skip1(self):
         return self.curr_skip1 if self.skip else ''

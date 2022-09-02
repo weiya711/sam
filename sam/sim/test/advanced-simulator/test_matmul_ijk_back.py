@@ -26,6 +26,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 )
 @pytest.mark.suitesparse
 def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
+    depth = 16
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -60,22 +61,22 @@ def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, report_stats, 
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_17 = CompressedCrdRdScan_back(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bi_17 = CompressedCrdRdScan_back(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats, depth=depth)
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
-    repsiggen_i_15 = RepeatSigGen_back(debug=debug_sim, statistics=report_stats)
-    repeat_Ci_14 = Repeat_back(debug=debug_sim, statistics=report_stats)
-    fiberlookup_Cj_13 = CompressedCrdRdScan_back(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
-    fiberlookup_Ck_9 = CompressedCrdRdScan_back(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
+    repsiggen_i_15 = RepeatSigGen_back(debug=debug_sim, statistics=report_stats, depth=depth)
+    repeat_Ci_14 = Repeat_back(debug=debug_sim, statistics=report_stats, depth=depth)
+    fiberlookup_Cj_13 = CompressedCrdRdScan_back(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats, depth=depth)
+    fiberlookup_Ck_9 = CompressedCrdRdScan_back(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats, depth=depth)
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
-    repsiggen_j_11 = RepeatSigGen_back(debug=debug_sim, statistics=report_stats)
-    repeat_Bj_10 = Repeat_back(debug=debug_sim, statistics=report_stats)
-    fiberlookup_Bk_8 = CompressedCrdRdScan_back(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
-    intersectk_7 = Intersect2_back(debug=debug_sim, statistics=report_stats)
-    arrayvals_B_5 = Array_back(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
-    arrayvals_C_6 = Array_back(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
-    mul_4 = Multiply2_back(debug=debug_sim, statistics=report_stats)
-    reduce_3 = Reduce_back(debug=debug_sim, statistics=report_stats)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
+    repsiggen_j_11 = RepeatSigGen_back(debug=debug_sim, statistics=report_stats, depth=depth)
+    repeat_Bj_10 = Repeat_back(debug=debug_sim, statistics=report_stats, depth=depth)
+    fiberlookup_Bk_8 = CompressedCrdRdScan_back(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats, depth=depth)
+    intersectk_7 = Intersect2_back(debug=debug_sim, statistics=report_stats, depth=depth)
+    arrayvals_B_5 = Array_back(init_arr=B_vals, debug=debug_sim, statistics=report_stats, depth=depth)
+    arrayvals_C_6 = Array_back(init_arr=C_vals, debug=debug_sim, statistics=report_stats, depth=depth)
+    mul_4 = Multiply2_back(debug=debug_sim, statistics=report_stats, depth=depth)
+    reduce_3 = Reduce_back(debug=debug_sim, statistics=report_stats, depth=depth)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats, depth=depth)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
@@ -89,8 +90,8 @@ def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, report_stats, 
     fiberlookup_Cj_13.add_child(repsiggen_j_11)
     repsiggen_j_11.add_child(repeat_Bj_10, "repsig")
     repeat_Bj_10.add_child(fiberlookup_Bk_8)
-    fiberlookup_Ck_9.add_child(intersectk_7, "in1")
-    fiberlookup_Bk_8.add_child(intersectk_7, "in2")
+    fiberlookup_Ck_9.add_child(intersectk_7, "in2")
+    fiberlookup_Bk_8.add_child(intersectk_7, "in1")
     intersectk_7.add_child(arrayvals_B_5)
     intersectk_7.add_child(arrayvals_C_6)
     arrayvals_B_5.add_child(mul_4, "in1")
@@ -137,6 +138,7 @@ def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, report_stats, 
         mul_4.update()
         reduce_3.update()
         fiberwrite_Xvals_0.update()
+        print("CYCLES ", time_cnt)
         print("___________________________________________________________________")
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1

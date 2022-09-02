@@ -120,6 +120,7 @@ def test_matmul_ijk(samBench, ssname, check_gold, debug_sim, report_stats, fill=
         mul_4.update()
         reduce_3.update()
         fiberwrite_Xvals_0.update()
+        print("CYCLES ", time_cnt)
         print("___________________________________________________________________")
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
