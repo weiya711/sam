@@ -3,13 +3,17 @@ __pycache__/
 
 *.swp
 *.swo
+
 *.txt
+*.out
 
 .DS_store
 .idea/
+.ipynb_checkpoints
 
 *.png
 *.pdf
+*.svg
 
 *.csv
 *.json
@@ -23,7 +27,8 @@ sam-outputs/
 compiler/benchmark/
 cmake-build-*/
 
-*.out
-*.svg
+*.egg-info
 
 *.gv
+
+tensor_*_mode_*

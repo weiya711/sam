@@ -242,6 +242,73 @@ class MatrixGenerator():
     def get_name(self):
         return self.name
 
+    def get_compressed_arrays(self, format=None, tpose=False, dump_shape=True):
+        '''
+        Dump the matrix into many arrays in a dict depending on matrix format
+        '''
+
+        result_dict = {}
+        # Transpose it first if necessary
+        if tpose is True:
+            self.array = numpy.transpose(self.array)
+            self.shape = self.array.shape
+            self.fiber_tree = FiberTree(tensor=self.array)
+
+        if format is not None:
+            self.format = format
+
+        if self.format == 'CSF':
+            # In CSF format, need to iteratively create seg/coord arrays
+            tmp_lvl_list = []
+            tmp_lvl_list.append(self.fiber_tree.get_root())
+
+            seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
+            result_dict[f"tensor_{self.name}_mode_0_seg"] = seg_arr
+            result_dict[f"tensor_{self.name}_mode_0_crd"] = coord_arr
+
+            at_vals = False
+            i = 1
+            while at_vals is False:
+                # Make the next level of fibers - basically BFS but segmented across depth of tree
+                next_tmp_lvl_list = []
+                for fib in tmp_lvl_list:
+                    crd_payloads_tmp = fib.get_coord_payloads()
+                    if type(crd_payloads_tmp[0][1]) is not FiberTreeFiber:
+                        at_vals = True
+                        for crd, pld in crd_payloads_tmp:
+                            next_tmp_lvl_list.append(pld)
+                    else:
+                        for crd, pld in crd_payloads_tmp:
+                            next_tmp_lvl_list.append(pld)
+                tmp_lvl_list = next_tmp_lvl_list
+                if at_vals:
+                    # If at vals, we don't need to dump csf, we have the level
+                    result_dict[f"tensor_{self.name}_mode_vals"] = tmp_lvl_list
+                else:
+                    seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
+                    result_dict[f"tensor_{self.name}_mode_{i}_seg"] = seg_arr
+                    result_dict[f"tensor_{self.name}_mode_{i}_crd"] = coord_arr
+                i = i + 1
+        elif self.format == "UNC":
+            flat_array = []
+            for val in numpy.nditer(self.array):
+                flat_array.append(val)
+            result_dict[f"tensor_{self.name}_mode_vals"] = flat_array
+
+            for i, d in enumerate(self.array.shape):
+                result_dict[f"tensor_{self.name}_mode_{i}"] = d
+
+        if dump_shape:
+            result_dict[f"shape"] = self.array.shape
+
+        # Transpose it back
+        if tpose is True:
+            self.array = numpy.transpose(self.array)
+            self.shape = self.array.shape
+            self.fiber_tree = FiberTree(tensor=self.array)
+
+        return result_dict
+
     def get_matrix(self):
         return self.array
 
