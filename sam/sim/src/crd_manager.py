@@ -206,6 +206,97 @@ class CrdHold(Primitive):
         return self.curr_inner_crd
 
 
+# Converts coordinate streams to point streams
+class CrdHold_back(Primitive):
+    def __init__(self, depth, **kwargs):
+        super().__init__(**kwargs)
+
+        self.outer_crd = []
+        self.inner_crd = []
+
+        self.repsig = []
+        self.curr_crd = ''
+        self.curr_inner_crd = ''
+
+        self.RSG = RepeatSigGen(debug=self.debug)
+        self.repeat = Repeat(debug=self.debug)
+
+        self.backpressure = []
+        self.branches = []
+        self.depth = depth
+        self.data_ready = True
+
+    def check_backpressure(self):
+        j =0
+        for i in self.backpressure:
+            if not i.fifo_available(self.branches[j]):
+                return False
+            j += 1
+        return True
+
+    def fifo_available(self, br = ""):
+        if br == "inner" and len(self.inner_crd) > self.depth:
+            return False
+        if br == "outer" and len(self.outer_crd) > self.depth:
+            return False
+        return True
+
+    def add_child(self, child= None, branch = ""):
+        self.backpressure.append(child)
+        self.branches.append(branch)
+
+    def update(self):
+        self.data_ready = False
+        if self.check_backpressure():
+            self.data_ready = True
+            self.update_done()
+            if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
+                self.block_start = False
+
+            if self.done:
+                self.curr_crd = ''
+                return
+
+            if len(self.inner_crd) > 0:
+                icrd = self.inner_crd.pop(0)
+                self.RSG.set_istream(icrd)
+                self.curr_inner_crd = icrd
+            else:
+                self.curr_inner_crd = ''
+            self.RSG.update()
+            self.repsig.append(self.RSG.out_repeat())
+
+            if len(self.outer_crd) > 0:
+                ocrd = self.outer_crd.pop(0)
+                self.repeat.set_in_ref(ocrd)
+            if len(self.repsig) > 0:
+                self.repeat.set_in_repeat(self.repsig.pop(0))
+
+            self.repeat.update()
+
+            self.curr_crd = self.repeat.out_ref()
+
+            self.done = self.RSG.done and self.repeat.done
+
+    def set_outer_crd(self, crd):
+        if crd != '' and crd is not None:
+            self.outer_crd.append(crd)
+
+    def set_inner_crd(self, crd):
+        if crd != '' and crd is not None:
+            self.inner_crd.append(crd)
+
+    def out_crd_outer(self):
+        if self.data_ready:
+            return self.curr_crd
+
+    def out_crd_inner(self):
+        if self.data_ready:
+            return self.curr_inner_crd
+
+
+
+
 # Converts point streams back into coordinate streams
 # Helper for the sparse accumulator
 class CrdPtConverter(Primitive):

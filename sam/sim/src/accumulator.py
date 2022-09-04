@@ -236,9 +236,6 @@ class Reduce_back(Primitive):
         return stats_dict
 
 
-
-
-
 class SparseCrdPtAccumulator1(Primitive):
     def __init__(self, maxdim=100, valtype=float, **kwargs):
         super().__init__(**kwargs)
@@ -561,6 +558,188 @@ class SparseAccumulator1(Primitive):
 
     def print_fifos(self):
         print("Spaccumulator: None available")
+
+
+# Accumulation into a vector
+class SparseAccumulator1_back(Primitive):
+    def __init__(self, maxdim=100, valtype=float, last_level=True, val_stkn=False, depth = 1, **kwargs):
+        super().__init__(**kwargs)
+        self.in_outer_crdpt = []
+        self.in_inner_crdpt = []
+        self.in_val = []
+
+        self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=maxdim, valtype=valtype, **kwargs)
+        self.crdpt_converter = CrdPtConverter(last_level=last_level, **kwargs)
+
+        self.crdpt_spacc_out_val = []
+
+        self.curr_outer_crd = None
+        self.curr_inner_crd = None
+        self.curr_val = None
+
+        self.outer_crdpt = []
+        self.inner_crdpt = []
+
+        self.val_stkn = val_stkn
+
+        if self.get_stats:
+            self.in_outer_crd_pt_fifo = 0
+            self.in_inner_crd_pt_fifo = 0
+            self.in_val_fifo = 0
+
+        self.backpressure = []
+        self.data_ready = True
+        self.branch = []
+        self.depth = depth
+
+    def check_backpressure(self):
+        j = 0
+        for i in self.backpressure:
+            if not i.fifo_available(self.branch[j]):
+                return False
+            j+=1
+        return True
+
+    def fifo_available(self, br = ""):
+        if br == "inner" and len(self.in_inner_crdpt) > self.depth:
+            return False
+        if br == "outer" and len(self.in_outer_crdpt) > self.depth:
+            return False
+        if br == "val" and len(self.in_val) > self.depth:
+            return False
+        return True
+
+    def add_child(self, child= None, branch = ""):
+        if child != None:
+            self.backpressure.append(child)
+            self.branch.append(branch)
+
+    def update(self):
+        self.data_ready = False
+        if self.check_backpressure():
+            self.data_ready = True
+            self.update_done()
+            if len(self.in_outer_crdpt) > 0 or len(self.in_inner_crdpt) > 0:
+                self.block_start = False
+
+            # What to do for drop tokens?
+            if self.get_stats:
+                self.in_outer_crd_pt_fifo = max(self.in_outer_crd_pt_fifo, len(self.in_outer_crdpt))
+                self.in_inner_crd_pt_fifo = max(self.in_inner_crd_pt_fifo, len(self.in_inner_crdpt))
+                self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
+
+            if len(self.in_outer_crdpt) > 0:
+                self.crdpt_spacc.set_outer_crdpt(self.in_outer_crdpt.pop(0))
+
+            if len(self.in_inner_crdpt) > 0:
+                self.crdpt_spacc.set_inner_crdpt(self.in_inner_crdpt.pop(0))
+
+            if len(self.in_val) > 0:
+                self.crdpt_spacc.set_val(self.in_val.pop(0))
+
+            self.crdpt_spacc.update()
+
+            self.crdpt_converter.set_outer_crdpt(self.crdpt_spacc.out_outer_crdpt())
+            self.crdpt_converter.set_inner_crdpt(self.crdpt_spacc.out_inner_crdpt())
+
+            if self.crdpt_spacc.out_val() != '':
+                self.crdpt_spacc_out_val.append(self.crdpt_spacc.out_val())
+
+            self.crdpt_converter.update()
+            self.curr_outer_crd = self.crdpt_converter.out_crd_outer()
+            self.curr_inner_crd = self.crdpt_converter.out_crd_inner()
+
+            if self.val_stkn:
+                self.curr_val = self.crdpt_spacc_out_val.pop(0) if isinstance(self.curr_inner_crd, int) and \
+                    len(self.crdpt_spacc_out_val) > 0 else self.curr_inner_crd
+            else:
+                self.curr_val = self.crdpt_spacc_out_val.pop(0) if len(self.crdpt_spacc_out_val) > 0 else ''
+
+            if self.debug:
+                print(self.in_val)
+
+            self.done = self.crdpt_spacc.out_done() and self.crdpt_converter.out_done()
+
+            if self.debug:
+                print("Done:", self.done,
+                      "\n SpCrdPt Accum Done:", self.crdpt_spacc.out_done(),
+                      "\t CrdPtConverter Done:", self.crdpt_converter.out_done()
+                      )
+
+    def set_inner_crdpt(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '' and crdpt is not None:
+            self.in_inner_crdpt.append(crdpt)
+
+    def set_outer_crdpt(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '' and crdpt is not None:
+            self.in_outer_crdpt.append(crdpt)
+
+    def crd_in_inner(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '' and crdpt is not None:
+            self.in_inner_crdpt.append(crdpt)
+
+    def crd_in_outer(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '' and crdpt is not None:
+            self.in_outer_crdpt.append(crdpt)
+
+    def set_crd_inner(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '' and crdpt is not None:
+            self.in_inner_crdpt.append(crdpt)
+
+    def set_crd_outer(self, crdpt):
+        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
+        if crdpt != '' and crdpt is not None:
+            self.in_outer_crdpt.append(crdpt)
+
+    def set_val(self, val):
+        assert not is_stkn(val), 'Values associated with points should not have stop tokens'
+        if val != '' and val is not None:
+            self.in_val.append(val)
+
+    def out_outer_crd(self):
+        if self.data_ready:
+            return self.curr_outer_crd
+
+    def out_inner_crd(self):
+        if self.data_ready:
+            return self.curr_inner_crd
+
+    def out_val(self):
+        if self.data_ready:
+            return self.curr_val
+
+    def out_crd_outer(self): 
+        if self.data_ready:
+            return self.curr_outer_crd
+
+    def out_crd_inner(self): 
+        if self.data_ready:
+            return self.curr_inner_crd
+
+    def return_statistics(self):
+        if self.get_stats:
+            stats_dict = {}
+            stats_dict["in_outer_fifo"] = self.in_outer_crd_pt_fifo
+            stats_dict["in_inner_fifo"] = self.in_inner_crd_pt_fifo
+            stats_dict["in_val_fifo"] = self.in_val_fifo
+            hits_info = self.crdpt_spacc.return_hits()
+            stats_dict["max_hits"] = hits_info[0]
+            stats_dict["hits_gt_one"] = hits_info[1]
+            stats_dict["total_elems"] = hits_info[2]
+            stats_dict.update(self.crdpt_spacc.return_statistics())
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
+        return stats_dict
+
+    def print_fifos(self):
+        print("Spaccumulator: None available")
+
 
 
 class SparseCrdPtAccumulator2(Primitive):

@@ -41,6 +41,70 @@ class StknDrop(Primitive):
         return self.curr_out
 
 
+# Drops tokens
+class StknDrop_back(Primitive):
+    def __init__(self, depth, **kwargs):
+        super().__init__(**kwargs)
+
+        self.in_stream = []
+
+        self.curr_out = ''
+
+        self.backpressure = []
+        self.data_ready = True
+        self.branch = []
+        self.depth = depth
+
+    def check_backpressure(self):
+        j = 0
+        for i in self.backpressure:
+            if not i.fifo_available(self.branch[j]):
+                return False
+            j+=1
+        return True
+
+    def fifo_available(self, br = ""):
+        if len(self.in_stream) > self.depth:
+            return False
+        return True
+
+    def add_child(self, child= None, branch = ""):
+        if child != None:
+            self.backpressure.append(child)
+            self.branch.append(branch)
+
+    def update(self):
+        self.data_ready = False
+        if self.check_backpressure():
+            self.data_ready = True
+            self.update_done()
+            if len(self.in_stream) > 0:
+                self.block_start = False
+
+            ival = ''
+            if self.done:
+                self.curr_out = ''
+                return
+
+            if len(self.in_stream) > 0:
+                ival = self.in_stream.pop(0)
+                if ival == 'D':
+                    self.done = True
+                    self.curr_out = 'D'
+                    return
+
+            self.curr_out = '' if is_stkn(ival) else ival
+            if self.debug:
+                print("Curr InnerCrd:", ival, "\t Curr OutputCrd:", self.curr_out)
+
+    def set_in_stream(self, val):
+        if val != '' and val is not None:
+            self.in_stream.append(val)
+
+    def out_val(self):
+        if self.data_ready:
+            return self.curr_out
+
 class EmptyFiberStknDrop(Primitive):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
