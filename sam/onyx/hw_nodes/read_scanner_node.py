@@ -93,10 +93,17 @@ class ReadScannerNode(HWNode):
         elif other_type == WriteScannerNode:
             # send the crd to write scanner
             wr_scan = other.get_name()
+
+            edge_attr = edge.get_attributes()
+            if 'use_alt_out_port' in edge_attr:
+                out_conn = 'block_rd_out'
+            else:
+                out_conn = 'coord_out'
+
             new_conns = {
                 'rd_scan_to_wr_scan': [
                     # send output to rd scanner
-                    ([(rd_scan, "coord_out"), (wr_scan, "data_in")], 17),
+                    ([(rd_scan, out_conn), (wr_scan, "data_in")], 17),
                     # ([(rd_scan, "eos_out_0"), (wr_scan, "eos_in_0")], 1),
                     # ([(wr_scan, "data_in_ready"), (rd_scan, "coord_out_ready")], 1),
                     # ([(rd_scan, "coord_out_valid"), (wr_scan, "data_in_valid")], 1),

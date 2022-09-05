@@ -112,8 +112,12 @@ class BuffetNode(HWNode):
             raise NotImplementedError(f'Cannot connect BuffetNode to {other_type}')
 
     def configure(self, attributes):
-        capacity_0 = 2048
-        capacity_1 = 2048
+
+        total_cap = 2048
+
+        capacity_0 = 1024
+        capacity_1 = total_cap - capacity_0
+
         cfg_kwargs = {
             'capacity_0': capacity_0,
             'capacity_1': capacity_1

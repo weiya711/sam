@@ -111,6 +111,12 @@ class SAMDotGraph():
         self.seq += 1
         return ret
 
+    def find_node_by_name(self, name):
+        for node in self.graph.get_nodes():
+            if node.get_name() == name:
+                return node
+        assert False
+
     def rewrite_spacc_1(self):
 
         # Get the spacc node and the resulting fiberwrites
@@ -161,11 +167,11 @@ class SAMDotGraph():
             # Delete the outgoing edges/attached nodes
             # output_nodes_ = []
             # Now delete the outputs of this
-            for edge_ in outgoing_edges:
-                # output_nodes_.append(edge_.get_destination())
-                self.graph.del_node(edge_.get_destination())
-                # self.graph.del_edge(edge_)
-                self.graph.del_edge(edge_.get_source(), edge_.get_destination())
+            # for edge_ in outgoing_edges:
+            #     # output_nodes_.append(edge_.get_destination())
+            #     self.graph.del_node(edge_.get_destination())
+            #     # self.graph.del_edge(edge_)
+            #     self.graph.del_edge(edge_.get_source(), edge_.get_destination())
 
             print(attrs)
             og_type = attrs['type']
@@ -200,9 +206,9 @@ class SAMDotGraph():
                                         **attrs, label=f"{og_label}_crd_wr_scanner", hwnode=f"{HWNodeType.WriteScanner}",
                                         type=og_type, mode="0", format="compressed", spacc="true", stop_lvl="0")
 
-            glb_crd = pydot.Node(f"spacc1_crd_glb_{self.get_next_seq()}", **attrs,
-                                 label=f"{og_label}_glb_crd_read", hwnode=f"{HWNodeType.GLB}",
-                                 tensor="x", mode="0", format="compressed", type=og_type)
+            # glb_crd = pydot.Node(f"spacc1_crd_glb_{self.get_next_seq()}", **attrs,
+            #                      label=f"{og_label}_glb_crd_read", hwnode=f"{HWNodeType.GLB}",
+            #                      tensor="x", mode="0", format="compressed", type=og_type)
 
             vals_buffet = pydot.Node(f"spacc1_vals_buffet_{self.get_next_seq()}",
                                      **attrs, label=f"{og_label}_vals_buffet", hwnode=f"{HWNodeType.Buffet}",
@@ -218,9 +224,9 @@ class SAMDotGraph():
                                          type=og_type, mode="vals", format="compressed", spacc="true",
                                          stop_lvl="0")
 
-            glb_vals = pydot.Node(f"spacc1_crd_vals_{self.get_next_seq()}", **attrs,
-                                  label=f"{og_label}_glb_vals_read", hwnode=f"{HWNodeType.GLB}",
-                                  tensor="x", mode="vals", format="vals", type=og_type)
+            # glb_vals = pydot.Node(f"spacc1_crd_vals_{self.get_next_seq()}", **attrs,
+            #                       label=f"{og_label}_glb_vals_read", hwnode=f"{HWNodeType.GLB}",
+            #                       tensor="x", mode="vals", format="vals", type=og_type)
 
             self.graph.add_node(rsg)
             self.graph.add_node(repeat)
@@ -229,11 +235,11 @@ class SAMDotGraph():
             self.graph.add_node(crd_buffet)
             self.graph.add_node(crd_rd_scanner)
             self.graph.add_node(crd_wr_scanner)
-            self.graph.add_node(glb_crd)
+            # self.graph.add_node(glb_crd)
             self.graph.add_node(vals_buffet)
             self.graph.add_node(vals_rd_scanner)
             self.graph.add_node(vals_wr_scanner)
-            self.graph.add_node(glb_vals)
+            # self.graph.add_node(glb_vals)
 
             print(in_edge_attrs[in_input_node])
             print(in_edge_attrs[in_output_node])
@@ -260,8 +266,23 @@ class SAMDotGraph():
             val_wr_scan_to_buffet = pydot.Edge(src=vals_wr_scanner, dst=vals_buffet)
             crd_rd_scan_to_buffet = pydot.Edge(src=crd_rd_scanner, dst=crd_buffet)
             vals_rd_scan_to_buffet = pydot.Edge(src=vals_rd_scanner, dst=vals_buffet)
-            crd_rd_scan_to_glb = pydot.Edge(src=crd_rd_scanner, dst=glb_crd)
-            val_rd_scan_to_glb = pydot.Edge(src=vals_rd_scanner, dst=glb_vals)
+
+            # Match the crd/vals outputs
+            crd_edge = [edge_ for edge_ in outgoing_edges if
+                        self.find_node_by_name(edge_.get_destination()).get_attributes()['mode'].strip('"') != "vals"][0]
+            val_edge = [edge_ for edge_ in outgoing_edges if
+                        self.find_node_by_name(edge_.get_destination()).get_attributes()['mode'].strip('"') == "vals"][0]
+            dst_crd = crd_edge.get_destination()
+            dst_vals = val_edge.get_destination()
+
+            crd_edge_attr = crd_edge.get_attributes()
+            val_edge_attr = val_edge.get_attributes()
+
+            self.graph.del_edge(crd_edge.get_source(), crd_edge.get_destination())
+            self.graph.del_edge(val_edge.get_source(), val_edge.get_destination())
+
+            crd_rd_scan_to_glb = pydot.Edge(src=crd_rd_scanner, dst=dst_crd, **crd_edge_attr, use_alt_out_port="1")
+            val_rd_scan_to_glb = pydot.Edge(src=vals_rd_scanner, dst=dst_vals, **val_edge_attr, use_alt_out_port="1")
 
             self.graph.add_edge(input_to_rsg_edge)
             self.graph.add_edge(rsg_to_repeat)
