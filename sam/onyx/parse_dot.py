@@ -11,7 +11,7 @@ class SAMDotGraphLoweringError(Exception):
 
 class SAMDotGraph():
 
-    def __init__(self, filename=None, local_mems=True, use_fork=False) -> None:
+    def __init__(self, filename=None, local_mems=True, use_fork=False, use_fa=False) -> None:
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]
@@ -21,6 +21,8 @@ class SAMDotGraph():
         self.seq = 0
         self.local_mems = local_mems
         self.use_fork = use_fork
+        self.use_fa = use_fa
+        self.fa_color = 0
 
         # Rewrite each 3-input joiners to 3 2-input joiners
         self.rewrite_tri_to_binary()
@@ -183,7 +185,7 @@ class SAMDotGraph():
 
             repeat = pydot.Node(f"spacc1_repeat_{self.get_next_seq()}",
                                 **attrs, label=f"{og_label}_repeat", hwnode=f"{HWNodeType.Repeat}",
-                                root="true", type=og_type)
+                                root="true", type=og_type, spacc="true")
 
             union = pydot.Node(f"spacc1_union_{self.get_next_seq()}",
                                **attrs, label=f"{og_label}_union", hwnode=f"{HWNodeType.Intersect}",
@@ -195,16 +197,20 @@ class SAMDotGraph():
 
             crd_buffet = pydot.Node(f"spacc1_crd_buffet_{self.get_next_seq()}",
                                     **attrs, label=f"{og_label}_crd_buffet", hwnode=f"{HWNodeType.Buffet}",
-                                    type=og_type)
+                                    type=og_type, fa_color=self.fa_color)
 
             crd_rd_scanner = pydot.Node(f"spacc1_crd_rd_scanner_{self.get_next_seq()}",
                                         **attrs, label=f"{og_label}_crd_rd_scanner", hwnode=f"{HWNodeType.ReadScanner}",
                                         tensor="x", type=og_type, root="false", format="compressed",
-                                        mode="0", index=f"{output_crd}", spacc="true", stop_lvl="0")
+                                        mode="0", index=f"{output_crd}", spacc="true", stop_lvl="0",
+                                        fa_color=self.fa_color)
 
             crd_wr_scanner = pydot.Node(f"spacc1_crd_wr_scanner_{self.get_next_seq()}",
                                         **attrs, label=f"{og_label}_crd_wr_scanner", hwnode=f"{HWNodeType.WriteScanner}",
-                                        type=og_type, mode="0", format="compressed", spacc="true", stop_lvl="0")
+                                        type=og_type, mode="0", format="compressed", spacc="true", stop_lvl="0",
+                                        fa_color=self.fa_color)
+
+            self.fa_color += 1
 
             # glb_crd = pydot.Node(f"spacc1_crd_glb_{self.get_next_seq()}", **attrs,
             #                      label=f"{og_label}_glb_crd_read", hwnode=f"{HWNodeType.GLB}",
@@ -212,21 +218,23 @@ class SAMDotGraph():
 
             vals_buffet = pydot.Node(f"spacc1_vals_buffet_{self.get_next_seq()}",
                                      **attrs, label=f"{og_label}_vals_buffet", hwnode=f"{HWNodeType.Buffet}",
-                                     type=og_type)
+                                     type=og_type, fa_color=self.fa_color)
 
             vals_rd_scanner = pydot.Node(f"spacc1_vals_rd_scanner_{self.get_next_seq()}",
                                          **attrs, label=f"{og_label}_vals_rd_scanner", hwnode=f"{HWNodeType.ReadScanner}",
                                          tensor="x", type=og_type, root="false", format="vals",
-                                         mode="vals", spacc="true", stop_lvl="0")
+                                         mode="vals", spacc="true", stop_lvl="0", fa_color=self.fa_color)
 
             vals_wr_scanner = pydot.Node(f"spacc1_vals_wr_scanner_{self.get_next_seq()}",
                                          **attrs, label=f"{og_label}_vals_wr_scanner", hwnode=f"{HWNodeType.WriteScanner}",
                                          type=og_type, mode="vals", format="compressed", spacc="true",
-                                         stop_lvl="0")
+                                         stop_lvl="0", fa_color=self.fa_color)
 
             # glb_vals = pydot.Node(f"spacc1_crd_vals_{self.get_next_seq()}", **attrs,
             #                       label=f"{og_label}_glb_vals_read", hwnode=f"{HWNodeType.GLB}",
             #                       tensor="x", mode="vals", format="vals", type=og_type)
+
+            self.fa_color += 1
 
             self.graph.add_node(rsg)
             self.graph.add_node(repeat)
@@ -568,11 +576,17 @@ class SAMDotGraph():
                 og_label = attrs['label']
                 del attrs['label']
                 rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
-                                     **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
+                                     **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
+                                     fa_color=self.fa_color)
                 wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}",
-                                     **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
+                                     **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}",
+                                     fa_color=self.fa_color)
                 buffet = pydot.Node(f"buffet_{self.get_next_seq()}",
-                                    **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
+                                    **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}",
+                                    fa_color=self.fa_color)
+
+                self.fa_color += 1
+
                 glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
                                        **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
                 if self.local_mems is False:
@@ -634,11 +648,17 @@ class SAMDotGraph():
                 og_label = attrs['label']
                 del attrs['label']
                 rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs,
-                                     label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
+                                     label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
+                                     fa_color=self.fa_color)
                 wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}", **attrs,
-                                     label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
+                                     label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}",
+                                     fa_color=self.fa_color)
                 buffet = pydot.Node(f"buffet_{self.get_next_seq()}", **attrs,
-                                    label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
+                                    label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}",
+                                    fa_color=self.fa_color)
+
+                self.fa_color += 1
+
                 glb_read = pydot.Node(f"glb_read_{self.get_next_seq()}", **attrs,
                                       label=f"{og_label}_glb_read", hwnode=f"{HWNodeType.GLB}")
                 if self.local_mems is False:
@@ -693,11 +713,17 @@ class SAMDotGraph():
             og_label = attrs['label']
             del attrs['label']
             rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
-                                 **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}")
+                                 **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
+                                 fa_color=self.fa_color)
             wr_scan = pydot.Node(f"wr_scan_{self.get_next_seq()}",
-                                 **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}")
+                                 **attrs, label=f"{og_label}_wr_scan", hwnode=f"{HWNodeType.WriteScanner}",
+                                 fa_color=self.fa_color)
             buffet = pydot.Node(f"buffet_{self.get_next_seq()}",
-                                **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}")
+                                **attrs, label=f"{og_label}_buffet", hwnode=f"{HWNodeType.Buffet}",
+                                fa_color=self.fa_color)
+
+            self.fa_color += 1
+
             glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
                                    **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
             if self.local_mems is False:

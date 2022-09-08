@@ -9,7 +9,7 @@ class ComputeNode(HWNode):
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.glb_node import GLBNode
         from sam.onyx.hw_nodes.buffet_node import BuffetNode
@@ -24,6 +24,7 @@ class ComputeNode(HWNode):
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         other_type = type(other)
 
@@ -130,6 +131,16 @@ class ComputeNode(HWNode):
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == FiberAccessNode:
+            print("COMPUTE TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
 

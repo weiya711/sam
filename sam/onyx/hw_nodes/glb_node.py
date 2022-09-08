@@ -58,7 +58,7 @@ class GLBNode(HWNode):
     def get_format(self):
         return self.format
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -73,6 +73,7 @@ class GLBNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         other_type = type(other)
 
@@ -114,6 +115,16 @@ class GLBNode(HWNode):
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == FiberAccessNode:
+            # Only could be using the write scanner portion of the fiber access
+            # fa = other.get_name()
+            conns_original = self.connect(other.get_write_scanner(), edge=edge)
+            print(conns_original)
+            conns_remapped = other.remap_conns(conns_original, "write_scanner")
+            print(conns_remapped)
+
+            return conns_remapped
+
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
 

@@ -16,7 +16,7 @@ class IntersectNode(HWNode):
         for conn, tensor in self.conn_to_tensor.items():
             self.tensor_to_conn[tensor] = conn
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -31,6 +31,7 @@ class IntersectNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         new_conns = None
         isect = self.get_name()
@@ -200,7 +201,30 @@ class IntersectNode(HWNode):
             }
             return new_conns
         elif other_type == CrdHoldNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            print(edge)
+            crdhold = other.get_name()
+            edge_comment = edge.get_attributes()['comment'].strip('"')
+            if 'outer' in edge_comment:
+                conn = 1
+            else:
+                conn = 0
+            new_conns = {
+                f'intersect_to_crdhold': [
+                    ([(isect, "coord_out"), (crdhold, f"cmrg_coord_in_{conn}")], 17),
+                ]
+            }
+            return new_conns
+        elif other_type == FiberAccessNode:
+            print("INTERSECT TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
+
         else:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
 

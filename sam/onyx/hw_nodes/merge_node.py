@@ -14,7 +14,7 @@ class MergeNode(HWNode):
     def get_inner(self):
         return self.inner
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         merge = self.get_name()
 

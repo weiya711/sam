@@ -28,7 +28,7 @@ class ReadScannerNode(HWNode):
     def get_format(self):
         return self.format
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -93,7 +93,6 @@ class ReadScannerNode(HWNode):
         elif other_type == WriteScannerNode:
             # send the crd to write scanner
             wr_scan = other.get_name()
-
             edge_attr = edge.get_attributes()
             if 'use_alt_out_port' in edge_attr:
                 out_conn = 'block_rd_out'

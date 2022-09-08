@@ -6,7 +6,7 @@ class MemoryNode(HWNode):
         super().__init__(name=name)
         self._connected_to_buffet = False
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
