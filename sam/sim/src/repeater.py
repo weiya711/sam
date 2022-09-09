@@ -345,8 +345,14 @@ class Repeat_back(Primitive):
             elif self.get_next_ref:
                 self.curr_out_ref = ''
 
+            if self.debug:
+                print("DEBUG__Now: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
+                      "\t Get Rep:", self.get_next_rep, 
+                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready) 
+
             repeat = ''
             if len(self.in_repeat) > 0 and self.get_next_rep:
+
                 repeat = self.in_repeat.pop(0)
                 if repeat == 'S' and self.empty_rep_fiber and self.meta_union_mode:
                     if isinstance(self.curr_in_ref, int):
@@ -385,6 +391,8 @@ class Repeat_back(Primitive):
                         self.curr_out_ref = ''
                     self.empty_rep_fiber = True
                 elif repeat == 'D':
+                    if self.curr_in_ref == 'D':
+                        self.curr_out_ref = 'D'
                     if self.curr_out_ref != 'D':
                         raise Exception("Both repeat and ref signal need to end in 'D'")
                     self.get_next_ref = True
