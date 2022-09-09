@@ -8,11 +8,11 @@ set -u
 
 BENCHMARKS=(
   mat_vecmul_FINAL
-  matmul_FINAL
-  mat_elemadd_FINAL
-  mat_elemadd3_FINAL
-  mat_residual_FINAL
-  mat_mattransmul_FINAL
+#  matmul_FINAL
+#  mat_elemadd_FINAL
+#  mat_elemadd3_FINAL
+#  mat_residual_FINAL
+#  mat_mattransmul_FINAL
 )
 
 errors=()

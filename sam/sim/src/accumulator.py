@@ -13,14 +13,15 @@ class Reduce(Primitive):
         self.emit_stkn = False
         self.curr_in_val = None
 
-        self.reduction_count = 0
-        self.num_inputs = 0
-        self.num_outputs = 0
-        self.stop_token_out = 0
-        self.drop_token_out = 0
-        self.valid_token_out = 0
-        self.zero_out = 0
-        self.nonzero_out = 0
+        if self.get_stats:
+            self.reduction_count = 0
+            self.num_inputs = 0
+            self.num_outputs = 0
+            self.stop_token_out = 0
+            self.drop_token_out = 0
+            self.valid_token_out = 0
+            self.zero_out = 0
+            self.nonzero_out = 0
 
     def update(self):
         self.update_done()
@@ -46,66 +47,71 @@ class Reduce(Primitive):
                 self.done = True
                 self.curr_out = 'D'
             else:
-                self.reduction_count += 1
+                if self.get_stats:
+                    self.reduction_count += 1
                 self.sum += self.curr_in_val
                 self.curr_out = ""
         else:
             self.curr_out = ""
 
-        if self.curr_out == "":
-            self.drop_token_out += 1
-        elif is_stkn(self.curr_out):
-            self.stop_token_out += 1
-        else:
-            if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
-                self.zero_out += 1
+        if self.get_stats:
+            if self.curr_out == "":
+                self.drop_token_out += 1
+            elif is_stkn(self.curr_out):
+                self.stop_token_out += 1
             else:
-                self.nonzero_out += 1
-            self.valid_token_out += 1
+                if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
+                    self.zero_out += 1
+                else:
+                    self.nonzero_out += 1
+                self.valid_token_out += 1
 
-        self.compute_fifos()
+        if self.get_stats:
+            self.compute_fifos()
         if self.debug:
             print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
                   "\t Sum:", self.sum)
 
     def set_in_val(self, val):
         if val != '' and val is not None:
-            self.num_inputs += 1
+            if self.get_stats:
+                self.num_inputs += 1
             self.in_val.append(val)
 
     def out_val(self):
-        self.num_outputs += 1
+        if self.get_stats:
+            self.num_outputs += 1
         return self.curr_out
 
     def compute_fifos(self):
         self.in_val_size = max(self.in_val_size, len(self.in_val))
 
     def print_fifos(self):
-        print("Reduction counts- total inputs ", self.num_inputs, " total outputs ", self.num_outputs,
-              " reduction values ", self.reduction_count)
-        print("FiFO Val size for Reduce block: ", self.in_val_size)
+        if self.get_stats:
+            print("Reduction counts- total inputs ", self.num_inputs, " total outputs ", self.num_outputs,
+                  " reduction values ", self.reduction_count)
+            print("FiFO Val size for Reduce block: ", self.in_val_size)
 
     def return_statistics(self):
-        stats_dict = {"red_count": self.reduction_count, "total_inputs": self.num_inputs,
-                      "total_outputs": self.num_outputs, "stkn_outs": self.stop_token_out,
-                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
-                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"red_count": self.reduction_count, "total_inputs": self.num_inputs,
+                          "total_outputs": self.num_outputs, "stkn_outs": self.stop_token_out,
+                          "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                          "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
 
 class SparseCrdPtAccumulator1(Primitive):
     def __init__(self, maxdim=100, valtype=float, **kwargs):
         super().__init__(**kwargs)
-        self.hits_tracker = {}
 
         self.outer_crdpt = []
         self.inner_crdpt = []
         self.in_val = []
 
-        self.out_crd_fifo = 0
-        self.in_crd_fifo = 0
-        self.in_val_fifo = 0
         self.curr_in_val = None
         self.curr_in_inner_crdpt = None
         self.curr_in_outer_crdpt = None
@@ -124,27 +130,33 @@ class SparseCrdPtAccumulator1(Primitive):
         self.storage = dict()
         self.valtype = valtype
 
-        self.stop_token_out = 0
-        self.drop_token_out = 0
-        self.valid_token_out = 0
-        self.zero_out = 0
-        self.nonzero_out = 0
+        if self.get_stats:
+            self.hits_tracker = {}
+            self.stop_token_out = 0
+            self.drop_token_out = 0
+            self.valid_token_out = 0
+            self.zero_out = 0
+            self.nonzero_out = 0
+            self.out_crd_fifo = 0
+            self.in_crd_fifo = 0
+            self.in_val_fifo = 0
 
     def update(self):
         self.update_done()
         if len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0:
             self.block_start = False
 
-        self.out_crd_fifo = max(self.out_crd_fifo, len(self.outer_crdpt))
-        self.in_crd_fifo = max(self.in_crd_fifo, len(self.inner_crdpt))
-        self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
+        if self.get_stats:
+            self.out_crd_fifo = max(self.out_crd_fifo, len(self.outer_crdpt))
+            self.in_crd_fifo = max(self.in_crd_fifo, len(self.inner_crdpt))
+            self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
 
         if self.done:
             self.curr_outer_crdpt = ''
             self.curr_inner_crdpt = ''
             self.curr_val = ''
-
-            self.drop_token_out += 1
+            if self.get_stats:
+                self.drop_token_out += 1
             return
 
         if len(self.in_val) > 0 and len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0:
@@ -159,13 +171,16 @@ class SparseCrdPtAccumulator1(Primitive):
 
             if self.curr_in_outer_crdpt in self.storage.keys():
                 inner_dict = self.storage[self.curr_in_outer_crdpt]
-                for k in inner_dict.keys():
-                    self.hits_tracker[k] = 1
+                if self.get_stats:
+                    for k in inner_dict.keys():
+                        self.hits_tracker[k] = 1
                 if self.curr_in_inner_crdpt in inner_dict.keys():
-                    self.hits_tracker[self.curr_in_inner_crdpt] += 1
+                    if self.get_stats:
+                        self.hits_tracker[self.curr_in_inner_crdpt] += 1
                     inner_dict[self.curr_in_inner_crdpt] += self.valtype(self.curr_in_val)
                 else:
-                    self.hits_tracker[self.curr_in_inner_crdpt] = 1
+                    if self.get_stats:
+                        self.hits_tracker[self.curr_in_inner_crdpt] = 1
                     inner_dict[self.curr_in_inner_crdpt] = self.valtype(self.curr_in_val)
             # If a done token is seen, cannot emit done until all coordinates have been written out
             elif self.curr_in_outer_crdpt == 'D':
@@ -198,17 +213,17 @@ class SparseCrdPtAccumulator1(Primitive):
             self.curr_outer_crdpt = ''
             self.curr_inner_crdpt = ''
             self.curr_val = ''
-
-        if self.curr_val == "":
-            self.drop_token_out += 1
-        elif is_stkn(self.curr_val):
-            self.stop_token_out += 1
-        else:
-            if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
-                self.zero_out += 1
+        if self.get_stats:
+            if self.curr_val == "":
+                self.drop_token_out += 1
+            elif is_stkn(self.curr_val):
+                self.stop_token_out += 1
             else:
-                self.nonzero_out += 1
-            self.valid_token_out += 1
+                if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
+                    self.zero_out += 1
+                else:
+                    self.nonzero_out += 1
+                self.valid_token_out += 1
 
         if self.debug:
             print("Done:", self.out_done(),
@@ -244,22 +259,26 @@ class SparseCrdPtAccumulator1(Primitive):
         return self.curr_val
 
     def return_statistics(self):
-        stats_dict = {"stkn_outs": self.stop_token_out,
-                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
-                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"stkn_outs": self.stop_token_out,
+                          "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                          "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
     def return_hits(self):
         i = 0
         cnt_gt_zero = 0
         cnt_total = 0
-        for k in self.hits_tracker.keys():
-            if self.hits_tracker[k] > i:
-                i = self.hits_tracker[k]
-            if self.hits_tracker[k] > 1:
-                cnt_gt_zero += 1
-            cnt_total += 1
+        if self.get_stats:
+            for k in self.hits_tracker.keys():
+                if self.hits_tracker[k] > i:
+                    i = self.hits_tracker[k]
+                if self.hits_tracker[k] > 1:
+                    cnt_gt_zero += 1
+                cnt_total += 1
         return i, cnt_gt_zero, cnt_total
 
 
@@ -270,10 +289,6 @@ class SparseAccumulator1(Primitive):
         self.in_outer_crdpt = []
         self.in_inner_crdpt = []
         self.in_val = []
-
-        self.in_outer_crd_pt_fifo = 0
-        self.in_inner_crd_pt_fifo = 0
-        self.in_val_fifo = 0
 
         self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=maxdim, valtype=valtype, **kwargs)
         self.crdpt_converter = CrdPtConverter(last_level=last_level, **kwargs)
@@ -289,15 +304,21 @@ class SparseAccumulator1(Primitive):
 
         self.val_stkn = val_stkn
 
+        if self.get_stats:
+            self.in_outer_crd_pt_fifo = 0
+            self.in_inner_crd_pt_fifo = 0
+            self.in_val_fifo = 0
+
     def update(self):
         self.update_done()
         if len(self.in_outer_crdpt) > 0 or len(self.in_inner_crdpt) > 0:
             self.block_start = False
 
         # What to do for drop tokens?
-        self.in_outer_crd_pt_fifo = max(self.in_outer_crd_pt_fifo, len(self.in_outer_crdpt))
-        self.in_inner_crd_pt_fifo = max(self.in_inner_crd_pt_fifo, len(self.in_inner_crdpt))
-        self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
+        if self.get_stats:
+            self.in_outer_crd_pt_fifo = max(self.in_outer_crd_pt_fifo, len(self.in_outer_crdpt))
+            self.in_inner_crd_pt_fifo = max(self.in_inner_crd_pt_fifo, len(self.in_inner_crdpt))
+            self.in_val_fifo = max(self.in_val_fifo, len(self.in_val))
 
         if len(self.in_outer_crdpt) > 0:
             self.crdpt_spacc.set_outer_crdpt(self.in_outer_crdpt.pop(0))
@@ -388,16 +409,19 @@ class SparseAccumulator1(Primitive):
         return self.curr_inner_crd
 
     def return_statistics(self):
-        stats_dict = {}
-        stats_dict["in_outer_fifo"] = self.in_outer_crd_pt_fifo
-        stats_dict["in_inner_fifo"] = self.in_inner_crd_pt_fifo
-        stats_dict["in_val_fifo"] = self.in_val_fifo
-        hits_info = self.crdpt_spacc.return_hits()
-        stats_dict["max_hits"] = hits_info[0]
-        stats_dict["hits_gt_one"] = hits_info[1]
-        stats_dict["total_elems"] = hits_info[2]
-        stats_dict.update(self.crdpt_spacc.return_statistics())
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {}
+            stats_dict["in_outer_fifo"] = self.in_outer_crd_pt_fifo
+            stats_dict["in_inner_fifo"] = self.in_inner_crd_pt_fifo
+            stats_dict["in_val_fifo"] = self.in_val_fifo
+            hits_info = self.crdpt_spacc.return_hits()
+            stats_dict["max_hits"] = hits_info[0]
+            stats_dict["hits_gt_one"] = hits_info[1]
+            stats_dict["total_elems"] = hits_info[2]
+            stats_dict.update(self.crdpt_spacc.return_statistics())
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
     def print_fifos(self):
@@ -429,12 +453,13 @@ class SparseCrdPtAccumulator2(Primitive):
         self.storage = dict()
         self.valtype = valtype
 
-        self.hits_tracker = {}
-        self.stop_token_out = 0
-        self.drop_token_out = 0
-        self.valid_token_out = 0
-        self.zero_out = 0
-        self.nonzero_out = 0
+        if self.get_stats:
+            self.hits_tracker = {}
+            self.stop_token_out = 0
+            self.drop_token_out = 0
+            self.valid_token_out = 0
+            self.zero_out = 0
+            self.nonzero_out = 0
 
     def update(self):
         self.update_done()
@@ -445,8 +470,8 @@ class SparseCrdPtAccumulator2(Primitive):
             self.curr_crdpt0 = ''
             self.curr_crdpt1 = ''
             self.curr_val = ''
-
-            self.drop_token_out += 1
+            if self.get_stats:
+                self.drop_token_out += 1
             return
 
         if len(self.in_val) > 0 and len(self.in_crdpt1) > 0 and len(self.in_crdpt0) > 0:
@@ -463,13 +488,16 @@ class SparseCrdPtAccumulator2(Primitive):
             else:
                 if self.curr_in1_crdpt in self.storage.keys():
                     inner_dict = self.storage[self.curr_in1_crdpt]
-                    for k in inner_dict.keys():
-                        self.hits_tracker[k] = 1
+                    if self.get_stats:
+                        for k in inner_dict.keys():
+                            self.hits_tracker[k] = 1
                     if self.curr_in0_crdpt in inner_dict.keys():
-                        self.hits_tracker[self.curr_in0_crdpt] += 1
+                        if self.get_stats:
+                            self.hits_tracker[self.curr_in0_crdpt] += 1
                         inner_dict[self.curr_in0_crdpt] += self.valtype(self.curr_in_val)
                     else:
-                        self.hits_tracker[self.curr_in0_crdpt] = 1
+                        if self.get_stats:
+                            self.hits_tracker[self.curr_in0_crdpt] = 1
                         inner_dict[self.curr_in0_crdpt] = self.valtype(self.curr_in_val)
                 else:
                     self.storage[self.curr_in1_crdpt] = {self.curr_in0_crdpt: self.valtype(self.curr_in_val)}
@@ -506,16 +534,17 @@ class SparseCrdPtAccumulator2(Primitive):
             self.curr_crdpt1 = ''
             self.curr_val = ''
 
-        if self.curr_val == "":
-            self.drop_token_out += 1
-        elif is_stkn(self.curr_val):
-            self.stop_token_out += 1
-        else:
-            if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
-                self.zero_out += 1
+        if self.get_stats:
+            if self.curr_val == "":
+                self.drop_token_out += 1
+            elif is_stkn(self.curr_val):
+                self.stop_token_out += 1
             else:
-                self.nonzero_out += 1
-            self.valid_token_out += 1
+                if (isinstance(self.curr_val, float) or isinstance(self.curr_val, int)) and self.curr_val == 0:
+                    self.zero_out += 1
+                else:
+                    self.nonzero_out += 1
+                self.valid_token_out += 1
 
         if self.debug:
             print("Done:", self.out_done(),
@@ -565,10 +594,13 @@ class SparseCrdPtAccumulator2(Primitive):
         return i, cnt_gt_zero, cnt_total
 
     def return_statistics(self):
-        stats_dict = {"stkn_outs": self.stop_token_out,
-                      "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
-                      "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"stkn_outs": self.stop_token_out,
+                          "drop_outs": self.drop_token_out, "valid_outs": self.valid_token_out,
+                          "zero_outs": self.zero_out, "nonzero_outs": self.nonzero_out}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
 
@@ -579,10 +611,6 @@ class SparseAccumulator2(Primitive):
         self.in1_crdpt = []
         self.in0_crdpt = []
         self.in_val = []
-
-        self.in1_fifo = 0
-        self.in0_fifo = 0
-        self.inval_fifo = 0
 
         self.crdpt_spacc = SparseCrdPtAccumulator2(maxdim=maxdim, valtype=valtype, **kwargs)
         self.crdpt_converter = CrdPtConverter(last_level=True, **kwargs)
@@ -597,12 +625,18 @@ class SparseAccumulator2(Primitive):
         self.inner_crdpt = []
 
         self.val_stkn = val_stkn
+        if self.get_stats:
+            self.in1_fifo = 0
+            self.in0_fifo = 0
+            self.inval_fifo = 0
 
     def update(self):
         self.update_done()
         if (len(self.in1_crdpt) > 0 or len(self.in0_crdpt) > 0 or len(self.in_val) > 0):
             self.block_start = False
-        self.compute_fifo()
+
+        if self.get_stats:
+            self.compute_fifo()
 
         if len(self.in1_crdpt) > 0:
             self.crdpt_spacc.set_outer_crdpt(self.in1_crdpt.pop(0))
@@ -672,10 +706,13 @@ class SparseAccumulator2(Primitive):
         return self.curr_val
 
     def return_statistics(self):
-        hits_info = self.crdpt_spacc.return_hits()
-        stats_dict = {"in1_fifo": self.in1_fifo, "in0_fifo": self.in0_fifo,
-                      "inval_fifo": self.inval_fifo, "max_hits": hits_info[0], "gt_one": hits_info[1],
-                      "total_elems": hits_info[2]}
-        stats_dict.update(self.crdpt_spacc.return_statistics())
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            hits_info = self.crdpt_spacc.return_hits()
+            stats_dict = {"in1_fifo": self.in1_fifo, "in0_fifo": self.in0_fifo,
+                          "inval_fifo": self.inval_fifo, "max_hits": hits_info[0], "gt_one": hits_info[1],
+                          "total_elems": hits_info[2]}
+            stats_dict.update(self.crdpt_spacc.return_statistics())
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
