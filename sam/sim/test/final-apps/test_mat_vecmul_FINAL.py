@@ -31,17 +31,17 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     c_dirname = os.path.join(formatted_dir, ssname, "other")
@@ -49,18 +49,18 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
     assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
     c_fname = c_fname[0]
     c_dirname = os.path.join(c_dirname, c_fname)
-
+    
     c_shape_filename = os.path.join(c_dirname, "C_shape.txt")
     c_shape = read_inputs(c_shape_filename)
 
-    c0_seg_filename = os.path.join(c_dirname, "C0_seg.txt")
+    c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
     c_seg0 = read_inputs(c0_seg_filename)
-    c0_crd_filename = os.path.join(c_dirname, "C0_crd.txt")
+    c0_crd_filename = os.path.join(c_dirname, "tensor_C_mode_0_crd")
     c_crd0 = read_inputs(c0_crd_filename)
 
-    c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
+    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
     c_vals = read_inputs(c_vals_filename, float)
-
+    
     # THIS IS FOR SIZE INFO
     Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     Bs_seg = read_inputs(os.path.join(Bs_dirname, "B0_seg.txt"))

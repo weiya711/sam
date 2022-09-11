@@ -34,17 +34,17 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, report_stats, debu
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)

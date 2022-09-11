@@ -31,17 +31,17 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
     C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "B0_seg.txt")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_B_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "B0_crd.txt")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_B_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "B1_seg.txt")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_B_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "B1_crd.txt")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_B_mode_1_seg")
     C_crd1 = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "tensor_B_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
     d_dirname = os.path.join(formatted_dir, ssname, "other")
@@ -52,12 +52,12 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
 
     d_shape = [C_shape[0]]
 
-    d0_seg_filename = os.path.join(d_dirname, "C0_seg.txt")
+    d0_seg_filename = os.path.join(d_dirname, "tensor_C_mode_0_seg")
     d_seg0 = read_inputs(d0_seg_filename)
-    d0_crd_filename = os.path.join(d_dirname, "C0_crd.txt")
+    d0_crd_filename = os.path.join(d_dirname, "tensor_C_mode_0_crd")
     d_crd0 = read_inputs(d0_crd_filename)
 
-    d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
+    d_vals_filename = os.path.join(d_dirname, "tensor_C_mode_vals")
     d_vals = read_inputs(d_vals_filename, float)
 
     f_dirname = os.path.join(formatted_dir, ssname, "other")
@@ -67,12 +67,12 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
     f_dirname = os.path.join(f_dirname, f_fname)
     f_shape = [C_shape[1]]
 
-    f0_seg_filename = os.path.join(f_dirname, "C0_seg.txt")
+    f0_seg_filename = os.path.join(f_dirname, "tensor_C_mode_0_seg")
     f_seg0 = read_inputs(f0_seg_filename)
-    f0_crd_filename = os.path.join(f_dirname, "C0_crd.txt")
+    f0_crd_filename = os.path.join(f_dirname, "tensor_C_mode_0_crd")
     f_crd0 = read_inputs(f0_crd_filename)
 
-    f_vals_filename = os.path.join(f_dirname, "C_vals.txt")
+    f_vals_filename = os.path.join(f_dirname, "tensor_C_mode_vals")
     f_vals = read_inputs(f_vals_filename, float)
 
     e_vals = [2]
