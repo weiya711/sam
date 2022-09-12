@@ -178,7 +178,7 @@ class CompressedCrdRdScan(CrdRdScan):
             self.skip_cnt = 0
             self.intersection_behind_cnt = 0
             self.fiber_behind_cnt = 0
-        self.stop_count = 0
+            self.stop_count = 0
         self.skip_stkn_cnt = 0
         self.out_stkn_cnt = 0
 
@@ -427,7 +427,7 @@ class CompressedCrdRdScan(CrdRdScan):
         if isinstance(self.curr_crd, int):
             self.prev_crd = self.curr_crd
 
-        if is_stkn(self.curr_crd):
+        if self.get_stats and is_stkn(self.curr_crd):
             self.stop_count += 1
 
         # Debugging print statements
