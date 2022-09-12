@@ -146,32 +146,24 @@ def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_b) > 0:
             fiberlookup_bi_17.set_in_ref(in_ref_b.pop(0))
-        fiberlookup_bi_17.update()
 
         if len(in_ref_C) > 0:
             fiberlookup_Ci_18.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_18.update()
 
         unioni_16.set_in1(fiberlookup_bi_17.out_ref(), fiberlookup_bi_17.out_crd())
         unioni_16.set_in2(fiberlookup_Ci_18.out_ref(), fiberlookup_Ci_18.out_crd())
-        unioni_16.update()
 
         fiberlookup_Cj_11.set_in_ref(unioni_16.out_ref2())
-        fiberlookup_Cj_11.update()
 
         fiberwrite_x0_1.set_input(unioni_16.out_crd())
-        fiberwrite_x0_1.update()
 
         repsiggen_i_14.set_istream(unioni_16.out_crd())
-        repsiggen_i_14.update()
 
         if len(in_ref_d) > 0:
             repeat_di_13.set_in_ref(in_ref_d.pop(0))
         repeat_di_13.set_in_repsig(repsiggen_i_14.out_repsig())
-        repeat_di_13.update()
 
         fiberlookup_dj_12.set_in_ref(repeat_di_13.out_ref())
-        fiberlookup_dj_12.update()
 
         temp.append(fiberlookup_Cj_11.out_crd())
         temp1.append(fiberlookup_dj_12.out_crd())
@@ -179,20 +171,47 @@ def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, fill=0):
         temp3.append(fiberlookup_dj_12.out_ref())
         intersectj_10.set_in1(fiberlookup_dj_12.out_ref(), fiberlookup_dj_12.out_crd())
         intersectj_10.set_in2(fiberlookup_Cj_11.out_ref(), fiberlookup_Cj_11.out_crd())
-        intersectj_10.update()
 
         # repsiggen_j_9.set_istream(intersectj_10.out_crd())
-        # repsiggen_j_9.update()
 
         arrayvals_C_6.set_load(intersectj_10.out_ref2())
-        arrayvals_C_6.update()
 
         arrayvals_d_7.set_load(intersectj_10.out_ref1())
-        arrayvals_d_7.update()
 
         # repeat_bj_8.set_in_ref(unioni_16.out_ref1())
         # repeat_bj_8.set_in_repsig(repsiggen_j_9.out_repsig())
+
+        arrayvals_b_4.set_load(unioni_16.out_ref1())
+
+        mul_5.set_in1(arrayvals_C_6.out_val())
+        mul_5.set_in2(arrayvals_d_7.out_val())
+
+        reduce_2.set_in_val(mul_5.out_val())
+
+
+        add_3.set_in1(arrayvals_b_4.out_val())
+        add_3.set_in2(reduce_2.out_val())
+
+        fiberwrite_xvals_0.set_input(add_3.out_val())
+
+        fiberlookup_bi_17.update()
+        fiberlookup_Ci_18.update()
+        unioni_16.update()
+        fiberlookup_Cj_11.update()
+        fiberwrite_x0_1.update()
+        repsiggen_i_14.update()
+        repeat_di_13.update()
+        fiberlookup_dj_12.update()
+        intersectj_10.update()
+        # repsiggen_j_9.update()
+        arrayvals_C_6.update()
+        arrayvals_d_7.update()
         # repeat_bj_8.update()
+        arrayvals_b_4.update()
+        mul_5.update()
+        reduce_2.update()
+        add_3.update()
+        fiberwrite_xvals_0.update()
 
         temp7.append(unioni_16.out_crd())
         temp6.append(unioni_16.out_ref1())
@@ -210,16 +229,6 @@ def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, fill=0):
         print("bj rep", remove_emptystr(temp5))
         print("rsg", remove_emptystr(temp9))
 
-        arrayvals_b_4.set_load(unioni_16.out_ref1())
-        arrayvals_b_4.update()
-
-        mul_5.set_in1(arrayvals_C_6.out_val())
-        mul_5.set_in2(arrayvals_d_7.out_val())
-        mul_5.update()
-
-        reduce_2.set_in_val(mul_5.out_val())
-        reduce_2.update()
-
         temp02.append(repeat_bj_8.out_ref())
         temp21.append(arrayvals_b_4.out_val())
         temp22.append(intersectj_10.out_ref2())
@@ -236,13 +245,6 @@ def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, fill=0):
         print("rep bj", remove_emptystr(temp02))
         print("b_vals", remove_emptystr(temp21))
         print()
-
-        add_3.set_in1(arrayvals_b_4.out_val())
-        add_3.set_in2(reduce_2.out_val())
-        add_3.update()
-
-        fiberwrite_xvals_0.set_input(add_3.out_val())
-        fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1
@@ -376,32 +378,24 @@ def test_unit_mat_residual_random(dim, nnz, debug_sim, max_val=10, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_b) > 0:
             fiberlookup_bi_17.set_in_ref(in_ref_b.pop(0))
-        fiberlookup_bi_17.update()
 
         if len(in_ref_C) > 0:
             fiberlookup_Ci_18.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_18.update()
 
         unioni_16.set_in1(fiberlookup_bi_17.out_ref(), fiberlookup_bi_17.out_crd())
         unioni_16.set_in2(fiberlookup_Ci_18.out_ref(), fiberlookup_Ci_18.out_crd())
-        unioni_16.update()
 
         fiberlookup_Cj_11.set_in_ref(unioni_16.out_ref2())
-        fiberlookup_Cj_11.update()
 
         fiberwrite_x0_1.set_input(unioni_16.out_crd())
-        fiberwrite_x0_1.update()
 
         repsiggen_i_14.set_istream(unioni_16.out_crd())
-        repsiggen_i_14.update()
 
         if len(in_ref_d) > 0:
             repeat_di_13.set_in_ref(in_ref_d.pop(0))
         repeat_di_13.set_in_repsig(repsiggen_i_14.out_repsig())
-        repeat_di_13.update()
 
         fiberlookup_dj_12.set_in_ref(repeat_di_13.out_ref())
-        fiberlookup_dj_12.update()
 
         temp.append(fiberlookup_Cj_11.out_crd())
         temp1.append(fiberlookup_dj_12.out_crd())
@@ -409,28 +403,54 @@ def test_unit_mat_residual_random(dim, nnz, debug_sim, max_val=10, fill=0):
         temp3.append(fiberlookup_dj_12.out_ref())
         intersectj_10.set_in1(fiberlookup_dj_12.out_ref(), fiberlookup_dj_12.out_crd())
         intersectj_10.set_in2(fiberlookup_Cj_11.out_ref(), fiberlookup_Cj_11.out_crd())
-        intersectj_10.update()
 
         # repsiggen_j_9.set_istream(intersectj_10.out_crd())
-        # repsiggen_j_9.update()
 
         arrayvals_C_6.set_load(intersectj_10.out_ref2())
-        arrayvals_C_6.update()
 
         arrayvals_d_7.set_load(intersectj_10.out_ref1())
-        arrayvals_d_7.update()
 
         # repeat_bj_8.set_in_ref(unioni_16.out_ref1())
         # repeat_bj_8.set_in_repsig(repsiggen_j_9.out_repsig())
-        # repeat_bj_8.update()
 
         # unionj1.set_in1(repeat_bj_8.out_ref())
         # unionj1.set_in2(intersectj_10.out_crd(), intersectj_10.out_ref1())
-        # unionj1.update()
         #
         # unionj2.set_in1(repeat_bj_8.out_ref())
         # unionj2.set_in2(intersectj_10.out_crd(), intersectj_10.out_ref2())
+
+        arrayvals_b_4.set_load(unioni_16.out_ref1())
+
+        mul_5.set_in1(arrayvals_C_6.out_val())
+        mul_5.set_in2(arrayvals_d_7.out_val())
+
+        reduce_2.set_in_val(mul_5.out_val())
+
+        add_3.set_in1(arrayvals_b_4.out_val())
+        add_3.set_in2(reduce_2.out_val())
+
+        fiberwrite_xvals_0.set_input(add_3.out_val())
+
+        fiberlookup_bi_17.update()
+        fiberlookup_Ci_18.update()
+        unioni_16.update()
+        fiberlookup_Cj_11.update()
+        fiberwrite_x0_1.update()
+        repsiggen_i_14.update()
+        repeat_di_13.update()
+        fiberlookup_dj_12.update()
+        intersectj_10.update()
+        # repsiggen_j_9.update()
+        arrayvals_C_6.update()
+        arrayvals_d_7.update()
+        # repeat_bj_8.update()
+        # unionj1.update()
         # unionj2.update()
+        arrayvals_b_4.update()
+        mul_5.update()
+        reduce_2.update()
+        add_3.update()
+        fiberwrite_xvals_0.update()
 
         # temp7.append(unioni_16.out_crd())
         # temp6.append(unioni_16.out_ref1())
@@ -449,16 +469,6 @@ def test_unit_mat_residual_random(dim, nnz, debug_sim, max_val=10, fill=0):
         # print("rsg", remove_emptystr(temp9))
         # print()
 
-        arrayvals_b_4.set_load(unioni_16.out_ref1())
-        arrayvals_b_4.update()
-
-        mul_5.set_in1(arrayvals_C_6.out_val())
-        mul_5.set_in2(arrayvals_d_7.out_val())
-        mul_5.update()
-
-        reduce_2.set_in_val(mul_5.out_val())
-        reduce_2.update()
-
         # temp.append(repeat_bj_8.out_ref())
         # temp1.append(arrayvals_b_4.out_val())
         # temp2.append(intersectj_10.out_ref2())
@@ -474,13 +484,6 @@ def test_unit_mat_residual_random(dim, nnz, debug_sim, max_val=10, fill=0):
         # print("mul out", remove_emptystr(temp6))
         # print("rep bj", remove_emptystr(temp))
         # print("b_vals", remove_emptystr(temp1))
-
-        add_3.set_in1(arrayvals_b_4.out_val())
-        add_3.set_in2(reduce_2.out_val())
-        add_3.update()
-
-        fiberwrite_xvals_0.set_input(add_3.out_val())
-        fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1

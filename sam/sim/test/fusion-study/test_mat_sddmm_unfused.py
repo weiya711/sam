@@ -179,47 +179,49 @@ def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, fill=0):
     while not done and time_cnt < 2 * TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_25.update()
 
         if len(in_ref_T) > 0:
             fiberlookup_Ti.set_in_ref(in_ref_T.pop(0))
-        fiberlookup_Ti.update()
 
         intersecti_24.set_in1(fiberlookup_Bi_25.out_ref(), fiberlookup_Bi_25.out_crd())
         intersecti_24.set_in2(fiberlookup_Ti.out_ref(), fiberlookup_Ti.out_crd())
-        intersecti_24.update()
 
         fiberlookup_Bj_19.set_in_ref(intersecti_24.out_ref1())
-        fiberlookup_Bj_19.update()
 
         fiberlookup_Tj.set_in_ref(intersecti_24.out_ref2())
-        fiberlookup_Tj.update()
 
         intersectj_18.set_in1(fiberlookup_Bj_19.out_ref(), fiberlookup_Bj_19.out_crd())
         intersectj_18.set_in2(fiberlookup_Tj.out_ref(), fiberlookup_Tj.out_crd())
-        intersectj_18.update()
 
         crddrop_9.set_outer_crd(intersecti_24.out_crd())
         crddrop_9.set_inner_crd(intersectj_18.out_crd())
-        crddrop_9.update()
 
         arrayvals_B_6.set_load(intersectj_18.out_ref1())
-        arrayvals_B_6.update()
 
         arrayvals_T.set_load(intersectj_18.out_ref2())
-        arrayvals_T.update()
 
         mul_5.set_in1(arrayvals_B_6.out_val())
         mul_5.set_in2(arrayvals_T.out_val())
-        mul_5.update()
 
         fiberwrite_Xvals_0.set_input(mul_5.out_val())
-        fiberwrite_Xvals_0.update()
 
         fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer())
-        fiberwrite_X0_2.update()
 
         fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner())
+
+
+        fiberlookup_Bi_25.update()
+        fiberlookup_Ti.update()
+        intersecti_24.update()
+        fiberlookup_Bj_19.update()
+        fiberlookup_Tj.update()
+        intersectj_18.update()
+        crddrop_9.update()
+        arrayvals_B_6.update()
+        arrayvals_T.update()
+        mul_5.update()
+        fiberwrite_Xvals_0.update()
+        fiberwrite_X0_2.update()
         fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()

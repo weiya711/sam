@@ -35,19 +35,22 @@ def test_unit_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0)
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             rdscan.set_in_ref(in_ref.pop(0))
-        rdscan.update()
         val1.set_load(rdscan.out_ref())
         val2.set_load(rdscan.out_ref())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
         wrscan.set_input(mul.out_val())
+
+        rdscan.update()
+        val1.update()
+        val2.update()
+        mul.update()
         wrscan.update()
+        
         print("Timestep", time, "\t Done --", "\tRdScan:", rdscan.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())
+        
         done = wrscan.out_done()
         time += 1
 
@@ -99,23 +102,24 @@ def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
         inter.set_in1(crdscan1.out_ref(), crdscan1.out_crd())
         inter.set_in2(crdscan2.out_ref(), crdscan2.out_crd())
-        inter.update()
         val1.set_load(inter.out_ref1())
         val2.set_load(inter.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
         wrscan.set_input(mul.out_val())
-        wrscan.update()
         oval.set_store(inter.out_crd(), mul.out_val())
+
+        crdscan1.update()
+        crdscan2.update()
+        inter.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        wrscan.update()
         oval.update()
 
         print("Timestep", time, "\t Done --",
@@ -123,6 +127,7 @@ def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
               "\tInter:", inter.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tOutVal:", oval.out_done())
+
         done = oval.out_done()
         time += 1
 
@@ -175,23 +180,24 @@ def test_unit_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
         inter.set_in1(crdscan1.out_ref(), crdscan1.out_crd())
         inter.set_in2(crdscan2.out_ref(), crdscan2.out_crd())
-        inter.update()
         val1.set_load(inter.out_ref1())
         val2.set_load(inter.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
         oval_wrscan.set_input(mul.out_val())
-        oval_wrscan.update()
         ocrd_wrscan.set_input(inter.out_crd())
+
+        crdscan1.update()
+        crdscan2.update()
+        inter.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        oval_wrscan.update()
         ocrd_wrscan.update()
 
         print("Timestep", time, "\t Done --",
@@ -249,23 +255,24 @@ def test_unit_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
         inter.set_in1(crdscan1.out_ref(), crdscan1.out_crd())
         inter.set_in2(crdscan2.out_ref(), crdscan2.out_crd())
-        inter.update()
         val1.set_load(inter.out_ref1())
         val2.set_load(inter.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
         oval_wrscan.set_input(mul.out_val())
-        oval_wrscan.update()
         ocrd_wrscan.set_input(inter.out_crd())
+
+        crdscan1.update()
+        crdscan2.update()
+        inter.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        oval_wrscan.update()
         ocrd_wrscan.update()
 
         print("Timestep", time, "\t Done --",
