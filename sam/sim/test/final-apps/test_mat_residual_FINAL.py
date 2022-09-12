@@ -27,8 +27,8 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 )
 @pytest.mark.suitesparse
 def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
-    C_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
+    C_dirname = os.path.join(cwd, "tmp_mat")
+    C_shape_filename = os.path.join(C_dirname, "shape")
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_B_mode_0_seg")
@@ -44,7 +44,7 @@ def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fil
     C_vals_filename = os.path.join(C_dirname, "tensor_B_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
-    b_dirname = os.path.join(formatted_dir, ssname, "other")
+    b_dirname = os.path.join(cwd, "tmp_mat")
     b_fname = [f for f in os.listdir(b_dirname) if ssname + "-vec_mode0" in f]
     assert len(b_fname) == 1, "Should only have one 'other' folder that matches"
     b_fname = b_fname[0]
@@ -59,7 +59,7 @@ def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fil
     b_vals_filename = os.path.join(b_dirname, "tensor_C_mode_vals")
     b_vals = read_inputs(b_vals_filename, float)
 
-    d_dirname = os.path.join(formatted_dir, ssname, "other")
+    d_dirname = os.path.join(cwd, "tmp_mat")
     d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode1" in f]
     assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
     d_fname = d_fname[0]

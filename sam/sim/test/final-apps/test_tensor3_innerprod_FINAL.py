@@ -26,8 +26,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, report_stats, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_dirname = os.path.join(cwd, "tmp_mat")
+    B_shape_filename = os.path.join(B_dirname, "shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
@@ -48,8 +48,8 @@ def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, report_stats,
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname, "shift", "sss012")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_dirname = os.path.join(cwd, "tmp_mat")
+    C_shape_filename = os.path.join(C_dirname, "shape")
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")

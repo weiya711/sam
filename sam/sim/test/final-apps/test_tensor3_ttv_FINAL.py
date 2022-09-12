@@ -28,8 +28,8 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 )
 @pytest.mark.frostt
 def test_tensor3_ttv_FINAL(samBench, frosttname, check_gold, report_stats, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_dirname = os.path.join(cwd, "tmp_mat")
+    B_shape_filename = os.path.join(B_dirname, "shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
@@ -50,13 +50,13 @@ def test_tensor3_ttv_FINAL(samBench, frosttname, check_gold, report_stats, debug
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    c_dirname = os.path.join(formatted_dir, frosttname, "other")
+    c_dirname = os.path.join(cwd, "tmp_mat")
     c_fname = [f for f in os.listdir(c_dirname) if frosttname + "-vec_mode2" in f]
     assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
     c_fname = c_fname[0]
     c_dirname = os.path.join(c_dirname, c_fname)
 
-    c_shape_filename = os.path.join(c_dirname, "C_shape.txt")
+    c_shape_filename = os.path.join(c_dirname, "shape")
     c_shape = read_inputs(c_shape_filename)
 
     c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")

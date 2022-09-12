@@ -201,34 +201,16 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
         f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + "\"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(
-            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
+            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + "shape\")\n")
         f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
-        # if tensor_formats.get_format(ten) == "dense":
-        #    f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \"" +
-        #       tensor_formats[ten]["information"]  + "\" \"" + tensor_formats[ten]["format"] + "\")\n")
-        #    f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
-        #       ten + "_shape.txt\")\n")
-        #    f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
         if tensor_format_parse.get_format(ten) == "ds01":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \"" +
-            #   tensor_formats[ten]["information"]  + "\" \"" + tensor_formats[ten]["format"] + "\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
-            #   ten + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
                 tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
-            # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ds10":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \"" +
-            #   tensor_formats[ten]["information"]
-            #   + "\" \"" + tensor_formats[ten]["format"] + "\" +  )\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
-            # ten + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
                 tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
@@ -237,11 +219,6 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ss01":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \""+
-            #   tensor_formats[ten]["information"] + "\" \"" +  tensor_formats[ten]["format"] + "\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" + ten
-            #   + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n"
             f.write(
                 tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
@@ -255,11 +232,6 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
                 tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ss10":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + "+
-            #   tensor_formats[ten]["information"] + "\" \"" + tensor_formats[ten]["format"] + "\" +  )\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename =
-            # os.name.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
                 tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
@@ -274,11 +246,6 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
 
         elif tensor_format_parse.get_format(ten) == "dss012":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + "+
-            #   tensor_formats[ten]["information"] + "\" \"" + tensor_formats[ten]["format"] + "\" +  )\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" + ten +
-            #   "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
                 tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
