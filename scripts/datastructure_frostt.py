@@ -17,6 +17,8 @@ parser.add_argument('-i', '--int', action='store_false', default=True, help='Saf
 parser.add_argument('-s', '--shift', action='store_false', default=True, help='Also format shifted tensor')
 parser.add_argument('-o', '--other', action='store_true', default=False, help='Format other tensor')
 parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, help='Format suitesparse other tensor')
+parser.add_argument('-np', '--numpy', action='store_true', default=False, help='Format numpy tensors')
+
 args = parser.parse_args()
 
 if args.other:
