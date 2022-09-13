@@ -36,11 +36,14 @@ def test_rd_scan_bv_direct_nd(arrs, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             bvscan.set_in_ref(in_ref.pop(0))
+
         bvscan.update()
 
-        print("Timestep", time, "\t Crd:", bvscan.out_bv(), "\t Ref:", bvscan.out_ref())
         out_bv.append(bvscan.out_bv())
         out_ref.append(bvscan.out_ref())
+        
+        print("Timestep", time, "\t Crd:", bvscan.out_bv(), "\t Ref:", bvscan.out_ref())
+
         done = bvscan.done
         time += 1
 

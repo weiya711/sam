@@ -35,9 +35,13 @@ def test_crd_hold_nd(arrs, debug_sim, max_val=1000):
             ch.set_inner_crd(icrd.pop(0))
         if len(ocrd) > 0:
             ch.set_outer_crd(ocrd.pop(0))
+
         ch.update()
-        print("Timestep", time, "\t Done:", ch.out_done(), "\t Out:", ch.out_crd_outer())
+        
         out.append(ch.out_crd_outer())
+
+        print("Timestep", time, "\t Done:", ch.out_done(), "\t Out:", ch.out_crd_outer())
+        
         done = ch.out_done()
         time += 1
 

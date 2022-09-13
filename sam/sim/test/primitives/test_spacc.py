@@ -37,12 +37,15 @@ def test_spacc1_direct(arrs, debug_sim):
             sa.set_outer_crdpt(ocrd.pop(0))
         if len(val) > 0:
             sa.set_val(val.pop(0))
-        sa.update()
-        print("Timestep", time, "\t Done:", sa.out_done())
 
+        sa.update()
+        
         out_ocrd.append(sa.out_outer_crd())
         out_icrd.append(sa.out_inner_crd())
         out_val.append(sa.out_val())
+
+        print("Timestep", time, "\t Done:", sa.out_done())
+
         done = sa.out_done()
         time += 1
 
@@ -99,12 +102,15 @@ def test_spacc2_direct(arrs, debug_sim):
             sa.set_crd_outer(crd1.pop(0))
         if len(val) > 0:
             sa.set_val(val.pop(0))
-        sa.update()
-        print("Timestep", time, "\t Done:", sa.out_done())
 
+        sa.update()
+        
         out_crd1.append(sa.out_crd_outer())
         out_crd0.append(sa.out_crd_inner())
         out_val.append(sa.out_val())
+
+        print("Timestep", time, "\t Done:", sa.out_done())
+
         done = sa.out_done()
         time += 1
 

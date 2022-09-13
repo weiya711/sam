@@ -135,17 +135,18 @@ def test_split_bv_intersect_direct(arrs, debug_sim):
         if len(crd) > 0:
             split.set_in_crd(crd.pop(0))
 
+        obv.set_in_crd(split.out_outer_crd())
+
+        ibv.set_in_crd(split.out_inner_crd())
+        
         split.update()
+        obv.update()
+        ibv.update()
 
         out_ocrd.append(split.out_outer_crd())
         out_icrd.append(split.out_inner_crd())
 
-        obv.set_in_crd(split.out_outer_crd())
-        obv.update()
         out_obv.append(obv.out_bv())
-
-        ibv.set_in_crd(split.out_inner_crd())
-        ibv.update()
         out_ibv.append(ibv.out_bv())
 
         print("Timestep", time, "\t Done:", split.out_done())
