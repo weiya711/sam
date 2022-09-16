@@ -433,9 +433,11 @@ def convert_aha_glb_output_file(glbfile, output_dir):
     with open(glbfile, "r") as glbfile_h:
         file_contents = glbfile_h.readlines()
         for line in file_contents:
-            sp_line = line.split(" ")
+            sp_line = line.strip().split(" ")
             for sp_line_tok in sp_line:
-                straightline.append(int(sp_line_tok, base=16))
+                sp_line_tok_stripped = sp_line_tok.strip()
+                print(f"converting token...\t{sp_line_tok_stripped}")
+                straightline.append(int(sp_line_tok_stripped, base=16))
 
     # Now we have straightline having the items in order
     # Now write them to the output
