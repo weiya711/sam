@@ -417,7 +417,7 @@ def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
 
 def convert_aha_glb_output_file(glbfile, output_dir):
 
-    glbfile_s = glbfile.rstrip(".txt")
+    glbfile_s = os.path.basename(glbfile).rstrip(".txt")
 
     if 'mode_vals' in glbfile:
         # num_blocks = 1
