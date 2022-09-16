@@ -148,7 +148,39 @@ class ReadScannerNode(HWNode):
         elif other_type == LookupNode:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == MergeNode:
-            raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
+
+            edge_attr = edge.get_attributes()
+            crddrop = other.get_name()
+            print("CHECKING READ TENSOR - CRDDROP")
+            print(edge)
+            print(self.get_tensor())
+            crd_drop_outer = other.get_outer()
+            comment = edge_attr['comment'].strip('"')
+            conn = 0
+            # okay this is dumb, stopgap until we can have super consistent output
+            try:
+                mapped_to_conn = comment.split("-")[1]
+            except Exception:
+                try:
+                    mapped_to_conn = comment.split("_")[1]
+                except Exception:
+                    mapped_to_conn = comment
+            if crd_drop_outer in mapped_to_conn:
+                conn = 1
+
+            if 'use_alt_out_port' in edge_attr:
+                out_conn = 'block_rd_out'
+            else:
+                out_conn = 'coord_out'
+
+            new_conns = {
+                f'rd_scan_to_crddrop_{conn}': [
+                    ([(rd_scan, out_conn), (crddrop, f"cmrg_coord_in_{conn}")], 17),
+                ]
+            }
+
+            return new_conns
+
         elif other_type == RepeatNode:
             repeat = other.get_name()
             new_conns = {

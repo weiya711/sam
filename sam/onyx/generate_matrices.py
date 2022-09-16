@@ -415,6 +415,40 @@ def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
     return mg
 
 
+def convert_aha_glb_output_file(glbfile, output_dir):
+
+    glbfile_s = glbfile.rstrip(".txt")
+
+    if 'mode_vals' in glbfile:
+        # num_blocks = 1
+        files = [f"{output_dir}/{glbfile_s}"]
+    else:
+        # num_blocks = 2
+        files = [f"{output_dir}/{glbfile_s}_seg",
+                 f"{output_dir}/{glbfile_s}_crd"]
+
+    straightline = []
+
+    # Straighten the file out
+    with open(glbfile, "r") as glbfile_h:
+        file_contents = glbfile_h.readlines()
+        for line in file_contents:
+            sp_line = line.split(" ")
+            for sp_line_tok in sp_line:
+                straightline.append(int(sp_line_tok, base=16))
+
+    # Now we have straightline having the items in order
+    # Now write them to the output
+    sl_ptr = 0
+    for file_path in files:
+        num_items = straightline[sl_ptr]
+        sl_ptr += 1
+        with open(file_path, "w+") as fh_:
+            for _ in range(num_items):
+                fh_.write(f"{straightline[sl_ptr]:04X}")
+                sl_ptr += 1
+
+
 def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_terminate=None) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)

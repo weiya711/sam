@@ -26,7 +26,7 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.parametrize("vectype", ["random", "runs", "blocks"])
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
 def test_vec_elemmul_skip_c_c_c(samBench, run_length, vectype, sparsity, debug_sim, max_val=1000, size=2000, fill=0):
-    assert(size > max_val)
+    assert (size > max_val)
 
     if vectype == "random":
         b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_" + vectype + "_sp_" + str(sparsity))
