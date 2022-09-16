@@ -111,8 +111,6 @@ class MergeNode(HWNode):
         return new_conns
 
     def configure(self, attributes):
-        print("MERGE CONFIGURE")
-        print(attributes)
         cmrg_enable = 1
         # TODO what is this supposed to be?
         cmrg_stop_lvl = 1

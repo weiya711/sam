@@ -226,10 +226,7 @@ class FiberAccessNode(HWNode):
 
     def configure(self, attributes, flavor):
 
-        print("FA CONFIGURE")
-        print(attributes)
         cfg_tuple, cfg_kwargs = self.get_flavor(flavor=flavor).configure(attributes)
-
         cfg_kwargs['flavor'] = flavor
 
         return cfg_tuple, cfg_kwargs
