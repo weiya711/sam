@@ -447,7 +447,7 @@ def convert_aha_glb_output_file(glbfile, output_dir):
         sl_ptr += 1
         with open(file_path, "w+") as fh_:
             for _ in range(num_items):
-                fh_.write(f"{straightline[sl_ptr]:04X}")
+                fh_.write(f"{straightline[sl_ptr]:04X}\n")
                 sl_ptr += 1
 
 
