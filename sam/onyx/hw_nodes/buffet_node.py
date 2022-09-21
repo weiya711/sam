@@ -1,4 +1,5 @@
 from sam.onyx.hw_nodes.hw_node import *
+import kratos
 
 
 class BuffetNode(HWNode):
@@ -118,8 +119,13 @@ class BuffetNode(HWNode):
         capacity_0 = 1024
         capacity_1 = total_cap - capacity_0
 
+        fetch_width_log = 2
+
+        cap0 = kratos.clog2(capacity_0) - fetch_width_log
+        cap1 = kratos.clog2(capacity_1) - fetch_width_log
+
         cfg_kwargs = {
-            'capacity_0': capacity_0,
-            'capacity_1': capacity_1
+            'capacity_0': cap0,
+            'capacity_1': cap1
         }
         return (capacity_0, capacity_1), cfg_kwargs
