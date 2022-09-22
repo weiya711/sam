@@ -212,7 +212,7 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ds10":
             f.write(
-                    tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_0_seg\" )\n")
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_0_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_0_crd\" )\n")
@@ -263,7 +263,8 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             for i in range(len(tensor_format_parse.get_format(ten))):
                 if tensor_format_parse.get_format(ten)[i] == "s":
                     f.write(tab(scope_lvl) + ten + str(i) + "_seg_filename = os.path.join(" +
-                            ten + "_dirname, \"tensor_" + tensor_format_parse.get_format(ten)[i]+ "_mode_" + i + "seg\")\n")
+                            ten + "_dirname, \"tensor_" + tensor_format_parse.get_format(ten)[
+                                i] + "_mode_" + str(i) + "seg\")\n")
                     f.write(
                         tab(scope_lvl) + ten + "_seg" + str(i) + " = read_inputs(" + ten + str(i) + "_seg_filename)\n")
                     f.write(tab(scope_lvl) + ten + str(i) + "_crd_filename = os.path.join(" +
@@ -627,13 +628,16 @@ for apath in file_paths:
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
                 u) + "_drop_val" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
         elif node_info["type"] == "crddrop":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
+            f.write(
+                tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "crdhold":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
+            f.write(
+                tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "mul":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
+            f.write(
+                tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "add":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Add2(debug=debug_sim, statistics=report_stats)\n")
