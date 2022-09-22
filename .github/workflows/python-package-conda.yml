@@ -26,9 +26,6 @@ jobs:
         cd sam/sim
         echo $CI
         pytest
-    - name: Check SAM Simulator generating script
-      run: |
-        make tests
     - name: Lint with flake8
       run: |
         conda install flake8
@@ -39,3 +36,6 @@ jobs:
     - name: Python style checking flake8
       run: |
         flake8 . --count --select=E,W --statistics --ignore=W503,W504 --max-line-length=127
+    - name: Check SAM Simulator generating script
+      run: |
+        make tests
