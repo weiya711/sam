@@ -49,7 +49,7 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
     assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
     c_fname = c_fname[0]
     c_dirname = os.path.join(c_dirname, c_fname)
- 
+
     c_shape_filename = os.path.join(c_dirname, "shape")
     c_shape = read_inputs(c_shape_filename)
 
@@ -60,7 +60,7 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
 
     c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
     c_vals = read_inputs(c_vals_filename, float)
- 
+
     # THIS IS FOR SIZE INFO
     Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     Bs_seg = read_inputs(os.path.join(Bs_dirname, "B0_seg.txt"))
