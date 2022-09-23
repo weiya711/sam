@@ -562,7 +562,7 @@ def safeCastPydataTensorToInts(tensor):
     return sparse.COO(tensor.coords, data, tensor.shape)
 
 
-def parse_taco_format(infilename, outdir, tensorname, format_str):
+def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=True):
     with open(infilename, 'r') as inf:
         level = -1
         count = 0
@@ -574,8 +574,9 @@ def parse_taco_format(infilename, outdir, tensorname, format_str):
                 dim_end = line.find(')')
                 dims = line[dim_start: dim_end]
                 dims = dims.split('x')
-
-                shapefile = os.path.join(outdir, tensorname + '_shape.txt')
+                shape_filename = 'tensor_' + tensorname + '_mode_shape' if \
+                                 hw_filename else tensorname + '_shape.txt'
+                shapefile = os.path.join(outdir, shape_filename)
                 with open(shapefile, 'w+') as shapef:
                     shapef.write(array_newline_str(dims))
             else:
@@ -591,19 +592,24 @@ def parse_taco_format(infilename, outdir, tensorname, format_str):
 
                     if level_done:
                         # This is a values array
-                        valfile = os.path.join(outdir, tensorname + '_vals.txt')
+                        val_filename = 'tensor_' + tensorname + '_mode_vals' if \
+                            hw_filename else tensorname + '_vals.txt'
+                        valfile = os.path.join(outdir, val_filename)
                         with open(valfile, 'w+') as valf:
                             valf.write(array_newline_str(line))
                     else:
                         level_format = format_str[level]
                         if level_format == 's':
                             if seg:
-                                segfile = os.path.join(outdir, tensorname + str(level) +
-                                                       '_seg.txt')
+                                seg_filename = 'tensor_' + tensorname + '_mode_' + str(level) + '_seg' if \
+                                    hw_filename else tensorname + str(level) + '_seg.txt'
+                                segfile = os.path.join(outdir, seg_filename)
                                 with open(segfile, 'w+') as segf:
                                     segf.write(array_newline_str(line))
                                 seg = False
                             else:
+                                crd_filename = 'tensor_' + tensorname + '_mode_' + str(level) + '_crd' if \
+                                    hw_filename else tensorname + str(level) + '_crd.txt'
                                 crdfile = os.path.join(outdir, tensorname + str(level) +
                                                        '_crd.txt')
                                 with open(crdfile, 'w+') as crdf:
