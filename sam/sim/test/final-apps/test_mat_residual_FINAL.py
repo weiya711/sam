@@ -28,20 +28,20 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 @pytest.mark.suitesparse
 def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
     C_dirname = os.path.join(cwd, "tmp_mat")
-    C_shape_filename = os.path.join(C_dirname, "shape")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "tensor_B_mode_0_seg")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "tensor_B_mode_0_crd")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "tensor_B_mode_1_seg")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "tensor_B_mode_1_crd")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "tensor_B_mode_vals")
+    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
     b_dirname = os.path.join(cwd, "tmp_mat")
@@ -51,12 +51,12 @@ def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fil
     b_dirname = os.path.join(b_dirname, b_fname)
     b_shape = [C_shape[0]]
 
-    b0_seg_filename = os.path.join(b_dirname, "tensor_C_mode_0_seg")
+    b0_seg_filename = os.path.join(b_dirname, "tensor_b_mode_0_seg")
     b_seg0 = read_inputs(b0_seg_filename)
-    b0_crd_filename = os.path.join(b_dirname, "tensor_C_mode_0_crd")
+    b0_crd_filename = os.path.join(b_dirname, "tensor_b_mode_0_crd")
     b_crd0 = read_inputs(b0_crd_filename)
 
-    b_vals_filename = os.path.join(b_dirname, "tensor_C_mode_vals")
+    b_vals_filename = os.path.join(b_dirname, "tensor_b_mode_vals")
     b_vals = read_inputs(b_vals_filename, float)
 
     d_dirname = os.path.join(cwd, "tmp_mat")
@@ -67,12 +67,12 @@ def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fil
 
     d_shape = [C_shape[1]]
 
-    d0_seg_filename = os.path.join(d_dirname, "tensor_C_mode_0_seg")
+    d0_seg_filename = os.path.join(d_dirname, "tensor_d_mode_0_seg")
     d_seg0 = read_inputs(d0_seg_filename)
-    d0_crd_filename = os.path.join(d_dirname, "tensor_C_mode_0_crd")
+    d0_crd_filename = os.path.join(d_dirname, "tensor_d_mode_0_crd")
     d_crd0 = read_inputs(d0_crd_filename)
 
-    d_vals_filename = os.path.join(d_dirname, "tensor_C_mode_vals")
+    d_vals_filename = os.path.join(d_dirname, "tensor_d_mode_vals")
     d_vals = read_inputs(d_vals_filename, float)
 
     C_shape0_min = min(len(b_vals) + len(C_crd0), b_shape[0])

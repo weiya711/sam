@@ -27,9 +27,9 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, return_stats, debug_sim, fill=0):
+def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, report_stats, debug_sim, fill=0):
     B_dirname = os.path.join(cwd, "tmp_mat")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
@@ -56,7 +56,7 @@ def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, return_stats, debug
     C_fname = C_fname[0]
     C_dirname = os.path.join(C_dirname, C_fname)
 
-    C_shape_filename = os.path.join(C_dirname, "shape")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
