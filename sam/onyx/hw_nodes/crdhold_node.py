@@ -13,7 +13,7 @@ class CrdHoldNode(HWNode):
     def get_inner(self):
         return self.inner
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         crdhold = self.get_name()
 
@@ -30,6 +30,7 @@ class CrdHoldNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.merge_node import MergeNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         new_conns = None
         other_type = type(other)
@@ -61,7 +62,37 @@ class CrdHoldNode(HWNode):
 
             return new_conns
         elif other_type == IntersectNode:
-            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
+            # out_conn = 0
+            # in_conn = 0
+
+            print(edge)
+            intersect = other.get_name()
+            # Use inner to process outer
+            print("CRDHOLD TO INTERSECT")
+            comment = edge.get_attributes()['comment'].strip('"')
+            print(comment)
+
+            label = edge.get_attributes()['label'].strip('"')
+            t_label = label.split('-')[1]
+            print(t_label)
+            if self.get_inner() in t_label:
+                out_conn = 0
+            else:
+                out_conn = 1
+
+            other_t_0 = other.get_tensor_from_connection(0)
+            print(other_t_0)
+            if other_t_0 in comment:
+                in_conn = 0
+            else:
+                in_conn = 1
+
+            new_conns = {
+                f'crdhold__{out_conn}_to_isect_{in_conn}': [
+                    ([(crdhold, f"cmrg_coord_out_{out_conn}"), (intersect, f"coord_in_{in_conn}")], 17),
+                ]
+            }
+
         elif other_type == ReduceNode:
             raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == LookupNode:
@@ -97,7 +128,29 @@ class CrdHoldNode(HWNode):
         elif other_type == BroadcastNode:
             raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
         elif other_type == RepSigGenNode:
-            raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
+            rsg = other.get_name()
+            edge_comment = edge.get_attributes()['comment'].strip('"')
+            if 'outer' in edge_comment:
+                conn = 1
+            else:
+                conn = 0
+            new_conns = {
+                f'crdhold_to_rsg': [
+                    ([(crdhold, f"cmrg_coord_out_{conn}"), (rsg, f"base_data_in")], 17),
+                ]
+            }
+            return new_conns
+
+        elif other_type == FiberAccessNode:
+            print("CRDHOLD TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect CrdHoldNode to {other_type}')
 

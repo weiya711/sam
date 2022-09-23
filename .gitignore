@@ -38,4 +38,8 @@ compiler/benchmark/
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
+# Temporary matrices
+tmp_mat*/
 
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/

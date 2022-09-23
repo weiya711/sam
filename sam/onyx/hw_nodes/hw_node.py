@@ -17,6 +17,7 @@ class HWNodeType(Enum):
     RepSigGen = 13
     CrdHold = 14
     SpAccumulator = 15
+    FiberAccess = 16
 
 
 class HWNode():
@@ -27,7 +28,7 @@ class HWNode():
         else:
             self.name = "default_name"
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
         pass
 
     def configure(self, attributes):

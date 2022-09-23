@@ -109,7 +109,7 @@ class ScipySparseTensorLoader:
 #         dims, coords, values = self.loader.load(path)
 #         return sparse.COO(coords, values, tuple(dims))
 #
-# # PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
+# # PydataSparseTensorDumper dumps a sparse tensor to the desired file.
 # class PydataSparseTensorDumper:
 #     def __init__(self):
 #         self.dumper = TnsFileDumper()
