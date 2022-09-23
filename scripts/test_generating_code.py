@@ -201,7 +201,7 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
         f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + "\"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(
-            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + 
+            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
             "_mode_shape\")\n")
         f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
         if tensor_format_parse.get_format(ten) == "ds01":
@@ -280,15 +280,16 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
             for i in range(len(tensor_format_parse.get_format(ten))):
                 if tensor_format_parse.get_format(ten)[i] == "s":
                     f.write(tab(scope_lvl) + ten + str(i) + "_seg_filename = os.path.join(" +
-                            ten + "_dirname, \"tensor_" + ten
-                             + "_mode_" + str(i) + "_seg\")\n")
+                            ten + "_dirname, \"tensor_" + ten +
+                            "_mode_" + str(i) + "_seg\")\n")
                     f.write(
                         tab(scope_lvl) + ten + "_seg" + str(i) + " = read_inputs(" + ten + str(i) + "_seg_filename)\n")
                     f.write(tab(scope_lvl) + ten + str(i) + "_crd_filename = os.path.join(" +
                             ten + "_dirname, \"tensor_" + ten + "_mode_" + str(i) + "_crd\")\n")
                     f.write(tab(scope_lvl) + ten + "_crd" + str(i) + " = read_inputs(" + ten + str(
                         i) + "_crd_filename)\n\n")
-        f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_vals\")\n")
+        f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten +
+                "_dirname, \"tensor_" + ten + "_mode_vals\")\n")
         f.write(tab(scope_lvl) + ten + "_vals" + " = read_inputs(" + ten + "_vals_filename, float)\n\n")
 
 
