@@ -129,7 +129,7 @@ class MatrixGenerator():
                     self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_{key}_crd")
 
         if dump_shape:
-            self.write_array(self.array.shape, name=f"shape")
+            self.write_array(self.array.shape, name=f"tensor_{self.name}_mode_shape", dump_dir=use_dir, hex=print_hex)
 
         # Transpose it back
         if tpose is True:
