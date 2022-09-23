@@ -31,7 +31,7 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 @pytest.mark.suitesparse
 def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
     B_dirname = os.path.join(cwd, "tmp_mat")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")

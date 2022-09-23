@@ -30,28 +30,28 @@ def _shiftLastMode(tensor):
 def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format="ss01"):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     # CSC
     C_dirname = os.path.join(ss_formatted_dir, ssname, "shift-trans", "ds10")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C0_seg = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C0_crd = read_inputs(C0_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
@@ -88,28 +88,28 @@ def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format
 def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     # CSR
     C_dirname = os.path.join(ss_formatted_dir, ssname, "shift", "ds01")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C1_seg = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C1_crd = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
@@ -140,15 +140,15 @@ def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val, forma
 
 def check_gold_mat_identity(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
@@ -174,28 +174,28 @@ def check_gold_mat_identity(ssname, debug_sim, out_crds, out_segs, out_val, form
 def check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     # CSR
     C_dirname = os.path.join(ss_formatted_dir, ssname, "shift", "ds01")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C1_seg = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C1_crd = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
@@ -238,15 +238,15 @@ def check_gold_mat_vecmul_ij(ssname, debug_sim, out_crds, out_segs, out_val, for
 def check_gold_mat_vecmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     c_dirname = os.path.join(ss_formatted_dir, ssname, "other")
@@ -257,12 +257,12 @@ def check_gold_mat_vecmul(ssname, debug_sim, out_crds, out_segs, out_val, format
 
     c_shape = B_shape[1]
 
-    c0_seg_filename = os.path.join(c_dirname, "C0_seg.txt")
+    c0_seg_filename = os.path.join(c_dirname, "tensor_C_mode_0_seg")
     c_seg0 = read_inputs(c0_seg_filename)
-    c0_crd_filename = os.path.join(c_dirname, "C0_crd.txt")
+    c0_crd_filename = os.path.join(c_dirname, "tensor_C_mode_0_crd")
     c_crd0 = read_inputs(c0_crd_filename)
 
-    c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
+    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
     c_vals = read_inputs(c_vals_filename, float)
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
@@ -301,15 +301,15 @@ def check_gold_mat_vecmul(ssname, debug_sim, out_crds, out_segs, out_val, format
 
 def check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
@@ -352,15 +352,15 @@ def check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_val, format_
 def check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     b_dirname = os.path.join(ss_formatted_dir, ssname, "other")
@@ -371,10 +371,10 @@ def check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_val, form
 
     b_shape = B_shape[0]
 
-    b0_crd_filename = os.path.join(b_dirname, "C0_crd.txt")
+    b0_crd_filename = os.path.join(b_dirname, "tensor_C_mode_0_crd")
     b_crd0 = read_inputs(b0_crd_filename)
 
-    b_vals_filename = os.path.join(b_dirname, "C_vals.txt")
+    b_vals_filename = os.path.join(b_dirname, "tensor_C_mode_vals")
     b_vals = read_inputs(b_vals_filename, float)
 
     c_dirname = os.path.join(ss_formatted_dir, ssname, "other")
@@ -385,10 +385,10 @@ def check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_val, form
 
     c_shape = B_shape[1]
 
-    c0_crd_filename = os.path.join(c_dirname, "C0_crd.txt")
+    c0_crd_filename = os.path.join(c_dirname, "tensor_C_mode_0_crd")
     c_crd0 = read_inputs(c0_crd_filename)
 
-    c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
+    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
     c_vals = read_inputs(c_vals_filename, float)
 
     B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
@@ -435,15 +435,15 @@ def check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_val, form
 def check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     b_dirname = os.path.join(ss_formatted_dir, ssname, "other")
@@ -454,10 +454,10 @@ def check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_val, f
 
     b_shape = B_shape[1]
 
-    b0_crd_filename = os.path.join(b_dirname, "C0_crd.txt")
+    b0_crd_filename = os.path.join(b_dirname, "tensor_C_mode_0_crd")
     b_crd0 = read_inputs(b0_crd_filename)
 
-    b_vals_filename = os.path.join(b_dirname, "C_vals.txt")
+    b_vals_filename = os.path.join(b_dirname, "tensor_C_mode_vals")
     b_vals = read_inputs(b_vals_filename, float)
 
     c_dirname = os.path.join(ss_formatted_dir, ssname, "other")
@@ -468,10 +468,10 @@ def check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_val, f
 
     c_shape = B_shape[0]
 
-    c0_crd_filename = os.path.join(c_dirname, "C0_crd.txt")
+    c0_crd_filename = os.path.join(c_dirname, "tensor_C_mode_0_crd")
     c_crd0 = read_inputs(c0_crd_filename)
 
-    c_vals_filename = os.path.join(c_dirname, "C_vals.txt")
+    c_vals_filename = os.path.join(c_dirname, "tensor_C_mode_vals")
     c_vals = read_inputs(c_vals_filename, float)
 
     s1 = 2
@@ -521,27 +521,27 @@ def check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_val, f
 def check_gold_mat_elemadd3(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
     # CSR
     B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B1_crd = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     C_dirname = os.path.join(ss_formatted_dir, ssname, "shift", "ds01")
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
     D_shape = C_shape

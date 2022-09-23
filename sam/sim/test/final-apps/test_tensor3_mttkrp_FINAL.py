@@ -29,7 +29,7 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 @pytest.mark.frostt
 def test_tensor3_mttkrp_FINAL(samBench, frosttname, check_gold, report_stats, debug_sim, fill=0):
     B_dirname = os.path.join(cwd, "tmp_mat")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
@@ -56,7 +56,7 @@ def test_tensor3_mttkrp_FINAL(samBench, frosttname, check_gold, report_stats, de
     C_fname = C_fname[0]
     C_dirname = os.path.join(C_dirname, C_fname)
 
-    C_shape_filename = os.path.join(C_dirname, "shape")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
@@ -78,20 +78,20 @@ def test_tensor3_mttkrp_FINAL(samBench, frosttname, check_gold, report_stats, de
     D_fname = D_fname[0]
     D_dirname = os.path.join(D_dirname, D_fname)
 
-    D_shape_filename = os.path.join(D_dirname, "C_shape.txt")
+    D_shape_filename = os.path.join(D_dirname, "tensor_D_mode_shape")
     D_shape = read_inputs(D_shape_filename)
 
-    D0_seg_filename = os.path.join(D_dirname, "tensor_C_mode_0_seg")
+    D0_seg_filename = os.path.join(D_dirname, "tensor_D_mode_0_seg")
     D_seg0 = read_inputs(D0_seg_filename)
-    D0_crd_filename = os.path.join(D_dirname, "tensor_C_mode_0_crd")
+    D0_crd_filename = os.path.join(D_dirname, "tensor_D_mode_0_crd")
     D_crd0 = read_inputs(D0_crd_filename)
 
-    D1_seg_filename = os.path.join(D_dirname, "tensor_C_mode_1_seg")
+    D1_seg_filename = os.path.join(D_dirname, "tensor_D_mode_1_seg")
     D_seg1 = read_inputs(D1_seg_filename)
-    D1_crd_filename = os.path.join(D_dirname, "tensor_C_mode_1_crd")
+    D1_crd_filename = os.path.join(D_dirname, "tensor_D_mode_1_crd")
     D_crd1 = read_inputs(D1_crd_filename)
 
-    D_vals_filename = os.path.join(D_dirname, "tensor_C_mode_vals")
+    D_vals_filename = os.path.join(D_dirname, "tensor_D_mode_vals")
     D_vals = read_inputs(D_vals_filename, float)
 
     fiberlookup_Bi_31 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)

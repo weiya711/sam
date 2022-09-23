@@ -27,7 +27,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 @pytest.mark.suitesparse
 def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
     B_dirname = os.path.join(cwd, "tmp_mat")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
@@ -44,7 +44,7 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fil
     B_vals = read_inputs(B_vals_filename, float)
 
     C_dirname = os.path.join(cwd, "tmp_mat")
-    C_shape_filename = os.path.join(C_dirname, "shape")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
@@ -62,7 +62,7 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fil
 
     # THIS IS FOR SIZE INFO
     Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    Bs_seg = read_inputs(os.path.join(Bs_dirname, "B0_seg.txt"))
+    Bs_seg = read_inputs(os.path.join(Bs_dirname, "tensor_B_mode_0_seg"))
 
     fiberlookup_Bk_17 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
     fiberlookup_Ck_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)

@@ -201,76 +201,95 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
         f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + "\"" +
                 tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
         f.write(
-            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + "shape\")\n")
+            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+            "_mode_shape\")\n")
         f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
         if tensor_format_parse.get_format(ten) == "ds01":
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname" + ",  \"tensor_" + ten + "_mode_1_seg\" )\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname" + ",  \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_dirname" + "tensor_" + ten + "_mode_1_crd\" )\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_dirname" + "tensor_" + ten + "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ds10":
             f.write(
-                    tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_0_seg\" )\n")
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_0_crd\" )\n")
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ss01":
             f.write(
-                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten + "_mode_0_seg\" )\n")
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten +
+                "_mode_0_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_0_crd\" )\n")
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_1_seg\" )\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor" + ten + "_mode_1_crd\" )\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor" + ten +
+                "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ss10":
             f.write(
-                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten + "_mode_0_seg\" )\n")
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten +
+                "_mode_0_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_0_crd\" )\n")
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_1_seg\" )\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_1_crd\" )\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
 
         elif tensor_format_parse.get_format(ten) == "dss012":
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_1_seg\" )\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_1_crd\" )\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "2_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_2_seg\" )\n")
+                tab(scope_lvl) + ten + "2_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_2_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg2" + " = read_inputs(" + ten + "2_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "2_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten + "_mode_2_crd\" )\n")
+                tab(scope_lvl) + ten + "2_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_2_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd2" + " = read_inputs(" + ten + "2_crd_filename)\n\n")
         else:
             ct = 0
             for i in range(len(tensor_format_parse.get_format(ten))):
                 if tensor_format_parse.get_format(ten)[i] == "s":
                     f.write(tab(scope_lvl) + ten + str(i) + "_seg_filename = os.path.join(" +
-                            ten + "_dirname, \"tensor_" + tensor_format_parse.get_format(ten)[i]+ "_mode_" + i + "seg\")\n")
+                            ten + "_dirname, \"tensor_" + ten +
+                            "_mode_" + str(i) + "_seg\")\n")
                     f.write(
                         tab(scope_lvl) + ten + "_seg" + str(i) + " = read_inputs(" + ten + str(i) + "_seg_filename)\n")
                     f.write(tab(scope_lvl) + ten + str(i) + "_crd_filename = os.path.join(" +
-                            ten + "_dirname, \"" + ten + str(i) + "_crd.txt\")\n")
+                            ten + "_dirname, \"tensor_" + ten + "_mode_" + str(i) + "_crd\")\n")
                     f.write(tab(scope_lvl) + ten + "_crd" + str(i) + " = read_inputs(" + ten + str(
                         i) + "_crd_filename)\n\n")
-        f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_vals.txt\")\n")
+        f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten +
+                "_dirname, \"tensor_" + ten + "_mode_vals\")\n")
         f.write(tab(scope_lvl) + ten + "_vals" + " = read_inputs(" + ten + "_vals_filename, float)\n\n")
 
 
@@ -627,13 +646,16 @@ for apath in file_paths:
             f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
                 u) + "_drop_val" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
         elif node_info["type"] == "crddrop":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
+            f.write(
+                tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "crdhold":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
+            f.write(
+                tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "mul":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
+            f.write(
+                tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
             d[u]["object"] = node_info["type"] + "_" + str(u)
         elif node_info["type"] == "add":
             f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Add2(debug=debug_sim, statistics=report_stats)\n")

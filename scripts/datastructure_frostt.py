@@ -17,6 +17,10 @@ parser.add_argument('-i', '--int', action='store_false', default=True, help='Saf
 parser.add_argument('-s', '--shift', action='store_false', default=True, help='Also format shifted tensor')
 parser.add_argument('-o', '--other', action='store_true', default=False, help='Format other tensor')
 parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, help='Format suitesparse other tensor')
+parser.add_argument('-h', '--hw', action='store_true', default=False,
+                    help='Format filenames as in AHA SCGRA <tensor_<name>_mode_<n|type>')
+parser.add_argument('-np', '--numpy', action='store_true', default=False, help='Format numpy tensors')
+
 args = parser.parse_args()
 
 if args.other:
@@ -57,7 +61,7 @@ if args.format is not None:
             outdir_orig_path = Path(outdir_other_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
-            parse_taco_format(taco_format_orig_filename, outdir_other_name, 'C', args.format)
+            parse_taco_format(taco_format_orig_filename, outdir_other_name, 'C', args.format, hw_filename=args.hw)
 
     else:
         taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
@@ -68,7 +72,7 @@ if args.format is not None:
         outdir_orig_path = Path(outdir_orig_name)
         outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
-        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
+        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
 
         # Shifted
         if args.shift:
@@ -76,4 +80,4 @@ if args.format is not None:
             outdir_shift_path = Path(outdir_shift_name)
             outdir_shift_path.mkdir(parents=True, exist_ok=True)
 
-            parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format)
+            parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)

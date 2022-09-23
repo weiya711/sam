@@ -288,8 +288,29 @@ class CompressedCrdRdScan(CrdRdScan):
             if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_slen:
                 raise Exception('Not enough elements in seg array')
 
-            # Input reference is a stop or done token, so forward that token (and set done if done token)
-            elif is_stkn(curr_in_ref) or curr_in_ref == 'D':
+            # Input reference is a stop token, aka empty fiber
+            # so increment that token
+            elif is_stkn(curr_in_ref):
+                self.end_fiber = True
+
+                if len(self.in_ref) > 0:
+                    next_in = self.in_ref[0]
+                    if is_stkn(next_in):
+                        self.in_ref.pop(0)
+                        stkn = increment_stkn(next_in)
+                    else:
+                        stkn = 'S0'
+                else:
+                    self.emit_fiber_stkn = True
+                    stkn = ''
+                self.curr_crd = stkn
+                self.curr_ref = stkn
+                self.curr_addr = 0
+                self.stop_addr = 0
+                self.start_addr = 0
+
+            # Input reference is  done token, so forward that token (and set done)
+            elif curr_in_ref == 'D':
                 self.curr_addr = 0
                 self.stop_addr = 0
                 self.start_addr = 0
