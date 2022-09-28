@@ -1,6 +1,6 @@
 import scipy.sparse
 import scipy.io
-import sparse
+# import sparse
 import os
 import glob
 import numpy
@@ -364,6 +364,67 @@ class FormatWriter:
 
             os.chmod(filename, 0o666)
 
+    def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01"):
+
+        if format_str == "ss01":
+            dcsr_dir = Path(dir_path)
+            dcsr_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
+            dcsr = self.convert_format(coo, "dcsr")
+
+            filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_seg")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsr.seg0))
+
+            filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_crd")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsr.crd0))
+
+            filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_1_seg")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsr.seg1))
+
+            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_1_crd")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsr.crd1))
+
+            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsr.data))
+
+            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsr.shape))
+
+        elif format_str == "ss10":
+            dcsc_dir = Path(dir_path)
+            dcsc_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
+
+            dcsc = self.convert_format(coo, "dcsc")
+
+            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_shape")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsc.shape))
+
+            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_1_seg")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsc.seg0))
+
+            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_1_crd")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsc.crd0))
+
+            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_seg")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsc.seg1))
+
+            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_crd")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsc.crd1))
+
+            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(dcsc.data))
+
     def writeout_separate(self, coo, dir_path, tensorname, omit_dense=True):
 
         csr_dir = Path(os.path.join(dir_path, "ds01"))
@@ -485,23 +546,23 @@ class FormatWriter:
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
-class InputCacheTensor:
-    def __init__(self):
-        self.lastLoaded = None
-        self.lastName = None
-        self.tensor = None
-
-    def load(self, tensor, suiteSparse, cast, format_str):
-        if self.lastName == str(tensor):
-            return self.tensor
-        else:
-            self.lastLoaded = tensor.load()
-            self.lastName = str(tensor)
-            if cast:
-                self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
-            else:
-                self.tensor = self.lastLoaded
-            return self.tensor
+# class InputCacheTensor:
+#     def __init__(self):
+#         self.lastLoaded = None
+#         self.lastName = None
+#         self.tensor = None
+# 
+#     def load(self, tensor, suiteSparse, cast, format_str):
+#         if self.lastName == str(tensor):
+#             return self.tensor
+#         else:
+#             self.lastLoaded = tensor.load()
+#             self.lastName = str(tensor)
+#             if cast:
+#                 self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
+#             else:
+#                 self.tensor = self.lastLoaded
+#             return self.tensor
 
 
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
@@ -549,17 +610,17 @@ class TensorCollectionSuiteSparse:
 
 # safeCastPydataTensorToInts casts a floating point tensor to integers
 # in a way that preserves the sparsity pattern.
-def safeCastPydataTensorToInts(tensor):
-    data = numpy.zeros(len(tensor.data), dtype='int64')
-    for i in range(len(data)):
-        # If the cast would turn a value into 0, instead write a 1. This preserves
-        # the sparsity pattern of the data.
-        # if int(tensor.data[i]) == 0:
-        #     data[i] = 1
-        # else:
-        #     data[i] = int(tensor.data[i])
-        data[i] = round_sparse(tensor.data[i])
-    return sparse.COO(tensor.coords, data, tensor.shape)
+# def safeCastPydataTensorToInts(tensor):
+#     data = numpy.zeros(len(tensor.data), dtype='int64')
+#     for i in range(len(data)):
+#         # If the cast would turn a value into 0, instead write a 1. This preserves
+#         # the sparsity pattern of the data.
+#         # if int(tensor.data[i]) == 0:
+#         #     data[i] = 1
+#         # else:
+#         #     data[i] = int(tensor.data[i])
+#         data[i] = round_sparse(tensor.data[i])
+#     return sparse.COO(tensor.coords, data, tensor.shape)
 
 
 def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=True):

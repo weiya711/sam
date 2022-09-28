@@ -26,8 +26,9 @@ cd $outdir
 
 for i in ${!DATASET_NAMES[@]}; do
     name=${DATASET_NAMES[$i]} 
+    sspath=${SUITESPARSE_PATH}/$name
     echo "Generating input format files for $name..."
-    python $basedir/scripts/datastructure_suitesparse.py -n $name 
+    SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $name -hw -t "mat_elemadd" 
     
     sspath=${SUITESPARSE_PATH}/$name
     SUITESPARSE_TENSOR_PATH=$sspath $basedir/compiler/taco/build/bin/taco-test sam.pack_other_ss    

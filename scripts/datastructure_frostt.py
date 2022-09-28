@@ -17,7 +17,7 @@ parser.add_argument('-i', '--int', action='store_false', default=True, help='Saf
 parser.add_argument('-s', '--shift', action='store_false', default=True, help='Also format shifted tensor')
 parser.add_argument('-o', '--other', action='store_true', default=False, help='Format other tensor')
 parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, help='Format suitesparse other tensor')
-parser.add_argument('-h', '--hw', action='store_true', default=False,
+parser.add_argument('-hw', '--hw', action='store_true', default=False,
                     help='Format filenames as in AHA SCGRA <tensor_<name>_mode_<n|type>')
 parser.add_argument('-np', '--numpy', action='store_true', default=False, help='Format numpy tensors')
 
