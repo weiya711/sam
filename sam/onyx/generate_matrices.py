@@ -232,7 +232,10 @@ class MatrixGenerator():
         with open(full_path, "w+") as wr_file:
             for item in str_list:
                 if hex:
-                    wr_file.write(f"{item:04X}\n")
+                    if isinstance(item, str):
+                        wr_file.write(f"{item}\n")
+                    else:
+                        wr_file.write(f"{item:04X}\n")
                 else:
                     wr_file.write(f"{item}\n")
 
