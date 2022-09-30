@@ -81,7 +81,7 @@ def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_d
             f"sam/compiler/sam-outputs/dot/{benchname}.gv"), "--seed", f"{0}",
             "--dump_bitstream", "--add_pond", "--combined",
             "--pipeline_scanner", "--base_dir", sparse_test_basedir,  
-            "--fiber_access", "--give_tensor", "--matrix_tmp_dir", matrix_tmp_dir]
+            "--fiber_access", "--give_tensor", "--matrix_tmp_dir", matrix_tmp_dir, "--trace"]
     error = run_process(build_tb_command, log_file, check=check)
     
     return error
@@ -94,9 +94,9 @@ def run_process(command, log_file=None, cwd=None, split=False, check=True):
 
     error = return_code != 0
     if error: 
-        print("FAILED: " + " ".join(build_tb_command))
+        print("FAILED: " + " ".join(command))
         log_file = "./suitesparse_run.log" if log_file is None else log_file
-        log_error(log_file, return_code, " ".join(build_tb_command))
+        log_error(log_file, return_code, " ".join(command))
     
     return error
 
