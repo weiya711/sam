@@ -103,9 +103,9 @@ class MatrixGenerator():
                         self.write_array(lines, name=f"tensor_{self.name}_mode_0", dump_dir=use_dir, hex=print_hex)
                     else:
                         self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg",
-                                        dump_dir=use_dir, hex=print_hex)
+                                         dump_dir=use_dir, hex=print_hex)
                         self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd",
-                                        dump_dir=use_dir, hex=print_hex)
+                                         dump_dir=use_dir, hex=print_hex)
                 if glb_override:
                     lines = [len(fake_lines_val), *fake_lines_val]
                     self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
