@@ -91,18 +91,26 @@ class MatrixGenerator():
             if all_zeros:
                 fake_lines_seg = ["0000",
                                   "0000"]
-                fake_lines_crd = []
+                fake_lines_crd = ["0000"]
                 # If it's a scalar/length 1 vec
                 if len(self.shape) == 1 and self.shape[0] == 1:
                     fake_lines_val = ["0000"]
                 else:
-                    fake_lines_val = []
+                    fake_lines_val = ["0000"]
                 for mode in range(len(self.array.shape)):
-                    self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg",
-                                     dump_dir=use_dir, hex=print_hex)
-                    self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd",
-                                     dump_dir=use_dir, hex=print_hex)
-                self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                    if glb_override:
+                        lines = [len(fake_lines_seg), *fake_lines_seg, len(fake_lines_crd), *fake_lines_crd]
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_0", dump_dir=use_dir, hex=print_hex)
+                    else:
+                        self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg",
+                                        dump_dir=use_dir, hex=print_hex)
+                        self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd",
+                                        dump_dir=use_dir, hex=print_hex)
+                if glb_override:
+                    lines = [len(fake_lines_val), *fake_lines_val]
+                    self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                else:
+                    self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
 
                 return
 
@@ -231,10 +239,11 @@ class MatrixGenerator():
         full_path = dump_dir + "/" + name
         with open(full_path, "w+") as wr_file:
             for item in str_list:
+                item_int = int(item)
                 if hex:
-                    wr_file.write(f"{item:04X}\n")
+                    wr_file.write(f"{item_int:04X}\n")
                 else:
-                    wr_file.write(f"{item}\n")
+                    wr_file.write(f"{item_int}\n")
 
     def get_shape(self):
         return self.shape
