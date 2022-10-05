@@ -37,15 +37,19 @@ def test_spcrdpt1_accum_direct(arrs, debug_sim):
             sa.set_outer_crdpt(ocrd.pop(0))
         if len(val) > 0:
             sa.set_val(val.pop(0))
+
         sa.update()
+        
+        out_ocrd.append(sa.out_outer_crdpt())
+        out_icrd.append(sa.out_inner_crdpt())
+        out_val.append(sa.out_val())
+
         print("Timestep", time, "\t Done:", sa.out_done(),
               "\n Curr in ocrd: ", sa.curr_in_outer_crdpt, "\t Curr in icrd", sa.curr_in_inner_crdpt,
               "\t Curr in val", sa.curr_in_val,
               "\n Emit crds: ", sa.emit_output,
               "\n Storage: ", sa.storage)
-        out_ocrd.append(sa.out_outer_crdpt())
-        out_icrd.append(sa.out_inner_crdpt())
-        out_val.append(sa.out_val())
+        
         done = sa.out_done()
         time += 1
 
@@ -101,15 +105,19 @@ def test_spcrdpt2_accum_direct(arrs, debug_sim):
             sa.set_outer_crdpt(ocrd.pop(0))
         if len(val) > 0:
             sa.set_val(val.pop(0))
+
         sa.update()
+        
+        out_ocrd.append(sa.out_outer_crdpt())
+        out_icrd.append(sa.out_inner_crdpt())
+        out_val.append(sa.out_val())
+
         print("Timestep", time, "\t Done:", sa.out_done(),
               "\n Curr in ocrd: ", sa.curr_crdpt1, "\t Curr in icrd", sa.curr_crdpt0,
               "\t Curr in val", sa.curr_in_val,
               "\n Emit crds: ", sa.emit_output,
               "\n Storage: ", sa.storage)
-        out_ocrd.append(sa.out_outer_crdpt())
-        out_icrd.append(sa.out_inner_crdpt())
-        out_val.append(sa.out_val())
+        
         done = sa.out_done()
         time += 1
 

@@ -30,9 +30,13 @@ def test_add_1d(dim1, neg1, neg2, debug_sim):
             add.set_in1(in1.pop(0))
         if len(in2) > 0:
             add.set_in2(in2.pop(0))
+
         add.update()
-        print("Timestep", time, "\t Out:", add.out_val())
+
         out_val.append(add.out_val())
+        
+        print("Timestep", time, "\t Out:", add.out_val())
+        
         done = add.out_done()
         time += 1
 
@@ -59,9 +63,13 @@ def test_mul_1d(dim1, debug_sim):
             mul.set_in1(in1.pop(0))
         if len(in2) > 0:
             mul.set_in2(in2.pop(0))
+
         mul.update()
-        print("Timestep", time, "\t Out:", mul.out_val())
+        
         out_val.append(mul.out_val())
+
+        print("Timestep", time, "\t Out:", mul.out_val())
+        
         done = mul.out_done()
         time += 1
 

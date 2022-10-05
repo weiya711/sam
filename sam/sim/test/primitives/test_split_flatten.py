@@ -111,9 +111,11 @@ def test_flat_direct(arrs, debug_sim):
             flat.set_in_inner_crd(icrd.pop(0))
 
         flat.update()
-        print("Timestep", time, "\t Done:", flat.out_done())
 
         out_crd.append(flat.out_crd())
+        
+        print("Timestep", time, "\t Done:", flat.out_done())
+
         done = flat.out_done()
         time += 1
 
@@ -153,19 +155,17 @@ def test_split_flat_direct(arrs, debug_sim):
         if len(crd) > 0:
             split.set_in_crd(crd.pop(0))
 
-        split.update()
-
-        out_ocrd.append(split.out_outer_crd())
-        out_icrd.append(split.out_inner_crd())
-
         flat.set_in_outer_crd(split.out_outer_crd())
         flat.set_in_inner_crd(split.out_inner_crd())
 
+        split.update()
         flat.update()
 
-        print("Timestep", time, "\t Split Done:", split.out_done(), "\t Flat Done:", flat.out_done())
-
+        out_ocrd.append(split.out_outer_crd())
+        out_icrd.append(split.out_inner_crd())
         out_crd.append(flat.out_crd())
+
+        print("Timestep", time, "\t Split Done:", split.out_done(), "\t Flat Done:", flat.out_done())
 
         done = split.out_done() and flat.out_done()
         time += 1

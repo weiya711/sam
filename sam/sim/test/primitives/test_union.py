@@ -52,12 +52,14 @@ def test_union_direct_nd(arrs, debug_sim):
             union.set_in1(ref1.pop(0), crd1.pop(0))
         if len(crd2) > 0:
             union.set_in2(ref2.pop(0), crd2.pop(0))
+
         union.update()
 
-        print("Timestep", time, "\t Crd:", union.out_crd(), "\t Ref1:", union.out_ref1(), "\t Ref2:", union.out_ref2())
         out_crd.append(union.out_crd())
         out_ref1.append(union.out_ref1())
         out_ref2.append(union.out_ref2())
+
+        print("Timestep", time, "\t Crd:", union.out_crd(), "\t Ref1:", union.out_ref1(), "\t Ref2:", union.out_ref2())
 
         done = union.done
         time += 1

@@ -29,9 +29,13 @@ def test_repeat_gen_direct(arrs, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_stream) > 0:
             repsig.set_istream(in_stream.pop(0))
+
         repsig.update()
-        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+        
         out.append(repsig.out_repeat())
+
+        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+        
         done = repsig.out_done()
         time += 1
 
@@ -58,9 +62,13 @@ def test_repeat_gen_random_nd(max_val, nd, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_stream) > 0:
             repsig.set_istream(in_stream.pop(0))
+
         repsig.update()
-        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+        
         out.append(repsig.out_repeat())
+        
+        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+        
         done = repsig.out_done()
         time += 1
 
@@ -104,9 +112,13 @@ def test_repeat_direct(arrs, debug_sim):
             rep.set_in_ref(in_ref.pop(0))
         if len(in_repeat) > 0:
             rep.set_in_repeat(in_repeat.pop(0))
+
         rep.update()
-        print("Timestep", time, "\t Done:", rep.out_done(), "\t Repeat Sig:", rep.out_ref())
+        
         out.append(rep.out_ref())
+        
+        print("Timestep", time, "\t Done:", rep.out_done(), "\t Repeat Sig:", rep.out_ref())
+        
         done = rep.out_done()
         time += 1
 
