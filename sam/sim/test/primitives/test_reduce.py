@@ -42,7 +42,7 @@ def test_reduce_direct_nd(arrs, debug_sim):
 
 
 # FIXME: Need to get this test working with reduce
-@pytest.mark.skip
+#@pytest.mark.skip
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
 def test_reduce_random_2d(dim, debug_sim, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)

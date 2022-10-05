@@ -28,8 +28,12 @@ def convert_stream_to_onyx_interp(stream):
             converted_stream.append(s_)
         elif type(s_) is str:
             control_code = 0
+            flag = 0
             if 'S' in s_:
-                control_code = int(s_.lstrip('S'))
+                if s_ == "S":
+                    control_code = 0
+                else:
+                    control_code = int(s_.lstrip('S'))
             elif 'D' in s_:
                 set_ctrl = ControlCodeOnyx.DONE.value
                 for offset_ in range(num_ctrl_bits):
@@ -40,12 +44,22 @@ def convert_stream_to_onyx_interp(stream):
                 for offset_ in range(num_ctrl_bits):
                     bts = get_bit(set_ctrl, offset_)
                     control_code = set_bit(control_code, ctrl_op_offset + offset_, bts)
+            elif 'R' in s_:
+                converted_stream.append(1)
+                flag = 1
             else:
+                print("-------- ", s_)
                 raise NotImplementedError
-            control_code = set_bit(control_code, top_bit, 1)
-            converted_stream.append(control_code)
+            if flag == 0:
+                control_code = set_bit(control_code, top_bit, 1)
+                converted_stream.append(control_code)
+            #print(s_, " ", converted_stream)
         else:
+            print(s_)
+            print("-------- ", s_)
             raise NotImplementedError
+    #print("Final Sol:")
+    #print(converted_stream, "\n  ", stream)
     assert len(converted_stream) == len(stream), \
         f"Input length {len(stream)} didn't match output length {len(converted_stream)}"
     return converted_stream

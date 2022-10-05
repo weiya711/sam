@@ -62,6 +62,72 @@ class MatrixGenerator():
     def _create_fiber_tree(self):
         self.fiber_tree = FiberTree(tensor=self.array)
 
+    def dump_stream(self):
+        out_ref = []
+        out_crd = []
+        out_val = []
+        idx = 0
+        
+        ttl_shape = 1
+        cum_shape = self.shape
+
+        for i in range(len(self.shape)):
+            ttl_shape *= self.shape[i]
+
+        for j in range(len(self.shape)-2, -1, -1):
+            print(j)
+            cum_shape[j] = cum_shape[j]*cum_shape[j+1]
+        
+        print(cum_shape)
+        print("====")
+        print(self.array.flatten())
+        flatten_arr = self.array.flatten()
+
+        ref = 0
+        for i in range(ttl_shape):
+            for j in range(len(cum_shape)):
+                if i != 0 and (i) % cum_shape[j] == 0: 
+                    out_crd.append("S" + str(len(cum_shape)-j-1))
+                    out_ref.append("S" + str(len(cum_shape)-j-1))
+                    out_val.append("S" + str(len(cum_shape)-j-1))
+                    ref = 0
+                    break
+            if flatten_arr[i] != 0:
+                out_crd.append(i % cum_shape[-1])
+                out_ref.append(ref)
+                out_val.append(flatten_arr[i])
+                ref += 1
+
+        out_ref.append("S"+str(len(cum_shape)-1))
+        out_crd.append("S"+str(len(cum_shape)-1))
+        out_val.append("S"+str(len(cum_shape)-1))
+
+        out_ref.append("D")
+        out_crd.append("D")
+        out_val.append("D")
+
+        print("CHECK")
+        print(out_crd)
+        print(out_ref)
+        print(out_val)
+
+        #for i in len(self.shape):
+        #    ref = 0
+        #    for j in self.shape[i]:
+        #        if self.array[idx] != 0:
+        #            out_ref.append(ref)
+        #            out_crd.append(idx)
+        #            ref += 1
+        #        idx += 1
+
+        print("IMPORTANT")
+        print(self.array)
+        print(len(self.array))
+        print("____________")
+        print(self.shape)
+
+
+
     def dump_outputs(self, format=None, tpose=False, dump_shape=True, glb_override=False, glb_dump_dir=None):
         '''
         Dump the matrix into many files depending on matrix format
