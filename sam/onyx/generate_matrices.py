@@ -473,16 +473,24 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
         mat_sc[0] = vals[0]
         mg = MatrixGenerator(name=name, shape=shape, tensor=mat_sc)
     elif format == 'CSF':
+        created_empty = False
         segs = []
         crds = []
         for mode in range(dims):
             seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
             crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
-            segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate))
-            crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
-
-        pt_list = get_point_list(crds, segs, val_arr=vals)
-        mg = create_matrix_from_point_list(name, pt_list, shape)
+            seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate)
+            segs.append(seg_t_)
+            # Empty matrix...
+            if mode == 0 and len(seg_t_) == 2 and seg_t_[0] == 0 and seg_t_[1] == 0:
+                mg = MatrixGenerator(name=name, shape=shape, sparsity=1.0)
+                created_empty = True
+                break
+            crd_t_ = read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate)
+            crds.append(crd_t_)
+        if not created_empty:
+            pt_list = get_point_list(crds, segs, val_arr=vals)
+            mg = create_matrix_from_point_list(name, pt_list, shape)
     elif format == 'COO':
         crds = []
         for mode in range(dims):
