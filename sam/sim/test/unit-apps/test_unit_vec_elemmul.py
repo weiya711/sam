@@ -7,6 +7,7 @@ from sam.sim.src.joiner import Intersect2
 from sam.sim.src.compute import Multiply2
 from sam.sim.src.array import Array
 
+from sam.sim.src.base import remove_emptystr
 from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr
 
 
@@ -111,7 +112,7 @@ def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
         wrscan.set_input(mul.out_val())
-        oval.set_store(inter.out_crd(), mul.out_val())
+        # oval.set_store(inter.out_crd(), mul.out_val())
 
         crdscan1.update()
         crdscan2.update()
@@ -120,7 +121,8 @@ def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
         val2.update()
         mul.update()
         wrscan.update()
-        oval.update()
+
+        # oval.update()
 
         print("Timestep", time, "\t Done --",
               "\tRdScan1:", crdscan1.out_done(), "\tRdScan2:", crdscan2.out_done(),
@@ -128,13 +130,15 @@ def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tOutVal:", oval.out_done())
 
-        done = oval.out_done()
+        done = wrscan.out_done()
         time += 1
 
-    check_arr(oval, gold_vec)
+    # check_arr(oval, gold_vec)
 
     if out_val:
         check_arr(wrscan, out_val)
+    else:
+        check_arr(wrscan, gold_vec)
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
