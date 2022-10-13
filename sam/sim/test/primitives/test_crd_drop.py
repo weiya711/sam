@@ -50,7 +50,7 @@ def test_crd_drop_1d(arrs, debug_sim):
 
         out_outer.append(cd.out_crd_outer())
         out_inner.append(cd.out_crd_inner())
- 
+
         print("Timestep", time, "\t Done:", cd.out_done(), "\t Out:", cd.out_crd_outer())
 
         done = cd.out_done()
