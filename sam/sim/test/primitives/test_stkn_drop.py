@@ -33,9 +33,9 @@ def test_tkn_drop(arrs, debug_sim):
         td.update()
 
         out.append(td.out_val())
-        
+
         print("Timestep", time, "\t Done:", td.out_done(), "\t Out:", td.out_val())
-        
+
         done = td.out_done()
         time += 1
 

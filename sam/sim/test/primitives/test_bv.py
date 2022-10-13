@@ -138,7 +138,7 @@ def test_split_bv_intersect_direct(arrs, debug_sim):
         obv.set_in_crd(split.out_outer_crd())
 
         ibv.set_in_crd(split.out_inner_crd())
-        
+
         split.update()
         obv.update()
         ibv.update()

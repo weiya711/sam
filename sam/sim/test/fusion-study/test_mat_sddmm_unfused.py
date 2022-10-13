@@ -209,7 +209,6 @@ def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, fill=0):
 
         fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner())
 
-
         fiberlookup_Bi_25.update()
         fiberlookup_Ti.update()
         intersecti_24.update()

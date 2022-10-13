@@ -56,7 +56,7 @@ def test_empty_stkn_drop(arrs, debug_sim):
         out.append(td.out_val())
 
         print("Timestep", time, "\t Done:", td.out_done(), "\t Out:", td.out_val())
-        
+
         done = td.out_done()
         time += 1
 

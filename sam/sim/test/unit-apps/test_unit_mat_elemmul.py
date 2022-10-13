@@ -57,13 +57,13 @@ def test_unit_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
         val2.update()
         mul.update()
         wrscan.update()
-        
+
         print("Timestep", time, "\t Done --",
               "\tRdScan D1:", rdscan_d1.out_done(),
               "\tRdScan D2:", rdscan_d2.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())
-        
+
         done = wrscan.out_done()
         time += 1
 
@@ -207,7 +207,7 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
         vals_X.update()
         wrscan_X1.update()
         wrscan_X2.update()
-        
+
         out_drop.append(drop.out_crd_outer())
         out_inter1.append(inter1.out_crd())
         in_drop.append(inter2.out_crd())
@@ -223,7 +223,7 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
               "\tWrScan:", vals_X.out_done(),
               "\tWrScan X1:", wrscan_X1.out_done(), "\tWrScan X2:", wrscan_X2.out_done(),
               )
-        
+
         done = wrscan_X2.out_done()
         time += 1
 
@@ -346,7 +346,7 @@ def test_unit_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
         vals_X.update()
         wrscan_X1.update()
         wrscan_X2.update()
-        
+
         print("Timestep", time, "\t Done --",
               "\tRdScan B1:", rdscan_B1.out_done(), "\tRdScan B2:", rdscan_B2.out_done(),
               "\tInter1:", inter1.out_done(),

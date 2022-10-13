@@ -41,7 +41,7 @@ def test_rd_scan_bv_direct_nd(arrs, debug_sim):
 
         out_bv.append(bvscan.out_bv())
         out_ref.append(bvscan.out_ref())
-        
+
         print("Timestep", time, "\t Crd:", bvscan.out_bv(), "\t Ref:", bvscan.out_ref())
 
         done = bvscan.done

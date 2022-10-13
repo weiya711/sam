@@ -82,7 +82,7 @@ def test_vec_elemadd_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
               "\tMul:", add.out_done(),
               "\tOutVal:", oval_wrscan.out_done(),
               "\tOutCrd:", ocrd_wrscan.out_done())
-        
+
         done = ocrd_wrscan.out_done()
         time += 1
 

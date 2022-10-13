@@ -113,7 +113,7 @@ def test_flat_direct(arrs, debug_sim):
         flat.update()
 
         out_crd.append(flat.out_crd())
-        
+
         print("Timestep", time, "\t Done:", flat.out_done())
 
         done = flat.out_done()

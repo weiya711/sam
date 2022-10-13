@@ -31,11 +31,11 @@ def test_repeat_gen_direct(arrs, debug_sim):
             repsig.set_istream(in_stream.pop(0))
 
         repsig.update()
-        
+
         out.append(repsig.out_repeat())
 
         print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
-        
+
         done = repsig.out_done()
         time += 1
 
@@ -64,11 +64,11 @@ def test_repeat_gen_random_nd(max_val, nd, debug_sim):
             repsig.set_istream(in_stream.pop(0))
 
         repsig.update()
-        
+
         out.append(repsig.out_repeat())
-        
+
         print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
-        
+
         done = repsig.out_done()
         time += 1
 
@@ -114,11 +114,11 @@ def test_repeat_direct(arrs, debug_sim):
             rep.set_in_repeat(in_repeat.pop(0))
 
         rep.update()
-        
+
         out.append(rep.out_ref())
-        
+
         print("Timestep", time, "\t Done:", rep.out_done(), "\t Repeat Sig:", rep.out_ref())
-        
+
         done = rep.out_done()
         time += 1
 

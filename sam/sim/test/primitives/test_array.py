@@ -21,11 +21,11 @@ def test_arr_load_1d(dim1, debug_sim, max_val=1000):
             arr.set_load(in_val.pop(0))
 
         arr.update()
-        
+
         out_val.append(arr.out_load())
 
         print("Timestep", time, "\t Out:", arr.out_load())
-        
+
         done = arr.out_done()
         time += 1
 
@@ -56,11 +56,11 @@ def test_arr_store_1d(dim1, debug_sim, max_val=1000):
             arr.set_store(in_addr.pop(0), in_val.pop(0))
 
         arr.update()
-        
+
         out_val.append(arr.out_load())
 
         print("Timestep", time, "\t Out:", arr.out_load())
-        
+
         done = arr.out_done()
         time += 1
 
@@ -108,7 +108,7 @@ def test_arr_load_direct_0tkn(arrs, debug_sim):
         out_val.append(arr.out_load())
 
         print("Timestep", time, "\t Out:", arr.out_load())
-        
+
         done = arr.out_done()
         time += 1
 

@@ -39,7 +39,7 @@ def test_spcrdpt1_accum_direct(arrs, debug_sim):
             sa.set_val(val.pop(0))
 
         sa.update()
-        
+
         out_ocrd.append(sa.out_outer_crdpt())
         out_icrd.append(sa.out_inner_crdpt())
         out_val.append(sa.out_val())
@@ -49,7 +49,7 @@ def test_spcrdpt1_accum_direct(arrs, debug_sim):
               "\t Curr in val", sa.curr_in_val,
               "\n Emit crds: ", sa.emit_output,
               "\n Storage: ", sa.storage)
-        
+
         done = sa.out_done()
         time += 1
 
@@ -107,7 +107,7 @@ def test_spcrdpt2_accum_direct(arrs, debug_sim):
             sa.set_val(val.pop(0))
 
         sa.update()
-        
+
         out_ocrd.append(sa.out_outer_crdpt())
         out_icrd.append(sa.out_inner_crdpt())
         out_val.append(sa.out_val())
@@ -117,7 +117,7 @@ def test_spcrdpt2_accum_direct(arrs, debug_sim):
               "\t Curr in val", sa.curr_in_val,
               "\n Emit crds: ", sa.emit_output,
               "\n Storage: ", sa.storage)
-        
+
         done = sa.out_done()
         time += 1
 

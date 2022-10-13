@@ -47,11 +47,11 @@ def test_unit_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0)
         val2.update()
         mul.update()
         wrscan.update()
-        
+
         print("Timestep", time, "\t Done --", "\tRdScan:", rdscan.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())
-        
+
         done = wrscan.out_done()
         time += 1
 

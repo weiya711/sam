@@ -22,7 +22,7 @@ def test_val_wr_scan_1d(dim1, debug_sim, max_val=1000, size=100, fill=0):
         wrscan.update()
 
         print("Timestep", time)
-        
+
         done = wrscan.out_done()
         time += 1
 
@@ -53,9 +53,9 @@ def test_comp_wr_scan_1d(nnz, debug_sim, max_val=1000, size=1001, fill=0):
             wrscan.set_input(in_val.pop(0))
 
         wrscan.update()
-        
+
         print("Timestep", time, "\t WrScan:", wrscan.out_done())
-        
+
         done = wrscan.out_done()
         time += 1
 
@@ -90,9 +90,9 @@ def test_comp_wr_scan_direct(arrs, debug_sim, size=1001, fill=0):
             wrscan.set_input(in_val.pop(0))
 
         wrscan.update()
-        
+
         print("Timestep", time, "\t WrScan:", wrscan.out_done())
-        
+
         done = wrscan.out_done()
         time += 1
 

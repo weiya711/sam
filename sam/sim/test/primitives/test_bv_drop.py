@@ -66,7 +66,7 @@ def test_bv_drop_nd(arrs, debug_sim):
         out_ibv.append(bd.out_bv_inner())
 
         print("Timestep", time, "\t Done:", bd.out_done(), "\t Out:", bd.out_bv_outer())
-        
+
         done = bd.out_done()
         time += 1
 

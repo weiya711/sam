@@ -39,7 +39,7 @@ def test_spacc1_direct(arrs, debug_sim):
             sa.set_val(val.pop(0))
 
         sa.update()
-        
+
         out_ocrd.append(sa.out_outer_crd())
         out_icrd.append(sa.out_inner_crd())
         out_val.append(sa.out_val())
@@ -104,7 +104,7 @@ def test_spacc2_direct(arrs, debug_sim):
             sa.set_val(val.pop(0))
 
         sa.update()
-        
+
         out_crd1.append(sa.out_crd_outer())
         out_crd0.append(sa.out_crd_inner())
         out_val.append(sa.out_val())

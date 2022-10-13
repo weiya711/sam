@@ -45,14 +45,14 @@ def test_crd_drop_1d(arrs, debug_sim):
             cd.set_inner_crd(icrd.pop(0))
         if len(ocrd) > 0:
             cd.set_outer_crd(ocrd.pop(0))
-        
+
         cd.update()
 
         out_outer.append(cd.out_crd_outer())
         out_inner.append(cd.out_crd_inner())
-        
+ 
         print("Timestep", time, "\t Done:", cd.out_done(), "\t Out:", cd.out_crd_outer())
-        
+
         done = cd.out_done()
         time += 1
 
@@ -88,7 +88,7 @@ def test_crd_drop_emptystr_1d(arrs, debug_sim):
             cd.set_outer_crd(ocrd.pop(0))
 
         cd.update()
-        
+
         out_outer.append(cd.out_crd_outer())
         out_inner.append(cd.out_crd_inner())
 

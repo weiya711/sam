@@ -188,7 +188,6 @@ def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, fill=0):
 
         reduce_2.set_in_val(mul_5.out_val())
 
-
         add_3.set_in1(arrayvals_b_4.out_val())
         add_3.set_in2(reduce_2.out_val())
 

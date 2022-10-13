@@ -30,13 +30,13 @@ def test_reduce_direct_nd(arrs, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_val) > 0:
             red.set_in_val(in_val.pop(0))
-        
+
         red.update()
 
         out_val.append(red.out_val())
 
         print("Timestep", time, "\t Red:", red.out_val(), "\t Ref1:", )
-        
+
         done = red.done
         time += 1
 
@@ -104,7 +104,7 @@ def test_reduce_random_2d(dim, debug_sim, max_val=1000, fill=0):
               "\tWrScan:", vals_X.out_done(),
               "\tWrScan X1:", wrscan_X1.out_done(),
               )
-        
+
         done = wrscan_X1.out_done()
         time += 1
 
