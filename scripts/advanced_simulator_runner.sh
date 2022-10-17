@@ -11,8 +11,8 @@ BENCHMARKS=(
 #  matmul_FINAL
 #  mat_identity
 #  mat_identity_back
-  matmul_ijk
-  matmul_ijk_back
+  matmul_ikj
+  matmul_ikj_back
 #  mat_elemmul_FINAL
 #  mat_elemadd_FINAL
 #  mat_elemadd3_FINAL

@@ -96,7 +96,7 @@ class memory_model():
         if self.mode == "all_unpacked":
             cumu_sum = 0
             val_levels = 0
-            for key in self.tile_ptrs_memtile:
+            for key in self.tile_ptrs_glbtile:
                 if val_levels = 0:
                     val_levels = key.return_tensor_indexes()
                 elif val_levels != key.return_tensor_indexes():
@@ -114,6 +114,23 @@ class memory_model():
 
     def check_mem_limit(tile):
         if self.mode == "all_unpacked":
+            cumu_sum = 0
+            val_levels = 0
+            for key in self.tile_ptrs_memtile:
+                if val_levels = 0:
+                    val_levels = key.return_tensor_indexes()
+                elif val_levels != key.return_tensor_indexes():
+                    assert False
+                cumu_sum += key.return_vals_size()
+
+            if val_levels != 0 and val_levels != tile.return_tensor_indexes():
+                assert False
+            cumu_sum += tile.return_vals_size()
+            if cumu_sum > self.size[num_levels-2]:
+                return False
+            else:
+                return True
+
 
 
     def check_glb_tile_limits():
