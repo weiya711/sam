@@ -4,7 +4,7 @@ main_memory: "None" # Infinite
 Glb_memory: 2000000 # Bytes
 Glb_tiles: 16 # Number of tiles
 Glb_tile_bandwidth: 2 # bytes per cycles per tile
-Glb_mem_mode: "Direct" # Adress for tile needed ot no? Direct - Adressing required, Alltoall - Adressing not required
+Glb_mem_mode: "Direct" # Adress for tile needed ot no? Direct - Adressing required, Alltoall - Adressing not required Also memtile mode pakced, unpacked etc
 Mem_memory: 2000 # Bytes
 Mem_tiles: 128 # No of memtiles
 Mem_tile_bandwith: 2 # Bandwidth to a memtile
