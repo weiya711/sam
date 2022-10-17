@@ -14,6 +14,15 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+import yaml
+
+with open("../../memory_config.yaml", "r") as stream:
+    try:
+        memory_config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        memory_config = None
+
+
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -25,6 +34,10 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 )
 @pytest.mark.suitesparse
 def test_matmul_ijk(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
+    print(memory_config)
+    mem_tile_elements = memory_config["Mem_memory"]//2
+    #print("Clk: ", memory_config["clk"])
+    
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)

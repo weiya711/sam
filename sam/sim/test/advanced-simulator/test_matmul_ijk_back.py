@@ -26,7 +26,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 )
 @pytest.mark.suitesparse
 def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
-    depth = 16
+    depth = 2 #16
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)

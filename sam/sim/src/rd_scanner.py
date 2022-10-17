@@ -160,8 +160,11 @@ def last_stkn(skiplist):
 
 
 class CompressedCrdRdScan(CrdRdScan):
-    def __init__(self, crd_arr=[], seg_arr=[], skip=True, **kwargs):
+    def __init__(self, crd_arr=[], seg_arr=[], skip=True, tile_size = None, **kwargs):
         super().__init__(**kwargs)
+
+        if tile_size != None:
+            assert len(crd_arr) < tile_size
 
         # Used for skip list
         self.skip = skip

@@ -1,0 +1,10 @@
+---
+clk: 1000000000
+main_memory: "None"
+Glb_memory: 2000000
+Glb_tiles: 16
+Glb_tile_bandwidth: 2
+Glb_mem_mode: "Direct" 
+Mem_memory: 2000
+Mem_tiles: 128
+Mem_tile_bandwith: 2
