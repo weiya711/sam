@@ -1,10 +1,10 @@
 ---
-clk: 1000000000
-main_memory: "None"
-Glb_memory: 2000000
-Glb_tiles: 16
-Glb_tile_bandwidth: 2
-Glb_mem_mode: "Direct" 
-Mem_memory: 2000
-Mem_tiles: 128
-Mem_tile_bandwith: 2
+clk: 1000000000 # Hz
+main_memory: "None" # Infinite 
+Glb_memory: 2000000 # Bytes
+Glb_tiles: 16 # Number of tiles
+Glb_tile_bandwidth: 2 # bytes per cycles per tile
+Glb_mem_mode: "Direct" # Adress for tile needed ot no? Direct - Adressing required, Alltoall - Adressing not required
+Mem_memory: 2000 # Bytes
+Mem_tiles: 128 # No of memtiles
+Mem_tile_bandwith: 2 # Bandwidth to a memtile
