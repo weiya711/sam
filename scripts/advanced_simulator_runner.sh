@@ -97,7 +97,7 @@ for b in ${!BENCHMARKS[@]}; do
 			matrix="$sspath/$line.mtx"
 		fi
 
-		if [ "$bench" == "mat_vecmul_FINAL" ]; then
+		if [ "$bench" == "matmul_ikj" ]; then
 			echo "Generating input format files for $line..."
 			SUITESPARSE_TENSOR_PATH=$matrix python $basedir/scripts/datastructure_suitesparse.py -n $line 
 
