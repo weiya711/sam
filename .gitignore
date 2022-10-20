@@ -27,3 +27,8 @@ cmake-build-*/
 *.svg
 
 *.gv
+
+*.mtx
+*.tns
+
+.ipynb_checkpoints/
