@@ -610,6 +610,7 @@ class TensorCollectionSuiteSparse:
 
 # safeCastPydataTensorToInts casts a floating point tensor to integers
 # in a way that preserves the sparsity pattern.
+<<<<<<< HEAD
 # def safeCastPydataTensorToInts(tensor):
 #     data = numpy.zeros(len(tensor.data), dtype='int64')
 #     for i in range(len(data)):
@@ -623,7 +624,20 @@ class TensorCollectionSuiteSparse:
 #     return sparse.COO(tensor.coords, data, tensor.shape)
 
 
-def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=True):
+def safeCastScipyTensorToInts(tensor):
+    data = numpy.zeros(len(tensor.data), dtype='int64')
+    for i in range(len(data)):
+        # If the cast would turn a value into 0, instead write a 1. This preserves
+        # the sparsity pattern of the data.
+        # if int(tensor.data[i]) == 0:
+        #     data[i] = 1
+        # else:
+        #     data[i] = int(tensor.data[i])
+        data[i] = round_sparse(tensor.data[i])
+    return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
+
+
+def parse_taco_format(infilename, outdir, tensorname, format_str):
     with open(infilename, 'r') as inf:
         level = -1
         count = 0

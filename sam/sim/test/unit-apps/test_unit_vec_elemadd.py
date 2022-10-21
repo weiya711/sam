@@ -54,23 +54,25 @@ def test_vec_elemadd_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
+
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
         union.set_in1(crdscan1.out_ref(), crdscan1.out_crd())
         union.set_in2(crdscan2.out_ref(), crdscan2.out_crd())
-        union.update()
         val1.set_load(union.out_ref1())
         val2.set_load(union.out_ref2())
-        val1.update()
-        val2.update()
         add.set_in1(val1.out_load())
         add.set_in2(val2.out_load())
-        add.update()
         oval_wrscan.set_input(add.out_val())
-        oval_wrscan.update()
         ocrd_wrscan.set_input(union.out_crd())
+
+        crdscan1.update()
+        crdscan2.update()
+        union.update()
+        val1.update()
+        val2.update()
+        add.update()
+        oval_wrscan.update()
         ocrd_wrscan.update()
 
         print("Timestep", time, "\t Done --",
@@ -80,6 +82,7 @@ def test_vec_elemadd_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
               "\tMul:", add.out_done(),
               "\tOutVal:", oval_wrscan.out_done(),
               "\tOutCrd:", ocrd_wrscan.out_done())
+
         done = ocrd_wrscan.out_done()
         time += 1
 

@@ -94,56 +94,57 @@ def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, report_stats,
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_14.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_14.update()
 
         if len(in_ref_C) > 0:
             fiberlookup_Ci_15.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_15.update()
 
         intersecti_13.set_in1(fiberlookup_Bi_14.out_ref(), fiberlookup_Bi_14.out_crd())
         intersecti_13.set_in2(fiberlookup_Ci_15.out_ref(), fiberlookup_Ci_15.out_crd())
-        intersecti_13.update()
 
         fiberlookup_Bj_11.set_in_ref(intersecti_13.out_ref1())
-        fiberlookup_Bj_11.update()
 
         fiberlookup_Cj_12.set_in_ref(intersecti_13.out_ref2())
-        fiberlookup_Cj_12.update()
 
         intersectj_10.set_in1(fiberlookup_Bj_11.out_ref(), fiberlookup_Bj_11.out_crd())
         intersectj_10.set_in2(fiberlookup_Cj_12.out_ref(), fiberlookup_Cj_12.out_crd())
-        intersectj_10.update()
 
         fiberlookup_Bk_8.set_in_ref(intersectj_10.out_ref1())
-        fiberlookup_Bk_8.update()
 
         fiberlookup_Ck_9.set_in_ref(intersectj_10.out_ref2())
-        fiberlookup_Ck_9.update()
 
         intersectk_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd())
         intersectk_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd())
-        intersectk_7.update()
 
         arrayvals_B_5.set_load(intersectk_7.out_ref1())
-        arrayvals_B_5.update()
 
         arrayvals_C_6.set_load(intersectk_7.out_ref2())
-        arrayvals_C_6.update()
 
         mul_4.set_in1(arrayvals_B_5.out_val())
         mul_4.set_in2(arrayvals_C_6.out_val())
-        mul_4.update()
 
         reduce_3.set_in_val(mul_4.out_val())
-        reduce_3.update()
 
         reduce_2.set_in_val(reduce_3.out_val())
-        reduce_2.update()
 
         reduce_1.set_in_val(reduce_2.out_val())
-        reduce_1.update()
 
         fiberwrite_xvals_0.set_input(reduce_1.out_val())
+
+        fiberlookup_Bi_14.update()
+        fiberlookup_Ci_15.update()
+        intersecti_13.update()
+        fiberlookup_Bj_11.update()
+        fiberlookup_Cj_12.update()
+        intersectj_10.update()
+        fiberlookup_Bk_8.update()
+        fiberlookup_Ck_9.update()
+        intersectk_7.update()
+        arrayvals_B_5.update()
+        arrayvals_C_6.update()
+        mul_4.update()
+        reduce_3.update()
+        reduce_2.update()
+        reduce_1.update()
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_xvals_0.out_done()
