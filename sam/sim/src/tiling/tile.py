@@ -11,7 +11,6 @@ from pathlib import Path
 from sam.util import SuiteSparseTensor, InputCacheSuiteSparse 
 from sam.sim.src.tiling.process_expr import parse_all, update_dict
 
-
 SAM_STRS = {"matmul_ikj":"X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"}
 
 def print_dict(dd):
@@ -208,20 +207,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Tile matrices')
     parser.add_argument("--input_tensor", type=str, default=None)
     parser.add_argument("--gen_tensor", action="store_true")
-    parser.add_argument("--output_csv", type=str, default="runs.csv")
     parser.add_argument("--cotile", type=str, default=None)
-    parser.add_argument("--output_mtx", type=str, default="./tiles")
+    parser.add_argument("--output_dir_path", type=str, default="./tiles")
     parser.add_argument("--hw_config", type=str, default=None)
     parser.add_argument("--multilevel", action="store_true")
 
     args = parser.parse_args()
 
     tensor = None
+    cwd = os.getcwd()
     if args.gen_tensor:
         tensor = scipy.sparse.random(16, 16)
     else:
         assert args.input_tensor is not None
-        cwd = os.getcwd()
         SS_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(cwd, 'suitesparse')) 
         print("PATH:", SS_PATH)
         tensor_path = os.path.join(SS_PATH, args.input_tensor + ".mtx")
@@ -252,17 +250,21 @@ if __name__ == "__main__":
 
 
         names = cotiled_tensors.keys()
-        output_mtx_name = os.path.join(args.output_mtx, args.cotile)
+        output_mtx_name = os.path.join(args.output_dir_path, args.cotile, "mtx")
         output_mtx_path = Path(output_mtx_name)
         output_mtx_path.mkdir(parents=True, exist_ok=True)
+        print(os.path.exists(output_mtx_path))
         for name in names:
             for tile_id, tile in cotiled_tensors[name].items():
 
                 [str(item) for item in tile_id]
                 filename = "tensor_" + name + "_tile_" + "_".join([str(item) for item in tile_id]) + ".mtx"
                 mtx_path_name = os.path.join(output_mtx_name, filename)
+                print(tile)
+                print(mtx_path_name, cwd)
     #                with open(mtx_path_name, "x") as ff:
                 scipy.io.mmwrite(mtx_path_name, tile)
+                print(os.path.exists(mtx_path_name))
     #        for tile_id, tile_coo in cotiled_tensors
     #        write_mtx(
 
