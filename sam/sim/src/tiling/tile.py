@@ -5,10 +5,11 @@ import argparse
 import ast
 import yaml
 import copy 
+import pickle 
 
 from itertools import compress
 from pathlib import Path
-from sam.util import SuiteSparseTensor, InputCacheSuiteSparse 
+from sam.util import SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter 
 from sam.sim.src.tiling.process_expr import parse_all, update_dict
 
 SAM_STRS = {"matmul_ikj":"X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"}
@@ -78,6 +79,7 @@ def tile_coo(tensor, ivar_map, split_map, new_ivar_order=None):
     human_readable = False
 
     tiles = dict()
+    tile_sizes = dict()
     order = len(tensor.shape) 
 
     tensor_points = tensor.todok()
@@ -97,9 +99,7 @@ def tile_coo(tensor, ivar_map, split_map, new_ivar_order=None):
             ivar = ivar_map[lvl] 
             sf = split_map[ivar]
 
-
             new_point.append(point[lvl] % sf)
-
             tile_id.append(int(point[lvl] / sf))
 
         
@@ -122,8 +122,14 @@ def tile_coo(tensor, ivar_map, split_map, new_ivar_order=None):
                 dok[tuple(point[0:-1])] = point[-1]
 
         tiles[key] = dok
+
+    for tile_id, tile_dok in tiles.items():
+        tile = tile_dok.tocoo()
+        nonempty_rows = tile.getnnz(axis=1)
+        nonempty_row_ind = np.where(nonempty_rows > 0)[0]
+        tile_sizes[tile_id] = tile.nnz * 2 + 2*len(nonempty_row_ind) + 3
         
-    return tiles
+    return tiles, tile_sizes
 
 # tensor_names: list of tensor names [B,C,D] (from SAM)
 # tensors: list of scipy.sparse.coo_matrix following tensor_names (from SAM)
@@ -132,7 +138,8 @@ def tile_coo(tensor, ivar_map, split_map, new_ivar_order=None):
 # split_map: dictionary of split factors (from hardware)
 def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map):
     tiled_tensors = dict()
-    
+    tiled_tensor_sizes = dict()
+
     for i,tensor in enumerate(tensors): 
         tensor_name = tensor_names[i]
         tensor_format = permutation_strs[i]
@@ -143,14 +150,52 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map):
             ivar = ivar_strs[i][dim]  
             ivar_map[lvl_permutation] = ivar
         
-        tiled_tensors[tensor_name] = tile_coo(tensor, ivar_map, split_map)
+        tiles, tile_sizes = tile_coo(tensor, ivar_map, split_map)
+        tiled_tensors[tensor_name] = tiles
+        tiled_tensor_sizes[tensor_name] = tile_sizes
 
-    return tiled_tensors
+    return tiled_tensors, tiled_tensor_sizes
 
 
-def cotile_multilevel_coo(app_str, hw_config_fname, tensors):
-    tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
-    tensors.append(tensor2)
+def get_other_tensors(app_str, tensor):
+    tensors = []
+    tensors.append(tensor)
+
+    if "matmul" in app_str:
+        print("Writing shifted...")
+        shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        trans_shifted = shifted.transpose()
+        tensors.append(trans_shifted)
+
+
+    elif "mat_elemadd3" in app_str:
+        print("Writing shifted...")
+        shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
+
+        print("Writing  shifted2...")
+        shifted2 = ScipyTensorShifter().shiftLastMode(shifted)
+        tensors.append(shifted2)
+    elif "mat_elemadd" in app_str or "mat_elemmul" in app_str:
+        print("Writing shifted...")
+        shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
+
+    elif "mat_sddmm" in app_str:
+        pass
+    elif "mat_mattransmul" in app_str or "mat_residual" in app_str:
+        pass
+    elif "mat_vecmul" in app_str:
+        pass
+    else:
+        tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
+        tensors.append(tensor2)
+        #raise NotImplementedError
+
+    return tensors
+
+def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
+    tensors = get_other_tensors(app_str, tensors[0])
 
     names, format_permutations, ivars = parse_sam_input(args.cotile)
     with open(hw_config_fname, "r") as stream:
@@ -162,8 +207,10 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors):
             assert len(level_names) == n_levels
 
             cotiled = None
+            cotiled_sizes = None
             split_map = {}
             for hw_lvl in range(n_levels-1):
+                cotiled_sizes_fname = os.path.join(output_dir_path, "hw_level_" + str(hw_lvl) + "_sizes") 
                 level_names_left = level_names[hw_lvl+1:]
 
                 sf = 1
@@ -178,20 +225,31 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors):
 
                 if cotiled is None:
                     # First iteration of tiling
-                    cotiled = cotile_coo(names, tensors, format_permutations, ivars, split_map)
+                    cotiled, cotiled_sizes = cotile_coo(names, tensors, format_permutations, ivars, split_map)
                 else:
                     # recursively tile the blocks
                     new_cotiled = {}
+                    new_cotiled_sizes = {}
                     for i,name in enumerate(names):
 
                         new_cotiled[name] = {}
+                        new_cotiled_sizes[name] = {}
                         for tile_id, tile in cotiled[name].items():
-                            new_cotiled_temp = cotile_coo(name, [tile.tocoo()], [format_permutations[i]], [ivars[i]], split_map)
-
+                            new_cotiled_temp, new_cotiled_sizes_temp = cotile_coo(name, [tile.tocoo()], [format_permutations[i]], [ivars[i]], split_map)
+                            
                             for kk, vv in copy.deepcopy(new_cotiled_temp)[name].items():
                                 new_tile_id = tuple(list(tile_id) + list(kk)) 
                                 new_cotiled[name][new_tile_id] = vv
+
+                            for kk, vv in copy.deepcopy(new_cotiled_sizes_temp)[name].items():
+                                new_tile_id = tuple(list(tile_id) + list(kk)) 
+                                new_cotiled_sizes[name][new_tile_id] = vv
                     cotiled = copy.deepcopy(new_cotiled)
+                    cotiled_sizes = copy.deepcopy(new_cotiled_sizes)
+
+                with open(cotiled_sizes_fname, "wb+") as pickle_fname:
+                    pickle.dump(cotiled_sizes, pickle_fname)
+                    
 
             return cotiled
         except yaml.YAMLError as exc:
@@ -232,15 +290,20 @@ if __name__ == "__main__":
     if args.cotile is None:
         print("ORIG:", tensor)
         print("SPLIT MAP", split_map)
-        tiles = tile_coo(tensor, {0:"i", 1:"j"}, split_map)
+        tiles, tile_sizes = tile_coo(tensor, {0:"i", 1:"j"}, split_map)
 
         print("TILES:")
         print_dict(tiles)
     else:
 
+        output_mtx_name = os.path.join(args.output_dir_path, args.cotile, "mtx")
+        output_mtx_path = Path(output_mtx_name)
+        output_mtx_path.mkdir(parents=True, exist_ok=True)
+        print(os.path.exists(output_mtx_path))
+
         if args.multilevel:
             assert args.cotile is not None
-            cotiled_tensors = cotile_multilevel_coo(args.cotile, args.hw_config, [tensor]) 
+            cotiled_tensors = cotile_multilevel_coo(args.cotile, args.hw_config, [tensor], os.path.join(args.output_dir_path, args.cotile)) 
         elif args.cotile is not None:
             tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
             names, format_permutations, ivars = parse_sam_input(args.cotile)
@@ -250,10 +313,6 @@ if __name__ == "__main__":
 
 
         names = cotiled_tensors.keys()
-        output_mtx_name = os.path.join(args.output_dir_path, args.cotile, "mtx")
-        output_mtx_path = Path(output_mtx_name)
-        output_mtx_path.mkdir(parents=True, exist_ok=True)
-        print(os.path.exists(output_mtx_path))
         for name in names:
             for tile_id, tile in cotiled_tensors[name].items():
 
@@ -262,9 +321,6 @@ if __name__ == "__main__":
                 mtx_path_name = os.path.join(output_mtx_name, filename)
                 print(tile)
                 print(mtx_path_name, cwd)
-    #                with open(mtx_path_name, "x") as ff:
                 scipy.io.mmwrite(mtx_path_name, tile)
                 print(os.path.exists(mtx_path_name))
-    #        for tile_id, tile_coo in cotiled_tensors
-    #        write_mtx(
 

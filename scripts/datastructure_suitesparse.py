@@ -34,6 +34,23 @@ def get_datastructure_string(format, mode):
     else:
         return ""
 
+def write_datastructure_tiles(args, tensor, out_path, tile_name):
+    print("Writing " + args.name + " for test " + args.benchname + "...")
+
+    dirname = args.output_dir_path if args.output_dir_path is not None else os.path.join(out_path, args.name, args.benchname)
+    dirname = os.path.join(dirname, tile_name)
+    dirpath = Path(dirname)
+    if os.path.exists(dirpath):
+        shutil.rmtree(dirpath)
+    dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
+
+    print(tile_name)
+    tensorname = tile_name.split("_")[1] 
+
+    coo = inputCache.load(tensor, False)
+    formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=args.onyx)
+
+
 def write_datastructure_bench(args, tensor, out_path, tiles=None):
     print("Writing " + args.name + " for test " + args.benchname + "...")
 
@@ -170,7 +187,7 @@ elif args.hw:
     if args.tiles:
         for i,tensor in enumerate(tensors):
             tile_name = os.path.split(mtx_files[i])[1].split(".")[0]
-            write_datastructure_bench(args, tensor, out_path, tiles=tile_name)
+            write_datastructure_tiles(args, tensor, out_path, tile_name)
     else:
         write_datastructure_bench(args, tensor, out_path)
 
