@@ -53,13 +53,13 @@ class CrdJoiner2(Joiner2, ABC):
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
-            print(in_ref1, " ", in_crd1)
+            #print(in_ref1, " ", in_crd1)
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
         if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
-            print(in_ref2, " ", in_crd2)
+            #print(in_ref2, " ", in_crd2)
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 

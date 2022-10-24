@@ -79,7 +79,7 @@ class Primitive(ABC):
 
     def out_done(self):
         return self.done
-
+    
     def is_debug(self):
         return self.debug
 
