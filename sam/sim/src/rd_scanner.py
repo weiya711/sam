@@ -172,15 +172,15 @@ class CompressedCrdRdScan(CrdRdScan):
         # Statistics
         if self.get_stats:
             self.unique_refs = []
-            #self.unique_crds = []
+            # self.unique_crds = []
             self.total_outputs = 0
             self.elements_skipped = 0
             self.skip_cnt = 0
             self.intersection_behind_cnt = 0
             self.fiber_behind_cnt = 0
-            self.stop_count = 0 
+            self.stop_count = 0
             self.empty_tkn_cnt = 0
-        self.skip_stkn_cnt = 0 # also used as a statistic
+        self.skip_stkn_cnt = 0  # also used as a statistic
         self.out_stkn_cnt = 0
 
         self.begin = True
@@ -208,9 +208,9 @@ class CompressedCrdRdScan(CrdRdScan):
         self.curr_ref = self.curr_addr
         self.curr_crd = self.crd_arr[self.curr_addr]
         if self.get_stats:
-            #if self.curr_ref not in self.unique_refs:
+            # if self.curr_ref not in self.unique_refs:
             #    self.unique_refs.append(self.curr_ref)
-            #if self.curr_crd not in self.unique_crds:
+            # if self.curr_crd not in self.unique_crds:
             #    self.unique_crds.append(self.curr_crd)
             self.total_outputs += 1
 
@@ -314,7 +314,7 @@ class CompressedCrdRdScan(CrdRdScan):
             # Default case where input reference is an integer value
             # which means to get the segment
             else:
-                if curr_in_ref not in self.unique_refs:
+                if self.get_stats and curr_in_ref not in self.unique_refs:
                     self.unique_refs.append[curr_in_ref]
                 self.start_addr = self.seg_arr[curr_in_ref]
                 self.stop_addr = self.seg_arr[curr_in_ref + 1]
@@ -342,7 +342,7 @@ class CompressedCrdRdScan(CrdRdScan):
                                     self.elements_skipped += curr_range.index(self.curr_skip) + 1
                                     self.skip_cnt += 1
 
-                            # Else emit smallest coordinate larger than the one provided by skip
+                            # Else emit the smallest coordinate larger than the one provided by skip
                             else:
                                 larger = [i for i in curr_range if i > self.curr_skip]
                                 if not larger:
@@ -434,7 +434,7 @@ class CompressedCrdRdScan(CrdRdScan):
         if self.get_stats and is_stkn(self.curr_crd):
             self.stop_count += 1
 
-        if not self.done and self.begin and self.curr_ref == '' and self.curr_crd == '':
+        if self.get_stats and not self.done and self.begin and self.curr_ref == '' and self.curr_crd == '':
             self.empty_tkn_cnt += 1
 
         # Debugging print statements
@@ -713,7 +713,7 @@ class BVRdScan(BVRdScanSuper):
                 self.curr_bv = self.bv_arr[self.curr_addr]
                 self.curr_ref = self._get_bv_ref(self.curr_addr)
 
-        else:   # elif self.curr_bv is not None and self.curr_ref is not None:
+        else:  # elif self.curr_bv is not None and self.curr_ref is not None:
             # Default stall (when done)
             self.curr_ref = ''
             self.curr_bv = ''
