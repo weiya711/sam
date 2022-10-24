@@ -34,6 +34,7 @@ def get_datastructure_string(format, mode):
     else:
         return ""
 
+
 def write_datastructure_tiles(args, tensor, out_path, tile_name):
     print("Writing " + args.name + " for test " + args.benchname + "...")
 
@@ -45,7 +46,7 @@ def write_datastructure_tiles(args, tensor, out_path, tile_name):
     dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
 
     print(tile_name)
-    tensorname = tile_name.split("_")[1] 
+    tensorname = tile_name.split("_")[1]
 
     coo = inputCache.load(tensor, False)
     formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=args.onyx)
@@ -120,10 +121,12 @@ parser.add_argument('-c', '--combined', action='store_true', default=False, help
                                                                                  'should be in separate files')
 parser.add_argument('-o', '--omit-dense', action='store_true', default=False, help='Do not create fully dense format')
 parser.add_argument('-i', '--integer', action='store_false', default=True, help='Safe sparsity cast to int for values')
-parser.add_argument('-hw', '--hw', action='store_true', default=False, help='Only generate formats used for hardware testing (all sparse levels, concordant)')
+parser.add_argument('-hw', '--hw', action='store_true', default=False,
+                    help='Only generate formats used for hardware testing (all sparse'
+                         'levels, concordant)')
 parser.add_argument('--onyx', action='store_true', default=False, help='Use Onyx file naming convention')
 parser.add_argument('-b', '--benchname', type=str, default=None, help='test name to run format '
-                                                                                     'conversion on')
+                                                                      'conversion on')
 parser.add_argument('--input_path', type=str, default=None)
 parser.add_argument('--output_dir_path', type=str, default=None)
 parser.add_argument('--tiles', action='store_true')
@@ -154,7 +157,7 @@ tensor = None
 if args.tiles:
     # get all mtx tile files from args.input_path
     mtx_files = [os.path.join(args.input_path, fname) for fname in os.listdir(args.input_path) if fname.endswith(".mtx")]
-    
+
     tensors = [SuiteSparseTensor(mtx_file) for mtx_file in mtx_files]
 elif args.input_path is not None:
     tensor = SuiteSparseTensor(args.input_path)
@@ -185,7 +188,7 @@ elif args.combined:
         formatWriter.writeout(trans_shifted, format_str, trans_filename)
 elif args.hw:
     if args.tiles:
-        for i,tensor in enumerate(tensors):
+        for i, tensor in enumerate(tensors):
             tile_name = os.path.split(mtx_files[i])[1].split(".")[0]
             write_datastructure_tiles(args, tensor, out_path, tile_name)
     else:

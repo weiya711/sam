@@ -523,7 +523,7 @@ class FormatWriter:
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dcsr.data))
 
-            if not hw: 
+            if not hw:
                 filename = os.path.join(dcsr_dir, tensorname + "_shape.txt")
             else:
                 filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
@@ -536,7 +536,7 @@ class FormatWriter:
 
             dcsc = self.convert_format(coo, "dcsc")
 
-            if not hw: 
+            if not hw:
                 filename = os.path.join(dcsr_dir, tensorname + "_shape.txt")
             else:
                 filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
@@ -577,6 +577,7 @@ class FormatWriter:
                 filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dcsc.data))
+
 
 # UfuncInputCache attempts to avoid reading the same tensor from disk multiple
 # times in a benchmark run.
