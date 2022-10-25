@@ -43,8 +43,7 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, out_format="ss01"):
         C_scipy = C_scipy.tocsc()
         gold_nd = (B_scipy @ C_scipy)
         gold_out = gold_nd.tocoo()
-        scipy.io.mmwrite("out.mtx", gold_out)
+        scipy.io.mmwrite("out" + tile_crd_b[0] + "_" + tile_crd_c[1] + "_" + tile_crd_b[2] + "_" + tile_crd_c[3] + ".mtx", gold_out)
 
-
-if __name__ == "__main__":
+if __name__ == "__main__": 
     check_gold_matmul_tiled([0, 0, 0, 0], [0, 0, 0, 0])
