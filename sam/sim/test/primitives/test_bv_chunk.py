@@ -45,13 +45,12 @@ def test_bv_chunk_direct(arrs, debug_sim):
         if len(crd) > 0:
             bv.set_in_crd(crd.pop(0))
 
-        bv.update()
-
-        out_bv.append(bv.out_bv())
-
         bvchunk.set_in_bv(bv.out_bv_int())
+
+        bv.update()
         bvchunk.update()
 
+        out_bv.append(bv.out_bv())
         out_bv_chunk.append(bvchunk.out_bv())
 
         print("Timestep", time, "\t Done:", bv.out_done(), bvchunk.out_done())

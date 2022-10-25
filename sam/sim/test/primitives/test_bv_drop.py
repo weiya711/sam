@@ -59,12 +59,14 @@ def test_bv_drop_nd(arrs, debug_sim):
             bd.set_inner_bv(item)
         if len(obv) > 0:
             bd.set_outer_bv(obv.pop(0))
+
         bd.update()
 
         out_obv.append(bd.out_bv_outer())
         out_ibv.append(bd.out_bv_inner())
 
         print("Timestep", time, "\t Done:", bd.out_done(), "\t Out:", bd.out_bv_outer())
+
         done = bd.out_done()
         time += 1
 

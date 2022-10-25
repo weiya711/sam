@@ -132,16 +132,12 @@ def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf,
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
 
         split1.set_in_crd(crdscan1.out_crd())
-        split1.update()
 
         split2.set_in_crd(crdscan2.out_crd())
-        split2.update()
 
         out_split1_0.append(split1.out_inner_crd())
         out_split1_1.append(split1.out_outer_crd())
@@ -158,6 +154,10 @@ def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf,
         wrscan2_0.set_input(split2.out_inner_crd())
         wrscan2_1.set_input(split2.out_outer_crd())
 
+        crdscan1.update()
+        crdscan2.update()
+        split1.update()
+        split2.update()
         wrscan1_0.update()
         wrscan1_1.update()
         wrscan2_0.update()
@@ -219,45 +219,45 @@ def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf,
     while not done and time2 < TIMEOUT:
         if len(in_ref1) > 0:
             rdscan1_1.set_in_ref(in_ref1.pop(0))
-        rdscan1_1.update()
         if len(in_ref2) > 0:
             rdscan2_1.set_in_ref(in_ref2.pop(0))
-        rdscan2_1.update()
 
         inter1.set_in1(rdscan1_1.out_ref(), rdscan1_1.out_crd())
         inter1.set_in2(rdscan2_1.out_ref(), rdscan2_1.out_crd())
-        inter1.update()
 
         rdscan1_0.set_in_ref(inter1.out_ref1())
-        rdscan1_0.update()
 
         rdscan2_0.set_in_ref(inter1.out_ref2())
-        rdscan2_0.update()
 
         inter0.set_in1(rdscan1_0.out_ref(), rdscan1_0.out_crd())
         inter0.set_in2(rdscan2_0.out_ref(), rdscan2_0.out_crd())
-        inter0.update()
 
         val1.set_load(inter0.out_ref1())
         val2.set_load(inter0.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
 
         oval_wrscan.set_input(mul.out_val())
-        oval_wrscan.update()
 
         crddrop.set_inner_crd(inter0.out_crd())
         crddrop.set_outer_crd(inter1.out_crd())
-        crddrop.update()
 
         wrscan0.set_input(crddrop.out_crd_inner())
-        wrscan0.update()
         wrscan1.set_input(crddrop.out_crd_outer())
-        wrscan1.update()
 
+        rdscan1_1.update()
+        rdscan2_1.update()
+        inter1.update()
+        rdscan1_0.update()
+        rdscan2_0.update()
+        inter0.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        oval_wrscan.update()
+        crddrop.update()
+        wrscan0.update()
+        wrscan1.update()
         print("Timestep", time2, "\t Done --",
               "\nRdScan1:", rdscan1_0.out_done(), rdscan2_0.out_done(), rdscan1_1.out_done(), rdscan2_1.out_done(),
               "\nInter:", inter0.out_done(), inter1.out_done(),

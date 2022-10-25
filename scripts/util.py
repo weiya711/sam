@@ -655,7 +655,7 @@ def safeCastPydataTensorToInts(tensor):
         # else:
         #     data[i] = int(tensor.data[i])
         data[i] = round_sparse(tensor.data[i])
-    return sparse.COO(tensor.coords, data, tensor.shape)
+    return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
 
 
 def parse_taco_format(infilename, outdir, tensorname, format_str):

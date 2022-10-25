@@ -133,21 +133,12 @@ def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, de
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
-
         bv1.set_in_crd(crdscan1.out_crd())
         bv2.set_in_crd(crdscan2.out_crd())
-        bv1.update()
-        bv2.update()
-
         bvchunk1.set_in_bv(bv1.out_bv_int())
-        bvchunk1.update()
-
         bvchunk2.set_in_bv(bv2.out_bv_int())
-        bvchunk2.update()
 
         temp1.append(bvchunk1.out_bv())
         temp2.append(bvchunk1.out_ref())
@@ -156,22 +147,29 @@ def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, de
 
         inter.set_in1(bvchunk1.out_ref(), bvchunk1.out_bv_int())
         inter.set_in2(bvchunk2.out_ref(), bvchunk2.out_bv_int())
-        inter.update()
 
         temp5.append(inter.out_bv())
 
         val1.set_load(inter.out_ref1())
         val2.set_load(inter.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
 
         oval_wrscan.set_input(mul.out_val())
-        oval_wrscan.update()
 
         wrscan0.set_input(inter.out_bv())
+
+        crdscan1.update()
+        crdscan2.update()
+        bv1.update()
+        bv2.update()
+        bvchunk1.update()
+        bvchunk2.update()
+        inter.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        oval_wrscan.update()
         wrscan0.update()
 
         print("Timestep", time1, "\t Done --",

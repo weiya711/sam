@@ -81,39 +81,40 @@ def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
 
         split1.set_in_crd(crdscan1.out_crd())
-        split1.update()
 
         split2.set_in_crd(crdscan2.out_crd())
-        split2.update()
-        out_split1_0.append(split1.out_inner_crd())
-        out_split1_1.append(split1.out_outer_crd())
-        out_split2_0.append(split2.out_inner_crd())
-        out_split2_1.append(split2.out_outer_crd())
 
         bv1_0.set_in_crd(split1.out_inner_crd())
         bv1_1.set_in_crd(split1.out_outer_crd())
         bv2_0.set_in_crd(split2.out_inner_crd())
         bv2_1.set_in_crd(split2.out_outer_crd())
-        bv1_0.update()
-        bv1_1.update()
-        bv2_0.update()
-        bv2_1.update()
 
         wrscan1_0.set_input(bv1_0.out_bv_int())
         wrscan1_1.set_input(bv1_1.out_bv_int())
         wrscan2_0.set_input(bv2_0.out_bv_int())
         wrscan2_1.set_input(bv2_1.out_bv_int())
 
+        crdscan1.update()
+        crdscan2.update()
+        split1.update()
+        split2.update()
+        bv1_0.update()
+        bv1_1.update()
+        bv2_0.update()
+        bv2_1.update()
         wrscan1_0.update()
         wrscan1_1.update()
         wrscan2_0.update()
         wrscan2_1.update()
+
+        out_split1_0.append(split1.out_inner_crd())
+        out_split1_1.append(split1.out_outer_crd())
+        out_split2_0.append(split2.out_inner_crd())
+        out_split2_1.append(split2.out_outer_crd())
 
         print("Timestep", time, "\t Done -- \n",
               "\nRdScan1:", crdscan1.out_done(), "\tRdScan2:", crdscan2.out_done(),
@@ -121,6 +122,7 @@ def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
               "\nBV:", bv1_0.out_done(), bv1_1.out_done(), bv2_0.out_done(), bv2_1.out_done(),
               "\nWrScan:", wrscan1_0.out_done(), wrscan1_1.out_done(), wrscan2_0.out_done(), wrscan2_1.out_done()
               )
+
         done = wrscan2_0.out_done() and wrscan2_1.out_done() and wrscan1_1.out_done() and wrscan1_0.out_done()
         time += 1
 
@@ -214,51 +216,52 @@ def test_mat_elemmul_bvonly(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
             bvscan1_1.set_in_ref(in_ref1.pop(0))
-        bvscan1_1.update()
         if len(in_ref2) > 0:
             bvscan2_1.set_in_ref(in_ref2.pop(0))
-        bvscan2_1.update()
 
         inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv())
         inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv())
-        inter1.update()
-
-        temp1.append(inter0.out_ref1())
-        print(remove_emptystr(temp1))
-        temp2.append(inter0.out_ref2())
-        print(remove_emptystr(temp2))
 
         bvscan1_0.set_in_ref(inter1.out_ref1())
-        bvscan1_0.update()
 
         bvscan2_0.set_in_ref(inter1.out_ref2())
-        bvscan2_0.update()
 
         inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv())
         inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv())
-        inter0.update()
 
         val1.set_load(inter0.out_ref1())
         val2.set_load(inter0.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
 
         oval_wrscan.set_input(mul.out_val())
-        oval_wrscan.update()
 
         temp3.append(inter0.out_bv())
         temp4.append(inter1.out_bv())
         bvdrop.set_inner_bv(inter0.out_bv())
         bvdrop.set_outer_bv(inter1.out_bv())
-        bvdrop.update()
 
         wrscan0.set_input(bvdrop.out_bv_inner())
-        wrscan0.update()
         wrscan1.set_input(bvdrop.out_bv_outer())
+
+        bvscan1_1.update()
+        bvscan2_1.update()
+        inter1.update()
+        bvscan1_0.update()
+        bvscan2_0.update()
+        inter0.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        oval_wrscan.update()
+        bvdrop.update()
+        wrscan0.update()
         wrscan1.update()
+
+        temp1.append(inter0.out_ref1())
+        print(remove_emptystr(temp1))
+        temp2.append(inter0.out_ref2())
+        print(remove_emptystr(temp2))
 
         print("Timestep", time, "\t Done --",
               "\nRdScan1:", bvscan1_0.out_done(), bvscan2_0.out_done(), bvscan1_1.out_done(), bvscan2_1.out_done(),
@@ -359,39 +362,40 @@ def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
-        crdscan2.update()
 
         split1.set_in_crd(crdscan1.out_crd())
-        split1.update()
 
         split2.set_in_crd(crdscan2.out_crd())
-        split2.update()
-        out_split1_0.append(split1.out_inner_crd())
-        out_split1_1.append(split1.out_outer_crd())
-        out_split2_0.append(split2.out_inner_crd())
-        out_split2_1.append(split2.out_outer_crd())
 
         bv1_0.set_in_crd(split1.out_inner_crd())
         bv1_1.set_in_crd(split1.out_outer_crd())
         bv2_0.set_in_crd(split2.out_inner_crd())
         bv2_1.set_in_crd(split2.out_outer_crd())
-        bv1_0.update()
-        bv1_1.update()
-        bv2_0.update()
-        bv2_1.update()
 
         wrscan1_0.set_input(bv1_0.out_bv_int())
         wrscan1_1.set_input(bv1_1.out_bv_int())
         wrscan2_0.set_input(bv2_0.out_bv_int())
         wrscan2_1.set_input(bv2_1.out_bv_int())
 
+        crdscan1.update()
+        crdscan2.update()
+        split1.update()
+        split2.update()
+        bv1_0.update()
+        bv1_1.update()
+        bv2_0.update()
+        bv2_1.update()
         wrscan1_0.update()
         wrscan1_1.update()
         wrscan2_0.update()
         wrscan2_1.update()
+
+        out_split1_0.append(split1.out_inner_crd())
+        out_split1_1.append(split1.out_outer_crd())
+        out_split2_0.append(split2.out_inner_crd())
+        out_split2_1.append(split2.out_outer_crd())
 
         print("Timestep", time1, "\t Done -- \n",
               "\nRdScan1:", crdscan1.out_done(), "\tRdScan2:", crdscan2.out_done(),
@@ -441,43 +445,44 @@ def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
             bvscan1_1.set_in_ref(in_ref1.pop(0))
-        bvscan1_1.update()
         if len(in_ref2) > 0:
             bvscan2_1.set_in_ref(in_ref2.pop(0))
-        bvscan2_1.update()
 
         inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv())
         inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv())
-        inter1.update()
 
         bvscan1_0.set_in_ref(inter1.out_ref1())
-        bvscan1_0.update()
 
         bvscan2_0.set_in_ref(inter1.out_ref2())
-        bvscan2_0.update()
 
         inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv())
         inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv())
-        inter0.update()
 
         val1.set_load(inter0.out_ref1())
         val2.set_load(inter0.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
 
         oval_wrscan.set_input(mul.out_val())
-        oval_wrscan.update()
 
         bvdrop.set_inner_bv(inter0.out_bv())
         bvdrop.set_outer_bv(inter1.out_bv())
-        bvdrop.update()
 
         wrscan0.set_input(bvdrop.out_bv_inner())
-        wrscan0.update()
         wrscan1.set_input(bvdrop.out_bv_outer())
+
+        bvscan1_1.update()
+        bvscan2_1.update()
+        inter1.update()
+        bvscan1_0.update()
+        bvscan2_0.update()
+        inter0.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        oval_wrscan.update()
+        bvdrop.update()
+        wrscan0.update()
         wrscan1.update()
 
         print("Timestep", time2, "\t Done --",
@@ -488,6 +493,7 @@ def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0
               "\nOutVal:", oval_wrscan.out_done(),
               "\tOutBV1:", wrscan1.out_done(), "\tOutBV0:", wrscan0.out_done()
               )
+
         done = wrscan0.out_done() and wrscan1.out_done() and oval_wrscan.out_done()
         time2 += 1
 

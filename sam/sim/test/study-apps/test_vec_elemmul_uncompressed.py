@@ -72,16 +72,18 @@ def test_unit_vec_elemmul_u_u_u(samBench, run_length, vectype, sparsity, debug_s
     while not done and time_cnt < TIMEOUT:
         if len(in_ref) > 0:
             rdscan.set_in_ref(in_ref.pop(0))
-        rdscan.update()
         val1.set_load(rdscan.out_ref())
         val2.set_load(rdscan.out_ref())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
         wrscan.set_input(mul.out_val())
+
+        rdscan.update()
+        val1.update()
+        val2.update()
+        mul.update()
         wrscan.update()
+
         print("Timestep", time_cnt, "\t Done --", "\tRdScan:", rdscan.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())

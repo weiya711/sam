@@ -102,33 +102,34 @@ def test_vec_elemmul_skip_c_c_c(samBench, run_length, vectype, sparsity, debug_s
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
             crdscan1.set_in_ref(in_ref1.pop(0))
-        crdscan1.update()
         if len(in_ref2) > 0:
             crdscan2.set_in_ref(in_ref2.pop(0))
 
         crdscan2.set_crd_skip(inter.out_crd_skip2())
         crdscan1.set_crd_skip(inter.out_crd_skip1())
-        crdscan2.update()
 
         inter.set_in1(crdscan1.out_ref(), crdscan1.out_crd())
         inter.set_in2(crdscan2.out_ref(), crdscan2.out_crd())
         out_rdscan1.append(crdscan1.out_crd())
         out_rdscan2.append(crdscan2.out_crd())
-        inter.update()
 
         out_skip1.append(inter.out_crd_skip1())
         out_skip2.append(inter.out_crd_skip2())
 
         val1.set_load(inter.out_ref1())
         val2.set_load(inter.out_ref2())
-        val1.update()
-        val2.update()
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
         oval_wrscan.set_input(mul.out_val())
-        oval_wrscan.update()
         ocrd_wrscan.set_input(inter.out_crd())
+
+        crdscan1.update()
+        crdscan2.update()
+        inter.update()
+        val1.update()
+        val2.update()
+        mul.update()
+        oval_wrscan.update()
         ocrd_wrscan.update()
 
         print("Timestep", time, "\t Done --",

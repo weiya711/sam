@@ -28,9 +28,9 @@ cd $outdir
 for i in ${!DATASET_NAMES[@]}; do
     name=${DATASET_NAMES[$i]} 
     echo "Generating input format files for $name..."
-    python $basedir/scripts/datastructure_suitesparse.py -n $name 
-    
     sspath=${SUITESPARSE_PATH}/$name
+    SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $name 
+    
     SUITESPARSE_TENSOR_PATH=$sspath $basedir/compiler/taco/build/bin/taco-test sam.pack_other_ss    
     python $basedir/scripts/datastructure_frostt.py -n $name -f ss01 --other -ss
     #chmod -R 775 $outdir

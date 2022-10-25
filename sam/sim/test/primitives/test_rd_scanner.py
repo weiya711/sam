@@ -28,10 +28,14 @@ def test_rd_scan_u_direct_1d(dim, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             urs.set_in_ref(in_ref.pop(0))
+
         urs.update()
-        print("Timestep", time, "\t Crd:", urs.out_crd(), "\t Ref:", urs.out_ref())
+
         out_crd.append(urs.out_crd())
         out_ref.append(urs.out_ref())
+
+        print("Timestep", time, "\t Crd:", urs.out_crd(), "\t Ref:", urs.out_ref())
+
         done = urs.done
         time += 1
 
@@ -57,10 +61,14 @@ def test_rd_scan_u_direct_2d(dim, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             urs.set_in_ref(in_ref.pop(0))
+
         urs.update()
-        print("Timestep", time, "\t Crd:", urs.out_crd(), "\t Ref:", urs.out_ref())
+
         out_crd.append(urs.out_crd())
         out_ref.append(urs.out_ref())
+
+        print("Timestep", time, "\t Crd:", urs.out_crd(), "\t Ref:", urs.out_ref())
+
         done = urs.done
         time += 1
 
@@ -88,10 +96,14 @@ def test_rd_scan_u_direct_3d(dim, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             urs.set_in_ref(in_ref.pop(0))
+
         urs.update()
-        print("Timestep", time, "\t Crd:", urs.out_crd(), "\t Ref:", urs.out_ref())
+
         out_crd.append(urs.out_crd())
         out_ref.append(urs.out_ref())
+
+        print("Timestep", time, "\t Crd:", urs.out_crd(), "\t Ref:", urs.out_ref())
+
         done = urs.done
         time += 1
 
@@ -122,10 +134,14 @@ def test_rd_scan_c_direct_1d(debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             crdscan.set_in_ref(in_ref.pop(0))
+
         crdscan.update()
-        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+
         out_crd.append(crdscan.out_crd())
         out_ref.append(crdscan.out_ref())
+
+        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+
         done = crdscan.done
         time += 1
 
@@ -161,10 +177,14 @@ def test_rd_scan_c_direct_nd(arrs, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             crdscan.set_in_ref(in_ref.pop(0))
+
         crdscan.update()
-        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+
         out_crd.append(crdscan.out_crd())
         out_ref.append(crdscan.out_ref())
+
+        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+
         done = crdscan.done
         time += 1
 
@@ -205,10 +225,14 @@ def test_rd_scan_direct_c_0tkn_nd(arrs, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             crdscan.set_in_ref(in_ref.pop(0))
+
         crdscan.update()
-        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+
         out_crd.append(crdscan.out_crd())
         out_ref.append(crdscan.out_ref())
+
+        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+
         done = crdscan.done
         time += 1
 
@@ -269,11 +293,14 @@ def test_rd_scan_direct_c_skip_nd(arrs, debug_sim):
             crdscan.set_in_ref(in_ref.pop(0))
         if len(in_skip) > 0:
             crdscan.set_crd_skip(in_skip.pop(0))
+
         crdscan.update()
 
-        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
         out_crd.append(crdscan.out_crd())
         out_ref.append(crdscan.out_ref())
+
+        print("Timestep", time, "\t Crd:", crdscan.out_crd(), "\t Ref:", crdscan.out_ref())
+
         done = crdscan.done
         time += 1
 
