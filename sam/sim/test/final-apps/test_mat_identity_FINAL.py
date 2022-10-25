@@ -85,11 +85,6 @@ def test_mat_identity(samBench, ssname, check_gold, debug_sim, report_stats, fil
     fiberwrite_X1_1.autosize()
     fiberwrite_Xvals_0.autosize()
 
-    print()
-    print("Bi stream", B_lvl0)
-    print("Bj stream", B_lvl1)
-    print("Bvals stream", B_vals)
-
     out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
     out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
@@ -98,6 +93,14 @@ def test_mat_identity(samBench, ssname, check_gold, debug_sim, report_stats, fil
         time.sleep(0.01)
 
     extra_info = dict()
+    print()
+    print("Bi stream", B_lvl0)
+    print("Bj stream", B_lvl1)
+    print("Bvals stream", B_vals)
+    extra_info["stream_Bi"] = B_lvl0
+    extra_info["stream_Bj"] = B_lvl1
+    extra_info["stream_Bv"] = B_vals
+
     extra_info["dataset"] = ssname
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
