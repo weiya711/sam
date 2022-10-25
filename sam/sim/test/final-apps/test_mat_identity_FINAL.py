@@ -57,7 +57,7 @@ def test_mat_identity(samBench, ssname, check_gold, debug_sim, report_stats, fil
 
     B_lvl0 = []
     B_lvl1 = []
-    B_vals = []
+    B_v = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_5.set_in_ref(in_ref_B.pop(0))
@@ -97,9 +97,15 @@ def test_mat_identity(samBench, ssname, check_gold, debug_sim, report_stats, fil
     print("Bi stream", B_lvl0)
     print("Bj stream", B_lvl1)
     print("Bvals stream", B_vals)
-    extra_info["stream_Bi"] = B_lvl0
-    extra_info["stream_Bj"] = B_lvl1
-    extra_info["stream_Bv"] = B_vals
+    extra_info["stream_Bi_noncontrol"] = sum([1 for x in B_lvl0 if isinstance(x, int)])
+    extra_info["stream_Bi_stop"] = sum([1 for x in B_lvl0 if isinstance(x, str) and is_stkn(x)])
+    extra_info["stream_Bi_empty"] = sum([1 for x in B_lvl0 if isinstance(x, str) and x == ''])
+    extra_info["stream_Bj_noncontrol"] = sum([1 for x in B_lvl1 if isinstance(x, int)])
+    extra_info["stream_Bj_stop"] = sum([1 for x in B_lvl1 if isinstance(x, str) and is_stkn(x)])
+    extra_info["stream_Bj_empty"] = sum([1 for x in B_lvl1 if isinstance(x, str) and x == ''])
+    extra_info["stream_Bvals_noncontrol"] = sum([1 for x in B_v if isinstance(x, int)])
+    extra_info["stream_Bvals_stop"] = sum([1 for x in B_v if isinstance(x, str) and is_stkn(x)])
+    extra_info["stream_Bvals_empty"] = sum([1 for x in B_v if isinstance(x, str) and x == ''])
 
     extra_info["dataset"] = ssname
     extra_info["cycles"] = time_cnt
