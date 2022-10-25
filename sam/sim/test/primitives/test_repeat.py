@@ -94,9 +94,12 @@ arr_dict4 = {'in_ref': [0, 'D'],
 arr_dict5 = {'in_ref': [0, 1, 'S0', 'D'],
              'repeat': ['R', 'R', 'R', 'S'] * 2 + ['D'],
              'gold': [0, 0, 0, 'S0', 1, 1, 1, 'S1', 'D']}
+arr_dict6 = {'in_ref': [0, 'S0', 'S0', 'S0', 'S0', 'S0', 'S0', 'S0', 'S1', 'D'],
+             'repeat': ['R', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'D'],
+             'gold': [0, 'S1', 'S1', 'S1', 'S1', 'S1', 'S1', 'S1', 'S2', 'D']}
 
 
-@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
+@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5, arr_dict6])
 def test_repeat_direct(arrs, debug_sim):
     in_ref = copy.deepcopy(arrs['in_ref'])
     in_repeat = copy.deepcopy(arrs['repeat'])

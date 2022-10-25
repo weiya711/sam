@@ -23,9 +23,9 @@ class Repeat(Primitive):
 
     def update(self):
         self.update_done()
-        if (len(self.in_ref) > 0 or len(self.in_repeat) > 0):
-            self.block_start = False
 
+        if len(self.in_ref) > 0 or len(self.in_repeat) > 0:
+            self.block_start = False
         # if len(self.in_ref) > 0 and self.get_next_ref_union:
         #     next_in = self.in_ref.pop(0)
         #     assert isinstance(next_in, int)
@@ -49,11 +49,13 @@ class Repeat(Primitive):
 
         if len(self.in_ref) > 0 and self.emit_stkn:
             next_in = self.in_ref[0]
+            print(self.in_ref)
             if is_stkn(next_in):
                 stkn = increment_stkn(next_in)
                 self.in_ref.pop(0)
             else:
                 stkn = 'S0'
+            print("THIS 0")
             self.curr_out_ref = stkn
             self.emit_stkn = False
             return
@@ -62,6 +64,7 @@ class Repeat(Primitive):
             return
 
         if len(self.in_ref) > 0 and self.get_next_ref:
+            print("_____HERE________")
             self.curr_in_ref = self.in_ref.pop(0)
             if is_stkn(self.curr_in_ref):
                 self.get_next_rep = True
@@ -76,7 +79,7 @@ class Repeat(Primitive):
                 self.get_next_ref = False
         elif self.get_next_ref:
             self.curr_out_ref = ''
-
+        print("get_next_rep", self.get_next_rep, self.empty_rep_fiber, self.meta_union_mode, self.curr_in_ref)
         repeat = ''
         if len(self.in_repeat) > 0 and self.get_next_rep:
             repeat = self.in_repeat.pop(0)
@@ -94,6 +97,7 @@ class Repeat(Primitive):
                             self.in_ref.pop(0)
                         else:
                             stkn = 'S0'
+                        print("THIS 1")
                         self.curr_out_ref = stkn
                     else:
                         self.emit_stkn = True
@@ -104,18 +108,23 @@ class Repeat(Primitive):
             elif repeat == 'S':
                 self.get_next_ref = True
                 self.get_next_rep = False
-                if len(self.in_ref) > 0:
-                    next_in = self.in_ref[0]
-                    if is_stkn(next_in):
-                        stkn = increment_stkn(next_in)
-                        self.in_ref.pop(0)
+                if isinstance(self.curr_in_ref, int):
+                    if len(self.in_ref) > 0:
+                        next_in = self.in_ref[0]
+                        if is_stkn(next_in):
+                            stkn = increment_stkn(next_in)
+                            self.in_ref.pop(0)
+                        else:
+                            stkn = 'S0'
+                        print("THIS 2")
+                        self.curr_out_ref = stkn
                     else:
-                        stkn = 'S0'
-                    self.curr_out_ref = stkn
-                else:
-                    self.emit_stkn = True
-                    self.curr_out_ref = ''
-                self.empty_rep_fiber = True
+                        self.emit_stkn = True
+                        self.curr_out_ref = ''
+                    self.empty_rep_fiber = True
+                elif is_stkn(self.curr_in_ref):
+                    self.curr_out_ref = increment_stkn(self.curr_in_ref)
+                    self.empty_rep_fiber = True
             elif repeat == 'D':
                 if self.curr_out_ref != 'D':
                     raise Exception("Both repeat and ref signal need to end in 'D'")
@@ -135,7 +144,8 @@ class Repeat(Primitive):
         if self.debug:
             print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
                   "\t Get Rep:", self.get_next_rep, "\t Rep:", repeat,
-                  "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref, " ", self.in_repeat)
+                  "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref, " ",
+                  self.in_repeat)
 
     def set_in_ref(self, ref):
         if ref != '' and ref is not None:
@@ -280,7 +290,7 @@ class Repeat_back(Primitive):
             return False
         return True
 
-    def add_child(self, child= None, branch=""):
+    def add_child(self, child=None, branch=""):
         self.backpressure.append(child)
         self.branches.append(branch)
 
@@ -289,9 +299,9 @@ class Repeat_back(Primitive):
 
         self.data_ready = False
         if self.check_backpressure():
-        
+
             self.data_ready = True
-            if (len(self.in_ref) > 0 or len(self.in_repeat) > 0):
+            if len(self.in_ref) > 0 or len(self.in_repeat) > 0:
                 self.block_start = False
 
         # if len(self.in_ref) > 0 and self.get_next_ref_union:
@@ -347,8 +357,9 @@ class Repeat_back(Primitive):
 
             if self.debug:
                 print("DEBUG__Now: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
-                      "\t Get Rep:", self.get_next_rep, 
-                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready) 
+                      "\t Get Rep:", self.get_next_rep,
+                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream", self.in_ref,
+                      "in_repeat", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
 
             repeat = ''
             if len(self.in_repeat) > 0 and self.get_next_rep:
@@ -411,12 +422,14 @@ class Repeat_back(Primitive):
             if self.debug:
                 print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
                       "\t Get Rep:", self.get_next_rep, "\t Rep:", repeat,
-                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref, " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
+                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref,
+                      "\t in_repeat:", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
         else:
             if self.debug:
                 print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
-                      "\t Get Rep:", self.get_next_rep, 
-                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready) 
+                      "\t Get Rep:", self.get_next_rep,
+                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream", self.in_ref,
+                      " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
 
     def set_in_ref(self, ref):
         if ref != '' and ref is not None:
@@ -498,11 +511,14 @@ class RepeatSigGen_back(Primitive):
                 self.curr_repeat = ''
             self.compute_fifos()
             if self.debug:
-                print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat, "\t Instream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure, " ", self.branches)
+                print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat, "\t Instream", self.istream,
+                      " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure,
+                      " ", self.branches)
         else:
             if self.debug:
-                print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure, " ", self.branches)
-
+                print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream", self.istream,
+                      " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure,
+                      " ", self.branches)
 
     def check_backpressure(self):
         j = 0
@@ -515,12 +531,12 @@ class RepeatSigGen_back(Primitive):
     def fifo_debug(self):
         print("Repeat sig : ", self.istream)
 
-    def fifo_available(self, br = ""):
+    def fifo_available(self, br=""):
         if len(self.istream) > self.depth:
             return False
         return True
 
-    def add_child(self, child= None, branch = ""):
+    def add_child(self, child=None, branch=""):
         self.backpressure.append(child)
         self.branches.append(branch)
 

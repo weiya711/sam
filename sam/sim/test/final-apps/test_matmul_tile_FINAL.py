@@ -64,8 +64,6 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fil
     Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     Bs_seg = read_inputs(os.path.join(Bs_dirname, "B0_seg.txt"))
 
-
-
     # fiberlookup_Bk0 = UncompressedCrdRdScan()
     # fiberlookup_Bk0 = UncompressedCrdRdScan()
     
@@ -86,7 +84,8 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fil
     spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats)
     spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats)
     spaccumulator2_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim,
+                                    statistics=report_stats)
     fiberwrite_X1_1 = CompressWrScan(seg_size=Bs_seg[-1] + 1, size=Bs_seg[-1] * Bs_seg[-1], fill=fill,
                                      debug=debug_sim, statistics=report_stats)
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats)
