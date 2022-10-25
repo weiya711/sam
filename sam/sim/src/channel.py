@@ -16,7 +16,7 @@ class output_memory_block():
     def __init__(self, name = "B", level = None, size = 1000*2, debug=False, bandwidth = 2, length = 1, mode = "all_upacked"):
         self.name = name
         self.level = level
-        self.size = size
+        self.size = size//2
         self.bandwidth = bandwidth
         self.length = length
 
@@ -32,7 +32,7 @@ class output_memory_block():
         self.curr_tile = None
         self.curr_size = 0
         self.old_tile = None
-        self.debug = debug
+        self.debug = True #debug
         self.outputed = False
         self.done = False
         self.done_received = False
@@ -154,7 +154,7 @@ class output_memory_block():
         return False
 
     def compute_latency(self, tile):
-        return 16
+        return 50
 
     def input_token(self):
         if self.downstream_token == "D":
@@ -166,10 +166,11 @@ class output_memory_block():
 
 
 class memory_block():
-    def __init__(self, name = "B", level = None, size = 1000*2, debug=False, bandwidth = 2, length = 1, mode = "all_upacked"):
+    def __init__(self, name = "B", level = None, size = 1000*2, latency = 10, debug=False, bandwidth = 2, length = 1, mode = "all_upacked"):
         self.name = name
         self.level = level
-        self.size = size
+        self.size = size//2
+        self.latency = latency
         self.bandwidth = bandwidth
         self.length = length
         self.tile_ptrs = []
@@ -185,7 +186,7 @@ class memory_block():
         self.curr_tile = None
         self.curr_size = None
         self.old_tile = None
-        self.debug = debug
+        self.debug = True #debug
         self.outputed = False
         self.done = False
         self.signalled = False
@@ -304,6 +305,7 @@ class memory_block():
                 self.old_tile = self.curr_tile
             self.curr_tile = self.tile_ptrs_fifo.pop(0)
             self.curr_size = self.tile_ptrs_size.pop(0)
+            assert self.curr_size < self.size
             if self.curr_tile == "D":
                 self.timestamp = None
                 self.ready = True
@@ -340,7 +342,7 @@ class memory_block():
         if self.done_processed == True and self.done_received == False:
             self.done_processed=False
         if self.debug:
-            print(self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
+            print(self.name,  self.old_tile, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
 
     def remove_tile(self, tile_ptr = None, tile_id = -1):
         if tile_ptr != None:
@@ -369,8 +371,8 @@ class memory_block():
 
     def compute_latency(self, tile):
         if self.curr_tile == self.old_tile:
-            return 0
-        return 4
+            return 1
+        return self.latency + self.curr_size//self.bandwidth
 
     def valid_tile(self):
         if self.valid and not self.outputed:

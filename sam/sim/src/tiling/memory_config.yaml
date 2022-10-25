@@ -3,8 +3,10 @@ clk: 1000000000 # Hz
 main_memory: "None" # Infinite 
 Glb_memory: 2000000 # Bytes
 Glb_tiles: 16 # Number of tiles
-Glb_tile_bandwidth: 2 # bytes per cycles per tile
+Glb_tile_bandwidth: 20 # bytes per cycles per tile
 Glb_mem_mode: "Direct" # Adress for tile needed ot no? Direct - Adressing required, Alltoall - Adressing not required Also memtile mode pakced, unpacked etc
+Global_Glb_latency: 100
 Mem_memory: 2000 # Bytes
 Mem_tiles: 128 # No of memtiles
-Mem_tile_bandwith: 2 # Bandwidth to a memtile
+Mem_tile_bandwidth: 2 # Bandwidth to a memtile
+Glb_Mem_latency: 10
