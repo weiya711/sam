@@ -33,7 +33,14 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, out_format="ss01"):
                 B_scipy.data[i] = int(B_scipy.data[i])
             itr += 1
         B_scipy = B_scipy.tocsr()
-        C_scipy = scipy.io.mmread(C_filename).tocsc()
+        C_scipy = scipy.io.mmread(C_filename)
+        for i, j, v in zip(C_scipy.row, C_scipy.col, C_scipy.data):
+            if C_scipy.data[i] < 1:
+                C_scipy.data[i] = 1
+            else:
+                C_scipy.data[i] = int(C_scipy.data[i])
+            itr += 1
+        C_scipy = C_scipy.tocsc()
         gold_nd = (B_scipy @ C_scipy)
         gold_out = gold_nd.tocoo()
         scipy.io.mmwrite("out.mtx", gold_out)
