@@ -163,6 +163,8 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, fill=0):
         done = fiberwrite_X0_2.out_done() and fiberwrite_Xvals_0.out_done() and fiberwrite_X1_1.out_done()
         time_cnt += 1
 
+
+    print("TIME:", time_cnt)
     fiberwrite_X0_2.autosize()
     fiberwrite_Xvals_0.autosize()
     fiberwrite_X1_1.autosize()
