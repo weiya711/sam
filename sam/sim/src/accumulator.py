@@ -60,7 +60,7 @@ class Reduce(Primitive):
             elif is_stkn(self.curr_out):
                 self.stop_token_out += 1
             else:
-                if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
+                if (isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
                     self.zero_out += 1
                 else:
                     self.nonzero_out += 1

@@ -251,8 +251,6 @@ class ReadScannerNode(HWNode):
         return new_conns
 
     def configure(self, attributes):
-        print("SCANNER CONFIG")
-        print(attributes)
         inner_offset = 0
         max_outer_dim = 0
         strides = [0]

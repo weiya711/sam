@@ -261,13 +261,17 @@ class SAMDotGraph():
             rsg_to_repeat = pydot.Edge(src=rsg, dst=repeat)
             repeat_to_crd_rd_scan = pydot.Edge(src=repeat, dst=crd_rd_scanner)
             crd_rd_scan_to_val_rd_scan = pydot.Edge(src=crd_rd_scanner, dst=vals_rd_scanner)
-            output_to_union_edge = pydot.Edge(src=in_output_node, dst=union, **in_edge_attrs[in_output_node], comment=f"in-B")
+            # output_to_union_edge = pydot.Edge(src=in_output_node, dst=union,
+            #                                   **in_edge_attrs[in_output_node], comment=f"in-B")
+            output_to_union_edge = pydot.Edge(src=in_output_node, dst=union, **in_edge_attrs[in_output_node], comment=f"in-C")
             val_to_union = pydot.Edge(src=in_val_node, dst=union, **in_edge_attrs[in_val_node],
-                                      type="ref", comment=f"in-B", val="true")
+                                      #   type="ref", comment=f"in-B", val="true")
+                                      type="ref", comment=f"in-C", val="true")
             crd_rd_scan_to_union = pydot.Edge(src=crd_rd_scanner, dst=union, type="crd", comment="in-x")
             val_rd_scan_to_union = pydot.Edge(src=vals_rd_scanner, dst=union, type="ref", comment="in-x", val="true")
             union_crd_to_crd_wr_scan = pydot.Edge(src=union, dst=crd_wr_scanner, type="crd")
-            union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-B')
+            # union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-B')
+            union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-C')
             union_val1_to_alu = pydot.Edge(src=union, dst=add, comment='out-x')
             add_to_val_wr_scan = pydot.Edge(src=add, dst=vals_wr_scanner)
             crd_wr_scan_to_buffet = pydot.Edge(src=crd_wr_scanner, dst=crd_buffet)
@@ -276,10 +280,14 @@ class SAMDotGraph():
             vals_rd_scan_to_buffet = pydot.Edge(src=vals_rd_scanner, dst=vals_buffet)
 
             # Match the crd/vals outputs
+            # crd_edge = [edge_ for edge_ in outgoing_edges if
+            #             self.find_node_by_name(edge_.get_destination()).get_attributes()['mode'].strip('"') != "vals"][0]
+            # val_edge = [edge_ for edge_ in outgoing_edges if
+            #             self.find_node_by_name(edge_.get_destination()).get_attributes()['mode'].strip('"') == "vals"][0]
             crd_edge = [edge_ for edge_ in outgoing_edges if
-                        self.find_node_by_name(edge_.get_destination()).get_attributes()['mode'].strip('"') != "vals"][0]
+                        edge_.get_attributes()['type'].strip('"') == "crd"][0]
             val_edge = [edge_ for edge_ in outgoing_edges if
-                        self.find_node_by_name(edge_.get_destination()).get_attributes()['mode'].strip('"') == "vals"][0]
+                        edge_.get_attributes()['type'].strip('"') == "val"][0]
             dst_crd = crd_edge.get_destination()
             dst_vals = val_edge.get_destination()
 
@@ -567,14 +575,62 @@ class SAMDotGraph():
 
         for node in nodes_to_proc:
             if 'fiberlookup' in node.get_comment():
+                print("PRINTING NODES")
+                print(node.get_attributes())
                 # Rewrite this node to a read
                 root = bool(node.get_root())
                 root = False
                 if 'true' in node.get_root():
                     root = True
                 attrs = node.get_attributes()
+
                 og_label = attrs['label']
                 del attrs['label']
+
+                dense_ = attrs['format'].strip('"') == 'dense'
+                print(f"IS DENSE: {dense_}")
+
+                # if dense_:
+
+                #     rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
+                #                         **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
+                #                         fa_color=self.fa_color)
+
+                #     self.fa_color += 1
+
+                #     crd_out_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
+                #                     "crd" in edge.get_label()][0]
+                #     ref_out_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
+                #                     "ref" in edge.get_label()][0]
+                #     ref_in_edge = None
+                #     if not root:
+                #         # Then we have ref in edge...
+                #         ref_in_edge = [edge for edge in self.graph.get_edges()
+                #                           if edge.get_destination() == node.get_name() and
+                #                       "ref" in edge.get_label()][0]
+                #     # Now add the nodes and move the edges...
+                #     self.graph.add_node(rd_scan)
+
+                #     # Now inject the read scanner to other nodes...
+                #     rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(),
+                #                                 **crd_out_edge.get_attributes())
+                #     rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(),
+                #                                 **ref_out_edge.get_attributes())
+                #     self.graph.add_edge(rd_to_down_crd)
+                #     self.graph.add_edge(rd_to_down_ref)
+                #     if ref_in_edge is not None:
+                #         up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, **ref_in_edge.get_attributes())
+                #         self.graph.add_edge(up_to_ref)
+
+                #     # Delte old stuff...
+                #     ret = self.graph.del_node(node)
+                #     ret = self.graph.del_edge(crd_out_edge.get_source(), crd_out_edge.get_destination())
+                #     self.graph.del_edge(ref_out_edge.get_source(), ref_out_edge.get_destination())
+                #     if ref_in_edge is not None:
+                #         self.graph.del_edge(ref_in_edge.get_source(), ref_in_edge.get_destination())
+
+                # else:
+
                 rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
                                      **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
                                      fa_color=self.fa_color)
@@ -782,11 +838,12 @@ def parse_graph(graph):
         else:
             type_cnt[prim_type] += 1
 
-        prim_hwnode = attr['hwnode']
-        if prim_type not in prim_hwnode:
-            hwnode_cnt[prim_type] = 1
-        else:
-            hwnode_cnt[prim_type] += 1
+        if 'hwnode' in attr:
+            prim_hwnode = attr['hwnode']
+            if prim_type not in prim_hwnode:
+                hwnode_cnt[prim_type] = 1
+            else:
+                hwnode_cnt[prim_type] += 1
 
     print("type", type_cnt)
     print("hwnode", hwnode_cnt)

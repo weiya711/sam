@@ -72,7 +72,8 @@ class ComputeNode(HWNode):
 
             if 'tensor' not in edge.get_attributes():
                 # Taking some liberties here - but technically this is the combo val
-                isect_conn = other.get_connection_from_tensor('B')
+                # isect_conn = other.get_connection_from_tensor('B')
+                isect_conn = other.get_connection_from_tensor('C')
             else:
                 isect_conn = other.get_connection_from_tensor(edge.get_tensor())
 
