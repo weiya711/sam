@@ -14,6 +14,8 @@ while read line; do
 	pytest test_mat_identity_FINAL.py --ssname $line --check-gold -s --benchmark-json=$path/$line.json
 
 	cd $basedir
+    python $basedir/scripts/converter.py --json_name $path/$line.json	
+    
 done <$1
 
 python $basedir/scripts/bench_csv_aggregator.py $path $basedir/suitesparse_stream_overhead.csv
