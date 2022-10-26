@@ -179,7 +179,7 @@ class CompressedCrdRdScan(CrdRdScan):
         self.start_addr = 0
         self.stop_addr = 0
 
-        self.curr_addr = 0
+        self.curr_addr = None
 
         self.end_fiber = False
         self.curr_ref = ''
@@ -213,12 +213,13 @@ class CompressedCrdRdScan(CrdRdScan):
                 stkn = increment_stkn(next_in)
             else:
                 stkn = 'S0'
+            self.emit_fiber_stkn = False
         else:
             self.emit_fiber_stkn = True
             stkn = ''
         self.curr_crd = stkn
         self.curr_ref = stkn
-        self.curr_addr = 0
+        self.curr_addr = None
         self.stop_addr = 0
         self.start_addr = 0
 
@@ -290,7 +291,7 @@ class CompressedCrdRdScan(CrdRdScan):
             self.curr_crd = stkn
             self.curr_ref = stkn
 
-            self.curr_addr = 0
+            self.curr_addr = None
             self.stop_addr = 0
             self.start_addr = 0
             self.emit_fiber_stkn = False
@@ -309,7 +310,7 @@ class CompressedCrdRdScan(CrdRdScan):
 
             # Input reference is a done token, so forward that token (and set done if done token)
             elif curr_in_ref == 'D':
-                self.curr_addr = 0
+                self.curr_addr = None
                 self.stop_addr = 0
                 self.start_addr = 0
                 self.curr_crd = curr_in_ref
@@ -319,7 +320,7 @@ class CompressedCrdRdScan(CrdRdScan):
 
             # Input reference is a stop token, so increment and forward that token
             elif is_stkn(curr_in_ref):
-                self.curr_addr = 0
+                self.curr_addr = None
                 self.stop_addr = 0
                 self.start_addr = 0
                 self.curr_crd = increment_stkn(curr_in_ref)
@@ -332,7 +333,7 @@ class CompressedCrdRdScan(CrdRdScan):
                 self.curr_ref = 'N'
                 self.end_fiber = True
                 self.emit_fiber_stkn = True
-                self.curr_addr = 0
+                self.curr_addr = None
                 self.stop_addr = 0
                 self.start_addr = 0
 
@@ -467,147 +468,8 @@ class CompressedCrdRdScan(CrdRdScan):
                   "\n end fiber:", self.end_fiber, "\t curr input:", curr_in_ref,
                   "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
                   self.prev_crd,
+                  "\n emit_fiber_stkn:", self.emit_fiber_stkn,
                   "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt)
-
-    def update_noskip(self):
-        curr_in_ref = None
-        # After Done token has been seen and outputted, do nothing
-        if self.curr_crd == 'D' or self.curr_ref == 'D' or self.done:
-            self.curr_addr = 0
-            self.stop_addr = 0
-            self.start_addr = 0
-            self.curr_crd = ''
-            self.curr_ref = ''
-
-        # Scanner needs to emit stop token and the next element has finally arrived.
-        # Previously set emit_fiber_stkn to True but wait on next in_ref
-        elif len(self.in_ref) > 0 and self.emit_fiber_stkn:
-            next_in = self.in_ref[0]
-            if is_stkn(next_in):
-                self.in_ref.pop(0)
-                stkn = increment_stkn(next_in)
-            else:
-                stkn = 'S0'
-            self.curr_crd = stkn
-            self.curr_ref = stkn
-
-            self.curr_addr = 0
-            self.stop_addr = 0
-            self.start_addr = 0
-            self.emit_fiber_stkn = False
-
-        # There exists another input reference at the segment and
-        # either at the start of computation or end of fiber
-        elif len(self.in_ref) > 0 and (self.end_fiber or (self.curr_crd is None or self.curr_ref is None)):
-            if self.curr_crd is None or self.curr_ref is None:
-                assert (self.curr_crd == self.curr_ref)
-            self.end_fiber = False
-
-            curr_in_ref = self.in_ref.pop(0)
-
-            # Input reference is out of bounds
-            if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_slen:
-                raise Exception('Not enough elements in seg array')
-
-            # Input reference is a stop or done token, so forward that token (and set done if done token)
-            elif is_stkn(curr_in_ref) or curr_in_ref == 'D':
-                self.curr_addr = 0
-                self.stop_addr = 0
-                self.start_addr = 0
-                self.curr_crd = curr_in_ref
-                self.curr_ref = curr_in_ref
-                self.end_fiber = True
-                if curr_in_ref == 'D':
-                    self.done = True
-
-            # See 'N' 0-token which immediately emits a stop token and ends the fiber
-            elif is_0tkn(curr_in_ref):
-                self.end_fiber = True
-
-                if len(self.in_ref) > 0:
-                    next_in = self.in_ref[0]
-                    if is_stkn(next_in):
-                        self.in_ref.pop(0)
-                        stkn = increment_stkn(next_in)
-                    else:
-                        stkn = 'S0'
-                else:
-                    self.emit_fiber_stkn = True
-                    stkn = ''
-                self.curr_crd = stkn
-                self.curr_ref = stkn
-                self.curr_addr = 0
-                self.stop_addr = 0
-                self.start_addr = 0
-
-            # Default case where input reference is an integer value
-            # which means to get the segment
-            else:
-                self.start_addr = self.seg_arr[curr_in_ref]
-                self.stop_addr = self.seg_arr[curr_in_ref + 1]
-                self.curr_addr = self.start_addr
-
-                # This case is if the segment has no coordinates (i.e. 5, 5)
-                if self.curr_addr >= self.stop_addr:
-                    # End of fiber, get next input reference
-                    self.end_fiber = True
-
-                    if len(self.in_ref) > 0:
-                        next_in = self.in_ref[0]
-                        if is_stkn(next_in):
-                            self.in_ref.pop(0)
-                            stkn = increment_stkn(next_in)
-                        else:
-                            stkn = 'S0'
-                    else:
-                        self.emit_fiber_stkn = True
-                        stkn = ''
-                    self.curr_crd = stkn
-                    self.curr_ref = stkn
-
-                # Default behave normally and emit the coordinates in the segment
-                else:
-                    self.curr_crd = self.crd_arr[self.curr_addr]
-                    self.curr_ref = self.curr_addr
-
-        # Finished emitting coordinates and have reached the end of the fiber for this level
-        elif (self.curr_addr == self.stop_addr - 1 or self.curr_addr == self.meta_clen - 1) and \
-                self.curr_crd is not None and self.curr_ref is not None:
-            # End of fiber, get next input reference
-            self.end_fiber = True
-
-            if len(self.in_ref) > 0:
-                next_in = self.in_ref[0]
-                if is_stkn(next_in):
-                    self.in_ref.pop(0)
-                    stkn = increment_stkn(next_in)
-                else:
-                    stkn = 'S0'
-            else:
-                self.emit_fiber_stkn = True
-                stkn = ''
-            self.curr_crd = stkn
-            self.curr_ref = stkn
-            self.curr_addr = 0
-            self.stop_addr = 0
-            self.start_addr = 0
-
-        # Base case: increment address and reference by 1 and get next coordinate
-        elif len(self.in_ref) > 0 and self.curr_crd is not None and self.curr_ref is not None:
-            self.curr_addr += 1
-            self.curr_ref = self.curr_addr
-            self.curr_crd = self.crd_arr[self.curr_addr]
-
-        # Default stall (when done)
-        elif self.curr_crd is not None and self.curr_ref is not None:
-            self.curr_ref = ''
-            self.curr_crd = ''
-
-        if self.debug:
-            print("DEBUG: C RD SCAN: \t "
-                  "Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
-                  "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
-                  "\t end fiber:", self.end_fiber, "\t curr input:", curr_in_ref)
 
     def set_crd_skip(self, in_crd):
         assert in_crd is None or is_valid_crd(in_crd)
@@ -700,7 +562,7 @@ class CompressedCrdRdScan_back(CrdRdScan):
             stkn = ''
         self.curr_crd = stkn
         self.curr_ref = stkn
-        self.curr_addr = 0
+        self.curr_addr = None
         self.stop_addr = 0
         self.start_addr = 0
 
