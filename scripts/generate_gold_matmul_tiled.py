@@ -5,7 +5,7 @@ import scipy.io
 import numpy as np
 
 
-def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, out_format="ss01"):
+def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01"):
     # CSR
     formatted_dir = "/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/mtx"
     B_dir = "tensor_B_tile_"
@@ -27,23 +27,32 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, out_format="ss01"):
         for i, j, v in zip(B_scipy.row, B_scipy.col, B_scipy.data):
             # print(B_scipy.data)
             # print(i, " ", j, " ", v)
-            if B_scipy.data[i] < 1:
-                B_scipy.data[i] = 1
+            if B_scipy.data[itr] < 1:
+                B_scipy.data[itr] = 1
             else:
-                B_scipy.data[i] = int(B_scipy.data[i])
+                B_scipy.data[itr] = int(B_scipy.data[itr])
             itr += 1
         B_scipy = B_scipy.tocsr()
         C_scipy = scipy.io.mmread(C_filename)
+        itr = 0
         for i, j, v in zip(C_scipy.row, C_scipy.col, C_scipy.data):
-            if C_scipy.data[i] < 1:
-                C_scipy.data[i] = 1
+            if C_scipy.data[itr] < 1:
+                C_scipy.data[itr] = 1
             else:
-                C_scipy.data[i] = int(C_scipy.data[i])
+                C_scipy.data[itr] = int(C_scipy.data[itr])
             itr += 1
         C_scipy = C_scipy.tocsc()
         gold_nd = (B_scipy @ C_scipy)
         gold_out = gold_nd.tocoo()
-        scipy.io.mmwrite("out" + tile_crd_b[0] + "_" + tile_crd_c[1] + "_" + tile_crd_b[2] + "_" + tile_crd_c[3] + ".mtx", gold_out)
+        assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[2]
+        scipy.io.mmwrite(dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_b[2]) + "_" + str(tile_crd_c[2]) + "_" + str(tile_crd_c[3]) + ".mtx", gold_out)
 
-if __name__ == "__main__": 
-    check_gold_matmul_tiled([0, 0, 0, 0], [0, 0, 0, 0])
+if __name__ == "__main__":
+    outdir = "/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/output/"
+    for i00 in range(5):
+        for k00 in range(5):
+            for j00 in range(5):
+                for i0 in range(2):
+                    for k0 in range(2):
+                        for j0 in range(2):
+                            generate_gold_matmul_tiled([i00, k00, i0, k0], [k00, j00, k0, j0], outdir)
