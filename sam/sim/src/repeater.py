@@ -49,13 +49,11 @@ class Repeat(Primitive):
 
         if len(self.in_ref) > 0 and self.emit_stkn:
             next_in = self.in_ref[0]
-            print(self.in_ref)
             if is_stkn(next_in):
                 stkn = increment_stkn(next_in)
                 self.in_ref.pop(0)
             else:
                 stkn = 'S0'
-            print("THIS 0")
             self.curr_out_ref = stkn
             self.emit_stkn = False
             return
@@ -64,7 +62,6 @@ class Repeat(Primitive):
             return
 
         if len(self.in_ref) > 0 and self.get_next_ref:
-            print("_____HERE________")
             self.curr_in_ref = self.in_ref.pop(0)
             if is_stkn(self.curr_in_ref):
                 self.get_next_rep = True
@@ -79,17 +76,16 @@ class Repeat(Primitive):
                 self.get_next_ref = False
         elif self.get_next_ref:
             self.curr_out_ref = ''
-        print("get_next_rep", self.get_next_rep, self.empty_rep_fiber, self.meta_union_mode, self.curr_in_ref)
+
         repeat = ''
         if len(self.in_repeat) > 0 and self.get_next_rep:
             repeat = self.in_repeat.pop(0)
+            # FIXME: See if self.meta_union_mode is ever needed?
             if repeat == 'S' and self.empty_rep_fiber and self.meta_union_mode:
                 if isinstance(self.curr_in_ref, int):
                     self.curr_out_ref = self.curr_in_ref
                     self.emit_stkn = True
-                else:
-                    assert is_0tkn(self.curr_in_ref), "Next ref should only be int or 0tkn but is " + str(
-                        self.curr_in_ref)
+                elif is_0tkn(self.curr_in_ref):
                     if len(self.in_ref) > 0:
                         next_in = self.in_ref[0]
                         if is_stkn(next_in):
@@ -97,18 +93,20 @@ class Repeat(Primitive):
                             self.in_ref.pop(0)
                         else:
                             stkn = 'S0'
-                        print("THIS 1")
                         self.curr_out_ref = stkn
                     else:
                         self.emit_stkn = True
                         self.curr_out_ref = ''
+                else:
+                    # stop token or done token?
+                    pass
                 self.empty_rep_fiber = True
                 self.get_next_ref = True
                 self.get_next_rep = False
-            elif repeat == 'S':
+            if repeat == 'S':
                 self.get_next_ref = True
                 self.get_next_rep = False
-                if isinstance(self.curr_in_ref, int):
+                if isinstance(self.curr_in_ref, int) or is_0tkn(self.curr_in_ref):
                     if len(self.in_ref) > 0:
                         next_in = self.in_ref[0]
                         if is_stkn(next_in):
@@ -116,7 +114,6 @@ class Repeat(Primitive):
                             self.in_ref.pop(0)
                         else:
                             stkn = 'S0'
-                        print("THIS 2")
                         self.curr_out_ref = stkn
                     else:
                         self.emit_stkn = True
@@ -363,7 +360,6 @@ class Repeat_back(Primitive):
 
             repeat = ''
             if len(self.in_repeat) > 0 and self.get_next_rep:
-
                 repeat = self.in_repeat.pop(0)
                 if repeat == 'S' and self.empty_rep_fiber and self.meta_union_mode:
                     if isinstance(self.curr_in_ref, int):

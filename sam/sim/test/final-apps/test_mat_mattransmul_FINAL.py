@@ -96,7 +96,7 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
     arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim, statistics=report_stats)
-    repeat_bj_12 = Repeat(debug=debug_sim, union=True, statistics=report_stats)
+    repeat_bj_12 = Repeat(debug=debug_sim, statistics=report_stats)
     arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim, statistics=report_stats)
     arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim, statistics=report_stats)
     arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim, statistics=report_stats)
