@@ -19,7 +19,7 @@ for b in ${!BENCHMARKS[@]}; do
 	while read line; do
 
 		echo "Tiling mtx file"
-                python $basedir/sam/sim/src/tiling/tile.py --input_tensor $line --cotile $bench --multilevel --hw_config $basedir/sam/sim/src/tiling/memory_config_simple.yaml 
+                python $basedir/sam/sim/src/tiling/tile.py --input_tensor $line --cotile $bench --multilevel --hw_config $basedir/sam/sim/src/tiling/memory_config_real.yaml 
 
                 echo "Generating input format files for $line..."
                 python $basedir/scripts/datastructure_suitesparse.py -n $line -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
