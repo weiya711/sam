@@ -40,27 +40,30 @@ def test_unit_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             rdscan_d1.set_in_ref(in_ref.pop(0))
-        rdscan_d1.update()
 
         rdscan_d2.set_in_ref(rdscan_d1.out_ref())
-        rdscan_d2.update()
 
         val1.set_load(rdscan_d2.out_ref())
         val2.set_load(rdscan_d2.out_ref())
-        val1.update()
-        val2.update()
 
         mul.set_in1(val1.out_load())
         mul.set_in2(val2.out_load())
-        mul.update()
 
         wrscan.set_input(mul.out_val())
+
+        rdscan_d1.update()
+        rdscan_d2.update()
+        val1.update()
+        val2.update()
+        mul.update()
         wrscan.update()
+
         print("Timestep", time, "\t Done --",
               "\tRdScan D1:", rdscan_d1.out_done(),
               "\tRdScan D2:", rdscan_d2.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())
+
         done = wrscan.out_done()
         time += 1
 
@@ -161,52 +164,54 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
     while not done and time < TIMEOUT:
         if len(in_ref_B) > 0:
             rdscan_B1.set_in_ref(in_ref_B.pop(0))
-        rdscan_B1.update()
 
         if len(in_ref_C) > 0:
             rdscan_C1.set_in_ref(in_ref_C.pop(0))
-        rdscan_C1.update()
 
         inter1.set_in1(rdscan_B1.out_ref(), rdscan_B1.out_crd())
         inter1.set_in2(rdscan_C1.out_ref(), rdscan_C1.out_crd())
-        inter1.update()
 
         rdscan_B2.set_in_ref(inter1.out_ref1())
-        rdscan_B2.update()
 
         rdscan_C2.set_in_ref(inter1.out_ref2())
-        rdscan_C2.update()
 
         inter2.set_in1(rdscan_B2.out_ref(), rdscan_B2.out_crd())
         inter2.set_in2(rdscan_C2.out_ref(), rdscan_C2.out_crd())
-        inter2.update()
 
         val_B.set_load(inter2.out_ref1())
-        val_B.update()
         val_C.set_load(inter2.out_ref2())
-        val_C.update()
 
         mul.set_in1(val_B.out_load())
         mul.set_in2(val_C.out_load())
-        mul.update()
 
         drop.set_outer_crd(inter1.out_crd())
         drop.set_inner_crd(inter2.out_crd())
-        drop.update()
 
         vals_X.set_input(mul.out_val())
+
+        # wrscan_X1.set_input(inter1.out_crd())
+        wrscan_X1.set_input(drop.out_crd_outer())
+
+        wrscan_X2.set_input(inter2.out_crd())
+
+        rdscan_B1.update()
+        rdscan_C1.update()
+        inter1.update()
+        rdscan_B2.update()
+        rdscan_C2.update()
+        inter2.update()
+        val_B.update()
+        val_C.update()
+        mul.update()
+        drop.update()
         vals_X.update()
+        wrscan_X1.update()
+        wrscan_X2.update()
 
         out_drop.append(drop.out_crd_outer())
         out_inter1.append(inter1.out_crd())
         in_drop.append(inter2.out_crd())
 
-        # wrscan_X1.set_input(inter1.out_crd())
-        wrscan_X1.set_input(drop.out_crd_outer())
-        wrscan_X1.update()
-
-        wrscan_X2.set_input(inter2.out_crd())
-        wrscan_X2.update()
         print("Timestep", time, "\t Done --",
               "\tRdScan B1:", rdscan_B1.out_done(), "\tRdScan B2:", rdscan_B2.out_done(),
               "\tInter1:", inter1.out_done(),
@@ -218,6 +223,7 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
               "\tWrScan:", vals_X.out_done(),
               "\tWrScan X1:", wrscan_X1.out_done(), "\tWrScan X2:", wrscan_X2.out_done(),
               )
+
         done = wrscan_X2.out_done()
         time += 1
 
@@ -298,47 +304,49 @@ def test_unit_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
     while not done and time < TIMEOUT:
         if len(in_ref_B) > 0:
             rdscan_B1.set_in_ref(in_ref_B.pop(0))
-        rdscan_B1.update()
 
         if len(in_ref_C) > 0:
             rdscan_C1.set_in_ref(in_ref_C.pop(0))
-        rdscan_C1.update()
 
         inter1.set_in1(rdscan_B1.out_ref(), rdscan_B1.out_crd())
         inter1.set_in2(rdscan_C1.out_ref(), rdscan_C1.out_crd())
-        inter1.update()
 
         rdscan_B2.set_in_ref(inter1.out_ref1())
-        rdscan_B2.update()
 
         rdscan_C2.set_in_ref(inter1.out_ref2())
-        rdscan_C2.update()
 
         inter2.set_in1(rdscan_B2.out_ref(), rdscan_B2.out_crd())
         inter2.set_in2(rdscan_C2.out_ref(), rdscan_C2.out_crd())
-        inter2.update()
 
         val_B.set_load(inter2.out_ref1())
-        val_B.update()
         val_C.set_load(inter2.out_ref2())
-        val_C.update()
 
         mul.set_in1(val_B.out_load())
         mul.set_in2(val_C.out_load())
-        mul.update()
 
         drop.set_outer_crd(inter1.out_crd())
         drop.set_inner_crd(inter2.out_crd())
-        drop.update()
 
         vals_X.set_input(mul.out_val())
-        vals_X.update()
 
         wrscan_X1.set_input(drop.out_crd_outer())
-        wrscan_X1.update()
 
         wrscan_X2.set_input(inter2.out_crd())
+
+        rdscan_B1.update()
+        rdscan_C1.update()
+        inter1.update()
+        rdscan_B2.update()
+        rdscan_C2.update()
+        inter2.update()
+        val_B.update()
+        val_C.update()
+        mul.update()
+        drop.update()
+        vals_X.update()
+        wrscan_X1.update()
         wrscan_X2.update()
+
         print("Timestep", time, "\t Done --",
               "\tRdScan B1:", rdscan_B1.out_done(), "\tRdScan B2:", rdscan_B2.out_done(),
               "\tInter1:", inter1.out_done(),

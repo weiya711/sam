@@ -25,7 +25,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss10")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -64,31 +64,32 @@ def test_matmul_FINAL(samBench, ssname, check_gold, debug_sim, fill=0):
     Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     Bs_seg = read_inputs(os.path.join(Bs_dirname, "B0_seg.txt"))
 
-    fiberlookup_Bk_17 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    fiberlookup_Ck_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
-    intersectk_16 = Intersect2(debug=debug_sim)
-    fiberlookup_Bi_15 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    repsiggen_i_13 = RepeatSigGen(debug=debug_sim)
-    repeat_Ci_12 = Repeat(debug=debug_sim)
-    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
-    crdhold_4 = CrdHold(debug=debug_sim)
-    repsiggen_j_9 = RepeatSigGen(debug=debug_sim)
-    repeat_Bj_8 = Repeat(debug=debug_sim)
-    arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim)
-    mul_5 = Multiply2(debug=debug_sim)
-    spaccumulator2_3 = SparseAccumulator2(debug=debug_sim)
-    spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim)
-    spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim)
-    spaccumulator2_3_drop_val = StknDrop(debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=Bs_seg[-1] + 1, size=Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim)
+    fiberlookup_Bk_17 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Ck_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
+    intersectk_16 = Intersect2(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bi_15 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
+    repsiggen_i_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_Ci_12 = Repeat(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
+    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
+    crdhold_4 = CrdHold(debug=debug_sim, statistics=report_stats)
+    repsiggen_j_9 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_Bj_8 = Repeat(debug=debug_sim, statistics=report_stats)
+    arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
+    mul_5 = Multiply2(debug=debug_sim, statistics=report_stats)
+    spaccumulator2_3 = SparseAccumulator2(debug=debug_sim, statistics=report_stats)
+    spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats)
+    spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats)
+    spaccumulator2_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=Bs_seg[-1] + 1, size=Bs_seg[-1] * Bs_seg[-1], fill=fill,
+                                     debug=debug_sim, statistics=report_stats)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
     time_cnt = 0
-
+    print("hell1 ", report_stats)
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bk_17.set_in_ref(in_ref_B.pop(0))

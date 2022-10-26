@@ -7,9 +7,9 @@ class Flatten(Primitive):
 
         self.in_outer_crd = []
         self.in_inner_crd = []
-
-        self.in_inner_crd_size = 0
-        self.in_outer_crd_size = 0
+        if self.get_stats:
+            self.in_inner_crd_size = 0
+            self.in_outer_crd_size = 0
 
         self.curr_crd = None
         self.curr_ocrd = None
@@ -74,8 +74,9 @@ class Flatten(Primitive):
         return self.curr_crd
 
     def compute_fifos(self):
-        self.in_inner_crd_size = max(self.in_inner_crd_size, len(self.in_inner_crd))
-        self.in_outer_crd_size = max(self.in_outer_crd_size, len(self.in_outer_crd))
+        if self.get_stats:
+            self.in_inner_crd_size = max(self.in_inner_crd_size, len(self.in_inner_crd))
+            self.in_outer_crd_size = max(self.in_outer_crd_size, len(self.in_outer_crd))
 
     def print_fifos(self):
         print("FIFOs size in the inner crd for flatten blocks: ", self.in_inner_crd_size)

@@ -67,13 +67,14 @@ def larger_stkn(a, b):
 
 
 class Primitive(ABC):
-    def __init__(self, debug=False, **kwargs):
+    def __init__(self, debug=False, statistics=False, **kwargs):
         self.done = False
         self.debug = debug
         self.done_cycles = 0
         self.start_cycle = ''
         self.total_cycles = 0
         self.block_start = True
+        self.get_stats = statistics
 
     def out_done(self):
         return self.done

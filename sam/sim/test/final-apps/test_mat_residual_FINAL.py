@@ -26,7 +26,7 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
     C_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
     C_shape = read_inputs(C_shape_filename)
@@ -76,22 +76,22 @@ def test_mat_residual(samBench, ssname, check_gold, debug_sim, fill=0):
     d_vals = read_inputs(d_vals_filename, float)
 
     C_shape0_min = min(len(b_vals) + len(C_crd0), b_shape[0])
-    fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim)
-    fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
-    unioni_16 = Union2(debug=debug_sim)
-    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape0_min, fill=fill, debug=debug_sim)
-    repsiggen_i_14 = RepeatSigGen(debug=debug_sim)
-    repeat_di_13 = Repeat(debug=debug_sim)
-    fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim)
-    intersectj_10 = Intersect2(debug=debug_sim)
-    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim)
-    arrayvals_d_7 = Array(init_arr=d_vals, debug=debug_sim)
-    mul_5 = Multiply2(debug=debug_sim)
-    arrayvals_b_4 = Array(init_arr=b_vals, debug=debug_sim)
-    add_3 = Add2(debug=debug_sim, neg2=True)
-    reduce_2 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape0_min, fill=fill, debug=debug_sim)
+    fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
+    unioni_16 = Union2(debug=debug_sim, statistics=report_stats)
+    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape0_min, fill=fill, debug=debug_sim, statistics=report_stats)
+    repsiggen_i_14 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_di_13 = Repeat(debug=debug_sim, statistics=report_stats)
+    fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim, statistics=report_stats)
+    intersectj_10 = Intersect2(debug=debug_sim, statistics=report_stats)
+    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
+    arrayvals_d_7 = Array(init_arr=d_vals, debug=debug_sim, statistics=report_stats)
+    mul_5 = Multiply2(debug=debug_sim, statistics=report_stats)
+    arrayvals_b_4 = Array(init_arr=b_vals, debug=debug_sim, statistics=report_stats)
+    add_3 = Add2(debug=debug_sim, neg2=True, statistics=report_stats)
+    reduce_2 = Reduce(debug=debug_sim, statistics=report_stats)
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape0_min, fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_b = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_d = [0, 'D']

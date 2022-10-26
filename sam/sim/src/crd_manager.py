@@ -18,9 +18,10 @@ class CrdDrop(Primitive):
         self.get_next_ocrd = True
 
         # statistics info
-        self.inner_crd_fifo = 0
-        self.outer_crd_fifo = 0
-        self.ocrd_drop_cnt = 0
+        if self.get_stats:
+            self.inner_crd_fifo = 0
+            self.outer_crd_fifo = 0
+            self.ocrd_drop_cnt = 0
 
     def update(self):
         self.update_done()
@@ -37,7 +38,8 @@ class CrdDrop(Primitive):
             return
 
         if len(self.outer_crd) > 0 and self.get_next_ocrd:
-            self.outer_crd_fifo = max(self.outer_crd_fifo, len(self.outer_crd))
+            if self.get_stats:
+                self.outer_crd_fifo = max(self.outer_crd_fifo, len(self.outer_crd))
             self.curr_ocrd = self.outer_crd.pop(0)
             if isinstance(self.curr_ocrd, int):
                 self.get_next_icrd = True
@@ -63,10 +65,12 @@ class CrdDrop(Primitive):
             self.has_crd = False
         elif self.get_next_ocrd:
             self.curr_crd = ''
-            self.ocrd_drop_cnt += 1
+            if self.get_stats:
+                self.ocrd_drop_cnt += 1
 
         if len(self.inner_crd) > 0 and self.get_next_icrd:
-            self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
+            if self.get_stats:
+                self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
             icrd = self.inner_crd.pop(0)
             self.curr_inner_crd = icrd
             if self.get_stkn:
@@ -77,9 +81,10 @@ class CrdDrop(Primitive):
             if isinstance(icrd, int):
                 self.has_crd = True
                 self.curr_crd = ''
-                self.ocrd_drop_cnt += 1
                 self.get_next_ocrd = False
                 self.get_next_icrd = True
+                if self.get_stats:
+                    self.ocrd_drop_cnt += 1
             elif is_stkn(icrd) and is_stkn(self.curr_ocrd):
                 self.get_next_ocrd = True
                 self.curr_crd = self.curr_ocrd
@@ -95,13 +100,15 @@ class CrdDrop(Primitive):
                 self.get_next_ocrd = False
             else:
                 self.curr_crd = ''
-                self.ocrd_drop_cnt += 1
                 self.get_next_icrd = False
                 self.get_next_ocrd = True
+                if self.get_stats:
+                    self.ocrd_drop_cnt += 1
         elif self.get_next_icrd:
             self.curr_crd = ''
             self.curr_inner_crd = ''
-            self.ocrd_drop_cnt += 1
+            if self.get_stats:
+                self.ocrd_drop_cnt += 1
         else:
             self.curr_inner_crd = ''
 
@@ -130,9 +137,12 @@ class CrdDrop(Primitive):
         print("CrdDrop Outer crd fifo size: ", self.outer_crd_fifo)
 
     def return_statistics(self):
-        stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo":
-                      self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"inner_crd_fifo": self.inner_crd_fifo, "outer_crd_fifo":
+                          self.outer_crd_fifo, "drop_count": self.ocrd_drop_cnt}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
 

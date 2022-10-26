@@ -154,12 +154,9 @@ class CompressedCrdRdScan(CrdRdScan):
         self.skip_processed = True
         self.prev_crd = 0
         # [Olivia]: I think this is needed to make sure we are looking at the correct fiber
-        self.skip_stkn_cnt = 0
-        self.out_stkn_cnt = 0
 
         self.crd_arr = crd_arr
         self.seg_arr = seg_arr
-
         self.start_addr = 0
         self.stop_addr = 0
 
@@ -169,22 +166,23 @@ class CompressedCrdRdScan(CrdRdScan):
         self.curr_ref = ''
         self.curr_crd = ''
         self.emit_fiber_stkn = False
-
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
 
         # Statistics
-        self.unique_refs = []
-        self.unique_crds = []
-        self.total_outputs = 0
-        self.elements_skipped = 0
-        self.skip_cnt = 0
-        self.intersection_behind_cnt = 0
-        self.fiber_behind_cnt = 0
+        if self.get_stats:
+            self.unique_refs = []
+            self.unique_crds = []
+            self.total_outputs = 0
+            self.elements_skipped = 0
+            self.skip_cnt = 0
+            self.intersection_behind_cnt = 0
+            self.fiber_behind_cnt = 0
+            self.stop_count = 0
+        self.skip_stkn_cnt = 0
+        self.out_stkn_cnt = 0
 
         self.begin = True
-
-        self.stop_count = 0
 
     def _emit_stkn_code(self):
         self.end_fiber = True
@@ -208,19 +206,23 @@ class CompressedCrdRdScan(CrdRdScan):
     def _set_curr(self):
         self.curr_ref = self.curr_addr
         self.curr_crd = self.crd_arr[self.curr_addr]
-        if self.curr_ref not in self.unique_refs:
-            self.unique_refs.append(self.curr_ref)
-        if self.curr_crd not in self.unique_crds:
-            self.unique_crds.append(self.curr_crd)
-        self.total_outputs += 1
+        if self.get_stats:
+            if self.curr_ref not in self.unique_refs:
+                self.unique_refs.append(self.curr_ref)
+            if self.curr_crd not in self.unique_crds:
+                self.unique_crds.append(self.curr_crd)
+            self.total_outputs += 1
 
     def return_statistics(self):
-        dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
-               "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
-               "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
-               "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
-               "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count}
-        dic.update(super().return_statistics())
+        if self.get_stats:
+            dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
+                   "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
+                   "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
+                   "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
+                   "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count}
+            dic.update(super().return_statistics())
+        else:
+            dic = {}
         return dic
 
     def update(self):
@@ -235,11 +237,13 @@ class CompressedCrdRdScan(CrdRdScan):
                     and self.curr_skip < self.prev_crd:
                 # ignore the skip if it's too small
                 self.skip_processed = True
-                self.intersection_behind_cnt += 1
+                if self.get_stats:
+                    self.intersection_behind_cnt += 1
             elif self.skip_stkn_cnt < self.out_stkn_cnt:
                 # ignore the skip if it's a fiber behind
                 self.skip_processed = True
-                self.fiber_behind_cnt += 1
+                if self.get_stats:
+                    self.fiber_behind_cnt += 1
             else:
                 self.skip_processed = False
 
@@ -351,22 +355,25 @@ class CompressedCrdRdScan(CrdRdScan):
                             if self.curr_skip in curr_range:
                                 self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
                                 self._set_curr()
-                                self.elements_skipped += curr_range.index(self.curr_skip) + 1
-                                self.skip_cnt += 1
+                                if self.get_stats:
+                                    self.elements_skipped += curr_range.index(self.curr_skip) + 1
+                                    self.skip_cnt += 1
 
                             # Else emit smallest coordinate larger than the one provided by skip
                             else:
                                 larger = [i for i in curr_range if i > self.curr_skip]
                                 if not larger:
                                     self._emit_stkn_code()
-                                    self.elements_skipped += len(curr_range)
-                                    self.skip_cnt += 1
+                                    if self.get_stats:
+                                        self.elements_skipped += len(curr_range)
+                                        self.skip_cnt += 1
                                 else:
                                     val_larger = min(larger)
                                     self.curr_addr = curr_range.index(val_larger) + self.start_addr
                                     self._set_curr()
-                                    self.elements_skipped += curr_range.index(val_larger) + 1
-                                    self.skip_cnt += 1
+                                    if self.get_stats:
+                                        self.elements_skipped += curr_range.index(val_larger) + 1
+                                        self.skip_cnt += 1
 
                         # Early exit from skip
                         elif is_stkn(self.curr_skip):
@@ -395,22 +402,25 @@ class CompressedCrdRdScan(CrdRdScan):
                     if self.curr_skip in curr_range:
                         self.curr_addr = curr_range.index(self.curr_skip) + self.start_addr
                         self._set_curr()
-                        self.elements_skipped += curr_range.index(self.curr_skip) + 1
-                        self.skip_cnt += 1
+                        if self.get_stats:
+                            self.elements_skipped += curr_range.index(self.curr_skip) + 1
+                            self.skip_cnt += 1
 
                     # Else emit smallest coordinate larger than the one provided by skip
                     else:
                         larger = [i for i in curr_range if i > self.curr_skip]
                         if not larger:
                             self._emit_stkn_code()
-                            self.elements_skipped += len(curr_range)
-                            self.skip_cnt += 1
+                            if self.get_stats:
+                                self.elements_skipped += len(curr_range)
+                                self.skip_cnt += 1
                         else:
                             val_larger = min(larger)
                             self.curr_addr = curr_range.index(val_larger) + self.start_addr
                             self._set_curr()
-                            self.elements_skipped += curr_range.index(val_larger) + 1
-                            self.skip_cnt += 1
+                            if self.get_stats:
+                                self.elements_skipped += curr_range.index(val_larger) + 1
+                                self.skip_cnt += 1
 
                     default_behavior = False
                 elif is_stkn(self.curr_skip):
@@ -438,7 +448,7 @@ class CompressedCrdRdScan(CrdRdScan):
         if isinstance(self.curr_crd, int):
             self.prev_crd = self.curr_crd
 
-        if is_stkn(self.curr_crd):
+        if self.get_stats and is_stkn(self.curr_crd):
             self.stop_count += 1
 
         # Debugging print statements

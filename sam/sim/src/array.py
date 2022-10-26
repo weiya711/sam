@@ -13,16 +13,16 @@ class Array(Primitive):
             assert (isinstance(init_arr, list))
             self.arr = init_arr
             self.size = len(init_arr)
-
         self.load_addrs = []
         self.store_vals = []
-        self.load_addr_size = 0
-        self.store_vals_size = 0
         self.load_en = False
         self.store_en = False
-        self.address_seen = []
 
-        self.valid_loads = 0
+        if self.get_stats:
+            self.valid_loads = 0
+            self.address_seen = []
+            self.load_addr_size = 0
+            self.store_vals_size = 0
 
         self.curr_load = ''
 
@@ -32,14 +32,16 @@ class Array(Primitive):
             self.block_start = False
 
         if self.load_en and len(self.load_addrs) > 0:
-            self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
+            if self.get_stats:
+                self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
             self.curr_load = self.load(self.load_addrs.pop(0))
             self.load_en = False
         else:
             self.curr_load = ''
 
         if self.store_en and len(self.store_vals) > 0:
-            self.store_vals_size = max(self.store_vals_size, len(self.store_vals))
+            if self.get_stats:
+                self.store_vals_size = max(self.store_vals_size, len(self.store_vals))
             store_tup = self.store_vals.pop(0)
             self.store(store_tup[0], store_tup[1])
             self.store_en = False
@@ -81,10 +83,12 @@ class Array(Primitive):
             raise Exception("Address (" + str(addr) + ") is out of array size (" +
                             str(self.size) + ") bounds, please resize")
         else:
-            if addr not in self.address_seen:
-                self.address_seen.append(addr)
+            if self.get_stats:
+                if addr not in self.address_seen:
+                    self.address_seen.append(addr)
+                self.valid_loads += 1
+
             val = self.arr[addr]
-            self.valid_loads += 1
 
         if self.debug:
             print("DEBUG: ARRAY LD:", "\t Addr:", addr, "\t Val:", val)
@@ -128,9 +132,12 @@ class Array(Primitive):
         self.arr = [fill for _ in range(self.size)]
 
     def return_statistics(self):
-        stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size,
-                      "elements_touched": len(self.address_seen), "valid_loads": self.valid_loads}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"array_size": self.size, "fifo_addr": self.load_addr_size, "fifo_vals": self.store_vals_size,
+                          "elements_touched": len(self.address_seen), "valid_loads": self.valid_loads}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
     def print_fifos(self):

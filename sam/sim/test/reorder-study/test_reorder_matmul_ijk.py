@@ -133,56 +133,57 @@ def test_reorder_matmul_ijk(samBench, sparsity, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_17.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_17.update()
 
         fiberwrite_X0_2.set_input(fiberlookup_Bi_17.out_crd())
-        fiberwrite_X0_2.update()
 
         repsiggen_i_15.set_istream(fiberlookup_Bi_17.out_crd())
-        repsiggen_i_15.update()
 
         if len(in_ref_C) > 0:
             repeat_Ci_14.set_in_ref(in_ref_C.pop(0))
         repeat_Ci_14.set_in_repsig(repsiggen_i_15.out_repsig())
-        repeat_Ci_14.update()
 
         fiberlookup_Cj_13.set_in_ref(repeat_Ci_14.out_ref())
-        fiberlookup_Cj_13.update()
 
         fiberlookup_Ck_9.set_in_ref(fiberlookup_Cj_13.out_ref())
-        fiberlookup_Ck_9.update()
 
         fiberwrite_X1_1.set_input(fiberlookup_Cj_13.out_crd())
-        fiberwrite_X1_1.update()
 
         repsiggen_j_11.set_istream(fiberlookup_Cj_13.out_crd())
-        repsiggen_j_11.update()
 
         repeat_Bj_10.set_in_ref(fiberlookup_Bi_17.out_ref())
         repeat_Bj_10.set_in_repsig(repsiggen_j_11.out_repsig())
-        repeat_Bj_10.update()
 
         fiberlookup_Bk_8.set_in_ref(repeat_Bj_10.out_ref())
-        fiberlookup_Bk_8.update()
 
         intersectk_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd())
         intersectk_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd())
-        intersectk_7.update()
 
         arrayvals_B_5.set_load(intersectk_7.out_ref1())
-        arrayvals_B_5.update()
 
         arrayvals_C_6.set_load(intersectk_7.out_ref2())
-        arrayvals_C_6.update()
 
         mul_4.set_in1(arrayvals_B_5.out_val())
         mul_4.set_in2(arrayvals_C_6.out_val())
-        mul_4.update()
 
         reduce_3.set_in_val(mul_4.out_val())
-        reduce_3.update()
 
         fiberwrite_Xvals_0.set_input(reduce_3.out_val())
+
+        fiberlookup_Bi_17.update()
+        fiberwrite_X0_2.update()
+        repsiggen_i_15.update()
+        repeat_Ci_14.update()
+        fiberlookup_Cj_13.update()
+        fiberlookup_Ck_9.update()
+        fiberwrite_X1_1.update()
+        repsiggen_j_11.update()
+        repeat_Bj_10.update()
+        fiberlookup_Bk_8.update()
+        intersectk_7.update()
+        arrayvals_B_5.update()
+        arrayvals_C_6.update()
+        mul_4.update()
+        reduce_3.update()
         fiberwrite_Xvals_0.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()

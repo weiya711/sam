@@ -169,8 +169,11 @@ class Repeat(Primitive):
         print("Repeat size for repeat block: ", self.in_repeat_size)
 
     def return_statistics(self):
-        stats_dict = {"in_ref_size": self.in_ref_size, "in_repeat_size": self.in_repeat_size}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"in_ref_size": self.in_ref_size, "in_repeat_size": self.in_repeat_size}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
 
 
@@ -226,6 +229,9 @@ class RepeatSigGen(Primitive):
         print("Repeat sig gen size:", self.istream_size)
 
     def return_statistics(self):
-        stats_dict = {"in_repeat_size": self.istream_size}
-        stats_dict.update(super().return_statistics())
+        if self.get_stats:
+            stats_dict = {"in_repeat_size": self.istream_size}
+            stats_dict.update(super().return_statistics())
+        else:
+            stats_dict = {}
         return stats_dict
