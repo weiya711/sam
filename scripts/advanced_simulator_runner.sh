@@ -11,7 +11,10 @@ BENCHMARKS=(
 #  matmul_FINAL
 #  mat_identity
 #  mat_identity_back
-  matmul_ikj_memory_back
+#  matmul_ikj_memory_back
+   matmul_ikj_lp
+#  matmul_ikj_tiled_bcsstm02
+#  matmul_ikj_check
 #  matmul_ikj_tiling
 #  matmul_ikj_back
 #  mat_elemmul_FINAL
@@ -48,6 +51,8 @@ elif [ $2 -eq 2 ]; then
 	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
 	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 	export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
+	export TILED_SUITESPARSE_FORMATTED_PATH=/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/formatted
+	export TILED_OUTPUT_PATH=/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/output/
 	lanka=OFF
 	neva=ON
 else
@@ -120,7 +125,7 @@ for b in ${!BENCHMARKS[@]}; do
 		cd $basedir
 	done <$1
 
-	python $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
+	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
 
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do

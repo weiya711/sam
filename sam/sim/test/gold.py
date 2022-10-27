@@ -1,7 +1,7 @@
 import scipy.sparse
 import os
 import math
-
+import scipy.io
 from sam.sim.src.base import *
 from sam.sim.test.test import *
 
@@ -11,7 +11,7 @@ cwd = os.getcwd()
 ss_formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 frostt_dir = os.getenv('FROSTT_PATH', default=os.path.join(cwd, 'mode-formats'))
 validate_dir = os.getenv('VALIDATION_OUTPUT_PATH', default=os.path.join(cwd, 'mode-formats'))
-
+tiled_output_path = os.getenv('TILED_OUTPUT_PATH', default=os.path.join(cwd, 'mode-formats'))
 tnsLoader = TnsFileLoader(False)
 
 
@@ -25,6 +25,47 @@ def _shiftLastMode(tensor):
         # TODO (rohany): Temporarily use a constant as the value.
         result[tuple(newCoord)] = 2
     return scipy.sparse.coo_matrix(result)
+
+
+def check_gold_matmul_tiled(tile_crd_b, tile_crd_c, ssname, debug_sim, out_crds, out_segs, out_val, out_format="ss01"):
+    # CSR
+    gold_file_path = "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_b[2]) + "_" + str(tile_crd_b[3]) + "_" + str(tile_crd_c[3]) + ".mtx"
+    gold_path = os.path.join(tiled_output_path, gold_file_path)
+    print(gold_path)
+    if not os.path.exists(gold_path):
+        if len(out_val) == 0:
+            return
+        if np.sum(np.asarray(out_val)) == 0:
+            return
+        else:
+            print(out_val)
+            assert False
+    gold_nd = scipy.io.mmread(gold_path).toarray()
+    transpose = out_format[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+
+    gold_tup = convert_ndarr_point_tuple(gold_nd)
+
+    if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
+        #print("Dense Mat1:\n", B_scipy.toarray())
+        #print("Dense Mat2:\n", C_scipy.toarray())
+        print("Dense Gold:", gold_nd)
+        print("Gold:", gold_tup)
+
+    if not out_val:
+        assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
+        out_tup = remove_zeros(out_tup)
+        if debug_sim:
+            print("Out:", out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
 
 
 def check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_val, out_format="ss01"):
