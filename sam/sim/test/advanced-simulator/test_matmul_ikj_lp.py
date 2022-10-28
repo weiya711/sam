@@ -20,25 +20,26 @@ import yaml
 cwd = os.getcwd()
 
 formatted_dir = os.getenv('TILED_SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 # FIXME: Figureout formats
 @pytest.mark.skipif(
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_stats, skip_empty, fill=0):
+def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_stats, skip_empty, yaml_name, fill=0):
     #if skip_empty:
     #    assert False
-    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
+    with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
     print("____________________")
     assert sizes_dict_level_full["B"][0] == sizes_dict_level_full["C"][1]
-    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/hw_level_0_sizes", "rb") as ff:
+    with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_0_sizes"), "rb") as ff:
         sizes_dict_level0 = pickle.load(ff)
     
     print("____________________")
     print(sizes_dict_level0)
-    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/hw_level_1_sizes", "rb") as ff:
+    with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_1_sizes"), "rb") as ff:
         sizes_dict_level1 = pickle.load(ff)
     
     print("____________________")
@@ -49,11 +50,9 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         full_size = sizes_dict_level_full[sizes]
     full_size = 846*1966 # Not used later replaced in the creating the struct
 
-    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/sam/sim/src/tiling/memory_config_real.yaml", "r") as stream:
+    with open(os.path.join(sam_home, "sam/sim/src/tiling/" + yaml_name), "r") as stream:
         loop_config = yaml.safe_load(stream)
-    # with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/sam/sim/src/tiling/memory_config_simple.yaml", "r") as stream:
-    #     loop_config = yaml.safe_load(stream)
-    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/sam/sim/src/tiling/memory_config.yaml", "r") as stream:
+    with open(os.path.join(sam_home, "./sam/sim/src/tiling/" + yaml_name), "r") as stream:
         memory_config = yaml.safe_load(stream)
 
     struct = {"i00": 1 + int(sizes_dict_level_full["B"][0])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "k00": 1 + int(sizes_dict_level_full["B"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "j00": 1 + int(sizes_dict_level_full["C"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "i0": loop_config["Glb_tile_size"], "k0": loop_config["Glb_tile_size"], "j0": loop_config["Glb_tile_size"]}

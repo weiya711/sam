@@ -28,6 +28,8 @@ errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+basedir=$(pwd)
+
 # LANKA
 if [ $2 -eq 1 ]; then
 	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
@@ -51,8 +53,9 @@ elif [ $2 -eq 2 ]; then
 	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
 	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 	export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
-	export TILED_SUITESPARSE_FORMATTED_PATH=/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/formatted
-	export TILED_OUTPUT_PATH=/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/output/
+    export SAM_HOME=$basedir
+	export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
+	export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 	lanka=OFF
 	neva=ON
 else
@@ -60,10 +63,9 @@ else
 	neva=OFF
 fi
 
-format_outdir=${SUITESPARSE_FORMATTED_PATH} 
-basedir=$(pwd)
 sspath=$SUITESPARSE_PATH
 benchout=suitesparse-bench_simulator/sam
+format_outdir=${SUITESPARSE_FORMATTED_PATH} 
 
 source $basedir/../venv/bin/activate
 
@@ -113,7 +115,7 @@ for b in ${!BENCHMARKS[@]}; do
 
 		cd $basedir/sam/sim
 		#python -m cProfile -o test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
-		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --skip-empty --check-gold --benchmark-json=$path/$line.json 
+		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --skip-empty --check-gold --yaml_name=$3 --benchmark-json=$path/$line.json 
 		python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?

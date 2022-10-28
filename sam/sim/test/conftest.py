@@ -19,6 +19,8 @@ def pytest_addoption(parser):
                      help="Flag that enables functional output checking")
     parser.addoption("--skip-empty", action="store_true", default=False,
                      help="Flag that enables functional output checking")
+    parser.addoption("--yaml_name", type=str, default="memory_config_real.yaml",
+                     help="Name of yaml file for tiling memory configuration")
 
 
 
@@ -97,6 +99,9 @@ def vecname(request):
 def synth(request):
     return request.config.getoption("--synth")
 
+@pytest.fixture
+def yaml_name(request):
+    return request.config.getoption("--yaml_name")
 
 @pytest.fixture
 def samBench(benchmark):
