@@ -13,17 +13,17 @@ def hash_tile(tile_id):
     return hash_val, hash_val//(encoder_diff**num)
 
 class output_memory_block():
-    def __init__(self, name = "B", level = None, size = 1000*2, debug=False, bandwidth = 2, length = 1, mode = "all_upacked"):
+    def __init__(self, name = "B", element_size = 2, level = None, indexes = 2, size = 1000*2, debug=False, latency = 2, bandwidth = 2, length = 1, mode = "all_unpacked"):
         self.name = name
         self.level = level
         self.size = size//2
         self.bandwidth = bandwidth
+        self.latency = latency
+        self.element_size = element_size
         self.length = length
-
         self.tile_ptrs_glb = []
         self.tile_ptrs_fifo = [] # virtual
         self.tile_ptrs_size = []
-
         self.mode = mode
         self.timestamp = None
         self.ready = True
@@ -32,12 +32,13 @@ class output_memory_block():
         self.curr_tile = None
         self.curr_size = 0
         self.old_tile = None
-        self.debug = True #debug
+        self.debug = debug
         self.outputed = False
         self.done = False
         self.done_received = False
         self.valid_processed = False
         self.child_ready = False
+        self.indexes = indexes
 
     def out_done(self):
         return self.done
@@ -72,8 +73,13 @@ class output_memory_block():
             size_vals = len(data[len(data)-1])
             for lengths in range(len(size_levels)):
                 size_levels[lengths] = len(data[lengths]) + len(data[lengths + limits//2])
-            
-            max_levels_size = max(max(size_levels), size_vals)
+            if self.mode == "not_consolidated": 
+                max_levels_size = max(max(size_levels), size_vals)
+            elif self.mode == "all_unpacked":
+                max_levels_size = np.sum(np.asarray(size_levels)) + size_vals
+            else:
+                print(self.mode + " not found")
+                assert False
             self.tile_ptrs_size.append(max_levels_size)
             tile_hash, tile_glb = hash_tile(tilecoord)
             print("Tile pointer vales = ", tile_hash, " ", tile_glb)
@@ -154,7 +160,13 @@ class output_memory_block():
         return False
 
     def compute_latency(self, tile):
-        return 50
+        if self.mode == "not_consolidated": 
+            return self.latency + self.curr_size//(self.bandwidth)
+        if self.mode == "all_unpacked": 
+            return self.latency + (self.curr_size * self.element_size)//(self.bandwidth)
+        else:
+            print(self.mode, " not found")
+            assert False
 
     def input_token(self):
         if self.downstream_token == "D":
@@ -166,11 +178,12 @@ class output_memory_block():
 
 
 class memory_block():
-    def __init__(self, name = "B", level = None, size = 1000*2, latency = 10, debug=False, bandwidth = 2, length = 1, mode = "all_upacked"):
+    def __init__(self, name = "B", element_size = 2, level = None, indexes = 2, size = 1000*2, latency = 10, debug=False, bandwidth = 2, length = 1, mode = "all_unpacked"):
         self.name = name
         self.level = level
-        self.size = size//2
+        self.size = size//element_size
         self.latency = latency
+        self.element_size = element_size
         self.bandwidth = bandwidth
         self.length = length
         self.tile_ptrs = []
@@ -186,7 +199,7 @@ class memory_block():
         self.curr_tile = None
         self.curr_size = None
         self.old_tile = None
-        self.debug = True #debug
+        self.debug = debug
         self.outputed = False
         self.done = False
         self.signalled = False
@@ -194,6 +207,7 @@ class memory_block():
         self.done_received = False
         self.valid_processed = False
         self.done_processed = False
+        self.indexes = indexes
 
     def out_done(self):
         return self.done
@@ -305,7 +319,12 @@ class memory_block():
                 self.old_tile = self.curr_tile
             self.curr_tile = self.tile_ptrs_fifo.pop(0)
             self.curr_size = self.tile_ptrs_size.pop(0)
-            assert self.curr_size < self.size
+            if self.mode == "all_unpacked":
+                assert self.curr_size < (self.size * (self.indexes + 1))
+            elif self.mode == "not_consolidated":
+                assert self.curr_size < self.size
+            else:
+                print(self.mode + " not found")
             if self.curr_tile == "D":
                 self.timestamp = None
                 self.ready = True
@@ -317,7 +336,6 @@ class memory_block():
                 self.signalled = True
                 self.done_received = False
                 self.done_processed = False
-                
                 if self.debug:
                     print(self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
                 return
@@ -372,7 +390,15 @@ class memory_block():
     def compute_latency(self, tile):
         if self.curr_tile == self.old_tile:
             return 1
-        return self.latency + self.curr_size//self.bandwidth
+        if self.mode == "all_unpacked":
+            return self.latency + (self.curr_size * self.element_size)//(self.bandwidth)
+            #return self.latency + self.curr_size//(self.bandwidth * (self.indexes + 1))
+        elif self.mode == "not_consolidated":
+            #elf.curr_size * self.element_size)//(self.bandwidth)
+            return self.latency + self.curr_size//(self.bandwidth)
+        else:
+            print(self.mode + " not found")
+            assert False
 
     def valid_tile(self):
         if self.valid and not self.outputed:

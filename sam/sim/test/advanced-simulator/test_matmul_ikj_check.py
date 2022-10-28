@@ -14,6 +14,7 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+import yaml
 cwd = os.getcwd()
 formatted_dir = os.getenv('TILED_SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
@@ -25,10 +26,19 @@ formatted_dir = os.getenv('TILED_SUITESPARSE_FORMATTED_PATH', default=os.path.jo
 )
 @pytest.mark.suitesparse
 def test_matmul_ikj_check(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
-
-    B_dir = "tensor_B_tile_" + str(0) + "_" + str(0) + "_" + str(0) + "_" + str(0)
+    #0_1_0_2_8_9
+    B_i00 = 0
+    B_k00 = 2
+    B_i0 = 8
+    B_k0 = 0
+    C_k00 = B_k00
+    C_j00 = 0
+    C_k0 = B_k0
+    C_j0 = 0
+    B_dir = "tensor_B_tile_" + str(B_i00) + "_" + str(B_k00) + "_" + str(B_i0) + "_" + str(B_k0)
     B_dirname = os.path.join(formatted_dir, B_dir)
-    C_dir = "tensor_C_tile_" + str(0) + "_" + str(0) + "_" + str(0) + "_" + str(1)
+    print(B_dirname)
+    C_dir = "tensor_C_tile_" + str(C_k00) + "_" + str(C_j00) + "_" + str(C_k0) + "_" + str(C_j0)
     C_dirname = os.path.join(formatted_dir, C_dir)
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
@@ -43,9 +53,8 @@ def test_matmul_ikj_check(samBench, ssname, check_gold, debug_sim, report_stats,
     C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
     C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
- 
-    
-    
+    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/sam/sim/src/tiling/memory_config_real.yaml", "r") as stream:
+        loop_config = yaml.safe_load(stream)
     B_shape = read_inputs(B_shape_filename)
 
     B_seg0 = read_inputs(B0_seg_filename)
@@ -70,13 +79,16 @@ def test_matmul_ikj_check(samBench, ssname, check_gold, debug_sim, report_stats,
     else:
 
         print(C_shape_filename, "unavailabe")
-        C_shape = [8, 7]
+        C_shape = [8, 8]
         C_seg0 = [0, 1]
         C_crd0 = [0]
         C_seg1 = [0, 1]
         C_crd1 = [0]
         C_vals = [1]
- 
+    B_shape = [loop_config["Mem_tile_size"], loop_config["Mem_tile_size"]]
+    C_shape = [loop_config["Mem_tile_size"], loop_config["Mem_tile_size"]]
+
+
 
     fiberlookup_Bi_19 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
     fiberlookup_Bk_14 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
@@ -173,6 +185,10 @@ def test_matmul_ikj_check(samBench, ssname, check_gold, debug_sim, report_stats,
     out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
 
+    if check_gold:
+        print("Checking gold...")
+        check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
+    
     def bench():
         time.sleep(0.01)
 
@@ -233,7 +249,7 @@ def test_matmul_ikj_check(samBench, ssname, check_gold, debug_sim, report_stats,
     for k in sample_dict.keys():
         extra_info["fiberlookup_Bk_14" + "_" + k] = sample_dict[k]
 
-    #if check_gold:
-    #    print("Checking gold...")
-    #    check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+    if check_gold:
+        print("Checking gold...")
+        check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
     samBench(bench, extra_info)
