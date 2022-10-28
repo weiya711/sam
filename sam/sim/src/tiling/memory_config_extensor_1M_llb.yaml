@@ -17,4 +17,3 @@ level_names: ["Main", "Glb", "Mem"]
 Main_tile_size: None
 Glb_tile_size: 16 # n = (nxn) elements
 Mem_tile_size: 128 # Size of one dense dimension. 8 = (8x8) 
-

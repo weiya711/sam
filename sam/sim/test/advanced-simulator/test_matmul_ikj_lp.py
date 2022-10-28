@@ -54,9 +54,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         loop_config = yaml.safe_load(stream)
     with open(os.path.join(sam_home, "./sam/sim/src/tiling/" + yaml_name), "r") as stream:
         memory_config = yaml.safe_load(stream)
-
     struct = {"i00": 1 + int(sizes_dict_level_full["B"][0])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "k00": 1 + int(sizes_dict_level_full["B"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "j00": 1 + int(sizes_dict_level_full["C"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "i0": int(loop_config["Glb_tile_size"]), "k0": int(loop_config["Glb_tile_size"]), "j0": int(loop_config["Glb_tile_size"])}
-    
+    #print(struct)
     fiberlookup_Bi00 = UncompressCrdRdScan(dim=struct["i00"], debug=debug_sim)
     fiberlookup_Bk00 = UncompressCrdRdScan(dim=struct["k00"], debug=debug_sim)
     repsiggen_i00 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
@@ -104,9 +103,10 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         repsiggen_j00.set_istream(fiberlookup_Cj00.out_crd())
         repeat_Bj00.set_in_ref(fiberlookup_Bk00.out_ref())
         repeat_Bj00.set_in_repsig(repsiggen_j00.out_repsig())
-            
+        flag_print_once = False
         if glb_model_b.valid_tile() and glb_model_c.valid_tile():
             flag_glb = True
+            flag_print_once = True
             in_ref_B0 = [0, 'D']
             in_ref_C0 = [0, 'D']
             fiberlookup_Bi0 = UncompressCrdRdScan(dim=struct["i0"], debug=debug_sim)
@@ -155,11 +155,18 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             repsiggen_j0.set_istream(fiberlookup_Cj0.out_crd())
             repeat_Bj0.set_in_ref(fiberlookup_Bk0.out_ref())
             repeat_Bj0.set_in_repsig(repsiggen_j0.out_repsig())
+
+            if isinstance(glb_model_b.token(), int) and isinstance(glb_model_c.token(), int): 
+                B_k00_ = glb_model_b.token()%struct["k00"]
+                B_i00_ = glb_model_b.token()//struct["k00"]
+                C_k00_ = glb_model_c.token()//struct["j00"]
+                C_j00_ = glb_model_c.token()%struct["j00"]
+            else:
+                B_k00_ = glb_model_b.token()
+                B_i00_ = glb_model_b.token()
+                C_k00_ = glb_model_c.token()
+                C_j00_ = glb_model_c.token()
             
-            B_k00_ = glb_model_b.token()%struct["k00"]
-            B_i00_ = glb_model_b.token()//struct["k00"]
-            C_k00_ = glb_model_c.token()//struct["j00"]
-            C_j00_ = glb_model_c.token()%struct["j00"]
             #if skip_empty and isinstance(repeat_Bj0.out_ref(), int) and isinstance(fiberlookup_Cj0.out_ref(), int):
             #    if not (B_i00_, B_k00_, repeat_Bj0.out_ref()//struct["k0"] , repeat_Bj0.out_ref()%struct["k0"]) in sizes_dict_level1["B"]:
             #        mem_model_b.add_tile(repeat_Bj0.out_ref(), -1)
@@ -175,12 +182,16 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                     mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), sizes_dict_level1["C"][(C_k00_, C_j00_, fiberlookup_Cj0.out_ref()//struct["j0"] , fiberlookup_Cj0.out_ref()%struct["j0"])])
                 else:
                     mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), 0)
-
+        
+        flag_token_mem = False
         if mem_model_b.valid_tile() and mem_model_c.valid_tile():
             flag = True
+            flag_token_mem = True
             tiled_done_processed = False
             in_ref_B = [0, 'D']
             in_ref_C = [0, 'D']
+
+
             #print("Updating Token") 
             B_k00 = glb_model_b.token()%struct["k00"]
             B_i00 = glb_model_b.token()//struct["k00"]
@@ -420,6 +431,14 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 if check_gold:
                     print("Checking gold...")
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
+
+            if self.debug and glb_model_b.out_done() == "D":
+                print(mem_model_c.token(), " ", mem_model_b.token())
+                print("GLB reader done ",  glb_model_x.out_done() , " ", mem_model_x.out_done())
+                print(glb_model_c.token(), " ",  glb_model_b.token())
+            if self.debug and mem_model_c.token() == "D" and mem_model_b.token() == "D":
+                print("Mem reader done ",  glb_model_x.out_done() , " ", mem_model_x.out_done())
+                print(glb_model_c.token() == "D" and glb_model_b.token() == "D")
 
             if mem_model_c.token() == "D" and glb_model_c.token() == "D" and mem_model_b.token() == "D" and glb_model_b.token() == "D" and glb_model_x.out_done() and mem_model_x.out_done():
                 done = True

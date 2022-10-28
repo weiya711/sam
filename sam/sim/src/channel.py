@@ -5,7 +5,7 @@ def hash_tile(tile_id):
     num = len(tile_id)//2
     cnt = 0
     encoder = 1
-    encoder_diff = 100
+    encoder_diff = 10000
     for a in reversed(tile_id):
         hash_val += encoder*a
         encoder *= encoder_diff
@@ -108,11 +108,16 @@ class output_memory_block():
             elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
                 self.loading = False
                 self.done = True
+                self.curr_tile = "D"
             elif self.done and self.child_ready:
                 self.ready = True
 
         if self.level == "glb2global":
             self.old_tile = None
+            if self.ready and len(self.tile_ptrs_fifo) > 0 and self.tile_ptrs_fifo[0] == "D":
+                self.curr_tile = self.tile_ptrs_fifo.pop(0)
+                self.done = True
+                self.ready = True
             if self.ready and len(self.tile_ptrs_fifo) > 0 and (self.curr_tile == None or self.curr_tile == "D" or self.curr_tile == self.tile_ptrs_fifo[0]):
                 #print("-0-0-0-0-0-0-0-0-0-")
                 self.curr_tile = self.tile_ptrs_fifo.pop(0)
@@ -389,7 +394,7 @@ class memory_block():
         return False
 
     def compute_latency(self, tile):
-        if self.skip_blocks and self.curr_size:
+        if self.skip_blocks and self.curr_size == 0:
             return 0
         if self.curr_tile == self.old_tile:
             return 1
