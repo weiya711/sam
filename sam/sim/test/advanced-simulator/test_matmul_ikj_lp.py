@@ -78,7 +78,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     mem_model_b = memory_block(name="B", element_size = memory_config["Bytes_per_element"], size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"])
     mem_model_c = memory_block(name="C", element_size = memory_config["Bytes_per_element"],size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"])
  
-    mem_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "mem2glb", bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"]) 
+    mem_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "mem2glb", bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"]) 
     glb_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "glb2global", bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"])
 
     flag_glb = False
@@ -379,6 +379,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             glb_model_x.update(time_cnt)
 
             if tiled_done and check_flag:
+                print("TIME PNT ", time_cnt)
                 check_flag = False
                 fiberwrite_X0_2.autosize()
                 fiberwrite_X1_1.autosize()
