@@ -394,8 +394,8 @@ class memory_block():
         return False
 
     def compute_latency(self, tile):
-        if self.skip_blocks and self.curr_size == 0:
-            return 0
+        if self.skip_blocks and self.curr_size == 0 and self.curr_tile != None:
+            return self.latency
         if self.curr_tile == self.old_tile:
             return 1
         if self.mode == "all_unpacked":
