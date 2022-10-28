@@ -432,11 +432,11 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                     print("Checking gold...")
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
 
-            if self.debug and glb_model_b.out_done() == "D":
+            if debug_sim and glb_model_b.out_done() == "D":
                 print(mem_model_c.token(), " ", mem_model_b.token())
                 print("GLB reader done ",  glb_model_x.out_done() , " ", mem_model_x.out_done())
                 print(glb_model_c.token(), " ",  glb_model_b.token())
-            if self.debug and mem_model_c.token() == "D" and mem_model_b.token() == "D":
+            if debug_sim and mem_model_c.token() == "D" and mem_model_b.token() == "D":
                 print("Mem reader done ",  glb_model_x.out_done() , " ", mem_model_x.out_done())
                 print(glb_model_c.token() == "D" and glb_model_b.token() == "D")
 
