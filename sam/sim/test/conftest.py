@@ -17,6 +17,9 @@ def pytest_addoption(parser):
                      help="Store output to filename for functional output checking")
     parser.addoption("--synth", action="store_true", default=False,
                      help="Flag that enables functional output checking")
+    parser.addoption("--skip-empty", action="store_true", default=False,
+                     help="Flag that enables functional output checking")
+
 
 
 def pytest_configure(config):
@@ -51,6 +54,9 @@ def pytest_collection_modifyitems(config, items):
             if "synth" in item.keywords:
                 item.add_marker(skip_synth)
 
+@pytest.fixture
+def skip_empty(request):
+    return request.config.getoption("--skip-empty")
 
 @pytest.fixture
 def debug_sim(request):

@@ -5,6 +5,7 @@ import scipy.io
 import numpy as np
 import yaml
 import math
+import pickle
 
 
 def round_sparse(x):
@@ -69,17 +70,20 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
 
 if __name__ == "__main__":
     outdir = "/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/output/"
-    full_size = 846*1966
 
     #generate_gold_matmul_tiled([0, 1, 2, 9], [1, 0, 9, 0], outdir)
     
     #generate_gold_matmul_tiled([0, 1, 0, 7], [1, 0, 7, 0], outdir)
-    #quit() 
+    #quit()    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
+ 
+    with open("tiles/matmul_ikj/tensor_sizes", "rb") as ff:
+        sizes_dict_level_full = pickle.load(ff)
 
-    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/sam/sim/src/tiling/memory_config_real.yaml", "r") as stream:
+    with open("sam/sim/src/tiling/memory_config_real.yaml", "r") as stream:
         loop_config = yaml.safe_load(stream)
 
-    struct = {"i00": 1 + int(846)//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "k00": 1 + int(1966)//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "j00": 1 + int(846)//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "i0": loop_config["Glb_tile_size"], "k0": loop_config["Glb_tile_size"], "j0": loop_config["Glb_tile_size"]}
+    struct = {"i00": 1 + int(sizes_dict_level_full["B"][0])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "k00": 1 + int(sizes_dict_level_full["B"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "j00": 1 + int(sizes_dict_level_full["C"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "i0": loop_config["Glb_tile_size"], "k0": loop_config["Glb_tile_size"], "j0": loop_config["Glb_tile_size"]}
+
     for i00 in range(struct["i00"]):
         for k00 in range(struct["k00"]):
             for j00 in range(struct["j00"]):

@@ -178,8 +178,9 @@ class output_memory_block():
 
 
 class memory_block():
-    def __init__(self, name = "B", element_size = 2, level = None, indexes = 2, size = 1000*2, latency = 10, debug=False, bandwidth = 2, length = 1, mode = "all_unpacked"):
+    def __init__(self, name = "B", skip_blocks = False, element_size = 2, level = None, indexes = 2, size = 1000*2, latency = 10, debug=False, bandwidth = 2, length = 1, mode = "all_unpacked"):
         self.name = name
+        self.skip_blocks = skip_blocks
         self.level = level
         self.size = size//element_size
         self.latency = latency
@@ -388,6 +389,8 @@ class memory_block():
         return False
 
     def compute_latency(self, tile):
+        if self.skip_blocks and self.curr_size:
+            return 0
         if self.curr_tile == self.old_tile:
             return 1
         if self.mode == "all_unpacked":
