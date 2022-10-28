@@ -446,6 +446,4 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         #print("###################")
         time_cnt += 1
 
-        if time_cnt > 10000000:
-            return
     print(time_cnt)
