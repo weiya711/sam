@@ -83,7 +83,8 @@ if __name__ == "__main__":
         loop_config = yaml.safe_load(stream)
 
     struct = {"i00": 1 + int(sizes_dict_level_full["B"][0])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "k00": 1 + int(sizes_dict_level_full["B"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "j00": 1 + int(sizes_dict_level_full["C"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "i0": loop_config["Glb_tile_size"], "k0": loop_config["Glb_tile_size"], "j0": loop_config["Glb_tile_size"]}
-
+    print(struct)
+    #quit()
     for i00 in range(struct["i00"]):
         for k00 in range(struct["k00"]):
             for j00 in range(struct["j00"]):
