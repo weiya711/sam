@@ -201,6 +201,15 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
     tensors = get_other_tensors(app_str, tensors[0])
 
     names, format_permutations, ivars = parse_sam_input(args.cotile)
+
+    sizes_dict = {}
+    for i, name in enumerate(names):
+        tensor = tensors[i]
+        sizes_dict[name] = tensor.shape
+    tensor_sizes_fname = os.path.join(output_dir_path, "tensor_sizes")
+    with open(tensor_sizes_fname, "wb+") as pickle_fname:
+        pickle.dump(sizes_dict, pickle_fname)
+
     with open(hw_config_fname, "r") as stream:
         try:
             hw_config = yaml.safe_load(stream)
