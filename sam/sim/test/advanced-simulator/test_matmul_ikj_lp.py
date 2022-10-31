@@ -30,6 +30,8 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_stats, skip_empty, yaml_name, fill=0):
     #if skip_empty:
     #    assert False
+    nbuffer = False # True
+    deb = False # True # True
     with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
     print("____________________")
@@ -44,7 +46,6 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     
     print("____________________")
     print(sizes_dict_level1)
-    #return
     full_size = 0
     for sizes in sizes_dict_level_full:
         full_size = sizes_dict_level_full[sizes]
@@ -54,8 +55,9 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         loop_config = yaml.safe_load(stream)
     with open(os.path.join(sam_home, "./sam/sim/src/tiling/" + yaml_name), "r") as stream:
         memory_config = yaml.safe_load(stream)
+    
     struct = {"i00": 1 + int(sizes_dict_level_full["B"][0])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "k00": 1 + int(sizes_dict_level_full["B"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "j00": 1 + int(sizes_dict_level_full["C"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "i0": int(loop_config["Glb_tile_size"]), "k0": int(loop_config["Glb_tile_size"]), "j0": int(loop_config["Glb_tile_size"])}
-    #print(struct)
+    #struct = {"i00": 1, "k00": 2, "j00": 2, "i0": 1, "k0": 3, "j0": 4}
     fiberlookup_Bi00 = UncompressCrdRdScan(dim=struct["i00"], debug=debug_sim)
     fiberlookup_Bk00 = UncompressCrdRdScan(dim=struct["k00"], debug=debug_sim)
     repsiggen_i00 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
@@ -71,15 +73,14 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     in_ref_C0 = []
     done = False
     time_cnt = 0
-    
-    glb_model_b = memory_block(name="GLB_B", skip_blocks = skip_empty, element_size = memory_config["Bytes_per_element"], size=memory_config["Glb_memory"], bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"])
-    glb_model_c = memory_block(name="GLB_C", skip_blocks = skip_empty, element_size = memory_config["Bytes_per_element"], size=memory_config["Glb_memory"], bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"])
-
-    mem_model_b = memory_block(name="B", skip_blocks = skip_empty, element_size = memory_config["Bytes_per_element"], size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"])
-    mem_model_c = memory_block(name="C", skip_blocks = skip_empty, element_size = memory_config["Bytes_per_element"],size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"])
  
-    mem_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "mem2glb", bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"]) 
-    glb_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "glb2global", bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"])
+    glb_model_b = memory_block(name="GLB_B", skip_blocks = skip_empty, nbuffer = nbuffer, element_size = memory_config["Bytes_per_element"], size=memory_config["Glb_memory"], bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],  debug = deb)
+    glb_model_c = memory_block(name="GLB_C", skip_blocks = skip_empty, nbuffer = nbuffer, element_size = memory_config["Bytes_per_element"], size=memory_config["Glb_memory"], bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"], debug = deb)
+    mem_model_b = memory_block(name="B", skip_blocks = skip_empty, nbuffer = nbuffer, element_size = memory_config["Bytes_per_element"], size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug  = deb)
+    mem_model_c = memory_block(name="C", skip_blocks = skip_empty, nbuffer = nbuffer, element_size = memory_config["Bytes_per_element"], size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = deb)
+ 
+    mem_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "mem2glb", bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = deb, loop_order = [struct["i0"], struct["k0"], struct["j0"]]) 
+    glb_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "glb2global", bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = deb, loop_order = [struct["i00"], struct["k00"], struct["j00"], struct["i0"], struct["k0"], struct["j0"]])
 
     flag_glb = False
     flag = False
@@ -89,8 +90,6 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     while not done and time_cnt < TIMEOUT:
         if debug_sim:
             print(time_cnt)
-        #print("Check")
-
         if len(in_ref_B00) > 0:
            fiberlookup_Bi00.set_in_ref(in_ref_B00.pop(0))
         fiberlookup_Bk00.set_in_ref(fiberlookup_Bi00.out_ref())
@@ -119,14 +118,6 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             repeat_Bj0 = Repeat(debug=debug_sim, statistics=report_stats)
             glb_model_b.valid_tile_recieved()
             glb_model_c.valid_tile_recieved()
-        # print("size")
-        # print(sizes_dict_level0["B"][(0, 0)])
-        # return
-        #if skip_empty and isinstance(repeat_Bj00.out_ref(), int) and isinstance(fiberlookup_Cj00.out_ref(), int):
-        #    if not (repeat_Bj00.out_ref()//struct["k00"] , repeat_Bj00.out_ref()%struct["k00"]) in sizes_dict_level0["B"]:
-        #        glb_model_b.add_tile(repeat_Bj00.out_ref(), -1)
-        #    if not (fiberlookup_Cj00.out_ref()//struct["j00"] , fiberlookup_Cj00.out_ref()%struct["j00"]) in sizes_dict_level0["C"]:
-        #        glb_model_c.add_tile(fiberlookup_Cj00.out_ref(), -1)
 
         if True: #not skip_empty:
             if isinstance(repeat_Bj00.out_ref(), int) and (repeat_Bj00.out_ref()//struct["k00"] , repeat_Bj00.out_ref()%struct["k00"]) in sizes_dict_level0["B"]:
@@ -137,10 +128,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 glb_model_c.add_tile(fiberlookup_Cj00.out_ref(), sizes_dict_level0["C"][(fiberlookup_Cj00.out_ref()//struct["j00"] , fiberlookup_Cj00.out_ref()%struct["j00"])])
             else:
                 glb_model_c.add_tile(fiberlookup_Cj00.out_ref(), 0)
-        # glb_model_b.set_downstream_token(mem_model_b.return_token())
-        # glb_model_c.set_downstream_token(mem_model_c.return_token())
-        glb_model_b.check_if_done(mem_model_b.out_done())
-        glb_model_c.check_if_done(mem_model_c.out_done())
+        glb_model_b.check_if_done(mem_model_b.out_done_in())
+        glb_model_c.check_if_done(mem_model_c.out_done_in())
 
         if flag_glb:
             if len(in_ref_B0) > 0:
@@ -175,33 +164,43 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
 
             if True: #not skip_empty:
                 if isinstance(repeat_Bj0.out_ref(), int) and (B_i00_, B_k00_, repeat_Bj0.out_ref()//struct["k0"] , repeat_Bj0.out_ref()%struct["k0"]) in sizes_dict_level1["B"]:
-                   mem_model_b.add_tile(repeat_Bj0.out_ref(), sizes_dict_level1["B"][(B_i00_, B_k00_, repeat_Bj0.out_ref()//struct["k0"] , repeat_Bj0.out_ref()%struct["k0"])])
+                    mem_model_b.add_tile(repeat_Bj0.out_ref(), sizes_dict_level1["B"][(B_i00_, B_k00_, repeat_Bj0.out_ref()//struct["k0"] , repeat_Bj0.out_ref()%struct["k0"])], glb_model_b.token())
                 else:
-                    mem_model_b.add_tile(repeat_Bj0.out_ref(), 0)
-                if isinstance(fiberlookup_Cj0.out_ref(), int) and (C_k00_, C_j00_, fiberlookup_Cj0.out_ref()//struct["j0"] , fiberlookup_Cj0.out_ref()%struct["j0"]) in sizes_dict_level1["C"]: 
-                    mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), sizes_dict_level1["C"][(C_k00_, C_j00_, fiberlookup_Cj0.out_ref()//struct["j0"] , fiberlookup_Cj0.out_ref()%struct["j0"])])
+                    mem_model_b.add_tile(repeat_Bj0.out_ref(), 0, glb_model_b.token())
+                if isinstance(fiberlookup_Cj0.out_ref(), int) and (C_k00_, C_j00_, fiberlookup_Cj0.out_ref()//struct["j0"] , fiberlookup_Cj0.out_ref()%struct["j0"]) in sizes_dict_level1["C"]:
+                    mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), sizes_dict_level1["C"][(C_k00_, C_j00_, fiberlookup_Cj0.out_ref()//struct["j0"] , fiberlookup_Cj0.out_ref()%struct["j0"])], glb_model_c.token())
                 else:
-                    mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), 0)
+                    mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), 0, glb_model_c.token())
         
         flag_token_mem = False
-        if mem_model_b.valid_tile() and mem_model_c.valid_tile():
+        if mem_model_b.valid_tile() and mem_model_c.valid_tile() and not mem_model_b.out_done() and not mem_model_c.out_done():
             flag = True
             flag_token_mem = True
             tiled_done_processed = False
             in_ref_B = [0, 'D']
             in_ref_C = [0, 'D']
+            #print("Updating Token")
+            if nbuffer:
+                B_k00 = (mem_model_b.token()//1000000)%struct["k00"]
+                B_i00 = (mem_model_b.token()//1000000)//struct["k00"]
+                B_k0 = (mem_model_b.token()%1000000)%struct["k0"]
+                B_i0 = (mem_model_b.token()%1000000)//struct["k0"]
+            else:
+                B_k00 = (glb_model_b.token())%struct["k00"]
+                B_i00 = (glb_model_b.token())//struct["k00"]
+                B_k0 = (mem_model_b.token())%struct["k0"]
+                B_i0 = (mem_model_b.token())//struct["k0"]
 
-
-            #print("Updating Token") 
-            B_k00 = glb_model_b.token()%struct["k00"]
-            B_i00 = glb_model_b.token()//struct["k00"]
-            B_k0 = mem_model_b.token()%struct["k0"]
-            B_i0 = mem_model_b.token()//struct["k0"]
-
-            C_j00 = glb_model_c.token()%struct["j00"]
-            C_k00 = glb_model_c.token()//struct["j00"]
-            C_j0 = mem_model_c.token()%struct["j0"]
-            C_k0 = mem_model_c.token()//struct["j0"]
+            if nbuffer:
+                C_j00 = (mem_model_c.token()//1000000)%struct["j00"]
+                C_k00 = (mem_model_c.token()//1000000)//struct["j00"]
+                C_j0 = (mem_model_c.token()%1000000)%struct["j0"]
+                C_k0 = (mem_model_c.token()%1000000)//struct["j0"]
+            else:
+                C_j00 = (glb_model_c.token())%struct["j00"]
+                C_k00 = (glb_model_c.token())//struct["j00"]
+                C_j0 = mem_model_c.token()%struct["j0"]
+                C_k0 = mem_model_c.token()//struct["j0"]
 
             B_dir = "tensor_B_tile_" + str(B_i00) + "_" + str(B_k00) + "_" + str(B_i0) + "_" + str(B_k0)
             B_dirname = os.path.join(formatted_dir, B_dir)
@@ -276,10 +275,6 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             B_shape = [loop_config["Mem_tile_size"], loop_config["Mem_tile_size"]]
             C_shape = [loop_config["Mem_tile_size"], loop_config["Mem_tile_size"]]
 
-            #print("Shapes: ", B_shape, " ", C_shape)
-            #print(B_crd0, B_seg0, B_seg1, B_crd1, B_vals)
-            #print(C_crd0, C_seg0, C_seg1, C_crd1, C_vals)
-            
             fiberlookup_Bi_19 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
             fiberlookup_Bk_14 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
             repsiggen_i_17 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
@@ -304,7 +299,12 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             mem_model_b.valid_tile_recieved()
             mem_model_c.valid_tile_recieved()
             check_flag = True
-        
+
+        if mem_model_b.valid_tile() and mem_model_c.valid_tile() and mem_model_b.out_done() and mem_model_c.out_done():
+            mem_model_x.add_upstream(tilecoord = "D", data = [[0], [0], [0], [0], [0]], valid = True)
+            mem_model_b.valid_tile_recieved()
+            mem_model_c.valid_tile_recieved()
+
         if flag:
             if len(in_ref_B) > 0:
                 fiberlookup_Bi_19.set_in_ref(in_ref_B.pop(0))
@@ -340,11 +340,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             fiberwrite_X0_2.set_input(spaccumulator1_3.out_crd_outer())
             mem_model_b.check_if_done(mem_model_x.out_done())
             mem_model_c.check_if_done(mem_model_x.out_done())
-            #mem_model_b.check_if_done([fiberwrite_Xvals_0.out_done(), fiberwrite_X1_1.out_done(), fiberwrite_X0_2.out_done()])
-            #mem_model_c.check_if_done([fiberwrite_Xvals_0.out_done(), fiberwrite_X1_1.out_done(), fiberwrite_X0_2.out_done()])
 
             mem_model_x.add_upstream(tilecoord = [B_i00, C_k00, C_j00, B_i0, C_k0, C_j0], data = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr(), fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr(), fiberwrite_Xvals_0.get_arr()], valid = tiled_done)
-            #glb_model_x.check_if_done(mem_model_x.out_done())
             glb_model_x.add_upstream(tilecoord = mem_model_x.token(), data = mem_model_x.get_size(), valid = mem_model_x.out_done())
 
         mem_model_x.set_child_ready(glb_model_x.out_ready())
@@ -423,13 +420,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 out_vals = fiberwrite_Xvals_0.get_arr()
                 if debug_sim:
                     pass
-                    #print("TILE IDs: Bi00: ", glb_model_b.token(), " ", glb_model_c.token(), " ", mem_model_b.token(), " ",mem_model_c.token()) 
-                    #print("TILE IDs: ", B_i00, B_k00, C_k00, C_j00, " , " , B_i0, B_k0, C_k0, C_j0) 
-                    #if len(out_vals) > 1:
-                    #    print("TILE ID ", B_i00, B_k00, C_k00, C_j00, " , " , B_i0, B_k0, C_k0, C_j0)
-                    #    print("Values: ", out_vals)
                 if check_gold:
-                    print("Checking gold...")
+                    print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
 
             if debug_sim and glb_model_b.out_done() == "D":
@@ -440,12 +432,16 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 print("Mem reader done ",  glb_model_x.out_done() , " ", mem_model_x.out_done())
                 print(glb_model_c.token() == "D" and glb_model_b.token() == "D")
 
-            if mem_model_c.token() == "D" and glb_model_c.token() == "D" and mem_model_b.token() == "D" and glb_model_b.token() == "D" and glb_model_x.out_done() and mem_model_x.out_done():
-                done = True
+            if mem_model_c.out_done():
+                if glb_model_c.out_done(): 
+                    if mem_model_b.out_done():
+                        if glb_model_b.out_done():
+                            print(glb_model_x.out_done())
+                            print(mem_model_x.out_done())
+                            if mem_model_x.final_done():
+                                if glb_model_x.final_done():
+                                    done = True
         
         #print("###################")
         time_cnt += 1
-
-        if time_cnt > 10000000:
-            return
     print(time_cnt)
