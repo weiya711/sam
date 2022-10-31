@@ -113,7 +113,7 @@ class output_memory_block():
                 assert False
             self.tile_ptrs_size.append(max_levels_size)
             tile_hash, tile_glb = hash_tile(tilecoord)
-            is self.debug:
+            if self.debug:
                 print("Tile pointer vales = ", tile_hash, " ", tile_glb)
             #tilecoord
             self.tile_ptrs_fifo.append(tile_hash)

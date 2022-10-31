@@ -436,8 +436,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 if glb_model_c.out_done(): 
                     if mem_model_b.out_done():
                         if glb_model_b.out_done():
-                            print(glb_model_x.out_done())
-                            print(mem_model_x.out_done())
+                            #print(glb_model_x.out_done())
+                            #print(mem_model_x.out_done())
                             if mem_model_x.final_done():
                                 if glb_model_x.final_done():
                                     done = True
