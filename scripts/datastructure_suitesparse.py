@@ -135,6 +135,7 @@ args = parser.parse_args()
 inputCache = InputCacheSuiteSparse()
 formatWriter = FormatWriter(args.integer)
 
+cwd = os.getcwd()
 if args.output_dir_path is None:
     out_dirname = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 else:
@@ -146,7 +147,6 @@ if args.name is None:
     print("Please enter a matrix name")
     exit()
 
-cwd = os.getcwd()
 if args.input_path is None:
     SS_PATH = os.getenv('SUITESPARSE_TENSOR_PATH', default=os.path.join(cwd, 'suitesparse'))
 else:
