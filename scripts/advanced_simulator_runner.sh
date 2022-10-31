@@ -13,6 +13,7 @@ BENCHMARKS=(
 #  mat_identity_back
 #  matmul_ikj_memory_back
    matmul_ikj_lp
+#  matmul_ikj_input_only
 #  matmul_ikj_tiled_bcsstm02
 #  matmul_ikj_check
 #  matmul_ikj_tiling
@@ -115,7 +116,7 @@ for b in ${!BENCHMARKS[@]}; do
 
 		cd $basedir/sam/sim
 		#python -m cProfile -o test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
-		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --skip-empty --check-gold --yaml_name=$3 --benchmark-json=$path/$line.json 
+		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --check-gold --yaml_name=$3 --benchmark-json=$path/$line.json 
 		python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?

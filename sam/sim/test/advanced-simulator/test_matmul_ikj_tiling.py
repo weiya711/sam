@@ -276,7 +276,9 @@ def test_matmul_ikj_tiling(samBench, ssname, check_gold, debug_sim, report_stats
 
             tiled_done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
 
-            mem_model_x.add_upstream(tilecoord = [B_i00, B_k00, C_k00, C_j00, B_i0, B_k0, C_k0, C_j0], data = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr(), fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr(), fiberwrite_Xvals_0.get_arr()], valid = tiled_done)
+            mem_model_x.add_upstream(tilecoord=[B_i00, B_k00, C_k00, C_j00, B_i0, B_k0, C_k0, C_j0],
+                    data=[fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr(), fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr(),
+                        fiberwrite_Xvals_0.get_arr()], valid = tiled_done)
             mem_model_x.input_token_(glb_model_x.return_token())
             glb_model_x.add_upstream(mem_model_x.token(), mem_model_x.get_size(), mem_model_x.out_done())
             glb_model_x.input_token_("D")

@@ -12,8 +12,21 @@ def hash_tile(tile_id):
         cnt += 1
     return hash_val, hash_val//(encoder_diff**num)
 
+def get_glb_tile_id(tile_id, num = 3):
+    if isinstance(tile_id, int):
+        encoder_diff = 10000
+        return tile_id//(encoder_diff**num)
+    return "D"
+
+def get_mem_tile_id(tile_id, num = 3):
+    if isinstance(tile_id, int):
+        encoder_diff = 10000
+        return tile_id%(encoder_diff**num)
+    return "D"
+
+
 class output_memory_block():
-    def __init__(self, name = "B", element_size = 2, level = None, indexes = 2, size = 1000*2, debug=False, latency = 2, bandwidth = 2, length = 1, mode = "all_unpacked"):
+    def __init__(self, name = "B", element_size = 2, level = None, indexes = 2, size = 1000*2, debug=False, latency = 2, bandwidth = 2, length = 1, mode = "all_unpacked", loop_order = [2, 2, 2]):
         self.name = name
         self.level = level
         self.size = size//2
@@ -39,9 +52,23 @@ class output_memory_block():
         self.valid_processed = False
         self.child_ready = False
         self.indexes = indexes
+        loop_order = [a-1 for a in loop_order]
+        self.loop_order, _ = hash_tile(loop_order)
+        if self.level == "glb2global":
+            self.mem_loop_limit = get_mem_tile_id(self.loop_order) 
 
     def out_done(self):
         return self.done
+    
+    def final_done(self): 
+        if self.debug:
+            print(self.level," done check-- ", self.curr_tile , " ", self.loop_order)
+        if self.level == "mem2glb" and self.done:
+            if get_mem_tile_id(self.curr_tile) == self.loop_order:
+                return True
+        if self.level == "glb2global" and self.curr_tile == self.loop_order and self.done:
+            return True
+        return False
 
     def out_ready(self):
         return self.ready
@@ -69,6 +96,10 @@ class output_memory_block():
         if valid and not self.valid_processed and self.level == "mem2glb": 
             self.valid_processed = True
             limits = len(data)-1
+            if tilecoord == "D":
+                self.tile_ptrs_fifo.append("D")
+                self.tile_ptrs_size.append(0)
+                return
             size_levels = [0]*(limits//2)
             size_vals = len(data[len(data)-1])
             for lengths in range(len(size_levels)):
@@ -82,9 +113,10 @@ class output_memory_block():
                 assert False
             self.tile_ptrs_size.append(max_levels_size)
             tile_hash, tile_glb = hash_tile(tilecoord)
-            print("Tile pointer vales = ", tile_hash, " ", tile_glb)
+            is self.debug:
+                print("Tile pointer vales = ", tile_hash, " ", tile_glb)
             #tilecoord
-            self.tile_ptrs_fifo.append(tile_glb)
+            self.tile_ptrs_fifo.append(tile_hash)
 
         if valid and not self.valid_processed and self.level == "glb2global": 
             self.valid_processed = True
@@ -108,47 +140,51 @@ class output_memory_block():
             elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
                 self.loading = False
                 self.done = True
-                self.curr_tile = "D"
+                #self.curr_tile = "D"
             elif self.done and self.child_ready:
                 self.ready = True
 
-        if self.level == "glb2global":
+        if self.level == "glb2global": 
             self.old_tile = None
-            if self.ready and len(self.tile_ptrs_fifo) > 0 and self.tile_ptrs_fifo[0] == "D":
+            if self.ready and self.done == False and get_mem_tile_id(self.curr_tile) == self.mem_loop_limit:
+                self.loading = True
+                self.ready = False
+                self.done = False
+                self.timestamp = cyclenum
+            elif self.ready and len(self.tile_ptrs_fifo) > 0 and (self.curr_tile == None or self.done):
                 self.curr_tile = self.tile_ptrs_fifo.pop(0)
-                self.done = True
+                self.done = False
                 self.ready = True
-            if self.ready and len(self.tile_ptrs_fifo) > 0 and (self.curr_tile == None or self.curr_tile == "D" or self.curr_tile == self.tile_ptrs_fifo[0]):
-                #print("-0-0-0-0-0-0-0-0-0-")
+            elif self.ready and len(self.tile_ptrs_fifo) > 0 and (get_glb_tile_id(self.curr_tile) == get_glb_tile_id(self.tile_ptrs_fifo[0])):
                 self.curr_tile = self.tile_ptrs_fifo.pop(0)
                 self.curr_size += self.tile_ptrs_size.pop(0)
                 self.done = False
-                #self.loading = True
-            elif self.ready and len(self.tile_ptrs_fifo) > 0 and self.curr_tile != None and self.curr_tile != self.tile_ptrs_fifo[0]:
-                #if len(self.tile_ptrs_fifo) > 0 and self.curr_tile != self.tile_ptrs_fifo[0]:
-                #print("***************************************************************************************")
+                self.ready = True
+            elif self.ready and len(self.tile_ptrs_fifo) > 0 and self.curr_tile != None and get_glb_tile_id(self.curr_tile) != get_glb_tile_id(self.tile_ptrs_fifo[0]):
                 self.loading = True
                 self.ready = False 
                 self.done = False
                 self.timestamp = cyclenum
-                #self.curr_size = 0
-            #elif self.ready and len(self.tile_ptrs_fifo) == 0 and self.curr_tile != None:
-            #    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^") 
-            #    self.loading = True
-            #    self.ready = False
-            #    self.done = False
-            #    #self.curr_size = 0
             elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
-                #print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&")
                 self.ready = True
                 self.curr_size = 0
                 self.done = True
+                self.loading = False
                 if len(self.tile_ptrs_fifo) > 0:
                     self.curr_tile = self.tile_ptrs_fifo[0]
-        #if self.level == "glb2global" and self.ready == False:
-            #print("@@@@@@@@@@@@@@@@@@@@")
         if self.debug:
-            print(self.level, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " curr tile: ", self.curr_tile, " Done ", self.done, " valid processed: ", self.valid_processed, " Child ready ", self.child_ready, " , ", self.curr_size, "       " , self.tile_ptrs_fifo)
+            #print(self.level  , " self.curr_tile", self.curr_tile, " ", cyclenum, self.timestamp + self.compute_latency(self.curr_tile), self.timestamp)
+            if self.loading == True:
+                print(self.level, " loads stuff : ", self.curr_tile , " ", get_glb_tile_id(self.curr_tile), self.curr_tile//(10000**3), get_mem_tile_id(self.curr_tile))
+            #    if self.level == "glb2global":
+            #        print(self.mem_loop_limit)
+            #if self.loading == True and self.level == "glb2global":
+            #    print("*********")
+            #if self.done == False:
+            #    print("####DONE FALSE for ", self.level)
+            #elif self.done == True and self.level == "glb2global":
+            #    print("@@@@ DONE True")
+            print("Output ", self.level, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " curr tile: ", self.curr_tile, " Done ", self.done, " valid processed: ", self.valid_processed, " Child ready ", self.child_ready, " , ", self.curr_size, "       " , self.tile_ptrs_fifo)
 
     def set_child_ready(self, token):
         self.child_ready = token
@@ -183,7 +219,7 @@ class output_memory_block():
 
 
 class memory_block():
-    def __init__(self, name = "B", skip_blocks = False, element_size = 2, level = None, indexes = 2, size = 1000*2, latency = 10, debug=False, bandwidth = 2, length = 1, mode = "all_unpacked"):
+    def __init__(self, name = "B", skip_blocks = False, element_size = 2, level = None, indexes = 2, size = 1000*2, nbuffer = False, latency = 10, debug=False, bandwidth = 2, length = 1, mode = "all_unpacked"):
         self.name = name
         self.skip_blocks = skip_blocks
         self.level = level
@@ -193,6 +229,7 @@ class memory_block():
         self.bandwidth = bandwidth
         self.length = length
         self.tile_ptrs = []
+        self.nbuffer = nbuffer
 
         self.tile_ptrs_fifo = [] # virtual
         self.tile_ptrs_size = []
@@ -214,18 +251,50 @@ class memory_block():
         self.valid_processed = False
         self.done_processed = False
         self.indexes = indexes
+        #self.nbuffer = False
+        self.full_buff = False# True
+        if self.nbuffer or self.full_buff:
+            self.loading_tile = None
+            self.load_size = 0
+            self.curr_tile = None
+            self.curr_size = 0
+            self.tile_ptrs = []
+            self.repeat_pattern = []
+            self.tile_sizes = []
+            self.timestamp = None
+            self.loading = False
+            self.done_in = False
 
     def out_done(self):
+        if self.nbuffer or self.full_buff:
+            return (len(self.tile_ptrs_fifo) == 0) and (len(self.tile_ptrs) < 2) and self.done
         return self.done
 
-    def add_tile(self, tile_ptr, size):
+    def out_done_in(self):
+        if self.nbuffer or self.full_buff:
+            return self.done_in
+        return self.out_done()
+
+    def add_tile(self, tile_ptr, size, upperlvl = 0):
         if tile_ptr == "D":
             self.tile_ptrs_fifo.append("D")
             self.tile_ptrs_size.append(0)
-        if tile_ptr != "" and isinstance(tile_ptr, int):
-            self.done = False
-            self.tile_ptrs_fifo.append(tile_ptr)
-            self.tile_ptrs_size.append(size)
+            return
+        if self.nbuffer or self.full_buff:
+            if tile_ptr != "" and isinstance(tile_ptr, int):
+                self.done = False
+                if isinstance(upperlvl, int):
+                    # upperlvl = 0
+                    self.tile_ptrs_fifo.append(tile_ptr + upperlvl*1000000)
+                else:
+                    self.tile_ptrs_fifo.append(tile_ptr)
+                self.tile_ptrs_size.append(size)
+        else:
+            if tile_ptr != "" and isinstance(tile_ptr, int):
+                self.done = False
+                self.tile_ptrs_fifo.append(tile_ptr)
+                self.tile_ptrs_size.append(size)
+ 
 
     def set_downstream_token(self, token):
         self.downstream_token = token
@@ -295,15 +364,6 @@ class memory_block():
             elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
                 self.loading = False
                 self.done = True
-            #elif self.done_received and not self.done_processed:
-            #    #Reset cycle
-            #    self.ready = True
-            #    self.done_processed = True
-            #    self.done = False
-            #if self.done_processed == True and self.done_received == False:
-            #    #Disable reset
-            #    self.done_processed=False
-
         if self.level == "glb2global":
             self.old_tile = None
             if self.ready and len(self.tile_ptrs_fifo) > 0:
@@ -319,54 +379,279 @@ class memory_block():
             
 
     def update(self, cyclenum):
-        self.signalled = False
-        if self.ready and len(self.tile_ptrs_fifo) > 0:
-            if self.curr_tile != "D":
-                self.old_tile = self.curr_tile
-            self.curr_tile = self.tile_ptrs_fifo.pop(0)
-            self.curr_size = self.tile_ptrs_size.pop(0)
-            if self.mode == "all_unpacked":
-                assert self.curr_size < (self.size * (self.indexes + 1))
-            elif self.mode == "not_consolidated":
-                assert self.curr_size < self.size
-            else:
-                print(self.mode + " not found")
-            if self.curr_tile == "D":
-                self.timestamp = None
-                self.ready = True
-                self.loading = False
-                self.valid = False
-                #self.curr_tile = None
+        if self.full_buff:
+            #if "GLB" in self.name: 
+                #print(self.name , "::", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
+            #    print("    full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo)
+            #    print("    ", self.tile_sizes, self.curr_size, self.load_size, self.tile_ptrs_size)
+            
+            assert len(self.tile_ptrs) == len(self.tile_sizes)
+            if len(self.tile_sizes) > 0:
+                #print("Tile sizes check", self.tile_sizes, " ",  sum(self.tile_sizes), sum(self.tile_sizes) + self.load_size, self.curr_size)
+                if self.loading_tile == None:
+                    #print(self.tile_sizes, " ", self.curr_size)
+                    assert sum(self.tile_sizes) == self.curr_size
+                else:
+                    assert sum(self.tile_sizes) + self.load_size == self.curr_size
+            assert len(self.tile_ptrs_fifo) == len(self.tile_ptrs_size)
+            
+            if self.done_received and not self.done_processed:
                 self.outputed = False
-                self.done = True
-                self.signalled = True
-                self.done_received = False
+                self.done_processed = True
+                self.valid = False
+                tile = self.tile_ptrs.pop(0)
+                self.curr_size -= self.tile_sizes.pop(0)
+                if len(self.tile_ptrs) == 0:
+                    self.old_tile = tile
+                else:
+                    self.old_tile = None
+                if len(self.tile_ptrs) > 0:
+                    self.curr_tile = self.tile_ptrs[0]
+                print("evit case", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
+                #return
+
+            if self.done_processed == True and self.done_received == False:
                 self.done_processed = False
-                if self.debug:
-                    print(self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
-                return
-            self.timestamp = cyclenum
-            self.ready = False
-            self.loading = True
-            self.valid = False
-            #self.done_processed = False
-        elif self.loading and cyclenum < self.timestamp + self.compute_latency(self.curr_tile):
-            pass
-        elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
-            self.loading = False
-            self.valid = True
-            self.outputed = False
-        elif self.done_received and not self.done_processed:
-            self.ready = True
-            self.done_processed = True
-            self.valid = False
-        elif not self.ready and not self.loading and self.input_token():
-            self.ready = True
-            self.valid = False
-        if self.done_processed == True and self.done_received == False:
-            self.done_processed=False
+            
+            if len(self.tile_ptrs) > 0:
+                self.curr_tile = self.tile_ptrs[0]
+                self.valid = True
+                if self.curr_tile == "D" and len(self.tile_ptrs) < 2 and len(self.tile_ptrs_fifo) == 0:
+                    self.timestamp = None
+                    self.ready = True
+                    self.loading = False
+                    self.valid = False
+                    self.outputed = False
+                    self.done = True
+                    self.done_received = False
+                    self.done_processed = False
+                    if self.debug:
+                        print("Done case:: ", self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs)
+                    #return
+                elif self.curr_tile == "D":
+                    self.tile_ptrs.pop(0)
+                    assert self.tile_sizes.pop(0) == 0
+                    self.curr_tile = self.tile_ptrs[0]
+
+            # Determines Ready
+            if len(self.tile_ptrs_fifo) > 0:
+                if len(self.tile_ptrs) > 0 and self.tile_ptrs_fifo[0] not in self.tile_ptrs:
+                    if self.tile_ptrs_size[0] + self.curr_size < self.size:
+                        self.ready = True
+                    else:
+                        self.ready = False
+                if len(self.tile_ptrs) > 0 and self.tile_ptrs_fifo[0] in self.tile_ptrs:
+                    self.ready = True
+            #else:
+            #    self.ready = True
+            # Actual transfer of data
+            if self.ready and len(self.tile_ptrs_fifo) > 0 and len(self.tile_ptrs) > 0 and (self.tile_ptrs_fifo[0] in self.tile_ptrs) and not self.loading:
+                tile = self.tile_ptrs_fifo.pop(0)
+                self.tile_ptrs_size.pop(0)
+                self.tile_ptrs.append(tile)
+                self.tile_sizes.append(0)
+                #self.repeat_pattern.append("R")
+            elif self.ready and len(self.tile_ptrs_fifo) > 0 and (len(self.tile_ptrs) == 0 or (self.tile_ptrs_fifo[0] not in self.tile_ptrs)) and not self.loading:
+                self.loading = True
+                self.ready = False
+                tile = self.tile_ptrs_fifo.pop(0)
+                self.load_size = self.tile_ptrs_size[0]
+                # print(self.load_size)
+                self.curr_size += self.tile_ptrs_size.pop(0)
+                self.loading_tile = tile
+                self.timestamp = cyclenum
+            elif self.loading and cyclenum > self.compute_latency(self.load_size) + self.timestamp:
+                self.loading = False
+                if self.loading_tile == "D" and (len(self.tile_ptrs) > 1 or len(self.tile_ptrs_fifo) > 1):
+                    self.done_in = True
+                elif self.loading_tile == "D":
+                    self.done = True
+                    self.done_in = True
+                else:
+                    self.done_in = False
+                self.tile_ptrs.append(self.loading_tile)
+                self.tile_sizes.append(self.load_size)
+                #self.repeat_pattern.append("S")
+                self.loading_tile = None
+                #self.ready = False
+                self.load_size = 0
+ 
+        elif self.nbuffer:
+            #if "GLB" in self.name: 
+            #print(self.name , "::", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
+            #print("    full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo)
+            #print("    ", self.tile_sizes, self.curr_size, self.load_size, self.tile_ptrs_size)
+ 
+            #self.done_in = False
+            #self.done = False
+            #print(self.name , " ", self.curr_tile)
+            # Evicts from memory handles case if memory empty retain till new data comes in
+            #if self.done_received and not self.done_processed:
+            #    self.outputed = False
+            #    self.done_processed = True
+            #    self.valid = False
+            #    tile = self.tile_ptrs.pop(0)
+            #    repeat = self.repeat_pattern.pop(0)
+            #    if repeat != "R":
+            #        self.curr_size -= self.tile_sizes.pop(0)
+            #    else:
+            #        self.tile_sizes.pop(0)
+            #    if len(self.tile_ptrs) == 0:
+            #        self.old_tile = tile
+            #    else:
+            #        self.old_tile = None
+            #    if len(self.tile_ptrs) > 0:
+            #        self.curr_tile = self.tile_ptrs[0]
+            #    print("evit case", self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs[0:10])
+            #    return
+            #if self.done_processed == True and self.done_received == False:
+            #    self.done_processed = False
+            
+            assert len(self.tile_ptrs) == len(self.tile_sizes)
+            if len(self.tile_sizes) > 0:
+                if self.loading_tile == None:
+                    assert sum(self.tile_sizes) == self.curr_size
+                else:
+                    assert sum(self.tile_sizes) + self.load_size == self.curr_size
+            assert len(self.tile_ptrs_fifo) == len(self.tile_ptrs_size)
+            if self.done_received and not self.done_processed:
+                self.outputed = False
+                self.done_processed = True
+                self.valid = False
+                tile = self.tile_ptrs.pop(0)
+                #repeat = self.repeat_pattern.pop(0)
+                #if repeat != "R":
+                self.curr_size -= self.tile_sizes.pop(0)
+                #else:
+                #    self.tile_sizes.pop(0)
+                if len(self.tile_ptrs) == 0:
+                    self.old_tile = tile
+                else:
+                    self.old_tile = None
+                if len(self.tile_ptrs) > 0:
+                    self.curr_tile = self.tile_ptrs[0]
+                print("evit case", self.done_in, " ", self.curr_size, self.load_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
+                #return
+
+            if self.done_processed == True and self.done_received == False:
+                self.done_processed = False
+            
+            if len(self.tile_ptrs) > 0:
+                self.curr_tile = self.tile_ptrs[0]
+                self.valid = True
+                if self.curr_tile == "D" and len(self.tile_ptrs) < 2 and len(self.tile_ptrs_fifo) == 0:
+                    self.timestamp = None
+                    self.ready = True
+                    self.loading = False
+                    self.valid = False
+                    self.outputed = False
+                    self.done = True
+                    self.done_received = False
+                    self.done_processed = False
+                    if self.debug:
+                        print("Done case:: ", self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs)
+                    #return
+                elif self.curr_tile == "D":
+                    self.tile_ptrs.pop(0)
+                    assert self.tile_sizes.pop(0) == 0
+                    self.curr_tile = self.tile_ptrs[0]
+
+            # Determines Ready
+            if len(self.tile_ptrs_fifo) > 0:
+                if len(self.tile_ptrs) > 0 and self.tile_ptrs_fifo[0] != self.tile_ptrs[-1]:
+                    assert self.tile_ptrs_size[0] < self.size
+                    if self.tile_ptrs_size[0] + self.curr_size < self.size:
+                        self.ready = True
+                    else:
+                        self.ready = False
+                if len(self.tile_ptrs) > 0 and self.tile_ptrs_fifo[0] == self.tile_ptrs[-1]:
+                    self.ready = True
+            else:
+                self.ready = True
+            # Actual transfer of data
+            if self.ready and len(self.tile_ptrs_fifo) > 0 and len(self.tile_ptrs) > 0 and self.tile_ptrs[-1] == self.tile_ptrs_fifo[0]:
+                tile = self.tile_ptrs_fifo.pop(0)
+                self.tile_ptrs_size.pop(0)
+                self.tile_ptrs.append(tile)
+                self.tile_sizes.append(0)
+                #self.repeat_pattern.append("R")
+            elif self.ready and len(self.tile_ptrs_fifo) > 0 and (len(self.tile_ptrs) == 0 or self.tile_ptrs[-1] != self.tile_ptrs_fifo[0]) and not self.loading:
+                self.loading = True
+                tile = self.tile_ptrs_fifo.pop(0)
+                self.load_size = self.tile_ptrs_size[0]
+                # print(self.load_size)
+                self.curr_size += self.tile_ptrs_size.pop(0)
+                self.loading_tile = tile
+                self.timestamp = cyclenum
+            elif self.loading and cyclenum > self.compute_latency(self.load_size) + self.timestamp:
+                self.loading = False
+                if self.loading_tile == "D" and (len(self.tile_ptrs) > 1 or len(self.tile_ptrs_fifo) > 1):
+                    self.done_in = True
+                    #self.load_size = 0
+                elif self.loading_tile == "D":
+                    self.done = True
+                    self.done_in = True
+                    #self.load_size = 0
+                else:
+                    self.done_in = False
+                    #self.load_size = 0
+                self.tile_ptrs.append(self.loading_tile)
+                self.tile_sizes.append(self.load_size)
+                #self.repeat_pattern.append("S")
+                self.load_size = 0
+                self.loading_tile = None
+        else:
+            self.signalled = False
+            if self.ready and len(self.tile_ptrs_fifo) > 0:
+                if self.curr_tile != "D":
+                    self.old_tile = self.curr_tile
+                self.curr_tile = self.tile_ptrs_fifo.pop(0)
+                self.curr_size = self.tile_ptrs_size.pop(0)
+                if self.mode == "all_unpacked":
+                    assert self.curr_size < (self.size)
+                elif self.mode == "not_consolidated":
+                    assert self.curr_size < self.size
+                else:
+                    print(self.mode + " not found")
+                if self.curr_tile == "D":
+                    self.timestamp = None
+                    self.ready = True
+                    self.loading = False
+                    self.valid = False
+                    #self.curr_tile = None
+                    self.outputed = False
+                    self.done = True
+                    self.signalled = True
+                    self.done_received = False
+                    self.done_processed = False
+                    if self.debug:
+                        print(self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
+                    return
+                self.timestamp = cyclenum
+                self.ready = False
+                self.loading = True
+                self.valid = False
+                #self.done_processed = False
+            elif self.loading and cyclenum < self.timestamp + self.compute_latency(self.curr_tile):
+                pass
+            elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
+                self.loading = False
+                self.valid = True
+                self.outputed = False
+            elif self.done_received and not self.done_processed:
+                self.ready = True
+                self.done_processed = True
+                self.valid = False
+            elif not self.ready and not self.loading and self.input_token():
+                self.ready = True
+                self.valid = False
+            if self.done_processed == True and self.done_received == False:
+                self.done_processed=False
         if self.debug:
-            print(self.name,  self.old_tile, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
+            if self.nbuffer:
+                print(self.name,  self.curr_size, self.size, self.old_tile, " done in ", self.done_in, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile , " ", self.tile_ptrs, " ", self.loading_tile, " ", self.tile_ptrs_fifo, "----------")
+            else:
+                print(self.name,  self.old_tile, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile , " ", self.tile_ptrs[0:10], " ", self.tile_ptrs_fifo[0:10], "----------")
 
     def remove_tile(self, tile_ptr = None, tile_id = -1):
         if tile_ptr != None:
@@ -394,19 +679,26 @@ class memory_block():
         return False
 
     def compute_latency(self, tile):
-        if self.skip_blocks and self.curr_size == 0 and self.curr_tile != None:
-            return self.latency
-        if self.curr_tile == self.old_tile:
-            return 1
-        if self.mode == "all_unpacked":
-            return self.latency + (self.curr_size * self.element_size)//(self.bandwidth)
-            #return self.latency + self.curr_size//(self.bandwidth * (self.indexes + 1))
-        elif self.mode == "not_consolidated":
-            #elf.curr_size * self.element_size)//(self.bandwidth)
-            return self.latency + self.curr_size//(self.bandwidth)
+        if self.nbuffer or self.full_buff:
+            if self.skip_blocks and self.curr_size == 0 and self.loading_tile != None:
+                return self.latency
+            if self.loading_tile != None and self.old_tile != None:
+                return 1
+            return self.latency + (tile * self.element_size)// (self.bandwidth)
         else:
-            print(self.mode + " not found")
-            assert False
+            if self.skip_blocks and self.curr_size == 0 and self.curr_tile != None:
+                return self.latency
+            if self.curr_tile == self.old_tile:
+                return 1
+            if self.mode == "all_unpacked":
+                return self.latency + (self.curr_size * self.element_size)//(self.bandwidth)
+                #return self.latency + self.curr_size//(self.bandwidth * (self.indexes + 1))
+            elif self.mode == "not_consolidated":
+                #elf.curr_size * self.element_size)//(self.bandwidth)
+                return self.latency + self.curr_size//(self.bandwidth)
+            else:
+                print(self.mode + " not found")
+                assert False
 
     def valid_tile(self):
         if self.valid and not self.outputed:
