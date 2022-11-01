@@ -404,14 +404,17 @@ class SparseCrdPtAccumulator1(Primitive):
         i = 0
         cnt_gt_zero = 0
         cnt_total = 0
+        total_sum = 0
         if self.get_stats:
             for k in self.hits_tracker.keys():
                 if self.hits_tracker[k] > i:
                     i = self.hits_tracker[k]
                 if self.hits_tracker[k] > 1:
                     cnt_gt_zero += 1
+                total_sum += self.hits_tracker[k]
                 cnt_total += 1
-        return i, cnt_gt_zero, cnt_total
+                
+        return i, cnt_gt_zero, cnt_total, total_sum
 
 
 # Accumulation into a vector
@@ -550,6 +553,7 @@ class SparseAccumulator1(Primitive):
             stats_dict["max_hits"] = hits_info[0]
             stats_dict["hits_gt_one"] = hits_info[1]
             stats_dict["total_elems"] = hits_info[2]
+            stats_dict["rmw_ops"] = hits_info[3]
             stats_dict.update(self.crdpt_spacc.return_statistics())
             stats_dict.update(super().return_statistics())
         else:
@@ -1174,7 +1178,7 @@ class SparseAccumulator2_back(Primitive):
             hits_info = self.crdpt_spacc.return_hits()
             stats_dict = {"in1_fifo": self.in1_fifo, "in0_fifo": self.in0_fifo,
                           "inval_fifo": self.inval_fifo, "max_hits": hits_info[0], "gt_one": hits_info[1],
-                          "total_elems": hits_info[2]}
+                          "total_elems": hits_info[2], "rmw_ops": hits_info[3]}
             stats_dict.update(self.crdpt_spacc.return_statistics())
             stats_dict.update(super().return_statistics())
         else:

@@ -19,7 +19,13 @@ DATASET_NAMES=(
 #  GD95_b
 #  Hamrle1
 #  LF10
-testbig
+  bcsstk10
+  bcsstk17
+  rma10
+  cant
+  consph
+  pwtk
+  mac_econ_fwd500
 )
 
 mkdir -p $outdir
