@@ -28,22 +28,25 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 )
 @pytest.mark.suitesparse
 def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_stats, skip_empty, yaml_name, nbuffer, fill=0):
+    stats_dict = {"mul_6_ops":0, "spacc1_3_rmw_ops":[]}
+
+
     #if skip_empty:
     #    assert False
     with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
-    print("____________________")
+    #print("____________________")
     assert sizes_dict_level_full["B"][0] == sizes_dict_level_full["C"][1]
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_0_sizes"), "rb") as ff:
         sizes_dict_level0 = pickle.load(ff)
     
-    print("____________________")
-    print(sizes_dict_level0)
+    #print("____________________")
+    #print(sizes_dict_level0)
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_1_sizes"), "rb") as ff:
         sizes_dict_level1 = pickle.load(ff)
     
-    print("____________________")
-    print(sizes_dict_level1)
+    #print("____________________")
+    #print(sizes_dict_level1)
     full_size = 0
     for sizes in sizes_dict_level_full:
         full_size = sizes_dict_level_full[sizes]
@@ -85,6 +88,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     tiled_done = False
     tiled_done_processed = False
     check_flag = True
+    #array = []
+    #array2 = []
     while not done and time_cnt < TIMEOUT:
         if debug_sim:
             print(time_cnt)
@@ -114,6 +119,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             fiberlookup_Cj0 = UncompressCrdRdScan(dim=struct["j0"], debug=debug_sim)
             repsiggen_j0 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
             repeat_Bj0 = Repeat(debug=debug_sim, statistics=report_stats)
+            # print("INITIALIZE Mem loop at ", time_cnt)
             glb_model_b.valid_tile_recieved()
             glb_model_c.valid_tile_recieved()
 
@@ -222,10 +228,10 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
             C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
             C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
-            print("FILENAME ", B_shape_filename)
-            print("EXISTS? ", os.path.exists(B_shape_filename))
-            print("FILENAME ", C_shape_filename)
-            print("EXISTS? ", os.path.exists(C_shape_filename))
+            #print("FILENAME ", B_shape_filename)
+            #print("EXISTS? ", os.path.exists(B_shape_filename))
+            #print("FILENAME ", C_shape_filename)
+            #print("EXISTS? ", os.path.exists(C_shape_filename))
  
             if os.path.exists(B_shape_filename):
                 B_shape = read_inputs(B_shape_filename)
@@ -294,6 +300,9 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
             fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
             fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats) 
+            
+            #print("INITIALIZE compute loop at ", time_cnt)
+            initialize_cntr = time_cnt
             mem_model_b.valid_tile_recieved()
             mem_model_c.valid_tile_recieved()
             check_flag = True
@@ -406,7 +415,9 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             #glb_model_x.update(time_cnt)
 
             if tiled_done and check_flag:
-                print("TIME PNT ", time_cnt)
+                #array.append(time_cnt - initialize_cntr)
+                #array2.append(str(B_i00) + "," + str(B_k00) + "," + str(C_j00)  + ":" + "," + str(B_i0) + "," + str(B_k0) + "," + str(C_j0))
+                #print("TIME PNT ", time_cnt)
                 check_flag = False
                 fiberwrite_X0_2.autosize()
                 fiberwrite_X1_1.autosize()
@@ -418,8 +429,12 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 if debug_sim:
                     pass
                 if check_gold:
-                    print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0)
+                    #print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
+                if report_stats:
+                    stats_dict["mul_6_ops"] += mul_6.return_statistics()["cycle_operation"]
+                    stats_dict["spacc1_3_rmw_ops"].append(spaccumulator1_3.return_statistics()["rmw_ops"])
+
 
             if debug_sim and glb_model_b.out_done() == "D":
                 print(mem_model_c.token(), " ", mem_model_b.token())
@@ -442,4 +457,20 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         
         #print("###################")
         time_cnt += 1
+    #print(array)
+    #arr_ = np.asarray(array)
+    #arr__ = np.asarray(array2)
+    #final_arr_ = []
+    #final_arr__ = []
+    #for i in range(len(arr_)):
+    #    if arr_[i] > 17:
+    #        final_arr_.append(arr_[i])
+    #        final_arr__.append(arr__[i])
+    #print(sum(array),  " ", max(array), )
+    #print(final_arr_)
+    #print(final_arr__)
+    #print("--------")
     print(time_cnt)
+    if report_stats:
+        print("\t Mul ops:", stats_dict["mul_6_ops"])
+        print("\t Acc ops:", sum(stats_dict["spacc1_3_rmw_ops"]))
