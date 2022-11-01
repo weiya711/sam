@@ -27,11 +27,9 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_stats, skip_empty, yaml_name, fill=0):
+def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_stats, skip_empty, yaml_name, nbuffer, fill=0):
     #if skip_empty:
     #    assert False
-    nbuffer = False # True
-    deb = False # True # True
     with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
     print("____________________")
@@ -432,7 +430,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 print("Mem reader done ",  glb_model_x.out_done() , " ", mem_model_x.out_done())
                 print(glb_model_c.token() == "D" and glb_model_b.token() == "D")
 
-            if mem_model_c.out_done():
+            if tiled_done and mem_model_c.out_done():
                 if glb_model_c.out_done(): 
                     if mem_model_b.out_done():
                         if glb_model_b.out_done():

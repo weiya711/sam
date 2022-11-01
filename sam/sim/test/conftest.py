@@ -21,6 +21,8 @@ def pytest_addoption(parser):
                      help="Flag that enables functional output checking")
     parser.addoption("--yaml_name", type=str, default="memory_config_real.yaml",
                      help="Name of yaml file for tiling memory configuration")
+    parser.addoption("--nbuffer", action="store_true", default=False,
+                     help="If nbuffering is enabled")
 
 
 
@@ -59,6 +61,11 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture
 def skip_empty(request):
     return request.config.getoption("--skip-empty")
+
+@pytest.fixture
+def nbuffer(request):
+    return request.config.getoption("--nbuffer")
+
 
 @pytest.fixture
 def debug_sim(request):
