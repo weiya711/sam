@@ -31,7 +31,7 @@ def check_gold_matmul_tiled(tile_crd_b, tile_crd_c, ssname, debug_sim, out_crds,
     # CSR
     gold_file_path = "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_b[2]) + "_" + str(tile_crd_b[3]) + "_" + str(tile_crd_c[3]) + ".mtx"
     gold_path = os.path.join(tiled_output_path, gold_file_path)
-    print(gold_path)
+    #print(gold_path)
     if not os.path.exists(gold_path):
         if len(out_val) == 0:
             return
