@@ -77,8 +77,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     mem_model_b = memory_block(name="B", skip_blocks = skip_empty, nbuffer = nbuffer, element_size = memory_config["Bytes_per_element"], size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug  = debug_sim)
     mem_model_c = memory_block(name="C", skip_blocks = skip_empty, nbuffer = nbuffer, element_size = memory_config["Bytes_per_element"], size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = debug_sim)
  
-    mem_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "mem2glb", bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = deb, loop_order = [struct["i0"], struct["k0"], struct["j0"]]) 
-    glb_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "glb2global", bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = deb, loop_order = [struct["i00"], struct["k00"], struct["j00"], struct["i0"], struct["k0"], struct["j0"]])
+    mem_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "mem2glb", bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = debug_sim, loop_order = [struct["i0"], struct["k0"], struct["j0"]]) 
+    glb_model_x = output_memory_block(name="X", element_size = memory_config["Bytes_per_element"], level = "glb2global", bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"], debug = debug_sim, loop_order = [struct["i00"], struct["k00"], struct["j00"], struct["i0"], struct["k0"], struct["j0"]])
 
     flag_glb = False
     flag = False
