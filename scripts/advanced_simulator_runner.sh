@@ -87,8 +87,6 @@ mkdir -p "$benchout"
 mkdir -p $format_outdir
 mkdir -p $TACO_TENSOR_PATH/other-formatted-taco
 
-#make -j8 taco/build NEVA=$neva LANKA=$lanka GEN=ON
-
 for b in ${!BENCHMARKS[@]}; do
 	bench=${BENCHMARKS[$b]}
 	path=$basedir/$benchout/$bench
