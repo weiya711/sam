@@ -32,22 +32,22 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     #    assert False
     with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
-    print("____________________")
+    #print("____________________")
     assert sizes_dict_level_full["B"][0] == sizes_dict_level_full["C"][1]
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_0_sizes"), "rb") as ff:
         sizes_dict_level0 = pickle.load(ff)
     
-    print("____________________")
-    print(sizes_dict_level0)
+    #print("____________________")
+    #print(sizes_dict_level0)
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_1_sizes"), "rb") as ff:
         sizes_dict_level1 = pickle.load(ff)
     
-    print("____________________")
-    print(sizes_dict_level1)
+    #print("____________________")
+    #print(sizes_dict_level1)
     full_size = 0
     for sizes in sizes_dict_level_full:
         full_size = sizes_dict_level_full[sizes]
-    full_size = 846*1966 # Not used later replaced in the creating the struct
+    #full_size = 846*1966 # Not used later replaced in the creating the struct
 
     with open(os.path.join(sam_home, "sam/sim/src/tiling/" + yaml_name), "r") as stream:
         loop_config = yaml.safe_load(stream)
@@ -222,10 +222,10 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
             C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
             C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
-            print("FILENAME ", B_shape_filename)
-            print("EXISTS? ", os.path.exists(B_shape_filename))
-            print("FILENAME ", C_shape_filename)
-            print("EXISTS? ", os.path.exists(C_shape_filename))
+            #print("FILENAME ", B_shape_filename)
+            #print("EXISTS? ", os.path.exists(B_shape_filename))
+            #print("FILENAME ", C_shape_filename)
+            #print("EXISTS? ", os.path.exists(C_shape_filename))
  
             if os.path.exists(B_shape_filename):
                 B_shape = read_inputs(B_shape_filename)
@@ -407,7 +407,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             glb_model_x.update(time_cnt)
 
             if tiled_done and check_flag:
-                print("TIME PNT ", time_cnt)
+                if self.debug:
+                    print("TIME PNT ", time_cnt)
                 check_flag = False
                 fiberwrite_X0_2.autosize()
                 fiberwrite_X1_1.autosize()
@@ -419,7 +420,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 if debug_sim:
                     pass
                 if check_gold:
-                    print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0)
+                    if self.debug:
+                        print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
 
             if debug_sim and glb_model_b.out_done() == "D":
