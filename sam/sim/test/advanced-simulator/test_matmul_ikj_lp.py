@@ -28,6 +28,8 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 )
 @pytest.mark.suitesparse
 def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_stats, skip_empty, yaml_name, nbuffer, fill=0):
+    stats_dict = {"mul_6_ops":0, "spacc1_3_rmw_ops":[]}
+
     #if skip_empty:
     #    assert False
     with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
@@ -421,6 +423,9 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 if check_gold:
                     print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
+                if report_stats:
+                    stats_dict["mul_6_ops"] += mul_6.return_statistics()["cycle_operation"]
+                    stats_dict["spacc1_3_rmw_ops"].append(spaccumulator1_3.return_statistics()["rmw_ops"])
 
             if debug_sim and glb_model_b.out_done() == "D":
                 print(mem_model_c.token(), " ", mem_model_b.token())
@@ -442,4 +447,9 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         
         #print("###################")
         time_cnt += 1
-    print(time_cnt)
+
+    print("TOTAL TIME", time_cnt)
+    
+    if report_stats:
+        print("\t Mul ops:", stats_dict["mul_6_ops"])
+        print("\t Acc ops:", sum(stats_dict["spacc1_3_rmw_ops"]))

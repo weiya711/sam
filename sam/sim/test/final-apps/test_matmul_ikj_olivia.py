@@ -24,7 +24,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -71,15 +71,15 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, fill=0):
     repsiggen_j_8 = RepeatSigGen(debug=debug_sim)
     repeat_Bj_7 = Repeat(debug=debug_sim)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
-    mul_4 = Multiply2(debug=debug_sim)
-    spaccumulator1_3 = SparseAccumulator1(debug=debug_sim)
+    mul_4 = Multiply2(debug=debug_sim, statistics=report_stats)
+    spaccumulator1_3 = SparseAccumulator1(debug=debug_sim, statistics=report_stats)
     spaccumulator1_3_drop_crd_in_inner = StknDrop(debug=debug_sim)
     spaccumulator1_3_drop_crd_in_outer = StknDrop(debug=debug_sim)
 
     spaccumulator1_3_crd_hold_in_ik = CrdHold(debug=debug_sim)
     spaccumulator1_3_crd_hold_in_ij = CrdHold(debug=debug_sim)
 
-    spaccumulator1_3_drop_val = StknDrop(debug=debug_sim)
+    spaccumulator1_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats)
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim)
     in_ref_B = [0, 'D']
@@ -192,6 +192,10 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, fill=0):
     sample_dict = intersectk_11.return_statistics()
     for k in sample_dict.keys():
         extra_info["intersectk_11" + "_" + k] = sample_dict[k]
+
+    sample_dict = mul_4.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["mul_4" + "_" + k] = sample_dict[k]
 
     sample_dict = spaccumulator1_3.return_statistics()
     for k in sample_dict.keys():
