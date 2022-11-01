@@ -87,7 +87,7 @@ mkdir -p "$benchout"
 mkdir -p $format_outdir
 mkdir -p $TACO_TENSOR_PATH/other-formatted-taco
 
-make -j8 taco/build NEVA=$neva LANKA=$lanka GEN=ON
+#make -j8 taco/build NEVA=$neva LANKA=$lanka GEN=ON
 
 for b in ${!BENCHMARKS[@]}; do
 	bench=${BENCHMARKS[$b]}
@@ -116,7 +116,7 @@ for b in ${!BENCHMARKS[@]}; do
 
 		cd $basedir/sam/sim
 		#python -m cProfile -o test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
-		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --check-gold --skip-empty --yaml_name=$3 --benchmark-json=$path/$line.json 
+		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --check-gold --skip-empty --nbuffer --yaml_name=$3 --benchmark-json=$path/$line.json 
 		python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?

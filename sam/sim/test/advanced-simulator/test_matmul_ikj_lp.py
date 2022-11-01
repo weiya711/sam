@@ -409,8 +409,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             glb_model_x.update(time_cnt)
 
             if tiled_done and check_flag:
-                if self.debug:
-                    print("TIME PNT ", time_cnt)
+                #print("TIME PNT ", time_cnt)
                 check_flag = False
                 fiberwrite_X0_2.autosize()
                 fiberwrite_X1_1.autosize()
