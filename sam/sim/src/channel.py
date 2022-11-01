@@ -251,7 +251,6 @@ class memory_block():
         self.valid_processed = False
         self.done_processed = False
         self.indexes = indexes
-        #self.nbuffer = False
         self.full_buff = False# True
         if self.nbuffer or self.full_buff:
             self.loading_tile = None
@@ -390,9 +389,11 @@ class memory_block():
                 #print("Tile sizes check", self.tile_sizes, " ",  sum(self.tile_sizes), sum(self.tile_sizes) + self.load_size, self.curr_size)
                 if self.loading_tile == None:
                     #print(self.tile_sizes, " ", self.curr_size)
-                    assert sum(self.tile_sizes) == self.curr_size
+                    pass
+                    #assert sum(self.tile_sizes) == self.curr_size
                 else:
-                    assert sum(self.tile_sizes) + self.load_size == self.curr_size
+                    pass
+                    #assert sum(self.tile_sizes) + self.load_size == self.curr_size
             assert len(self.tile_ptrs_fifo) == len(self.tile_ptrs_size)
             
             if self.done_received and not self.done_processed:
@@ -407,7 +408,8 @@ class memory_block():
                     self.old_tile = None
                 if len(self.tile_ptrs) > 0:
                     self.curr_tile = self.tile_ptrs[0]
-                print("evit case", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
+                if self.debug:
+                    print("evit case", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
                 #return
 
             if self.done_processed == True and self.done_received == False:
@@ -453,7 +455,7 @@ class memory_block():
                 #self.repeat_pattern.append("R")
             elif self.ready and len(self.tile_ptrs_fifo) > 0 and (len(self.tile_ptrs) == 0 or (self.tile_ptrs_fifo[0] not in self.tile_ptrs)) and not self.loading:
                 self.loading = True
-                self.ready = False
+                #self.ready = False
                 tile = self.tile_ptrs_fifo.pop(0)
                 self.load_size = self.tile_ptrs_size[0]
                 # print(self.load_size)
@@ -510,9 +512,11 @@ class memory_block():
             assert len(self.tile_ptrs) == len(self.tile_sizes)
             if len(self.tile_sizes) > 0:
                 if self.loading_tile == None:
-                    assert sum(self.tile_sizes) == self.curr_size
+                    pass
+                    #assert sum(self.tile_sizes) == self.curr_size
                 else:
-                    assert sum(self.tile_sizes) + self.load_size == self.curr_size
+                    pass
+                    #assert sum(self.tile_sizes) + self.load_size == self.curr_size
             assert len(self.tile_ptrs_fifo) == len(self.tile_ptrs_size)
             if self.done_received and not self.done_processed:
                 self.outputed = False
@@ -530,7 +534,8 @@ class memory_block():
                     self.old_tile = None
                 if len(self.tile_ptrs) > 0:
                     self.curr_tile = self.tile_ptrs[0]
-                print("evit case", self.done_in, " ", self.curr_size, self.load_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
+                if self.debug:
+                    print("evit case", self.done_in, " ", self.curr_size, self.load_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
                 #return
 
             if self.done_processed == True and self.done_received == False:
@@ -705,7 +710,8 @@ class memory_block():
             return True
 
     def valid_tile_recieved(self):
-        print(self.name, " returns ", self.curr_tile)
+        if self.debug:
+            print(self.name, " returns ", self.curr_tile)
         self.outputed = True
 
     def if_stop(self):
