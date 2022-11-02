@@ -279,6 +279,8 @@ if __name__ == "__main__":
     parser.add_argument("--output_dir_path", type=str, default="./tiles")
     parser.add_argument("--hw_config", type=str, default=None)
     parser.add_argument("--multilevel", action="store_true")
+    parser.add_argument("--input_path", type=str, default=None)
+    parser.add_argument("--extensor", action="store_true")
 
     args = parser.parse_args()
 
@@ -286,6 +288,8 @@ if __name__ == "__main__":
     cwd = os.getcwd()
     if args.gen_tensor:
         tensor = scipy.sparse.random(16, 16)
+    elif args.extensor:
+        tensor = scipy.io.mmread(args.input_path)
     else:
         assert args.input_tensor is not None
         SS_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(cwd, 'suitesparse'))
