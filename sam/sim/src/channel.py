@@ -582,7 +582,13 @@ class memory_block():
                 elif self.curr_tile == "D":
                     self.tile_ptrs.pop(0)
                     assert self.tile_sizes.pop(0) == 0
-                    self.curr_tile = self.tile_ptrs[0]
+                    #self.curr_tile = self.tile_ptrs[0]
+                    if True:
+                        if len(self.tile_ptrs) > 0:
+                            self.curr_tile = self.tile_ptrs[0]
+                        else:
+                            self.curr_tile = "D"
+                            self.valid = False
 
             # Determines Ready
             if len(self.tile_ptrs_fifo) > 0:

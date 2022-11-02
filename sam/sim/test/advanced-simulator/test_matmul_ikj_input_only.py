@@ -90,7 +90,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     check_flag = True
 
     tiled_skip = False
-    #array = []
+    array = []
     #array2 = []
     while not done and time_cnt < TIMEOUT:
         if debug_sim:
@@ -417,6 +417,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             #print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             #mem_model_x.update(time_cnt)
             #glb_model_x.update(time_cnt)
+            #tiled_skip = False
             if tiled_skip:
                 tiled_done = True
                 
@@ -470,6 +471,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
         #print("###################")
         time_cnt += 1
     #print(array)
+    #print(sum(array))
     #arr_ = np.asarray(array)
     #arr__ = np.asarray(array2)
     #final_arr_ = []
