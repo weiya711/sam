@@ -9,6 +9,7 @@ def write_mtx(path, t):
     scipy.io.mmwrite(path, t)
 
 if __name__ == "__main__":
+   np.random.seed(seed)
    dims = list(range(1024, 16390, 668)) 
    nnzs = [5000, 10000, 25000, 50000]
 
