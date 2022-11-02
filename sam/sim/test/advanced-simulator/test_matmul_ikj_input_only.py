@@ -88,6 +88,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     tiled_done = False
     tiled_done_processed = False
     check_flag = True
+
+    tiled_skip = False
     #array = []
     #array2 = []
     while not done and time_cnt < TIMEOUT:
@@ -127,11 +129,11 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             if isinstance(repeat_Bj00.out_ref(), int) and (repeat_Bj00.out_ref()//struct["k00"] , repeat_Bj00.out_ref()%struct["k00"]) in sizes_dict_level0["B"]:
                 glb_model_b.add_tile(repeat_Bj00.out_ref(), sizes_dict_level0["B"][(repeat_Bj00.out_ref()//struct["k00"] , repeat_Bj00.out_ref()%struct["k00"])])
             else:
-                glb_model_b.add_tile(repeat_Bj00.out_ref(), 0)
+                glb_model_b.add_tile(repeat_Bj00.out_ref(), 8)
             if isinstance(fiberlookup_Cj00.out_ref(), int) and (fiberlookup_Cj00.out_ref()//struct["j00"] , fiberlookup_Cj00.out_ref()%struct["j00"]) in sizes_dict_level0["C"]:
                 glb_model_c.add_tile(fiberlookup_Cj00.out_ref(), sizes_dict_level0["C"][(fiberlookup_Cj00.out_ref()//struct["j00"] , fiberlookup_Cj00.out_ref()%struct["j00"])])
             else:
-                glb_model_c.add_tile(fiberlookup_Cj00.out_ref(), 0)
+                glb_model_c.add_tile(fiberlookup_Cj00.out_ref(), 8)
         glb_model_b.check_if_done(mem_model_b.out_done_in())
         glb_model_c.check_if_done(mem_model_c.out_done_in())
 
@@ -170,11 +172,11 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 if isinstance(repeat_Bj0.out_ref(), int) and (B_i00_, B_k00_, repeat_Bj0.out_ref()//struct["k0"] , repeat_Bj0.out_ref()%struct["k0"]) in sizes_dict_level1["B"]:
                     mem_model_b.add_tile(repeat_Bj0.out_ref(), sizes_dict_level1["B"][(B_i00_, B_k00_, repeat_Bj0.out_ref()//struct["k0"] , repeat_Bj0.out_ref()%struct["k0"])], glb_model_b.token())
                 else:
-                    mem_model_b.add_tile(repeat_Bj0.out_ref(), 0, glb_model_b.token())
+                    mem_model_b.add_tile(repeat_Bj0.out_ref(), 8, glb_model_b.token())
                 if isinstance(fiberlookup_Cj0.out_ref(), int) and (C_k00_, C_j00_, fiberlookup_Cj0.out_ref()//struct["j0"] , fiberlookup_Cj0.out_ref()%struct["j0"]) in sizes_dict_level1["C"]:
                     mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), sizes_dict_level1["C"][(C_k00_, C_j00_, fiberlookup_Cj0.out_ref()//struct["j0"] , fiberlookup_Cj0.out_ref()%struct["j0"])], glb_model_c.token())
                 else:
-                    mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), 0, glb_model_c.token())
+                    mem_model_c.add_tile(fiberlookup_Cj0.out_ref(), 8, glb_model_c.token())
         
         flag_token_mem = False
         if mem_model_b.valid_tile() and mem_model_c.valid_tile() and not mem_model_b.out_done() and not mem_model_c.out_done():
@@ -274,6 +276,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 C_seg1 = [0, 1]
                 C_crd1 = [0]
                 C_vals = [0]
+                #tiled_done = True
+                tiled_skip = True
 
             #print("Shapes: ", B_shape, " ", C_shape)
             B_shape = [loop_config["Mem_tile_size"], loop_config["Mem_tile_size"]]
@@ -413,27 +417,34 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             #print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
             #mem_model_x.update(time_cnt)
             #glb_model_x.update(time_cnt)
-
+            if tiled_skip:
+                tiled_done = True
+                
             if tiled_done and check_flag:
                 #array.append(time_cnt - initialize_cntr)
                 #array2.append(str(B_i00) + "," + str(B_k00) + "," + str(C_j00)  + ":" + "," + str(B_i0) + "," + str(B_k0) + "," + str(C_j0))
                 #print("TIME PNT ", time_cnt)
                 check_flag = False
-                fiberwrite_X0_2.autosize()
-                fiberwrite_X1_1.autosize()
-                fiberwrite_Xvals_0.autosize()
+                if not tiled_skip:
+                    fiberwrite_X0_2.autosize()
+                    fiberwrite_X1_1.autosize()
+                    fiberwrite_Xvals_0.autosize()
 
-                out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
-                out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
-                out_vals = fiberwrite_Xvals_0.get_arr()
+                    out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
+                    out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
+                    out_vals = fiberwrite_Xvals_0.get_arr()
                 if debug_sim:
                     pass
                 if check_gold:
-                    #print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0)
-                    check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
-                if report_stats:
+                    #print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
+                    if not tiled_skip:
+                        check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
+                if report_stats and not tiled_skip:
                     stats_dict["mul_6_ops"] += mul_6.return_statistics()["cycle_operation"]
                     stats_dict["spacc1_3_rmw_ops"].append(spaccumulator1_3.return_statistics()["rmw_ops"])
+                else:
+                    stats_dict["mul_6_ops"] += 0
+                    stats_dict["spacc1_3_rmw_ops"].append(0)
 
 
             if debug_sim and glb_model_b.out_done() == "D":
@@ -454,7 +465,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                                 #if mem_model_x.final_done():
                                 #    if glb_model_x.final_done():
                                 done = True
-        
+         
+        tiled_skip = False
         #print("###################")
         time_cnt += 1
     #print(array)
