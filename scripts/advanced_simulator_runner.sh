@@ -39,6 +39,9 @@ if [ $2 -eq 1 ]; then
 	export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
 	export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
 	export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
+	export SAM_HOME=$basedir
+	export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
+	export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 	
 	mkdir -p $TACO_TENSOR_PATH
 	mkdir -p $SUITESPARSE_FORMATTED_PATH
@@ -62,6 +65,9 @@ elif [ $2 -eq 2 ]; then
 else
 	lanka=OFF
 	neva=OFF
+	export SAM_HOME=$basedir
+	export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
+	export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 fi
 
 sspath=$SUITESPARSE_PATH
