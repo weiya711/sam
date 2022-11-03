@@ -411,7 +411,7 @@ class memory_block():
                 if len(self.tile_ptrs) > 0:
                     self.curr_tile = self.tile_ptrs[0]
                 #if self.debug:
-                print("evit case", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
+                #print("evit case", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
                 #return
 
             if self.done_processed == True and self.done_received == False:

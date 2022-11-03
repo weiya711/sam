@@ -408,7 +408,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             fiberwrite_X1_1.set_input(spaccumulator1_3.out_crd_inner())
             fiberwrite_X0_2.set_input(spaccumulator1_3.out_crd_outer())
             if tiled_done and not tile_signalled:
-                print("check done")
+                #print("check done")
                 mem_model_b.check_if_done(tiled_done)
                 mem_model_c.check_if_done(tiled_done)
                 tile_signalled = True
