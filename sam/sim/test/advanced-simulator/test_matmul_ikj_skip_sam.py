@@ -35,12 +35,12 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_0_sizes"), "rb") as ff:
         sizes_dict_level0 = pickle.load(ff)
     
-    print(sizes_dict_level0)
+    #print(sizes_dict_level0)
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_1_sizes"), "rb") as ff:
         sizes_dict_level1 = pickle.load(ff)
     
     #print("____________________")
-    print(sizes_dict_level1)
+    #print(sizes_dict_level1)
     full_size = 0
     for sizes in sizes_dict_level_full:
         full_size = sizes_dict_level_full[sizes]
@@ -139,8 +139,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 glb_c_fifo.append(fiberlookup_Cj00.out_ref())
             if len(glb_b_fifo) > 0 and len(glb_c_fifo) > 0 and isinstance(glb_b_fifo[0], int) and isinstance(glb_c_fifo[0], int) and (glb_b_fifo[0]//struct["k00"] ,  glb_b_fifo[0]%struct["k00"]) in sizes_dict_level0["B"] and (glb_c_fifo[0]//struct["j00"] ,  glb_c_fifo[0]%struct["j00"]) in sizes_dict_level0["C"]:
                 
-                print("B", glb_b_fifo[0]//struct["k00"], glb_b_fifo[0]%struct["k00"])
-                print("C", glb_c_fifo[0]//struct["j00"], glb_c_fifo[0]%struct["j00"])
+                #print("B", glb_b_fifo[0]//struct["k00"], glb_b_fifo[0]%struct["k00"])
+                #print("C", glb_c_fifo[0]//struct["j00"], glb_c_fifo[0]%struct["j00"])
                 glb_model_b.add_tile(glb_b_fifo[0], sizes_dict_level0["B"][(glb_b_fifo[0]//struct["k00"] , glb_b_fifo[0]%struct["k00"])])
                 glb_model_c.add_tile(glb_c_fifo[0], sizes_dict_level0["C"][(glb_c_fifo[0]//struct["j00"] , glb_c_fifo[0]%struct["j00"])])
                 glb_b_fifo.pop(0)
@@ -230,12 +230,12 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
 
         flag_token_mem = False
         if mem_model_b.valid_tile() and mem_model_c.valid_tile(): 
-            print("B")
-            print((mem_model_b.token()//1000000)//struct["k00"], (mem_model_b.token()//1000000)%struct["k00"])
-            print((mem_model_b.token()%1000000)//struct["k0"], (mem_model_b.token()%1000000)%struct["k0"])
-            print("C")
-            print((mem_model_c.token()//1000000)//struct["j00"], (mem_model_b.token()//1000000)%struct["j00"])
-            print((mem_model_c.token()%1000000)//struct["j0"], (mem_model_b.token()%1000000)%struct["j0"])
+            #print("B")
+            #print((mem_model_b.token()//1000000)//struct["k00"], (mem_model_b.token()//1000000)%struct["k00"])
+            #print((mem_model_b.token()%1000000)//struct["k0"], (mem_model_b.token()%1000000)%struct["k0"])
+            #print("C")
+            #print((mem_model_c.token()//1000000)//struct["j00"], (mem_model_b.token()//1000000)%struct["j00"])
+            #print((mem_model_c.token()%1000000)//struct["j0"], (mem_model_b.token()%1000000)%struct["j0"])
             flag = True
             flag_token_mem = True
             tiled_done_processed = False
@@ -503,7 +503,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                     pass
                 if check_gold:
                     assert B_k00 == C_k00 and B_k0 == C_k0
-                    print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
+                    #print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
                     if not tiled_skip:
                         check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0], None, debug_sim, out_crds=out_crds, out_segs=out_segs, out_val=out_vals, out_format="ss01")
                 if report_stats and not tiled_skip:
@@ -523,7 +523,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                 print(glb_model_c.token() == "D" and glb_model_b.token() == "D")
 
             if tiled_done:
-                print(mem_model_c.out_done(), glb_model_c.out_done(), mem_model_b.out_done(), glb_model_b.out_done())
+                #print(mem_model_c.out_done(), glb_model_c.out_done(), mem_model_b.out_done(), glb_model_b.out_done())
                 if mem_model_c.out_done():
                     if glb_model_c.out_done(): 
                         if mem_model_b.out_done():
@@ -554,7 +554,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     #print(final_arr_)
     #print(final_arr__)
     #print("--------")
-    print(time_cnt)
+    print("TOTAL_TIME = ", time_cnt)
     if report_stats:
         print("\t Mul ops:", stats_dict["mul_6_ops"])
         print("\t Acc ops:", sum(stats_dict["spacc1_3_rmw_ops"]))

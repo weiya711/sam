@@ -574,7 +574,7 @@ class memory_block():
                 #if self.debug:
                 
                 #if "GLB" in self.name:
-                print("evit case", self.done_in, self.curr_size, self.load_size, self.remove_size, ":", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes, " ", self.outputed)
+                #print("evit case", self.done_in, self.curr_size, self.load_size, self.remove_size, ":", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes, " ", self.outputed)
                 #return
 
             if self.done_processed == True and self.done_received == False:
