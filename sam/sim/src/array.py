@@ -2,7 +2,7 @@ from .base import *
 
 
 class Array(Primitive):
-    def __init__(self, init_arr=None, size=1024, fill=0, **kwargs):
+    def __init__(self, init_arr=None, size=1024, fill=0, depth=1, **kwargs):
         super().__init__(**kwargs)
 
         self.fill = fill
@@ -18,6 +18,12 @@ class Array(Primitive):
         self.load_en = False
         self.store_en = False
 
+        if self.backpressure_en:
+            self.backpressure = []
+            self.data_ready = True
+            self.branch = []
+            self.depth = depth 
+
         if self.get_stats:
             self.valid_loads = 0
             self.address_seen = []
@@ -26,29 +32,50 @@ class Array(Primitive):
 
         self.curr_load = ''
 
+    def add_child(self, child, branch = ""):
+        if self.backpressure_en:
+            if child != None:
+                self.backpressure.append(child)
+                self.branch.append(branch)
+    
+    def check_backpressure(self):
+        if self.backpressure_en:
+            j = 0
+            for i in self.backpressure:
+                if not i.fifo_available(self.branch[j]):
+                    return False
+                j+=1
+        return True
+
     def update(self):
         self.update_done()
-        if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
-            self.block_start = False
+        if self.backpressure_en:
+            self.data_ready = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_ready = True
+            if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
+                self.block_start = False
 
-        if self.load_en and len(self.load_addrs) > 0:
-            if self.get_stats:
-                self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
-            self.curr_load = self.load(self.load_addrs.pop(0))
-            self.load_en = False
-        else:
-            self.curr_load = ''
+            if self.load_en and len(self.load_addrs) > 0:
+                if self.get_stats:
+                    self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
+                self.curr_load = self.load(self.load_addrs.pop(0))
+                self.load_en = False
+            else:
+                self.curr_load = ''
 
-        if self.store_en and len(self.store_vals) > 0:
-            if self.get_stats:
-                self.store_vals_size = max(self.store_vals_size, len(self.store_vals))
-            store_tup = self.store_vals.pop(0)
-            self.store(store_tup[0], store_tup[1])
-            self.store_en = False
+            if self.store_en and len(self.store_vals) > 0:
+                if self.get_stats:
+                    self.store_vals_size = max(self.store_vals_size, len(self.store_vals))
+                store_tup = self.store_vals.pop(0)
+                self.store(store_tup[0], store_tup[1])
+                self.store_en = False
 
-    def fifo_available(self):
-        if len(self.load_addrs) > 1:
-            return False
+    def fifo_available(self, br = ""):
+        if self.backpressure_en:
+            if len(self.load_addrs) > 1:
+                return False
         return True
     
     def set_load(self, addr):
