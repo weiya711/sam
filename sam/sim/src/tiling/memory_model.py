@@ -1,7 +1,7 @@
 import numpy as np
 
 class tile_ptr():
-    def __init__(tileid = 0; levels = 0, levels_size = None, vals_size=None):
+    def __init__(tileid = 0, levels = 0, levels_size = None, vals_size=None):
         self.tileid = tileid
         self.levels = levels
         if self.levels > 0:
