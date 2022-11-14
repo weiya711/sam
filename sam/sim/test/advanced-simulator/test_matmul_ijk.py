@@ -16,13 +16,6 @@ import os
 import csv
 import yaml
 
-with open("../../memory_config.yaml", "r") as stream:
-    try:
-        memory_config = yaml.safe_load(stream)
-    except yaml.YAMLError as exc:
-        memory_config = None
-
-
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
