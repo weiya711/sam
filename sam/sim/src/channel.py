@@ -173,17 +173,8 @@ class output_memory_block():
                 if len(self.tile_ptrs_fifo) > 0:
                     self.curr_tile = self.tile_ptrs_fifo[0]
         if self.debug:
-            #print(self.level  , " self.curr_tile", self.curr_tile, " ", cyclenum, self.timestamp + self.compute_latency(self.curr_tile), self.timestamp)
             if self.loading == True:
                 print(self.level, " loads stuff : ", self.curr_tile , " ", get_glb_tile_id(self.curr_tile), self.curr_tile//(10000**3), get_mem_tile_id(self.curr_tile))
-            #    if self.level == "glb2global":
-            #        print(self.mem_loop_limit)
-            #if self.loading == True and self.level == "glb2global":
-            #    print("*********")
-            #if self.done == False:
-            #    print("####DONE FALSE for ", self.level)
-            #elif self.done == True and self.level == "glb2global":
-            #    print("@@@@ DONE True")
             print("Output ", self.level, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " curr tile: ", self.curr_tile, " Done ", self.done, " valid processed: ", self.valid_processed, " Child ready ", self.child_ready, " , ", self.curr_size, "       " , self.tile_ptrs_fifo)
 
     def set_child_ready(self, token):
@@ -306,8 +297,6 @@ class memory_block():
             return "D"
         if self.loading:
             return "L"
-        #if self.signalled:
-        #    return self.curr_tile
 
     def return_if_loading(self):
         return self.loading
@@ -325,100 +314,14 @@ class memory_block():
                     return
         self.done_received = True
         return
-
-    def add_upstream(self, tilecoord, data, valid):
-        if not valid:
-            self.done_processed = False
-        if valid and not self.done_processed and self.level == "mem2glb": 
-            self.done_processed = True
-            limits = len(data)-1
-            size_levels = [0]*(limits//2)
-            size_vals = len(data[len(data)-1])
-            for lengths in range(len(size_levels)):
-                size_levels[lengths] = len(data[lengths]) + len(data[lengths + limits//2])
-            
-            max_levels_size = max(max(size_levels), size_vals)
-            self.tile_ptrs_size.append(max_levels_size)
-            tile_hash, tile_glb = hash_tile(tilecoord)
-            self.tile_ptrs_fifo.append(tile_hash)
-
-        if valid and not self.done_processed and self.level == "glb2global":
-            
-            self.done_processed = True
-            self.tile_ptrs_fifo.append(tilecoord)
-            size = data
-            self.tile_ptrs_size.append(data)
-
-    def not_loading(self):
-        if self.loading:
-            return False
-        return True
-    
-    def out_update(self, cyclenum):
-        if self.level == "mem2glb":
-            self.old_tile = None
-            if self.downstream_token == "D":
-                self.ready = True
-            elif self.downstream_token == "L":
-                return
-            elif self.ready and len(self.tile_ptrs_fifo) > 0:
-                self.curr_tile = self.tile_ptrs_fifo.pop(0)
-                self.curr_size = self.tile_ptrs_size.pop(0)
-                self.loading = True
-                self.ready = False
-                self.timestamp = cyclenum
-            elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
-                self.loading = False
-                self.done = True
-        if self.level == "glb2global":
-            self.old_tile = None
-            if self.ready and len(self.tile_ptrs_fifo) > 0:
-                self.curr_tile = self.tile_ptrs_fifo.pop(0)
-                self.curr_size = self.tile_ptrs_size.pop(0)
-                self.loading = True
-                self.ready = False
-                self.timestamp = cyclenum
-                self.done = False
-            elif self.loading and cyclenum > self.timestamp + self.compute_latency(self.curr_tile):
-                self.ready = True
-                self.done = True
     
     def print_debug(self):
         print("evit case", self.done_in, self.curr_size, self.load_size, self.remove_size, ":", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
 
+    
     def update(self, cyclenum):
         if self.nbuffer:
-            self.done_in = False
-            #if "GLB" in self.name: 
-            #print(self.name , "::", self.done_in, " ", self.curr_size, " ", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile)
-            #print("    full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo)
-            #print("    ", self.tile_sizes, self.curr_size, self.load_size, self.tile_ptrs_size)
- 
-            #self.done_in = False
-            #self.done = False
-            #print(self.name , " ", self.curr_tile)
-            # Evicts from memory handles case if memory empty retain till new data comes in
-            #if self.done_received and not self.done_processed:
-            #    self.outputed = False
-            #    self.done_processed = True
-            #    self.valid = False
-            #    tile = self.tile_ptrs.pop(0)
-            #    repeat = self.repeat_pattern.pop(0)
-            #    if repeat != "R":
-            #        self.curr_size -= self.tile_sizes.pop(0)
-            #    else:
-            #        self.tile_sizes.pop(0)
-            #    if len(self.tile_ptrs) == 0:
-            #        self.old_tile = tile
-            #    else:
-            #        self.old_tile = None
-            #    if len(self.tile_ptrs) > 0:
-            #        self.curr_tile = self.tile_ptrs[0]
-            #    print("evit case", self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs[0:10])
-            #    return
-            #if self.done_processed == True and self.done_received == False:
-            #    self.done_processed = False
-            
+            self.done_in = False    
             assert len(self.tile_ptrs) == len(self.tile_sizes)
             if len(self.tile_sizes) > 0:
                 if self.loading_tile == None:
@@ -429,28 +332,13 @@ class memory_block():
                     #assert sum(self.tile_sizes) + self.load_size == self.curr_size
 
             assert len(self.tile_ptrs_fifo) == len(self.tile_ptrs_size)
-            #print(self.name, " ", self.done_received, " ", self.done_processed)
             if self.done_received and len(self.tile_ptrs) > 0: # and not self.done_processed:
-                #print("TILE evict tile ", self.tile_ptrs[0], self.tile_ptrs[1:], self.tile_ptrs_fifo)
-                #print(self.curr_size == sum(self.tile_sizes), self.curr_size == sum(self.tile_sizes) + self.load_size, self.curr_size == sum(self.tile_sizes) + self.load_size + self.remove_size)
-                #print(self.old_tile, " ", self.tile_ptrs)
-                #print("EVICT case", self.done_in, self.curr_size, self.load_size, self.remove_size, ":", self.size, self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
-                #print(cyclenum)
                 assert self.curr_size == sum(self.tile_sizes) or self.curr_size == (sum(self.tile_sizes) + self.load_size) or self.curr_size == (sum(self.tile_sizes) + self.load_size + self.remove_size)
-                #if "GLB" in self.name:
-                #    print("EVICT start ", self.curr_size, self.load_size, self.remove_size, "-- ", self.tile_sizes)
                 
                 self.outputed = False
                 self.done_processed = True
                 self.valid = False
                 tile = self.tile_ptrs.pop(0)
-                #if len(self.tile_ptrs) == 0:
-                #    self.curr_size -= self.remove_size
-                #    self.remove_size = 0
-                #    #tile != self.old_tile and self.remove_size != 0:
-                #    #self.curr_size -= self.remove_size
-                #    #self.remove_size = 0
-                
                 if len(self.tile_ptrs) == 0: 
                     self.old_tile = None #tile
                 else:
@@ -495,7 +383,6 @@ class memory_block():
                     self.done_processed = False
                     if self.debug:
                         print("Done case:: ", self.name, " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading, " done: ", self.done, " downstream token: ", self.downstream_token, " Done received and processed ", self.done_received, " ", self.done_processed ," : current tile: ", self.curr_tile, " full tles ", self.tile_ptrs)
-                    #return
                 elif self.curr_tile == "D":
                     while len(self.tile_ptrs) > 0 and self.tile_ptrs[0] == "D":
                         self.tile_ptrs.pop(0)
@@ -543,7 +430,6 @@ class memory_block():
             else:
                 self.ready = True
 
-
             # Actual transfer of data
             if self.ready and len(self.tile_ptrs_fifo) > 0 and len(self.tile_ptrs) > 0 and self.tile_ptrs[-1] == self.tile_ptrs_fifo[0] and not self.loading:
                 if self.tile_ptrs_fifo[0] == "D":
@@ -559,16 +445,12 @@ class memory_block():
                     print(self.name, " ", self.curr_size, self.load_size, self.tile_sizes, self.remove_size, "::", self.tile_ptrs, self.curr_tile, self.loading_tile, self.tile_ptrs_fifo)
                     assert False
 
-                #print(self.curr_size, self.load_size, self.tile_sizes, self.remove_size, "::", self.tile_ptrs, self.curr_tile, self.loading_tile, self.tile_ptrs_fifo)
                 self.loading = True
                 tile = self.tile_ptrs_fifo.pop(0)
                 self.load_size = self.tile_ptrs_size[0]
-                # print(self.load_size)
                 self.curr_size += self.tile_ptrs_size.pop(0)
                 self.loading_tile = tile
                 self.timestamp = cyclenum
-                
-                #print(self.curr_size, self.load_size, self.tile_sizes, self.remove_size, "::", self.tile_ptrs, self.curr_tile, self.loading_tile, self.tile_ptrs_fifo)
                 
                 if self.curr_size != self.load_size + sum(self.tile_sizes) + self.remove_size:
                     print(self.name, " ", self.curr_size, self.load_size, self.tile_sizes, self.remove_size, "::", self.tile_ptrs, self.curr_tile, self.loading_tile, self.tile_ptrs_fifo)
@@ -680,9 +562,7 @@ class memory_block():
                 return 1
             if self.mode == "all_unpacked":
                 return self.latency + (self.curr_size * self.element_size)//(self.bandwidth)
-                #return self.latency + self.curr_size//(self.bandwidth * (self.indexes + 1))
             elif self.mode == "not_consolidated":
-                #elf.curr_size * self.element_size)//(self.bandwidth)
                 return self.latency + self.curr_size//(self.bandwidth)
             else:
                 print(self.mode + " not found")
@@ -707,79 +587,3 @@ class memory_block():
 
     def input_token_(self, token):
         self.downstream_token = token
-
-
-class channel():
-    def __init__(size = 1000**3, bandwidth = 2, tile_ptrs=None, mode = "all_upacked"):
-        self.size = size
-        self.tile_ptrs_tile = [] #tiile_ptrs_glbtile
-        
-        self.tile_ptrs_ids = []
-
-        self.tile_ptrs_fifo = [] # virtual
-        self.mode = mode
-
-        seld.timestamps = {}
-
-    def add_tile(tile_ptr):
-        for ptrs in tile_ptr:
-            self.tile_ptrs_fifo.append(ptrs)
-
-    def update(cyclenum):
-        head = self.tile_ptrs_glbfifo[0]
-        
-        if head.getid() not in self.tile_ptrs_ids:
-            if check_limit(head):
-                if self.timestamps[heal.getid()] != None:
-                    self.timestamps[head.getid()] = cyclenum
-                if cyclenum > self.timestamps[head.getid()] + compute_latency(head):
-                    self.tile_ptrs_tile.append(head_glb)
-                    self.tile_ptrs_ids.append(head_glb.getid)
-                    self.tile_ptrs_fifo.pop()
-
-    def remove_tile(tile_ptr = None, tile_id = -1):
-        if tile_ptr != None:
-            index = self.tile_ptrs_ids.index(tile_ptr.getid())
-            self.tile_ptrs_ids.pop(index)
-            self.tile_ptrs_tile.pop(index)
-
-    def check_tile(tile_id):
-        if tile_id in self.tile_ptrs_ids:
-            return True
-        return False
-
-    def compute_latency(tile):
-        return 0
-
-
-    def check_limit(tile):
-        if self.mode == "all_unpacked":
-            cumu_sum = 0
-            val_levels = 0
-            for key in self.tile_ptrs_tile:
-                if val_levels == 0:
-                    val_levels = key.return_tensor_indexes()
-                elif val_levels != key.return_tensor_indexes():
-                    assert False
-                cumu_sum += key.return_vals_size()
-
-            if val_levels != 0 and val_levels != tile.return_tensor_indexes():
-                assert False
-            cumu_sum += tile.return_vals_size()
-            if cumu_sum > self.size[num_levels-2]:
-                return False
-            else:
-                return True
-
-
-    def check_tile_limits():
-        if self.mode == "all_unpacked":
-            cumu_sum = 0
-            val_levels = 0
-            for key in self.tile_ptrs_tile:
-                if val_levels == 0:
-                    val_levels = self.tile_ptrs_tile[key].return_tensor_indexes()
-                elif val_levels != self.tile_ptrs_tile[key].return_tensor_indexes():
-                    assert False
-                cumu_sum += self.tile_ptrs_tile[key].return_vals_size()
-            assert cumu_sum < self.size[num_levels-2]
