@@ -25,8 +25,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
-    depth = 4 #16
+def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -62,47 +61,48 @@ def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, report_stats, 
     C_vals = read_inputs(C_vals_filename, float)
 
     fiberlookup_Bi_17 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0,
-                                            debug=debug_sim, back_en=True,
+                                            debug=debug_sim, back_en=backpressure,
                                             statistics=report_stats,
-                                            depth=depth)
+                                            depth=int(depth))
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill,
                                      debug=debug_sim,
                                      statistics=report_stats)
     repsiggen_i_15 = RepeatSigGen(debug=debug_sim, statistics=report_stats,
-                                  depth=depth, back_en=True)
+                                  depth=depth, back_en=backpressure,
+                                  depth=int(depth))
     repeat_Ci_14 = Repeat(debug=debug_sim, statistics=report_stats,
-                          back_en=True, depth=depth)
+                          back_en=backpressure, depth=int(depth))
     fiberlookup_Cj_13 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1,
-                                            debug=debug_sim, back_en=True,
+                                            debug=debug_sim, back_en=backpressure,
                                             statistics=report_stats,
-                                            depth=depth)
+                                            depth=int(depth))
     fiberlookup_Ck_9 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0,
-                                           debug=debug_sim,back_en=True,
+                                           debug=debug_sim,back_en=backpressure,
                                            statistics=report_stats,
-                                           depth=depth)
+                                           depth=int(depth))
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, 
                                      size=B_shape[0] * C_shape[1],
                                      fill=fill, debug=debug_sim, 
                                      statistics=report_stats)
     repsiggen_j_11 = RepeatSigGen(debug=debug_sim, statistics=report_stats,
-                                  back_en=True, depth=depth)
+                                  back_en=backpressure, depth=int(depth))
     repeat_Bj_10 = Repeat(debug=debug_sim, statistics=report_stats,
-                          back_en=True, depth=depth)
+                          back_en=backpressure, depth=int(depth))
     fiberlookup_Bk_8 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1,
-                                           debug=debug_sim,back_en=True,
-                                           statistics=report_stats, depth=depth)
+                                           debug=debug_sim, back_en=backpressure,
+                                           statistics=report_stats, depth=int(depth))
     intersectk_7 = Intersect2(debug=debug_sim, statistics=report_stats,
-                              back_en=True, depth=depth)
+                              back_en=backpressure, depth=int(depth))
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim,
                           statistics=report_stats,
-                          back_en=True, depth=depth)
+                          back_en=backpressure, depth=int(depth))
     arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim,
-                          statistics=report_stats, back_en=True,
-                          depth=depth)
+                          statistics=report_stats, back_en=backpressure,
+                          depth=int(depth))
     mul_4 = Multiply2(debug=debug_sim, statistics=report_stats,
-                      back_en=True, depth=depth)
+                      back_en=backpressure, depth=int(depth))
     reduce_3 = Reduce(debug=debug_sim, statistics=report_stats,
-                      back_en=True, depth=depth)
+                      back_en=backpressure, depth=int(depth))
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats, depth=depth)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
