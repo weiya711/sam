@@ -610,7 +610,6 @@ class TensorCollectionSuiteSparse:
 
 # safeCastPydataTensorToInts casts a floating point tensor to integers
 # in a way that preserves the sparsity pattern.
-<<<<<<< HEAD
 # def safeCastPydataTensorToInts(tensor):
 #     data = numpy.zeros(len(tensor.data), dtype='int64')
 #     for i in range(len(data)):
