@@ -9,7 +9,7 @@ from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
-from sam.sim.src.array import Array_back
+from sam.sim.src.array import Array
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
@@ -68,7 +68,7 @@ def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, backpressure, 
                                      debug=debug_sim,
                                      statistics=report_stats)
     repsiggen_i_15 = RepeatSigGen(debug=debug_sim, statistics=report_stats,
-                                  depth=depth, back_en=backpressure,
+                                  back_en=backpressure,
                                   depth=int(depth))
     repeat_Ci_14 = Repeat(debug=debug_sim, statistics=report_stats,
                           back_en=backpressure, depth=int(depth))
@@ -103,7 +103,7 @@ def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, backpressure, 
                       back_en=backpressure, depth=int(depth))
     reduce_3 = Reduce(debug=debug_sim, statistics=report_stats,
                       back_en=backpressure, depth=int(depth))
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats, depth=depth)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
