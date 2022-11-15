@@ -51,7 +51,6 @@ class Repeat(Primitive):
             self.backpressure.append(child)
             self.branches.append(branch)
 
-
     def update(self):
         self.update_done()
         if self.backpressure_en:
@@ -114,9 +113,10 @@ class Repeat(Primitive):
 
             if self.backpressure_en and self.debug:
                 print("DEBUG__Now: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
-                      "\t Get Rep:", self.get_next_rep, 
-                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
-
+                      "\t Get Rep:", self.get_next_rep,
+                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn,
+                      "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ",
+                      self.check_backpressure(), " ", self.data_ready)
             repeat = ''
             if len(self.in_repeat) > 0 and self.get_next_rep:
                 repeat = self.in_repeat.pop(0)
@@ -166,7 +166,6 @@ class Repeat(Primitive):
                     # Rtvik's comment
                     if self.curr_in_ref == 'D':
                         self.curr_out_ref = 'D'
- 
                     if self.curr_out_ref != 'D':
                         raise Exception("Both repeat and ref signal need to end in 'D'")
                     self.get_next_ref = True
@@ -191,14 +190,15 @@ class Repeat(Primitive):
                 else:
                     print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
                           "\t Get Rep:", self.get_next_rep, "\t Rep:", repeat,
-                          "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref, " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
+                          "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref,
+                          " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
         else:
             if self.debug:
                 print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
-                      "\t Get Rep:", self.get_next_rep, 
-                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready) 
-
-
+                      "\t Get Rep:", self.get_next_rep,
+                      "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream",
+                      self.in_ref, " ", self.in_repeat, " backstream: ",
+                      self.check_backpressure(), " ", self.data_ready)
 
     def set_in_ref(self, ref):
         if ref != '' and ref is not None:
@@ -207,7 +207,6 @@ class Repeat(Primitive):
     def set_in_repeat(self, repeat):
         if repeat != '' and repeat is not None:
             self.in_repeat.append(repeat)
-
     # def set_in_union_0tkn(self, union_0tkn):
     #     if union_0tkn != '':
     #         self.in_union_other_0tkn.append(union_0tkn)
@@ -246,9 +245,8 @@ class Repeat(Primitive):
 # It essentially snoops on the crd stream
 
 class RepeatSigGen(Primitive):
-    def __init__(self, depth = 1, **kwargs):
+    def __init__(self, depth=1, **kwargs):
         super().__init__(**kwargs)
-
         self.istream = []
         self.curr_repeat = ''
         self.istream_size = 0
@@ -286,11 +284,14 @@ class RepeatSigGen(Primitive):
             if not self.backpressure_en and self.debug:
                 print("DEBUG: REP GEN", "\t In", istream, "\t Out ", self.curr_repeat, "\t INstream", self.istream)
             elif self.backpressure_en and self.debug:
-                print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat, "\t Instream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure, " ", self.branches)
+                print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat, "\t Instream",
+                      self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready,
+                      " ", self.backpressure, " ", self.branches)
         else:
             if self.debug:
-                print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream", self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready, " ", self.backpressure, " ", self.branches)
-
+                print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream",
+                      self.istream, " backstream: ", self.check_backpressure(), " ",
+                      self.data_ready, " ", self.backpressure, " ", self.branches)
 
     def check_backpressure(self):
         if self.backpressure_en:

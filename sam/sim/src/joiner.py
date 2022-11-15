@@ -32,7 +32,7 @@ class CrdJoiner2(Joiner2, ABC):
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j =0
+            j = 0
             for i in self.backpressure:
                 if not i.fifo_available(self.branches[j]):
                     return False
@@ -42,7 +42,7 @@ class CrdJoiner2(Joiner2, ABC):
     def fifo_debug(self):
         print("Crd Joiner2 : ", self.in_ref1, " ", self.in_ref2)
 
-    def fifo_available(self, br = ""):
+    def fifo_available(self, br=""):
         if self.backpressure_en:
             if br == "in1" and len(self.in_ref1) > self.depth:
                 return False
@@ -50,20 +50,20 @@ class CrdJoiner2(Joiner2, ABC):
                 return False
         return True
 
-    def add_child(self, child= None, branch = ""):
+    def add_child(self, child=None, branch=""):
         if self.backpressure_en:
             self.backpressure.append(child)
             self.branches.append(branch)
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
-            #print(in_ref1, " ", in_crd1)
+            # print(in_ref1, " ", in_crd1)
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
         if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
-            #print(in_ref2, " ", in_crd2)
+            # print(in_ref2, " ", in_crd2)
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 
@@ -161,11 +161,9 @@ class Intersect2(CrdJoiner2):
         self.update_done()
         if self.backpressure_en:
             self.data_ready = False
-        
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_ready = True
-        
             if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
                 self.block_start = False
             if self.get_stats:
@@ -281,7 +279,7 @@ class Intersect2(CrdJoiner2):
                   "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
                   "\n Intersection rate: ",
                   self.return_intersection_rate(), " ", self.in_ref1, self.in_ref2, self.in_crd1, self.in_crd2)
-            
+
     def out_crd_skip1(self):
         return self.curr_skip1 if self.skip else ''
 
@@ -320,7 +318,6 @@ class Intersect2(CrdJoiner2):
         else:
             stat_dict = {}
         return stat_dict
-
 
 
 class Union2(CrdJoiner2):

@@ -21,26 +21,26 @@ class Compute2(Primitive, ABC):
             self.depth = depth
 
     def check_backpressure(self):
-        if self.backpressure:
-            j =0
+        if self.backpressure_en:
+            j = 0
             for i in self.backpressure:
                 if not i.fifo_available(self.branches[j]):
                     return False
                 j += 1
         return True
 
-    def fifo_available(self, br = ""):
-        if self.backpressure:
+    def fifo_available(self, br=""):
+        if self.backpressure_en:
             if br == "in1" and len(self.in1) > self.depth:
                 return False
             if br == "in2" and len(self.in2) > self.depth:
                 return False
-            #if len(self.in1) > 1 or len(self.in2) > 1:
+            # if len(self.in1) > 1 or len(self.in2) > 1:
             #    return False
         return True
 
-    def add_child(self, child= None, branch = ""):
-        if self.backpressure:
+    def add_child(self, child=None, branch=""):
+        if self.backpressure_en:
             self.backpressure.append(child)
             self.branches.append(branch)
 
@@ -151,14 +151,14 @@ class Multiply2(Compute2):
         self.update_done()
         if self.backpressure_en:
             self.data_ready = False
-        if (self.backpressure_en and self.check_backpressure()) or self.backpressure_en:
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_ready = True
             if (len(self.in1) > 0 or len(self.in2) > 0):
                 self.block_start = False
 
             if len(self.in1) > 0 and len(self.in2) > 0:
-                #print("tokens : ", self.curr_in1, self.curr_in2, " ", self.in1, " ", self.in2)
+                # print("tokens : ", self.curr_in1, self.curr_in2, " ", self.in1, " ", self.in2)
                 if self.get1:
                     self.curr_in1 = self.in1.pop(0)
                 if self.get2:
@@ -183,7 +183,7 @@ class Multiply2(Compute2):
                     self.get2 = False
                 elif is_stkn(self.curr_in1) and is_stkn(self.curr_in2):
                     # Inputs are both the same and stop tokens
-                    #print("Check : ", self.curr_in1, " ", self.curr_in2)
+                    # print("Check : ", self.curr_in1, " ", self.curr_in2)
                     assert self.curr_in1 == self.curr_in2, "Both must be the same stop token: " + str(self.curr_in1) + \
                                                            " != " + str(self.curr_in2)
                     self.curr_out = self.curr_in1

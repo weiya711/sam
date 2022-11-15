@@ -35,7 +35,7 @@ class CrdRdScan(Primitive, ABC):
             self.branches.append(branch)
 
     def fifo_available(self, br=""):
-        if self.backpressure and len(self.in_ref) > self.depth:
+        if self.backpressure_en and len(self.in_ref) > self.depth:
             return False
         return True
 
@@ -161,7 +161,7 @@ def last_stkn(skiplist):
 
 
 class CompressedCrdRdScan(CrdRdScan):
-    def __init__(self, crd_arr=[], seg_arr=[], skip=True, depth = 1, tile_size=None, **kwargs):
+    def __init__(self, crd_arr=[], seg_arr=[], skip=True, depth=1, tile_size=None, **kwargs):
         super().__init__(**kwargs)
 
         if tile_size is not None:
@@ -207,7 +207,6 @@ class CompressedCrdRdScan(CrdRdScan):
             self.depth = depth
             self.data_ready = True
 
-
     def fifo_available(self, br=""):
         if self.backpressure_en and len(self.in_ref) > self.depth:
             return False
@@ -220,17 +219,17 @@ class CompressedCrdRdScan(CrdRdScan):
     def out_ref(self, child=None):
         if self.backpressure_en and self.data_ready:
             return self.curr_ref
-        elif self.backpressure:
+        elif self.backpressure_en:
             return
-        if not self.backpressure:
+        if not self.backpressure_en:
             return self.curr_ref
 
     def out_crd(self, child=None):
         if self.backpressure_en and self.data_ready:
             return self.curr_crd
-        elif self.backpressure:
+        elif self.backpressure_en:
             return
-        if not self.backpressure:
+        if not self.backpressure_en:
             return self.curr_crd
 
     def _emit_stkn_code(self):
@@ -275,19 +274,17 @@ class CompressedCrdRdScan(CrdRdScan):
             dic = {}
         return dic
 
-
     def check_backpressure(self):
         if self.backpressure_en:
             j = 0
             for i in self.backpressure:
-                #print(i)
-                #print("\n\n\n", i, i.fifo_debug(),  "\n\n\n")
+                # print(i)
+                # print("\n\n\n", i, i.fifo_debug(),  "\n\n\n")
                 if not i.fifo_available(self.branches[j]):
                     # print("\nChrecked: ", i.in_ref, "\n")
                     return False
                 j += 1
         return True
-
 
     def update(self):
         self.update_done()
@@ -339,7 +336,6 @@ class CompressedCrdRdScan(CrdRdScan):
                     stkn = 'S0'
                 self.curr_crd = stkn
                 self.curr_ref = stkn
-    
                 self.curr_addr = None
                 self.stop_addr = 0
                 self.start_addr = 0
@@ -392,7 +388,6 @@ class CompressedCrdRdScan(CrdRdScan):
                     self.start_addr = self.seg_arr[curr_in_ref]
                     self.stop_addr = self.seg_arr[curr_in_ref + 1]
                     self.curr_addr = self.start_addr
-    
                     # This case is if the segment has no coordinates (i.e. 5, 5)
                     if self.curr_addr >= self.stop_addr:
                         # End of fiber, get next input reference
@@ -430,7 +425,6 @@ class CompressedCrdRdScan(CrdRdScan):
                                         if self.get_stats:
                                             self.elements_skipped += curr_range.index(val_larger) + 1
                                             self.skip_cnt += 1
-    
                             # Early exit from skip
                             elif is_stkn(self.curr_skip):
                                 self._emit_stkn_code()
@@ -506,34 +500,53 @@ class CompressedCrdRdScan(CrdRdScan):
 
             if self.get_stats and is_stkn(self.curr_crd):
                 self.stop_count += 1
-
-            
             # Debugging print statements
-            if self.debug:
+            if self.debug and self.backpressure_en:
                 print("DEBUG: C RD SCAN:"
-                      "\n \t" 
+                      "\n \t"
                       "name: ", self.name, "\t ref", len(self.in_ref), " :: ", self.in_ref,
                       "\t Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref,
                       "\n curr addr:", self.curr_addr, "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
                       "\n end fiber:", self.end_fiber, "\t curr input:", curr_in_ref,
                       "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
                       self.prev_crd,
-                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt,  "\t Bakcpressure: ", self.check_backpressure(), "\t backpressure_len: ", self.backpressure, " ", self.branches, " :: ", self.data_ready)
-
+                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt, "\t Bakcpressure: ",
+                      self.check_backpressure(), "\t backpressure_len: ",
+                      self.backpressure, " ", self.branches, " :: ", self.data_ready)
+            elif self.debug:
+                print("DEBUG: C RD SCAN:"
+                      "\n \t"
+                      "name: ", self.name, "\t ref", len(self.in_ref), " :: ", self.in_ref,
+                      "\t Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref,
+                      "\n curr addr:", self.curr_addr, "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
+                      "\n end fiber:", self.end_fiber, "\t curr input:", curr_in_ref,
+                      "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
+                      self.prev_crd,
+                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt)
         else:
             # Debugging print statements
-            if self.debug:
+            if self.debug and self.backpressure_en:
                 print("DEBUG: C RD SCAN:"
-                      "\n \t" 
+                      "\n \t"
                       "name: ", self.name, "\t ref", len(self.in_ref), " :: ", self.in_ref,
                       "\t Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref,
                       "\n curr addr:", self.curr_addr, "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
                       "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
                       self.prev_crd,
-                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt,  "\t Bakcpressure: ", self.check_backpressure(), "\t backpressure_len: ", self.backpressure, " ", self.branches, " :: ", self.data_ready)    
-            
-            ## Debugging print statements
-            #if self.debug:
+                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt, "\t Bakcpressure: ",
+                      self.check_backpressure(), "\t backpressure_len: ", self.backpressure, " ",
+                      self.branches, " :: ", self.data_ready)
+            elif self.debug:
+                print("DEBUG: C RD SCAN:"
+                      "\n \t"
+                      "name: ", self.name, "\t ref", len(self.in_ref), " :: ", self.in_ref,
+                      "\t Curr crd:", self.curr_crd, "\t curr ref:", self.curr_ref,
+                      "\n curr addr:", self.curr_addr, "\t start addr:", self.start_addr, "\t stop addr:", self.stop_addr,
+                      "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
+                      self.prev_crd,
+                      "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt)
+            # # Debugging print statements
+            # if self.debug:
             #    print("DEBUG: C RD SCAN:"
             #          "\n \t"
             #          "name: ", self.name, "\t ref", len(self.in_ref), " :: ", self.in_ref,
@@ -556,9 +569,7 @@ class CompressedCrdRdScan(CrdRdScan):
             self.in_crd_skip.append(in_crd)
 
 
-
 # ---------------- BV --------------#
-
 class BVRdScanSuper(Primitive, ABC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

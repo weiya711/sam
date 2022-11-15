@@ -8,7 +8,8 @@ from sam.sim.src.compute import Multiply2, Add2
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
+from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2, SparseAccumulator1
+from sam.sim.src.array import Array
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
@@ -24,7 +25,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
+def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, report_stats, backpressure, depth, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -59,31 +60,85 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, report_stats, fill=
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_19 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
-    fiberlookup_Bk_14 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
-    repsiggen_i_17 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
-    repeat_Ci_16 = Repeat(debug=debug_sim, statistics=report_stats)
-    fiberlookup_Ck_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
-    intersectk_13 = Intersect2(debug=debug_sim, statistics=report_stats)
-    crdhold_5 = CrdHold(debug=debug_sim, statistics=report_stats)
-    fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
-    arrayvals_C_8 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
-    crdhold_4 = CrdHold(debug=debug_sim, statistics=report_stats)
-    repsiggen_j_10 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
-    repeat_Bj_9 = Repeat(debug=debug_sim, statistics=report_stats)
-    arrayvals_B_7 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
-    mul_6 = Multiply2(debug=debug_sim, statistics=report_stats)
-    spaccumulator1_3 = SparseAccumulator1(debug=debug_sim, statistics=report_stats)
-    spaccumulator1_3_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats)
-    spaccumulator1_3_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats)
-    spaccumulator1_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bi_19 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0,
+                                            debug=debug_sim, back_en=backpressure,
+                                            statistics=report_stats,
+                                            depth=int(depth))
+    fiberlookup_Bk_14 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1,
+                                            debug=debug_sim, back_en=backpressure,
+                                            statistics=report_stats,
+                                            depth=int(depth))
+    repsiggen_i_17 = RepeatSigGen(debug=debug_sim, statistics=report_stats,
+                                  back_en=backpressure, depth=int(depth))
+    repeat_Ci_16 = Repeat(debug=debug_sim, statistics=report_stats,
+                          back_en=backpressure, depth=int(depth))
+    fiberlookup_Ck_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0,
+                                            debug=debug_sim, back_en=backpressure,
+                                            statistics=report_stats,
+                                            depth=int(depth))
+    intersectk_13 = Intersect2(debug=debug_sim, statistics=report_stats,
+                               back_en=backpressure, depth=int(depth))
+    crdhold_5 = CrdHold(debug=debug_sim, statistics=report_stats,
+                        back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1,
+                                            debug=debug_sim, back_en=backpressure,
+                                            statistics=report_stats,
+                                            depth=int(depth))
+    arrayvals_C_8 = Array(init_arr=C_vals, debug=debug_sim,
+                          statistics=report_stats, back_en=backpressure,
+                          depth=int(depth))
+    crdhold_4 = CrdHold(debug=debug_sim, statistics=report_stats,
+                        back_en=backpressure, depth=int(depth))
+    repsiggen_j_10 = RepeatSigGen(debug=debug_sim, statistics=report_stats,
+                                  back_en=backpressure, depth=int(depth))
+    repeat_Bj_9 = Repeat(debug=debug_sim, statistics=report_stats,
+                         back_en=backpressure, depth=int(depth))
+    arrayvals_B_7 = Array(init_arr=B_vals, debug=debug_sim,
+                          statistics=report_stats, back_en=backpressure, depth=int(depth))
+    mul_6 = Multiply2(debug=debug_sim, statistics=report_stats,
+                      back_en=backpressure, depth=int(depth))
+    spaccumulator1_3 = SparseAccumulator1(debug=debug_sim, statistics=report_stats,
+                                          back_en=backpressure, depth=int(depth))
+    spaccumulator1_3_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats,
+                                               back_en=backpressure, depth=int(depth))
+    spaccumulator1_3_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats,
+                                               back_en=backpressure, depth=int(depth))
+    spaccumulator1_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats,
+                                         back_en=backpressure, depth=int(depth))
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill,
+                                    debug=debug_sim, statistics=report_stats)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill,
+                                     debug=debug_sim, statistics=report_stats)
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
     time_cnt = 0
+
+    if backpressure:
+        fiberlookup_Bi_19.add_child(repsiggen_i_17)
+        fiberlookup_Bi_19.add_child(fiberlookup_Bk_14, "ref")
+        fiberlookup_Bi_19.add_child(crdhold_5, "outer")
+        repsiggen_i_17.add_child(repeat_Ci_16)
+        repeat_Ci_16.add_child(fiberlookup_Ck_15)
+        fiberlookup_Ck_15.add_child(intersectk_13, "in1")
+        fiberlookup_Bk_14.add_child(intersectk_13, "in2")
+        intersectk_13.add_child(crdhold_5, "inner")
+        intersectk_13.add_child(fiberlookup_Cj_12)
+        intersectk_13.add_child(repeat_Bj_9, "ref")
+        crdhold_5.add_child(crdhold_4, "outer")
+        fiberlookup_Cj_12.add_child(crdhold_4, "inner")
+        fiberlookup_Cj_12.add_child(arrayvals_C_8)
+        fiberlookup_Cj_12.add_child(repsiggen_j_10)
+        arrayvals_C_8.add_child(mul_6, "in2")
+        repsiggen_j_10.add_child(repeat_Bj_9, "repsig")
+        repeat_Bj_9.add_child(mul_6, "in1")
+        crdhold_4.add_child(spaccumulator1_3_drop_crd_inner)
+        crdhold_4.add_child(spaccumulator1_3_drop_crd_outer)
+        mul_6.add_child(spaccumulator1_3_drop_val)
+        spaccumulator1_3_drop_crd_inner.add_child(spaccumulator1_3, "inner")
+        spaccumulator1_3_drop_crd_outer.add_child(spaccumulator1_3, "outer")
+        spaccumulator1_3_drop_val.add_child(spaccumulator1_3, "val")
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
@@ -136,15 +191,12 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, report_stats, fill=
         spaccumulator1_3_drop_crd_inner.update()
         spaccumulator1_3_drop_val.update()
         spaccumulator1_3.update()
-
         fiberwrite_Xvals_0.update()
         fiberwrite_X1_1.update()
         fiberwrite_X0_2.update()
-        print("CYCLES ", time_cnt)
-        print("___________________________________________________________________")
- 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
+        print("____________")
 
     fiberwrite_X0_2.autosize()
     fiberwrite_X1_1.autosize()

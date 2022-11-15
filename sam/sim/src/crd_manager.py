@@ -173,14 +173,14 @@ class CrdHold(Primitive):
             for i in self.backpressure:
                 if not i.fifo_available(self.branches[j]):
                     return False
-                j+=1
+                j += 1
         return True
 
-    def add_child(self, child=None, branch = ""):
+    def add_child(self, child=None, branch=""):
         self.backpressure.append(child)
         self.branches.append(branch)
-    
-    def fifo_available(self, br = ""):
+
+    def fifo_available(self, br=""):
         if self.backpressure:
             if br == "inner" and len(self.inner_crd) > self.depth:
                 return False
@@ -233,11 +233,11 @@ class CrdHold(Primitive):
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
-        if (self.backpressure and self.data_ready) or not self.backpressure:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_crd
 
     def out_crd_inner(self):
-        if (self.backpressure and self.data_ready) or not self.backpressure:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_inner_crd
 
 
