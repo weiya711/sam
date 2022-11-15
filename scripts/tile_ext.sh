@@ -11,6 +11,8 @@ basedir=$(pwd)
 
 ext_path=$basedir/extensor_mtx/$1
 
+echo "$ext_path"
+
 for b in ${!BENCHMARKS[@]}; do
 	bench=${BENCHMARKS[$b]}
 	path=$basedir/$benchout/$bench
