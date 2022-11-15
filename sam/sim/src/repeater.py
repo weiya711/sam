@@ -117,6 +117,7 @@ class Repeat(Primitive):
                       "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn,
                       "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ",
                       self.check_backpressure(), " ", self.data_ready)
+
             repeat = ''
             if len(self.in_repeat) > 0 and self.get_next_rep:
                 repeat = self.in_repeat.pop(0)

@@ -93,9 +93,9 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim)
-    repeat_bj_12 = Repeat(debug=debug_sim, union=True)
-    repeat_ej_13 = Repeat(debug=debug_sim, union=True)
-    repeat_fj_14 = Repeat(debug=debug_sim, union=True)
+    repeat_bj_12 = Repeat(debug=debug_sim)
+    repeat_ej_13 = Repeat(debug=debug_sim)
+    repeat_fj_14 = Repeat(debug=debug_sim)
     arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim)
     arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim)
     arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim)
@@ -128,73 +128,96 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
     temp12 = []
     temp13 = []
     temp14 = []
+    temp_add1 = []
+    temp_add2 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_27.update()
 
         if len(in_ref_f) > 0:
             fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
-        fiberlookup_fi_28.update()
-
-        # temp1.append(fiberlookup_fi_28.out_crd())
-        # temp2.append(fiberlookup_Ci_27.out_crd())
 
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
-        unioni_26.update()
 
         fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
-        fiberlookup_Cj_18.update()
 
         fiberwrite_x0_1.set_input(unioni_26.out_crd())
-        fiberwrite_x0_1.update()
 
         repsiggen_i_24.set_istream(unioni_26.out_crd())
-        repsiggen_i_24.update()
 
         if len(in_ref_b) > 0:
             repeat_bi_20.set_in_ref(in_ref_b.pop(0))
         repeat_bi_20.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_bi_20.update()
 
         if len(in_ref_d) > 0:
             repeat_di_21.set_in_ref(in_ref_d.pop(0))
         repeat_di_21.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_di_21.update()
 
         if len(in_ref_e) > 0:
             repeat_ei_22.set_in_ref(in_ref_e.pop(0))
         repeat_ei_22.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_ei_22.update()
 
         fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref())
-        fiberlookup_dj_19.update()
 
         intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
         intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
-        intersectj_17.update()
 
         repsiggen_j_16.set_istream(intersectj_17.out_crd())
-        repsiggen_j_16.update()
 
         arrayvals_C_7.set_load(intersectj_17.out_ref2())
-        arrayvals_C_7.update()
 
         arrayvals_d_8.set_load(intersectj_17.out_ref1())
-        arrayvals_d_8.update()
 
         repeat_bj_12.set_in_ref(repeat_bi_20.out_ref())
         repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig())
+
+        arrayvals_e_10.set_load(repeat_ei_22.out_ref())
+
+        arrayvals_f_11.set_load(unioni_26.out_ref2())
+
+        mul_9.set_in1(arrayvals_e_10.out_val())
+        mul_9.set_in2(arrayvals_f_11.out_val())
+
+        arrayvals_b_6.set_load(repeat_bj_12.out_ref())
+
+        mul_5.set_in1(arrayvals_b_6.out_val())
+        mul_5.set_in2(arrayvals_C_7.out_val())
+
+        mul_4.set_in1(mul_5.out_val())
+        mul_4.set_in2(arrayvals_d_8.out_val())
+
+        reduce_2.set_in_val(mul_4.out_val())
+
+        add_3.set_in1(reduce_2.out_val())
+        add_3.set_in2(mul_9.out_val())
+
+        fiberwrite_xvals_0.set_input(add_3.out_val())
+
+        fiberlookup_Ci_27.update()
+        fiberlookup_fi_28.update()
+        unioni_26.update()
+        fiberlookup_Cj_18.update()
+        fiberwrite_x0_1.update()
+        repsiggen_i_24.update()
+        repeat_bi_20.update()
+        repeat_di_21.update()
+        repeat_ei_22.update()
+        fiberlookup_dj_19.update()
+        intersectj_17.update()
+        repsiggen_j_16.update()
+        arrayvals_C_7.update()
+        arrayvals_d_8.update()
         repeat_bj_12.update()
-
-        repeat_ej_13.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_ej_13.set_in_ref(repeat_ei_22.out_ref())
-        repeat_ej_13.update()
-
-        repeat_fj_14.set_in_ref(unioni_26.out_ref2())
-        repeat_fj_14.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_fj_14.update()
+        arrayvals_e_10.update()
+        arrayvals_f_11.update()
+        mul_9.update()
+        arrayvals_b_6.update()
+        mul_5.update()
+        mul_4.update()
+        reduce_2.update()
+        add_3.update()
+        fiberwrite_xvals_0.update()
 
         temp7.append(unioni_26.out_crd())
         temp6.append(unioni_26.out_ref1())
@@ -213,36 +236,30 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
         temp11.append(repeat_ej_13.out_ref())
         temp5.append(repeat_fj_14.out_ref())
 
-        arrayvals_e_10.set_load(repeat_ej_13.out_ref())
-        arrayvals_e_10.update()
+        temp_add1.append(mul_9.out_val())
+        temp_add2.append(mul_4.out_val())
 
-        arrayvals_f_11.set_load(repeat_fj_14.out_ref())
-        arrayvals_f_11.update()
+        if debug_sim:
+            print("unioni", remove_emptystr(temp7))
+            print(remove_emptystr(temp6))
+            print(remove_emptystr(temp8))
+            print("repeat di", remove_emptystr(temp12))
+            print("rep bi", remove_emptystr(temp9))
+            print("rep ei", remove_emptystr(temp10))
 
-        mul_9.set_in1(arrayvals_e_10.out_val())
-        mul_9.set_in2(arrayvals_f_11.out_val())
-        mul_9.update()
+            print("Cj", remove_emptystr(temp))
+            print(remove_emptystr(temp2))
+            print("dj", remove_emptystr(temp1))
+            print(remove_emptystr(temp3))
 
-        arrayvals_b_6.set_load(repeat_bj_12.out_ref())
-        arrayvals_b_6.update()
+            print("intj", remove_emptystr(temp13))
+            print("rep bj", remove_emptystr(temp4))
+            print("rep ej", remove_emptystr(temp11))
+            print("rep fj", remove_emptystr(temp5))
+            print()
 
-        mul_5.set_in1(arrayvals_b_6.out_val())
-        mul_5.set_in2(arrayvals_C_7.out_val())
-        mul_5.update()
-
-        mul_4.set_in1(mul_5.out_val())
-        mul_4.set_in2(arrayvals_d_8.out_val())
-        mul_4.update()
-
-        add_3.set_in1(mul_4.out_val())
-        add_3.set_in2(mul_9.out_val())
-        add_3.update()
-
-        reduce_2.set_in_val(add_3.out_val())
-        reduce_2.update()
-
-        fiberwrite_xvals_0.set_input(reduce_2.out_val())
-        fiberwrite_xvals_0.update()
+            print("add1", remove_emptystr(temp_add1))
+            print("add2", remove_emptystr(temp_add2))
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1
@@ -255,24 +272,6 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
     out_vals = fiberwrite_xvals_0.get_arr()
 
     if debug_sim:
-        print("unioni", remove_emptystr(temp7))
-        print(remove_emptystr(temp6))
-        print(remove_emptystr(temp8))
-        print("repeat di", remove_emptystr(temp12))
-        print("rep bi", remove_emptystr(temp9))
-        print("rep ei", remove_emptystr(temp10))
-
-        print("Cj", remove_emptystr(temp))
-        print(remove_emptystr(temp2))
-        print("dj", remove_emptystr(temp1))
-        print(remove_emptystr(temp3))
-
-        print("intj", remove_emptystr(temp13))
-        print("rep bj", remove_emptystr(temp4))
-        print("rep ej", remove_emptystr(temp11))
-        print("rep fj", remove_emptystr(temp5))
-        print()
-
         print(out_crds[0])
         print(out_segs[0])
         print(out_vals)
@@ -377,7 +376,7 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
     arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim)
-    repeat_bj_12 = Repeat(debug=debug_sim, union=True)
+    repeat_bj_12 = Repeat(debug=debug_sim)
     # repeat_ej_13 = Repeat(debug=debug_sim, union=True)
     # repeat_fj_14 = Repeat(debug=debug_sim, union=True)
     arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim)
@@ -415,59 +414,44 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
-        fiberlookup_Ci_27.update()
 
         if len(in_ref_f) > 0:
             fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
-        fiberlookup_fi_28.update()
 
         unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
         unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
-        unioni_26.update()
 
         fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
-        fiberlookup_Cj_18.update()
 
         fiberwrite_x0_1.set_input(unioni_26.out_crd())
-        fiberwrite_x0_1.update()
 
         repsiggen_i_24.set_istream(unioni_26.out_crd())
-        repsiggen_i_24.update()
 
         if len(in_ref_b) > 0:
             repeat_bi_20.set_in_ref(in_ref_b.pop(0))
         repeat_bi_20.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_bi_20.update()
 
         if len(in_ref_d) > 0:
             repeat_di_21.set_in_ref(in_ref_d.pop(0))
         repeat_di_21.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_di_21.update()
 
         if len(in_ref_e) > 0:
             repeat_ei_22.set_in_ref(in_ref_e.pop(0))
         repeat_ei_22.set_in_repsig(repsiggen_i_24.out_repsig())
-        repeat_ei_22.update()
 
         fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref())
-        fiberlookup_dj_19.update()
 
         intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
         intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
-        intersectj_17.update()
 
         repsiggen_j_16.set_istream(intersectj_17.out_crd())
-        repsiggen_j_16.update()
 
         arrayvals_C_7.set_load(intersectj_17.out_ref2())
-        arrayvals_C_7.update()
 
         arrayvals_d_8.set_load(intersectj_17.out_ref1())
-        arrayvals_d_8.update()
 
         repeat_bj_12.set_in_ref(repeat_bi_20.out_ref())
         repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_bj_12.update()
 
         temp7.append(unioni_26.out_crd())
         temp6.append(unioni_26.out_ref1())
@@ -487,34 +471,50 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
         # temp5.append(repeat_fj_14.out_ref())
 
         arrayvals_e_10.set_load(repeat_ei_22.out_ref())
-        arrayvals_e_10.update()
 
         arrayvals_f_11.set_load(unioni_26.out_ref2())
-        arrayvals_f_11.update()
 
         mul_9.set_in1(arrayvals_e_10.out_val())
         mul_9.set_in2(arrayvals_f_11.out_val())
-        mul_9.update()
 
         arrayvals_b_6.set_load(repeat_bj_12.out_ref())
-        arrayvals_b_6.update()
 
         mul_5.set_in1(arrayvals_b_6.out_val())
         mul_5.set_in2(arrayvals_C_7.out_val())
-        mul_5.update()
 
         mul_4.set_in1(mul_5.out_val())
         mul_4.set_in2(arrayvals_d_8.out_val())
-        mul_4.update()
 
         reduce_2.set_in_val(mul_4.out_val())
-        reduce_2.update()
 
         add_3.set_in1(reduce_2.out_val())
         add_3.set_in2(mul_9.out_val())
-        add_3.update()
 
         fiberwrite_xvals_0.set_input(add_3.out_val())
+
+        fiberlookup_Ci_27.update()
+        fiberlookup_fi_28.update()
+        unioni_26.update()
+        fiberlookup_Cj_18.update()
+        fiberwrite_x0_1.update()
+        repsiggen_i_24.update()
+        repeat_bi_20.update()
+        repeat_di_21.update()
+        repeat_ei_22.update()
+        fiberlookup_dj_19.update()
+        intersectj_17.update()
+        repsiggen_j_16.update()
+        arrayvals_C_7.update()
+        arrayvals_d_8.update()
+        repeat_bj_12.update()
+        arrayvals_e_10.update()
+        arrayvals_f_11.update()
+        mul_9.update()
+        arrayvals_b_6.update()
+        mul_5.update()
+        mul_4.update()
+        reduce_2.update()
+        add_3.update()
         fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
@@ -551,37 +551,37 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
         print(out_vals)
         print()
 
-        b_nd = np.zeros(b_shape)
-        d_nd = np.zeros(d_shape)
+    b_nd = np.zeros(f_shape)
+    d_nd = np.zeros(d_shape)
 
-        for i in range(len(f_crd0)):
-            val = f_vals[i]
-            crd = f_crd0[i]
-            b_nd[crd] = val
+    for i in range(len(f_crd0)):
+        val = f_vals[i]
+        crd = f_crd0[i]
+        b_nd[crd] = val
 
-        for i in range(len(d_crd0)):
-            val = d_vals[i]
-            crd = d_crd0[i]
-            d_nd[crd] = val
+    for i in range(len(d_crd0)):
+        val = d_vals[i]
+        crd = d_crd0[i]
+        d_nd[crd] = val
 
-        gold_nd = 2 * C_nd @ d_nd + 2 * b_nd
+    gold_nd = 2 * C_nd @ d_nd + 2 * b_nd
 
-        gold_tup = convert_ndarr_point_tuple(gold_nd)
-        if debug_sim:
-            print("Out segs:", out_segs)
-            print("Out crds:", out_crds)
-            print("Out vals:", out_vals)
-            print("Dense Vec1:\n", b_nd)
-            print("Dense Mat1:\n", C_nd)
-            print("Dense Vec2:\n", d_nd)
-            print("Dense Gold:", gold_nd)
-            print("Gold:", gold_tup)
+    gold_tup = convert_ndarr_point_tuple(gold_nd)
+    if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_vals)
+        print("Dense Vec1:\n", b_nd)
+        print("Dense Mat1:\n", C_nd)
+        print("Dense Vec2:\n", d_nd)
+        print("Dense Gold:", gold_nd)
+        print("Gold:", gold_tup)
 
-        if not out_vals:
-            assert out_vals == gold_tup
-        elif not gold_tup:
-            assert all([v == 0 for v in out_vals])
-        else:
-            out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
-            out_tup = remove_zeros(out_tup)
-            assert (check_point_tuple(out_tup, gold_tup))
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))

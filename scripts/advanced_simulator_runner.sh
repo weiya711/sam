@@ -107,7 +107,7 @@ for b in ${!BENCHMARKS[@]}; do
 
 		cd $basedir/sam/sim
 		#python -m cProfile -o test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
-		pytest test/advanced-simulator/test_$bench.py --ssname $line -s --report-stats --back --depth=4 --debug-sim --check-gold --benchmark-json=$path/$line.json
+		pytest test/advanced-simulator/test_$bench.py --ssname $line -s --report-stats --debug-sim --back --depth=4 --check-gold --benchmark-json=$path/$line.json
 		python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?
