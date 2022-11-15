@@ -1,7 +1,7 @@
 import pytest
 import time
 import scipy.sparse
-from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan, CompressedCrdRdScan_back
+from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2, Add2
@@ -24,7 +24,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_identity_back(samBench, ssname, check_gold, debug_sim, report_stats, fill=0):
+def test_mat_identity_back(samBench, ssname, check_gold, debug_sim, report_stats, backpressure, depth, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -42,17 +42,20 @@ def test_mat_identity_back(samBench, ssname, check_gold, debug_sim, report_stats
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    fiberlookup_Bi_5 = CompressedCrdRdScan_back(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, name = "fiberloopup_Bi", statistics=report_stats)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, name = "fiberwrite_X0", statistics=report_stats)
-    fiberlookup_Bj_4 = CompressedCrdRdScan_back(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, name = "fiberlookup_Bj", statistics=report_stats)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim, name = "fiberwrite_X1", statistics=report_stats)
+    fiberlookup_Bi_5 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, backpressure=backpressure, depth=int(depth),
+                                           name="fiberloopup_Bi", statistics=report_stats)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, name="fiberwrite_X0", statistics=report_stats)
+    fiberlookup_Bj_4 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, backpressure=backpressure, depth=int(depth),
+                                           name="fiberlookup_Bj", statistics=report_stats)
+    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim, name="fiberwrite_X1", statistics=report_stats)
     arrayvals_B_3 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats, name = "arrayvals")
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim, statistics=report_stats, name = "vals_write")
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim, statistics=report_stats, name="vals_write")
     in_ref_B = [0, 'D']
     done = False
     time_cnt = 0
-
-    fiberlookup_Bi_5.add_child(fiberlookup_Bj_4)
+    
+    if backpressure:
+        fiberlookup_Bi_5.add_child(fiberlookup_Bj_4)
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
