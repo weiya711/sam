@@ -438,7 +438,6 @@ class memory_block():
                 self.tile_ptrs_size.pop(0)
                 self.tile_ptrs.append(tile)
                 self.tile_sizes.append(0)
-                #self.repeat_pattern.append("R")
             elif self.ready and len(self.tile_ptrs_fifo) > 0 and (self.tile_ptrs_fifo[0] == "D" or len(self.tile_ptrs) == 0 or self.tile_ptrs[-1] != self.tile_ptrs_fifo[0]) and not self.loading:
                 #print(self.loading)
                 if self.curr_size != self.load_size + sum(self.tile_sizes) + self.remove_size:
