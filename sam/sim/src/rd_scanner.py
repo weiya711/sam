@@ -293,10 +293,7 @@ class CompressedCrdRdScan(CrdRdScan):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_ready = True
-            if len(self.in_ref) > 0 or (self.skip and len(self.in_crd_skip) > 0):
-                self.block_start = False
-
-            # Process skip token first and save
+# Process skip token first and save
             if len(self.in_crd_skip) > 0 and self.skip_processed:
                 self.curr_skip = self.in_crd_skip.pop(0)
                 if self.skip_stkn_cnt == self.out_stkn_cnt and isinstance(self.curr_skip, int) \
@@ -336,6 +333,7 @@ class CompressedCrdRdScan(CrdRdScan):
                     stkn = 'S0'
                 self.curr_crd = stkn
                 self.curr_ref = stkn
+
                 self.curr_addr = None
                 self.stop_addr = 0
                 self.start_addr = 0
@@ -388,6 +386,7 @@ class CompressedCrdRdScan(CrdRdScan):
                     self.start_addr = self.seg_arr[curr_in_ref]
                     self.stop_addr = self.seg_arr[curr_in_ref + 1]
                     self.curr_addr = self.start_addr
+
                     # This case is if the segment has no coordinates (i.e. 5, 5)
                     if self.curr_addr >= self.stop_addr:
                         # End of fiber, get next input reference
@@ -425,6 +424,7 @@ class CompressedCrdRdScan(CrdRdScan):
                                         if self.get_stats:
                                             self.elements_skipped += curr_range.index(val_larger) + 1
                                             self.skip_cnt += 1
+
                             # Early exit from skip
                             elif is_stkn(self.curr_skip):
                                 self._emit_stkn_code()
@@ -500,6 +500,7 @@ class CompressedCrdRdScan(CrdRdScan):
 
             if self.get_stats and is_stkn(self.curr_crd):
                 self.stop_count += 1
+
             # Debugging print statements
             if self.debug and self.backpressure_en:
                 print("DEBUG: C RD SCAN:"
