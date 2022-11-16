@@ -77,12 +77,12 @@ def test_matmul_ijk_back(samBench, ssname, check_gold, debug_sim, backpressure, 
                                             statistics=report_stats,
                                             depth=int(depth))
     fiberlookup_Ck_9 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0,
-                                           debug=debug_sim,back_en=backpressure,
+                                           debug=debug_sim, back_en=backpressure,
                                            statistics=report_stats,
                                            depth=int(depth))
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, 
+    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1,
                                      size=B_shape[0] * C_shape[1],
-                                     fill=fill, debug=debug_sim, 
+                                     fill=fill, debug=debug_sim,
                                      statistics=report_stats)
     repsiggen_j_11 = RepeatSigGen(debug=debug_sim, statistics=report_stats,
                                   back_en=backpressure, depth=int(depth))
