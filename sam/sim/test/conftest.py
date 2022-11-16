@@ -18,9 +18,10 @@ def pytest_addoption(parser):
     parser.addoption("--synth", action="store_true", default=False,
                      help="Flag that enables functional output checking")
     parser.addoption("--back", action="store_true", default=False,
-                    help="Whether backpressure is enabled")
+                     help="Whether backpressure is enabled")
     parser.addoption("--depth", action="store", default=2,
                      help="fifo depth value")
+
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "suitesparse: mark test as needing suitesparse dataset to run")
@@ -59,17 +60,21 @@ def pytest_collection_modifyitems(config, items):
 def debug_sim(request):
     return request.config.getoption("--debug-sim")
 
+
 @pytest.fixture
 def backpressure(request):
     return request.config.getoption("--back")
+
 
 @pytest.fixture
 def depth(request):
     return request.config.getoption("--depth")
 
+
 @pytest.fixture
 def check_gold(request):
     return request.config.getoption("--check-gold")
+
 
 @pytest.fixture
 def report_stats(request):
