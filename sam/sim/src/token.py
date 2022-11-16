@@ -31,7 +31,7 @@ class StknDrop(Primitive):
         return True
 
     def add_child(self, child=None, branch=""):
-        if self.backpressure_en and child != None:
+        if self.backpressure_en and child is not None:
             self.backpressure.append(child)
             self.branch.append(branch)
 
