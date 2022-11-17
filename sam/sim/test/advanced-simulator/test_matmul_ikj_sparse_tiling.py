@@ -32,15 +32,22 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report_stats,
                                  skip_empty, yaml_name, nbuffer, fill=0):
     stats_dict = {"mul_6_ops": 0, "spacc1_3_rmw_ops": [], "out_arr_size": 0}
+    # Helper Datastructures
+    # Sizes for the full matrix (to get software loop sizes)
     with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
+    # Make sure the tiles were correctly done
     assert sizes_dict_level_full["B"][0] == sizes_dict_level_full["C"][1]
+    # GLB tile's sizes in a dict
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_0_sizes"), "rb") as ff:
         sizes_dict_level0 = pickle.load(ff)
+    # Mem tile's sizes in a dict
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_1_sizes"), "rb") as ff:
         sizes_dict_level1 = pickle.load(ff)
+    # Tile sizes at GLB and memory level
     with open(os.path.join(sam_home, "sam/sim/src/tiling/" + yaml_name), "r") as stream:
         loop_config = yaml.safe_load(stream)
+    # Loading the same thing again (redundant)
     with open(os.path.join(sam_home, "./sam/sim/src/tiling/" + yaml_name), "r") as stream:
         memory_config = yaml.safe_load(stream)
 
@@ -51,7 +58,9 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
               "j0": int(loop_config["Glb_tile_size"])}
 
     cnt_i = 0
-    # Get seg and crd arrays of mem tiles and glb tiles
+    # Get an array that allows us to get the cordinates from the reference values
+    # Called ref_glb_convertor to be able to use the sizes_dict_level0
+    # Get seg and crd arrays of mem tiles and glb tiles in glb_arr
     ref_glb_convertor, glb_arr = generate_tile_crd_glb_matmul(struct, sizes_dict_level0)
     ref_to_crd_convertor = dict()
 
@@ -66,14 +75,14 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     repsiggen_j00 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
     repeat_Bj00 = Repeat(debug=debug_sim, statistics=report_stats)
 
-    # Reference
+    # Reference for software loops
     in_ref_B00 = [0, 'D']
     in_ref_C00 = [0, 'D']
     in_ref_B0 = []
     in_ref_C0 = []
     done = False
     time_cnt = 0
-
+    # Intitialize memory blocks
     glb_model_b = memory_block(name="GLB_B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
                                bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],
@@ -146,9 +155,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             # get keys
             keys = [glb_model_b.token(), glb_model_c.token()]
             # Initialize memory array
+            # Get an array that allows us to get the cordinates from the reference values
+            # Called ref_to_crd_convertor to be able to use the sizes_dict_level0
+            # Get seg and crd arrays of mem tiles in mem_arr
             ref_to_crd_convertor, mem_arr = generate_tile_crd_mem_matmul(struct, sizes_dict_level1, keys,
                                                                          ref_glb_convertor, ref_to_crd_convertor)
-            # New GLB tile present
+            # New GLB tile: Reintialize controllers at the glb level
             flag_glb = True
             in_ref_B0 = [0, 'D']
             in_ref_C0 = [0, 'D']
@@ -166,7 +178,8 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             glb_model_c.valid_tile_recieved()
 
         if isinstance(repeat_Bj00.out_ref(), int):
-            # Add an actual tile from the daatstructure
+            # Get size of tile from a the datastructure
+            # Get the coordinates for the tile
             B_ = ref_glb_convertor["B"][repeat_Bj00.out_ref()].split("_")
             glb_model_b.add_tile(repeat_Bj00.out_ref(), sizes_dict_level0["B"][(int(B_[0]), int(B_[1]))])
         else:
@@ -174,6 +187,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             glb_model_b.add_tile(repeat_Bj00.out_ref(), 8)
         if isinstance(fiberlookup_Cj00.out_ref(), int):
             # Add an actual tile for the datastructure
+            # Get crds from the reference
             C_ = ref_glb_convertor["C"][fiberlookup_Cj00.out_ref()].split("_")
             glb_model_c.add_tile(fiberlookup_Cj00.out_ref(), sizes_dict_level0["C"][(int(C_[0]), int(C_[1]))])
         else:
@@ -204,6 +218,11 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                 B_k00__ = int(B_ct[1])
                 B_i00__ = int(B_ct[0])
                 if isinstance(repeat_Bj0.out_ref(), int):
+                    # Send the next channel the reference for the mem tile being loaded + current glb tile so can
+                    # use it to correctly address into the datastructure
+                    # Get crds for mem tile value using the datastructure
+                    # Each memtile block output has both the glb tile address + mem tile address backed in to use the
+                    # helper datastructures
                     mem_b_t = ref_to_crd_convertor["B_" + str(glb_model_b.token())][repeat_Bj0.out_ref()].split("_")
                     mem_model_b.add_tile(repeat_Bj0.out_ref(),
                                          sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
@@ -216,6 +235,9 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                 C_k00__ = int(C_ct[0])
                 C_j00__ = int(C_ct[1])
                 if isinstance(fiberlookup_Cj0.out_ref(), int):
+                    # Send the next channel the reference for the mem tile being loaded + current glb tile so can
+                    # use it to correctly address into the datastructure
+                    # Get crds for mem tile value using the datastructure
                     mem_c_t = ref_to_crd_convertor["C_" + str(glb_model_c.token())][fiberlookup_Cj0.out_ref()].split("_")
                     mem_model_c.add_tile(fiberlookup_Cj0.out_ref(),
                                          sizes_dict_level1["C"][(C_k00__, C_j00__, int(mem_c_t[0]), int(mem_c_t[1]))],
@@ -230,9 +252,16 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             in_ref_B = [0, 'D']
             in_ref_C = [0, 'D']
             if nbuffer:
+                # Get the GLB reference from the memtile by divuiding it by 1000000 (hard coded for now)
+                # Later replace this with a crd hold block
+                # Use the reference to get the crds for the glb level
+                # (since the size datastructure uses coordinates not refrences
                 B_glb = ref_glb_convertor["B"][mem_model_b.token() // 1000000].split("_")
                 B_k00 = int(B_glb[1])
                 B_i00 = int(B_glb[0])
+                # Get the mem tile refrence by modulo 1000000
+                # Use the reference to get the crds for the mem level
+                # (since the size datastructure uses coordinates not refrences)
                 B_mem = ref_to_crd_convertor["B_" +
                                              str(mem_model_b.token() // 1000000)][mem_model_b.token() % 1000000].split("_")
                 B_k0 = int(B_mem[1])
@@ -247,9 +276,16 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                 B_i0 = int(B_mem[0])
 
             if nbuffer:
+                # Get the GLB reference from the memtile by divuiding it by 1000000 (hard coded for now)
+                # can use a crd hold block
+                # Use the reference to get the crds for the glb level
+                # (since the size datastructure uses coordinates not refrences
                 C_glb = ref_glb_convertor["C"][mem_model_c.token() // 1000000].split("_")
                 C_j00 = int(C_glb[1])
                 C_k00 = int(C_glb[0])
+                # Get the mem tile refrence by modulo 1000000
+                # Use the reference to get the crds for the mem level
+                # (since the size datastructure uses coordinates not refrences
                 C_mem = ref_to_crd_convertor["C_" +
                                              str(mem_model_c.token() // 1000000)][mem_model_c.token() % 1000000].split("_")
                 C_j0 = int(C_mem[1])
@@ -267,6 +303,8 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                 print("B ", B_i00, B_k00, B_i0, B_k0)
                 print("C ", C_k00, C_j00, C_k0, C_j0)
                 assert False
+            # ABove allows us to get coordinates, allows reading in correct tiles since the files are stored with respect to
+            # their coordinates not references
             # Load files for current tile
             B_dir = "tensor_B_tile_" + str(B_i00) + "_" + str(B_k00) + "_" + str(B_i0) + "_" + str(B_k0)
             B_dirname = os.path.join(formatted_dir, B_dir)
