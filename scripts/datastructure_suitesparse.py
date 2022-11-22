@@ -48,16 +48,16 @@ parser.add_argument('-c', '--combined', action='store_true', default=False, help
                                                                                  'should be in separate files')
 parser.add_argument('-o', '--omit-dense', action='store_true', default=False, help='Do not create fully dense format')
 parser.add_argument('-i', '--integer', action='store_false', default=True, help='Safe sparsity cast to int for values')
-parser.add_argument('-hw', '--hw', action='store_true', default=False, help='Only generate formats used for hardware testing (all sparse levels, concordant)')
+parser.add_argument('-hw', '--hw', action='store_true', default=False, help='Only generate formats used for hardware '
+                                                                            'testing (all sparse levels, concordant)')
 parser.add_argument('-b', '--benchname', type=str, action='store', help='test name to run format '
-                                                                                     'conversion on')
+                                                                        'conversion on')
 parser.add_argument('--out', type=str, default=None)
 
 args = parser.parse_args()
 
 inputCache = InputCacheSuiteSparse()
 formatWriter = FormatWriter(args.integer)
-
 
 out_path = Path(out_dirname)
 out_path.mkdir(parents=True, exist_ok=True, mode=0o777)
@@ -98,10 +98,10 @@ elif args.hw:
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
     dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
-    
+
     if "mat_mattransmul" in args.benchname or "mat_residual" in args.benchname:
         tensorname = "C"
-    else: 
+    else:
         tensorname = "B"
     coo = inputCache.load(tensor, False)
     formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01")
@@ -130,16 +130,16 @@ elif args.hw:
         tensorname = "C"
         shifted = ScipyTensorShifter().shiftLastMode(coo)
         formatWriter.writeout_separate_sparse_only(shifted, dirname, tensorname, format_str="ss01")
-    
+
     elif "mat_sddmm" in args.benchname:
-        pass 
+        pass
     elif "mat_mattransmul" in args.benchname or "mat_residual" in args.benchname:
         pass
     elif "mat_vecmul" in args.benchname:
         pass
     else:
-        raise NotImplementedError 
-        
+        raise NotImplementedError
+
 else:
     print("Writing " + args.name + " original...")
     dirname = os.path.join(out_path, args.name, "orig")

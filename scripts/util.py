@@ -551,7 +551,7 @@ class FormatWriter:
 #         self.lastLoaded = None
 #         self.lastName = None
 #         self.tensor = None
-# 
+#
 #     def load(self, tensor, suiteSparse, cast, format_str):
 #         if self.lastName == str(tensor):
 #             return self.tensor
@@ -636,7 +636,7 @@ def safeCastScipyTensorToInts(tensor):
     return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
 
 
-def parse_taco_format(infilename, outdir, tensorname, format_str):
+def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=False):
     with open(infilename, 'r') as inf:
         level = -1
         count = 0
