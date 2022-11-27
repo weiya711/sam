@@ -222,7 +222,7 @@ class output_memory_block():
 class memory_block():
     def __init__(self, name="B", skip_blocks=False, element_size=2, level=None, indexes=2,
                  size=1000 * 2, nbuffer=False, latency=10, debug=False, bandwidth=2,
-                 length=1, mode="all_unpacked"):
+                 length=1, mode="all_unpacked", pipeline_en=False):
         self.name = name
         self.skip_blocks = skip_blocks
         self.level = level
@@ -258,6 +258,7 @@ class memory_block():
             self.loading_tile = None
             self.load_size = 0
             self.curr_tile = None
+            self.next_tile = None
             self.curr_size = 0
             self.tile_ptrs = []
             self.repeat_pattern = []
@@ -266,6 +267,9 @@ class memory_block():
             self.loading = False
             self.done_in = False
             self.remove_size = 0
+            self.if_latency_ = []
+            self.if_latency = True
+            self.pipeline_en = pipeline_en
 
     def out_done(self):
         if self.nbuffer or self.full_buff:
@@ -281,6 +285,7 @@ class memory_block():
         if tile_ptr == "D":
             self.tile_ptrs_fifo.append("D")
             self.tile_ptrs_size.append(0)
+            self.if_latency_.append(True)
             return
         if self.nbuffer or self.full_buff:
             if tile_ptr != "" and isinstance(tile_ptr, int):
@@ -288,8 +293,10 @@ class memory_block():
                 if isinstance(upperlvl, int):
                     # upperlvl = 0
                     self.tile_ptrs_fifo.append(tile_ptr + upperlvl * 1000000)
+                    self.if_latency_.append(True)
                 else:
                     self.tile_ptrs_fifo.append(tile_ptr)
+                    self.if_latency_.append(True)
                 self.tile_ptrs_size.append(size)
                 # print("Tile ptrs fifo: ", self.name, self.tile_ptrs_fifo)
         else:
@@ -331,9 +338,20 @@ class memory_block():
               " Done received and processed ", self.done_received, " ", self.done_processed, " : current tile: ",
               self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
 
+    def return_next(self, ref_to_crd_map=None):
+        if self.nbuffer:
+            if self.next_tile is None:
+                return None
+            else:
+                return self.next_tile
+        return None
+
     def update(self, cyclenum):
         if self.nbuffer:
             self.done_in = False
+            #print(self.name, len(self.if_latency_), len(self.tile_ptrs_fifo))
+            if len(self.if_latency_) != len(self.tile_ptrs_fifo):
+                assert False
             assert len(self.tile_ptrs) == len(self.tile_sizes)
             if len(self.tile_sizes) > 0:
                 if self.loading_tile is None:
@@ -381,6 +399,8 @@ class memory_block():
 
                 if len(self.tile_ptrs) > 0:
                     self.curr_tile = self.tile_ptrs[0]
+                if len(self.tile_ptrs) > 1:
+                    self.next_tile = self.tile_ptrs[1]
 
             if self.done_processed and not self.done_received:
                 self.done_processed = False
@@ -415,6 +435,13 @@ class memory_block():
                     if len(self.tile_ptrs) > 0:
                         self.curr_tile = self.tile_ptrs[0]
                         self.valid = True
+
+            if len(self.tile_ptrs) > 0:
+                self.curr_tile = self.tile_ptrs[0]
+            if len(self.tile_ptrs) > 1:
+                self.next_tile = self.tile_ptrs[1]
+            else:
+                self.next_tile = None
 
             if self.curr_tile == "D" and len(self.tile_ptrs) < 2 and len(self.tile_ptrs_fifo) == 0:
                 # self.timestamp = None
@@ -452,6 +479,15 @@ class memory_block():
                     self.ready = True
             else:
                 self.ready = True
+            # Dram pipelining
+            if self.pipeline_en and self.ready and self.loading:
+                temp_size = 0
+                for i in range(len(self.if_latency_)):
+                    temp_size += self.tile_ptrs_size[i]
+                    if self.curr_size + temp_size < self.size:
+                        self.if_latency_[i] = False
+                    else:
+                        break
 
             # Actual transfer of data
             if self.ready and len(self.tile_ptrs_fifo) > 0 and \
@@ -459,6 +495,8 @@ class memory_block():
                 if self.tile_ptrs_fifo[0] == "D":
                     self.done_in = True
                 tile = self.tile_ptrs_fifo.pop(0)
+                # Remove the tile's latency record
+                self.if_latency_.pop(0)
                 self.tile_ptrs_size.pop(0)
                 self.tile_ptrs.append(tile)
                 self.tile_sizes.append(0)
@@ -477,13 +515,14 @@ class memory_block():
                 self.curr_size += self.tile_ptrs_size.pop(0)
                 self.loading_tile = tile
                 self.timestamp = cyclenum
+                self.if_latency = self.if_latency_.pop(0)
                 if self.curr_size != self.load_size + sum(self.tile_sizes) + self.remove_size:
                     print(self.name, " ", self.curr_size, self.load_size, self.tile_sizes,
                           self.remove_size, "::", self.tile_ptrs, self.curr_tile,
                           self.loading_tile, self.tile_ptrs_fifo)
                     assert False
 
-            elif self.loading and cyclenum > self.compute_latency(self.load_size) + self.timestamp:
+            elif self.loading and cyclenum > self.compute_latency(self.load_size, self.if_latency) + self.timestamp:
                 self.loading = False
                 if self.loading_tile == "D" and (len(self.tile_ptrs) > 1 or len(self.tile_ptrs_fifo) > 1):
                     self.done_in = True
@@ -587,12 +626,17 @@ class memory_block():
             return True
         return False
 
-    def compute_latency(self, tile):
+    def compute_latency(self, tile, if_latency=True):
         if self.nbuffer or self.full_buff:
             if self.skip_blocks and self.curr_size == 0 and self.loading_tile is not None:
-                return self.latency
+                if self.pipeline_en and not if_latency:
+                    return 1
+                else:
+                    return self.latency
             if self.loading_tile is not None and self.old_tile is not None and self.loading_tile == self.old_tile:
                 return 1
+            if self.pipeline_en and not if_latency:
+                return 1 + (tile * self.element_size) // (self.bandwidth)
             return self.latency + (tile * self.element_size) // (self.bandwidth)
         else:
             if self.skip_blocks and self.curr_size == 0 and self.curr_tile is not None:
@@ -610,6 +654,9 @@ class memory_block():
     def valid_tile(self):
         if self.valid and not self.outputed:
             return True
+
+    def if_valid(self):
+        return self.valid
 
     def valid_tile_recieved(self):
         # if self.debug:
