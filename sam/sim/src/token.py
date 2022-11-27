@@ -14,6 +14,7 @@ class StknDrop(Primitive):
             self.data_ready = True
             self.branch = []
             self.depth = depth
+            self.fifo_avail = True
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -24,10 +25,18 @@ class StknDrop(Primitive):
                 j += 1
         return True
 
-    def fifo_available(self, br=""):
+    def update_ready(self):
         if self.backpressure_en:
             if len(self.in_stream) > self.depth:
-                return False
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
+
+    def fifo_available(self, br=""):
+        if self.backpressure_en:
+            return self.fifo_avail
+            # if len(self.in_stream) > self.depth:
+            #     return False
         return True
 
     def add_child(self, child=None, branch=""):
@@ -37,6 +46,7 @@ class StknDrop(Primitive):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:

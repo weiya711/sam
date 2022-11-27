@@ -25,6 +25,8 @@ class Repeat(Primitive):
             self.data_ready = True
             self.branches = []
             self.depth = depth
+            self.fifo_avail_ref = True
+            self.fifo_avail_repeat = True
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -40,11 +42,24 @@ class Repeat(Primitive):
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if br == "ref" and len(self.in_ref) > self.depth:
-                return False
-            if len(self.in_repeat) > self.depth and (br == "repeat" or br == "repsig"):
-                return False
+            if br == "ref":  # and len(self.in_ref) > self.depth:
+                return self.fifo_avail_ref
+                # return False
+            if (br == "repeat" or br == "repsig"):  # len(self.in_repeat) > self.depth and (br == "repeat" or br == "repsig"):
+                return self.fifo_avail_repeat
+                # return False
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_ref) > self.depth:
+                self.fifo_avail_ref = False
+            else:
+                self.fifo_avail_ref = True
+            if len(self.in_repeat) > self.depth:
+                self.fifo_avail_repeat = False
+            else:
+                self.fifo_avail_repeat = True
 
     def add_child(self, child=None, branch=""):
         if self.backpressure_en:
@@ -53,6 +68,7 @@ class Repeat(Primitive):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -257,9 +273,11 @@ class RepeatSigGen(Primitive):
             self.data_ready = True
             self.branches = []
             self.depth = depth
+            self.fifo_avail = True
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -308,9 +326,17 @@ class RepeatSigGen(Primitive):
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if len(self.istream) > self.depth:
-                return False
+            return self.fifo_avail
+            # if len(self.istream) > self.depth:
+            #     return False
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.istream) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
 
     def add_child(self, child=None, branch=""):
         if self.backpressure_en:

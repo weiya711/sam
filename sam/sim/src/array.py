@@ -23,6 +23,7 @@ class Array(Primitive):
             self.data_ready = True
             self.branch = []
             self.depth = depth
+            self.fifo_avail = True
 
         if self.get_stats:
             self.valid_loads = 0
@@ -49,6 +50,7 @@ class Array(Primitive):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -57,7 +59,11 @@ class Array(Primitive):
             if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
                 self.block_start = False
 
-            if self.load_en and len(self.load_addrs) > 0:
+            if len(self.load_addrs) > 0:
+                if self.load_addrs[0] is not None and self.load_addrs[0] != "":
+                    self.load_en = True
+                else:
+                    self.load_en = False
                 if self.get_stats:
                     self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
                 self.curr_load = self.load(self.load_addrs.pop(0))
@@ -71,19 +77,30 @@ class Array(Primitive):
                 store_tup = self.store_vals.pop(0)
                 self.store(store_tup[0], store_tup[1])
                 self.store_en = False
+        if self.debug and self.backpressure_en:
+            print("arr: ", self.fifo_avail, self.load_addrs, self.load_en, self.check_backpressure(), self.backpressure)
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if len(self.load_addrs) > 1:
-                return False
+            return self.fifo_avail
+            # if len(self.load_addrs) > 1:
+            #     return False
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.load_addrs) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
 
     def set_load(self, addr):
         if addr != '' and addr is not None:
-            self.load_en = True
+            # self.load_en = True
             self.load_addrs.append(addr)
         else:
-            self.load_en = False
+            pass
+            # self.load_en = False
 
     def set_store(self, addr, vals):
         if addr != '' and vals != '' and addr is not None and vals is not None:
@@ -96,10 +113,12 @@ class Array(Primitive):
         return self.arr
 
     def out_load(self):
-        return self.curr_load
+        if self.data_ready:
+            return self.curr_load
 
     def out_val(self):
-        return self.curr_load
+        if self.data_ready:
+            return self.curr_load
 
     def load(self, addr):
         # Special handling of loads of stop tokens

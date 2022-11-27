@@ -18,6 +18,7 @@ class CrdRdScan(Primitive, ABC):
         if self.backpressure_en:
             self.backpressure = []
             self.branches = []
+            self.fifo_avail = True
 
     def set_in_ref(self, in_ref):
         if in_ref != '' and in_ref is not None:
@@ -35,9 +36,18 @@ class CrdRdScan(Primitive, ABC):
             self.branches.append(branch)
 
     def fifo_available(self, br=""):
-        if self.backpressure_en and len(self.in_ref) > self.depth:
-            return False
+        if self.backpressure_en:
+            return self.fifo_avail
+            # and len(self.in_ref) > self.depth:
+            # return False
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_ref) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
 
     def fifo_debug(self):
         print("Crd rd: ", self.in_ref)
@@ -62,6 +72,7 @@ class UncompressCrdRdScan(CrdRdScan):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if len(self.in_ref) > 0:
             self.block_start = False
 
@@ -288,6 +299,7 @@ class CompressedCrdRdScan(CrdRdScan):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:

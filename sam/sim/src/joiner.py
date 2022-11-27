@@ -29,6 +29,8 @@ class CrdJoiner2(Joiner2, ABC):
             self.data_ready = True
             self.branches = []
             self.depth = depth
+            self.fifo_avail_in1 = True
+            self.fifo_avail_in2 = True
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -44,11 +46,24 @@ class CrdJoiner2(Joiner2, ABC):
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if br == "in1" and len(self.in_ref1) > self.depth:
-                return False
-            if br == "in2" and len(self.in_ref2) > self.depth:
-                return False
+            if br == "in1":  # and len(self.in_ref1) > self.depth:
+                return self.fifo_avail_in1
+                # return False
+            if br == "in2":  # and len(self.in_ref2) > self.depth:
+                return self.fifo_avail_in2
+                # return False
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_ref1) > self.depth:
+                self.fifo_avail_in1 = False
+            else:
+                self.fifo_avail_in1 = True
+            if len(self.in_ref2) > self.depth:
+                self.fifo_avail_in2 = False
+            else:
+                self.fifo_avail_in2 = True
 
     def add_child(self, child=None, branch=""):
         if self.backpressure_en:
@@ -159,6 +174,7 @@ class Intersect2(CrdJoiner2):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -340,6 +356,7 @@ class Union2(CrdJoiner2):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
             self.block_start = False
         if self.get_stats:

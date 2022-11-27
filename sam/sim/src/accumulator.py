@@ -28,6 +28,7 @@ class Reduce(Primitive):
             self.data_ready = True
             self.branch = []
             self.depth = depth
+            self.fifo_avail = True
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -41,10 +42,20 @@ class Reduce(Primitive):
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if len(self.in_val) > self.depth:
-                return False
-            return True
+            return self.fifo_avail
         return True
+        # if self.backpressure_en:
+        #     if len(self.in_val) > self.depth:
+        #         return False
+        #     return True
+        # return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_val) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
 
     def add_child(self, child=None, branch=""):
         if self.backpressure_en and child is not None:
@@ -52,6 +63,7 @@ class Reduce(Primitive):
             self.branch.append(branch)
 
     def update(self):
+        self.update_ready()
         self.update_done()
         if self.backpressure_en:
             self.data_ready = False
@@ -350,6 +362,9 @@ class SparseAccumulator1(Primitive):
             self.data_ready = True
             self.branch = []
             self.depth = depth
+            self.fifo_avail_inner = True
+            self.fifo_avail_outer = True
+            self.fifo_avail_val = True
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -363,13 +378,14 @@ class SparseAccumulator1(Primitive):
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if br == "inner" and len(self.in_inner_crdpt) > self.depth:
-                return False
-            if br == "outer" and len(self.in_outer_crdpt) > self.depth:
-                return False
-            if br == "val" and len(self.in_val) > self.depth:
-                return False
-            return True
+            if br == "inner":
+                # and len(self.in_inner_crdpt) > self.depth:
+                return self.fifo_avail_inner
+            if br == "outer":  # and len(self.in_outer_crdpt) > self.depth:
+                return self.fifo_avail_outer  # return False
+            if br == "val":  # and len(self.in_val) > self.depth:
+                return self.fifo_avail_val  # return False
+            # return True
         return True
 
     def add_child(self, child=None, branch=""):
@@ -378,8 +394,24 @@ class SparseAccumulator1(Primitive):
                 self.backpressure.append(child)
                 self.branch.append(branch)
 
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_inner_crdpt) > self.depth:
+                self.fifo_avail_inner = False
+            else:
+                self.fifo_avail_inner = True
+            if len(self.in_outer_crdpt) > self.depth:
+                self.fifo_avail_outer = False
+            else:
+                self.fifo_avail_outer = True
+            if len(self.in_val) > self.depth:
+                self.fifo_avail_val = False
+            else:
+                self.fifo_avail_val = True
+
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -715,6 +747,9 @@ class SparseAccumulator2(Primitive):
             self.data_ready = True
             self.branch = []
             self.depth = depth
+            self.fifo_avail_inner = True
+            self.fifo_avail_outer = True
+            self.fifo_avail_val = True
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -728,13 +763,14 @@ class SparseAccumulator2(Primitive):
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if br == "inner" and len(self.in_inner_crdpt) > self.depth:
-                return False
-            if br == "outer" and len(self.in_outer_crdpt) > self.depth:
-                return False
-            if br == "val" and len(self.in_val) > self.depth:
-                return False
-            return True
+            if br == "inner":
+                # and len(self.in_inner_crdpt) > self.depth:
+                return self.fifo_avail_inner
+            if br == "outer":  # and len(self.in_outer_crdpt) > self.depth:
+                return self.fifo_avail_outer  # return False
+            if br == "val":  # and len(self.in_val) > self.depth:
+                return self.fifo_avail_val  # return False
+            # return True
         return True
 
     def add_child(self, child=None, branch=""):
@@ -743,8 +779,24 @@ class SparseAccumulator2(Primitive):
                 self.backpressure.append(child)
                 self.branch.append(branch)
 
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in0_crdpt) > self.depth:
+                self.fifo_avail_inner = False
+            else:
+                self.fifo_avail_inner = True
+            if len(self.in1_crdpt) > self.depth:
+                self.fifo_avail_outer = False
+            else:
+                self.fifo_avail_outer = True
+            if len(self.in_val) > self.depth:
+                self.fifo_avail_val = False
+            else:
+                self.fifo_avail_val = True
+
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:

@@ -166,6 +166,8 @@ class CrdHold(Primitive):
             self.branches = []
             self.depth = depth
             self.data_ready = True
+            self.fifo_avail_inner = True
+            self.fifo_avail_outer = True
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -182,14 +184,28 @@ class CrdHold(Primitive):
 
     def fifo_available(self, br=""):
         if self.backpressure:
-            if br == "inner" and len(self.inner_crd) > self.depth:
-                return False
-            if br == "outer" and len(self.outer_crd) > self.depth:
-                return False
+            if br == "inner":  # and len(self.inner_crd) > self.depth:
+                return self.fifo_avail_inner
+                # return False
+            if br == "outer":  # and len(self.outer_crd) > self.depth:
+                return self.fifo_avail_outer
+                # return False
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.inner_crd) > self.depth:
+                self.fifo_avail_inner = False
+            else:
+                self.fifo_avail_inner = True
+            if len(self.outer_crd) > self.depth:
+                self.fifo_avail_outer = False
+            else:
+                self.fifo_avail_outer = True
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
             self.data_ready = False
 

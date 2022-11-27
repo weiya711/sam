@@ -132,7 +132,8 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, report_stats, backp
         fiberlookup_Cj_12.add_child(repsiggen_j_10)
         arrayvals_C_8.add_child(mul_6, "in2")
         repsiggen_j_10.add_child(repeat_Bj_9, "repsig")
-        repeat_Bj_9.add_child(mul_6, "in1")
+        repeat_Bj_9.add_child(arrayvals_B_7)
+        arrayvals_B_7.add_child(mul_6, "in1")
         crdhold_4.add_child(spaccumulator1_3_drop_crd_inner)
         crdhold_4.add_child(spaccumulator1_3_drop_crd_outer)
         mul_6.add_child(spaccumulator1_3_drop_val)
@@ -196,7 +197,7 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, report_stats, backp
         fiberwrite_X0_2.update()
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
-        print("____________")
+        print("____________", time_cnt)
 
     fiberwrite_X0_2.autosize()
     fiberwrite_X1_1.autosize()
