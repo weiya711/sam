@@ -258,6 +258,7 @@ class memory_block():
             self.loading_tile = None
             self.load_size = 0
             self.curr_tile = None
+            self.next_tile = None
             self.curr_size = 0
             self.tile_ptrs = []
             self.repeat_pattern = []
@@ -266,6 +267,39 @@ class memory_block():
             self.loading = False
             self.done_in = False
             self.remove_size = 0
+        if self.get_stats:
+            self.load_cycles = 0
+            self.valid_tile_cycles = 0
+            self.not_ready_cycles = 0
+            self.num_tiles = 0
+            self.if_repeat = 0
+            self.repeat_dist = 0
+            self.rep_true = False
+
+    def update_stats(self):
+        if self.get_stats:
+            if self.loading:
+                self.load_cycles += 1
+            if self.valid:
+                self.valid_tile_cycles += 1
+            if not self.ready:
+                self.not_ready_cycles += 1
+            if self.nbuffer:
+                self.num_tiles = max(self.num_tiles, len(self.tile_ptrs))
+                if self.rep_true:
+                    self.if_repeat += 1
+                else:
+                    self.if_repeat = 0
+                self.repeat_dist = max(self.repeat_dist, self.if_repeat)
+
+    def get_stats(self):
+        if self.get_stats:
+            stats_dict = {self.name + "_load_cycles": self.load_cycles,
+                          self.name + "_valid_cycles": self.valid_tile_cycles, self.name + "_ready_cycles": self.not_ready_cycles,
+                          self.name + "_max_tile_nums": self.num_tiles, self.name + "_repeat_dist": self.repeat_dist}
+        else:
+            stats_dict = {}
+        return stats_dict
 
     def out_done(self):
         if self.nbuffer or self.full_buff:
@@ -331,7 +365,16 @@ class memory_block():
               " Done received and processed ", self.done_received, " ", self.done_processed, " : current tile: ",
               self.curr_tile, " full tles ", self.tile_ptrs, self.loading_tile, self.tile_ptrs_fifo, " ", self.tile_sizes)
 
+    def return_next(self, ref_to_crd_map=None):
+        if self.nbuffer:
+            if self.next_token is None:
+                return None
+            else:
+                return self.next_token
+        return None
+
     def update(self, cyclenum):
+        self.update_stats()
         if self.nbuffer:
             self.done_in = False
             assert len(self.tile_ptrs) == len(self.tile_sizes)
@@ -381,6 +424,8 @@ class memory_block():
 
                 if len(self.tile_ptrs) > 0:
                     self.curr_tile = self.tile_ptrs[0]
+                if len(self.tile_ptrs) > 1:
+                    self.next_tile = self.tile_ptrs[1]
 
             if self.done_processed and not self.done_received:
                 self.done_processed = False
@@ -415,6 +460,13 @@ class memory_block():
                     if len(self.tile_ptrs) > 0:
                         self.curr_tile = self.tile_ptrs[0]
                         self.valid = True
+
+            if len(self.tile_ptrs) > 0:
+                self.curr_tile = self.tile_ptrs[0]
+            if len(self.tile_ptrs) > 1:
+                self.next_tile = self.tile_ptrs[1]
+            else:
+                self.next_tile = None
 
             if self.curr_tile == "D" and len(self.tile_ptrs) < 2 and len(self.tile_ptrs_fifo) == 0:
                 # self.timestamp = None
@@ -458,6 +510,8 @@ class memory_block():
                     len(self.tile_ptrs) > 0 and self.tile_ptrs[-1] == self.tile_ptrs_fifo[0] and not self.loading:
                 if self.tile_ptrs_fifo[0] == "D":
                     self.done_in = True
+                if self.get_stats:
+                    self.rep_true = True
                 tile = self.tile_ptrs_fifo.pop(0)
                 self.tile_ptrs_size.pop(0)
                 self.tile_ptrs.append(tile)
@@ -471,6 +525,8 @@ class memory_block():
                           self.remove_size, "::", self.tile_ptrs, self.curr_tile,
                           self.loading_tile, self.tile_ptrs_fifo)
                     assert False
+                if self.get_stats:
+                    self.rep_true = False
                 self.loading = True
                 tile = self.tile_ptrs_fifo.pop(0)
                 self.load_size = self.tile_ptrs_size[0]
@@ -485,6 +541,8 @@ class memory_block():
 
             elif self.loading and cyclenum > self.compute_latency(self.load_size) + self.timestamp:
                 self.loading = False
+                if self.get_stats:
+                    self.rep_true = False
                 if self.loading_tile == "D" and (len(self.tile_ptrs) > 1 or len(self.tile_ptrs_fifo) > 1):
                     self.done_in = True
                     # self.load_size = 0
@@ -589,6 +647,8 @@ class memory_block():
 
     def compute_latency(self, tile):
         if self.nbuffer or self.full_buff:
+            if self.loading_tile == "D":
+                return 1
             if self.skip_blocks and self.curr_size == 0 and self.loading_tile is not None:
                 return self.latency
             if self.loading_tile is not None and self.old_tile is not None and self.loading_tile == self.old_tile:
@@ -610,6 +670,9 @@ class memory_block():
     def valid_tile(self):
         if self.valid and not self.outputed:
             return True
+
+    def if_valid(self):
+        return self.valid
 
     def valid_tile_recieved(self):
         # if self.debug:
