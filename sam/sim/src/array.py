@@ -113,11 +113,11 @@ class Array(Primitive):
         return self.arr
 
     def out_load(self):
-        if self.data_ready:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_load
 
     def out_val(self):
-        if self.data_ready:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_load
 
     def load(self, addr):
