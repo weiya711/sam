@@ -102,69 +102,70 @@ def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, report_stats, debug
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_22.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_22.update()
 
         fiberlookup_Bj_18.set_in_ref(fiberlookup_Bi_22.out_ref())
-        fiberlookup_Bj_18.update()
 
         fiberwrite_X0_3.set_input(fiberlookup_Bi_22.out_crd())
-        fiberwrite_X0_3.update()
 
         repsiggen_i_20.set_istream(fiberlookup_Bi_22.out_crd())
-        repsiggen_i_20.update()
 
         if len(in_ref_C) > 0:
             repeat_Ci_19.set_in_ref(in_ref_C.pop(0))
         repeat_Ci_19.set_in_repsig(repsiggen_i_20.out_repsig())
-        repeat_Ci_19.update()
 
         fiberwrite_X1_2.set_input(fiberlookup_Bj_18.out_crd())
-        fiberwrite_X1_2.update()
 
         repsiggen_j_16.set_istream(fiberlookup_Bj_18.out_crd())
-        repsiggen_j_16.update()
 
         repeat_Cj_15.set_in_ref(repeat_Ci_19.out_ref())
         repeat_Cj_15.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_Cj_15.update()
 
         fiberlookup_Ck_14.set_in_ref(repeat_Cj_15.out_ref())
-        fiberlookup_Ck_14.update()
 
         fiberlookup_Cl_10.set_in_ref(fiberlookup_Ck_14.out_ref())
-        fiberlookup_Cl_10.update()
 
         fiberwrite_X2_1.set_input(fiberlookup_Ck_14.out_crd())
-        fiberwrite_X2_1.update()
 
         repsiggen_k_12.set_istream(fiberlookup_Ck_14.out_crd())
-        repsiggen_k_12.update()
 
         repeat_Bk_11.set_in_repsig(repsiggen_k_12.out_repsig())
         repeat_Bk_11.set_in_ref(fiberlookup_Bj_18.out_ref())
-        repeat_Bk_11.update()
 
         fiberlookup_Bl_9.set_in_ref(repeat_Bk_11.out_ref())
-        fiberlookup_Bl_9.update()
 
         intersectl_8.set_in1(fiberlookup_Bl_9.out_ref(), fiberlookup_Bl_9.out_crd())
         intersectl_8.set_in2(fiberlookup_Cl_10.out_ref(), fiberlookup_Cl_10.out_crd())
-        intersectl_8.update()
 
         arrayvals_B_6.set_load(intersectl_8.out_ref1())
-        arrayvals_B_6.update()
 
         arrayvals_C_7.set_load(intersectl_8.out_ref2())
-        arrayvals_C_7.update()
 
         mul_5.set_in1(arrayvals_B_6.out_val())
         mul_5.set_in2(arrayvals_C_7.out_val())
-        mul_5.update()
 
         reduce_4.set_in_val(mul_5.out_val())
-        reduce_4.update()
 
         fiberwrite_Xvals_0.set_input(reduce_4.out_val())
+
+        fiberlookup_Bi_22.update()
+        fiberlookup_Bj_18.update()
+        fiberwrite_X0_3.update()
+        repsiggen_i_20.update()
+        repeat_Ci_19.update()
+        fiberwrite_X1_2.update()
+        repsiggen_j_16.update()
+        repeat_Cj_15.update()
+        fiberlookup_Ck_14.update()
+        fiberlookup_Cl_10.update()
+        fiberwrite_X2_1.update()
+        repsiggen_k_12.update()
+        repeat_Bk_11.update()
+        fiberlookup_Bl_9.update()
+        intersectl_8.update()
+        arrayvals_B_6.update()
+        arrayvals_C_7.update()
+        mul_5.update()
+        reduce_4.update()
         fiberwrite_Xvals_0.update()
 
         done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and \

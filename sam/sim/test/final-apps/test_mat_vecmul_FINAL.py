@@ -129,6 +129,7 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
             if is_stkn(spaccumulator1_2.out_crd_inner()) else 'D' if spaccumulator1_2.out_crd_inner() == 'D' else ''
 
         fiberwrite_x0_1.set_input(out_crdi)
+
         fiberwrite_x0_1.update()
         spaccumulator1_2_drop_crd_outer.update()
         spaccumulator1_2_drop_crd_inner.update()

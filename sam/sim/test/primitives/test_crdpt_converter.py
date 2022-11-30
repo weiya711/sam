@@ -44,8 +44,10 @@ def test_crdpt_converter_direct(arrs, last_level, debug_sim):
         if len(ocrd) > 0:
             cpc.set_outer_crdpt(ocrd.pop(0))
 
-        print("\n Curr in ocrd:", cpc.outer_crdpt, "\t Curr in icrd:", cpc.inner_crdpt)
         cpc.update()
+
+        out_ocrd.append(cpc.out_crd_outer())
+        out_icrd.append(cpc.out_crd_inner())
 
         print("Timestep", time, "\t Done:", cpc.out_done(),
               "\n Curr in ocrd:", cpc.outer_crdpt, "\t Curr in icrd:", cpc.inner_crdpt,
@@ -53,8 +55,6 @@ def test_crdpt_converter_direct(arrs, last_level, debug_sim):
               "\t Prev ocrd:", cpc.prev_ocrdpt, "\t Prev ocrd:", cpc.prev_ocrd,
               "\n Emit Tkn:", cpc.emit_stkn, "\t Emit Done:", cpc.emit_done, "\t Prev Stkn:", cpc.prev_stkn)
 
-        out_ocrd.append(cpc.out_crd_outer())
-        out_icrd.append(cpc.out_crd_inner())
         done = cpc.out_done()
         time += 1
 

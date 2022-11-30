@@ -69,59 +69,60 @@ def test_unit_mat_mul_ijk_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
         # Input iteration for i
         if len(in_ref_B) > 0:
             rdscan_Bi.set_in_ref(in_ref_B.pop(0))
-        rdscan_Bi.update()
 
         repsiggen_Bi.set_istream(rdscan_Bi.out_crd())
-        repsiggen_Bi.update()
 
         repeat_Ci.set_in_repeat(repsiggen_Bi.out_repeat())
         if len(in_ref_C) > 0:
             repeat_Ci.set_in_ref(in_ref_C.pop(0))
-        repeat_Ci.update()
 
         # Input iteration for j
         rdscan_Cj.set_in_ref(repeat_Ci.out_ref())
-        rdscan_Cj.update()
 
         repsiggen_Cj.set_istream(rdscan_Cj.out_crd())
-        repsiggen_Cj.update()
 
         repeat_Bj.set_in_repeat(repsiggen_Cj.out_repeat())
         repeat_Bj.set_in_ref(rdscan_Bi.out_ref())
-        repeat_Bj.update()
 
         # Input iteration for k
         rdscan_Bk.set_in_ref(repeat_Bj.out_ref())
-        rdscan_Bk.update()
 
         rdscan_Ck.set_in_ref(rdscan_Cj.out_ref())
-        rdscan_Ck.update()
 
         inter1.set_in1(rdscan_Bk.out_ref(), rdscan_Bk.out_crd())
         inter1.set_in2(rdscan_Ck.out_ref(), rdscan_Ck.out_crd())
-        inter1.update()
 
         # Computation
 
         val_B.set_load(inter1.out_ref1())
-        val_B.update()
         val_C.set_load(inter1.out_ref2())
-        val_C.update()
 
         mul.set_in1(val_B.out_load())
         mul.set_in2(val_C.out_load())
-        mul.update()
 
         reduce.set_in_val(mul.out_val())
-        reduce.update()
 
         vals_X.set_input(reduce.out_val())
-        vals_X.update()
 
         wrscan_Xi.set_input(rdscan_Bi.out_crd())
-        wrscan_Xi.update()
 
         wrscan_Xj.set_input(rdscan_Cj.out_crd())
+
+        rdscan_Bi.update()
+        repsiggen_Bi.update()
+        repeat_Ci.update()
+        rdscan_Cj.update()
+        repsiggen_Cj.update()
+        repeat_Bj.update()
+        rdscan_Bk.update()
+        rdscan_Ck.update()
+        inter1.update()
+        val_B.update()
+        val_C.update()
+        mul.update()
+        reduce.update()
+        vals_X.update()
+        wrscan_Xi.update()
         wrscan_Xj.update()
 
         if time % 100 == 0:
@@ -231,59 +232,60 @@ def test_unit_mat_mul_ijk_uu_uc_uc(dim, debug_sim, max_val=1000, fill=0):
         # Input iteration for i
         if len(in_ref_B) > 0:
             rdscan_Bi.set_in_ref(in_ref_B.pop(0))
-        rdscan_Bi.update()
 
         repsiggen_Bi.set_istream(rdscan_Bi.out_crd())
-        repsiggen_Bi.update()
 
         repeat_Ci.set_in_repeat(repsiggen_Bi.out_repeat())
         if len(in_ref_C) > 0:
             repeat_Ci.set_in_ref(in_ref_C.pop(0))
-        repeat_Ci.update()
 
         # Input iteration for j
         rdscan_Cj.set_in_ref(repeat_Ci.out_ref())
-        rdscan_Cj.update()
 
         repsiggen_Cj.set_istream(rdscan_Cj.out_crd())
-        repsiggen_Cj.update()
 
         repeat_Bj.set_in_repeat(repsiggen_Cj.out_repeat())
         repeat_Bj.set_in_ref(rdscan_Bi.out_ref())
-        repeat_Bj.update()
 
         # Input iteration for k
         rdscan_Bk.set_in_ref(repeat_Bj.out_ref())
-        rdscan_Bk.update()
 
         rdscan_Ck.set_in_ref(rdscan_Cj.out_ref())
-        rdscan_Ck.update()
 
         inter1.set_in1(rdscan_Bk.out_ref(), rdscan_Bk.out_crd())
         inter1.set_in2(rdscan_Ck.out_ref(), rdscan_Ck.out_crd())
-        inter1.update()
 
         # Computation
 
         val_B.set_load(inter1.out_ref1())
-        val_B.update()
         val_C.set_load(inter1.out_ref2())
-        val_C.update()
 
         mul.set_in1(val_B.out_load())
         mul.set_in2(val_C.out_load())
-        mul.update()
 
         reduce.set_in_val(mul.out_val())
-        reduce.update()
 
         vals_X.set_input(reduce.out_val())
-        vals_X.update()
 
         wrscan_Xi.set_input(rdscan_Bi.out_crd())
-        wrscan_Xi.update()
 
         wrscan_Xj.set_input(rdscan_Cj.out_crd())
+
+        rdscan_Bi.update()
+        repsiggen_Bi.update()
+        repeat_Ci.update()
+        rdscan_Cj.update()
+        repsiggen_Cj.update()
+        repeat_Bj.update()
+        rdscan_Bk.update()
+        rdscan_Ck.update()
+        inter1.update()
+        val_B.update()
+        val_C.update()
+        mul.update()
+        reduce.update()
+        vals_X.update()
+        wrscan_Xi.update()
         wrscan_Xj.update()
 
         B1_lookup_out.append(rdscan_Bi.out_ref())
@@ -415,58 +417,59 @@ def test_unit_mat_mul_ijk_direct_uu_uc_uc(arrs, debug_sim, fill=0):
         # Input iteration for i
         if len(in_ref_B) > 0:
             rdscan_Bi.set_in_ref(in_ref_B.pop(0))
-        rdscan_Bi.update()
 
         repsiggen_Bi.set_istream(rdscan_Bi.out_crd())
-        repsiggen_Bi.update()
 
         repeat_Ci.set_in_repeat(repsiggen_Bi.out_repeat())
         if len(in_ref_C) > 0:
             repeat_Ci.set_in_ref(in_ref_C.pop(0))
-        repeat_Ci.update()
 
         # Input iteration for j
         rdscan_Cj.set_in_ref(repeat_Ci.out_ref())
-        rdscan_Cj.update()
 
         repsiggen_Cj.set_istream(rdscan_Cj.out_crd())
-        repsiggen_Cj.update()
 
         repeat_Bj.set_in_repeat(repsiggen_Cj.out_repeat())
         repeat_Bj.set_in_ref(rdscan_Bi.out_ref())
-        repeat_Bj.update()
 
         # Input iteration for k
         rdscan_Bk.set_in_ref(repeat_Bj.out_ref())
-        rdscan_Bk.update()
 
         rdscan_Ck.set_in_ref(rdscan_Cj.out_ref())
-        rdscan_Ck.update()
 
         inter1.set_in1(rdscan_Bk.out_ref(), rdscan_Bk.out_crd())
         inter1.set_in2(rdscan_Ck.out_ref(), rdscan_Ck.out_crd())
-        inter1.update()
 
         # Computation
         val_B.set_load(inter1.out_ref1())
-        val_B.update()
         val_C.set_load(inter1.out_ref2())
-        val_C.update()
 
         mul.set_in1(val_B.out_load())
         mul.set_in2(val_C.out_load())
-        mul.update()
 
         reduce.set_in_val(mul.out_val())
-        reduce.update()
 
         vals_X.set_input(reduce.out_val())
-        vals_X.update()
 
         wrscan_Xi.set_input(rdscan_Bi.out_crd())
-        wrscan_Xi.update()
 
         wrscan_Xj.set_input(rdscan_Cj.out_crd())
+
+        rdscan_Bi.update()
+        repsiggen_Bi.update()
+        repeat_Ci.update()
+        rdscan_Cj.update()
+        repsiggen_Cj.update()
+        repeat_Bj.update()
+        rdscan_Bk.update()
+        rdscan_Ck.update()
+        inter1.update()
+        val_B.update()
+        val_C.update()
+        mul.update()
+        reduce.update()
+        vals_X.update()
+        wrscan_Xi.update()
         wrscan_Xj.update()
 
         B1_lookup_out.append(rdscan_Bi.out_ref())

@@ -551,7 +551,7 @@ class FormatWriter:
 #         self.lastLoaded = None
 #         self.lastName = None
 #         self.tensor = None
-# 
+#
 #     def load(self, tensor, suiteSparse, cast, format_str):
 #         if self.lastName == str(tensor):
 #             return self.tensor
@@ -623,7 +623,20 @@ class TensorCollectionSuiteSparse:
 #     return sparse.COO(tensor.coords, data, tensor.shape)
 
 
-def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=True):
+def safeCastScipyTensorToInts(tensor):
+    data = numpy.zeros(len(tensor.data), dtype='int64')
+    for i in range(len(data)):
+        # If the cast would turn a value into 0, instead write a 1. This preserves
+        # the sparsity pattern of the data.
+        # if int(tensor.data[i]) == 0:
+        #     data[i] = 1
+        # else:
+        #     data[i] = int(tensor.data[i])
+        data[i] = round_sparse(tensor.data[i])
+    return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
+
+
+def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=False):
     with open(infilename, 'r') as inf:
         level = -1
         count = 0
