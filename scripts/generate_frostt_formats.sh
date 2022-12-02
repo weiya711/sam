@@ -22,8 +22,11 @@ FORMATS=(
 
 #export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
 #export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
+export FROSTT_PATH=/home/rubensl/misc/data/FROSTT
+export FROSTT_FORMATTED_PATH=/home/rubensl/misc/data/FROSTT-formatted
 #export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
-#export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+export FROSTT_FORMATTED_TACO_PATH=/home/rubensl/misc/data/FROSTT-formatted/taco-tensor
+export TACO_TENSOR_PATH=/home/rubensl/misc/data
 #export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 
 basedir=$(pwd)

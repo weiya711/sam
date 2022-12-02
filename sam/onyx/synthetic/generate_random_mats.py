@@ -42,6 +42,7 @@ if __name__ == "__main__":
     for idx, sparsity in enumerate(sparsities):
         print(sparsity)
         tmp_mat = MatrixGenerator(name=f'{name}', shape=shape, sparsity=sparsity,
-                                  format='CSF', dump_dir=f"{output_dir}/{name}_random_sp_{sparsity}", tensor=None)
+                                  format='CSF', dump_dir=f"{output_dir}/", tensor=None)
+                                #   format='CSF', dump_dir=f"{output_dir}/{name}_random_sp_{sparsity}", tensor=None)
         # print(tmp_mat)
         tmp_mat.dump_outputs(format=output_format, tpose=transpose)

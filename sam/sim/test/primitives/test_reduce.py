@@ -1,7 +1,7 @@
 import pytest
 import copy
 import random
-from sam.sim.src.accumulator import Reduce
+from sam.sim.src.accumulator import Reduce, MaxReduce
 from sam.sim.src.rd_scanner import CompressedCrdRdScan
 from sam.sim.src.wr_scanner import CompressWrScan, ValsWrScan
 from sam.sim.src.base import remove_emptystr
@@ -22,11 +22,12 @@ def test_reduce_direct_nd(arrs, debug_sim):
     in_val = copy.deepcopy(arrs['in_val'])
     gold_val = copy.deepcopy(arrs['gold_val'])
 
-    red = Reduce(debug=debug_sim)
+    red = MaxReduce(debug=debug_sim)
 
     done = False
     time = 0
     out_val = []
+    print(in_val)
     while not done and time < TIMEOUT:
         if len(in_val) > 0:
             red.set_in_val(in_val.pop(0))
@@ -41,6 +42,8 @@ def test_reduce_direct_nd(arrs, debug_sim):
         time += 1
 
     out_val = remove_emptystr(out_val)
+    print(out_val)
+    pytest.set_trace()
 
     assert (out_val == gold_val)
 

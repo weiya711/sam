@@ -79,8 +79,10 @@ class MatrixGenerator():
             tmp_lvl_list.append(self.fiber_tree.get_root())
 
             seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
-            self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg")
-            self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd")
+            # self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg")
+            # self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd")
+            self.write_array(seg_arr, name=f"{self.name}0_seg.txt")
+            self.write_array(coord_arr, name=f"{self.name}0_crd.txt")
 
             at_vals = False
             i = 1
@@ -99,17 +101,18 @@ class MatrixGenerator():
                 tmp_lvl_list = next_tmp_lvl_list
                 if at_vals:
                     # If at vals, we don't need to dump csf, we have the level
-                    self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals")
+                    self.write_array(tmp_lvl_list, name=f"{self.name}_vals.txt")
                 else:
                     seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
-                    self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg")
-                    self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd")
+                    self.write_array(seg_arr, name=f"{self.name}{i}_seg.txt")
+                    self.write_array(coord_arr, name=f"{self.name}{i}_crd.txt")
                 i = i + 1
         elif self.format == "UNC":
             flat_array = []
             for val in numpy.nditer(self.array):
                 flat_array.append(val)
-            self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals")
+            # self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals")
+            self.write_array(flat_array, name=f"{self.name}_vals.txt")
         elif self.format == "COO":
             crd_dict = dict()
             order = len(self.array.shape)
@@ -124,12 +127,12 @@ class MatrixGenerator():
                 is_not_finished = it.iternext()
             for key in crd_dict:
                 if key == order:
-                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_vals")
+                    self.write_array(crd_dict[key], name=f"{self.name}_vals.txt")
                 else:
-                    self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_{key}_crd")
+                    self.write_array(crd_dict[key], name=f"{self.name}{key}_crd.txt")
 
         if dump_shape:
-            self.write_array(self.array.shape, name=f"shape")
+            self.write_array(self.array.shape, name=f"{self.name}_shape.txt")
 
         # Transpose it back
         if tpose is True:
