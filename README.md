@@ -1,5 +1,7 @@
 # The Sparse Abstract Machine (SAM) IR, Compiler, and Simulator 
 
+![Master Build CI](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=master)
+
 ## SAM Front-end Compiler
 
 Overview:
