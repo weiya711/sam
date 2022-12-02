@@ -114,6 +114,14 @@ elif args.hw:
         trans_shifted = shifted.transpose()
         formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss10")
 
+    elif "matmul_ikj" in args.benchname:
+        shifted = ScipyTensorShifter().shiftLastMode(coo)
+
+        print("Writing " + args.name + " shifted and transposed...")
+        tensorname = "C"
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss01")
+
     elif "mat_elemadd3" in args.benchname:
         print("Writing " + args.name + " shifted...")
         tensorname = "C"

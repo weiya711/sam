@@ -29,7 +29,7 @@ for i in ${!DATASET_NAMES[@]}; do
     sspath=${SUITESPARSE_PATH}/$name
     echo "Generating input format files for $name..."
 
-    SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $name -hw -t "matmul_ikj" 
+    SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $name -hw -b "matmul_ikj" 
     
     # python $basedir/scripts/datastructure_frostt.py -n $name -f ss01 --other -ss
 done
