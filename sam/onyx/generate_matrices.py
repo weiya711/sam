@@ -91,18 +91,26 @@ class MatrixGenerator():
             if all_zeros:
                 fake_lines_seg = ["0000",
                                   "0000"]
-                fake_lines_crd = []
+                fake_lines_crd = ["0000"]
                 # If it's a scalar/length 1 vec
                 if len(self.shape) == 1 and self.shape[0] == 1:
                     fake_lines_val = ["0000"]
                 else:
-                    fake_lines_val = []
+                    fake_lines_val = ["0000"]
                 for mode in range(len(self.array.shape)):
-                    self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg",
-                                     dump_dir=use_dir, hex=print_hex)
-                    self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd",
-                                     dump_dir=use_dir, hex=print_hex)
-                self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                    if glb_override:
+                        lines = [len(fake_lines_seg), *fake_lines_seg, len(fake_lines_crd), *fake_lines_crd]
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_{mode}", dump_dir=use_dir, hex=print_hex)
+                    else:
+                        self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg",
+                                         dump_dir=use_dir, hex=print_hex)
+                        self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd",
+                                         dump_dir=use_dir, hex=print_hex)
+                if glb_override:
+                    lines = [len(fake_lines_val), *fake_lines_val]
+                    self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                else:
+                    self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
 
                 return
 
@@ -231,13 +239,11 @@ class MatrixGenerator():
         full_path = dump_dir + "/" + name
         with open(full_path, "w+") as wr_file:
             for item in str_list:
+                item_int = int(item)
                 if hex:
-                    if isinstance(item, str):
-                        wr_file.write(f"{item}\n")
-                    else:
-                        wr_file.write(f"{item:04X}\n")
+                    wr_file.write(f"{item_int:04X}\n")
                 else:
-                    wr_file.write(f"{item}\n")
+                    wr_file.write(f"{item_int}\n")
 
     def get_shape(self):
         return self.shape
@@ -467,16 +473,24 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
         mat_sc[0] = vals[0]
         mg = MatrixGenerator(name=name, shape=shape, tensor=mat_sc)
     elif format == 'CSF':
+        created_empty = False
         segs = []
         crds = []
         for mode in range(dims):
             seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
             crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
-            segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate))
-            crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
-
-        pt_list = get_point_list(crds, segs, val_arr=vals)
-        mg = create_matrix_from_point_list(name, pt_list, shape)
+            seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate)
+            segs.append(seg_t_)
+            # Empty matrix...
+            if mode == 0 and len(seg_t_) == 2 and seg_t_[0] == 0 and seg_t_[1] == 0:
+                mg = MatrixGenerator(name=name, shape=shape, sparsity=1.0)
+                created_empty = True
+                break
+            crd_t_ = read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate)
+            crds.append(crd_t_)
+        if not created_empty:
+            pt_list = get_point_list(crds, segs, val_arr=vals)
+            mg = create_matrix_from_point_list(name, pt_list, shape)
     elif format == 'COO':
         crds = []
         for mode in range(dims):
