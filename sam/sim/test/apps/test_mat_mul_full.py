@@ -24,7 +24,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
+def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, backpressure, depth, fill=0):
     # filename = os.path.join(formatted_dir, ssname+"_"+"csr.txt")
     # formats = ['d', 's']
     # [B_shape, B0_dim, (B1_seg, B1_crd), B_vals] = read_combined_inputs(filename, formats)
@@ -67,26 +67,26 @@ def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
         print("Mat B:", B_shape, B0_dim, B1_seg, B1_crd, B_vals)
         print("Mat C:", C_shape, C1_dim, C0_seg, C0_crd, C_vals)
 
-    rdscan_Bi = UncompressCrdRdScan(dim=B0_dim, debug=debug_sim)
-    rdscan_Bk = CompressedCrdRdScan(crd_arr=B1_crd, seg_arr=B1_seg, debug=debug_sim)
-    val_B = Array(init_arr=B_vals, debug=debug_sim)
+    rdscan_Bi = UncompressCrdRdScan(dim=B0_dim, debug=debug_sim, back_en=backpressure, depth=depth)
+    rdscan_Bk = CompressedCrdRdScan(crd_arr=B1_crd, seg_arr=B1_seg, debug=debug_sim, back_en=backpressure, depth=depth)
+    val_B = Array(init_arr=B_vals, debug=debug_sim, back_en=backpressure, depth=depth)
 
-    rdscan_Cj = UncompressCrdRdScan(dim=C1_dim, debug=debug_sim)
-    rdscan_Ck = CompressedCrdRdScan(crd_arr=C0_crd, seg_arr=C0_seg, debug=debug_sim)
-    val_C = Array(init_arr=C_vals, debug=debug_sim)
+    rdscan_Cj = UncompressCrdRdScan(dim=C1_dim, debug=debug_sim, back_en=backpressure, depth=depth)
+    rdscan_Ck = CompressedCrdRdScan(crd_arr=C0_crd, seg_arr=C0_seg, debug=debug_sim, back_en=backpressure, depth=depth)
+    val_C = Array(init_arr=C_vals, debug=debug_sim, back_en=backpressure, depth=depth)
 
-    repsiggen_Bi = RepeatSigGen(debug=debug_sim)
-    repsiggen_Cj = RepeatSigGen(debug=debug_sim)
-    repeat_Ci = Repeat(debug=debug_sim)
-    repeat_Bj = Repeat(debug=debug_sim)
-    inter1 = Intersect2(debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    reduce = Reduce(debug=debug_sim)
+    repsiggen_Bi = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=depth)
+    repsiggen_Cj = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=depth)
+    repeat_Ci = Repeat(debug=debug_sim, back_en=backpressure, depth=depth)
+    repeat_Bj = Repeat(debug=debug_sim, back_en=backpressure, depth=depth)
+    inter1 = Intersect2(debug=debug_sim, back_en=backpressure, depth=depth)
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=depth)
+    reduce = Reduce(debug=debug_sim, back_en=backpressure, depth=depth)
 
     # drop = CrdDrop(debug=debug_sim)
-    vals_X = ValsWrScan(size=B0_dim * C1_dim, fill=fill, debug=debug_sim)
-    wrscan_Xi = CompressWrScan(seg_size=2, size=B0_dim, fill=fill)
-    wrscan_Xj = CompressWrScan(seg_size=B0_dim + 1, size=B0_dim * B0_dim, fill=fill)
+    vals_X = ValsWrScan(size=B0_dim * C1_dim, fill=fill, debug=debug_sim, back_en=backpressure, depth=depth)
+    wrscan_Xi = CompressWrScan(seg_size=2, size=B0_dim, fill=fill, back_en=backpressure, depth=depth)
+    wrscan_Xj = CompressWrScan(seg_size=B0_dim + 1, size=B0_dim * B0_dim, fill=fill, back_en=backpressure, depth=depth)
 
     extra_info = dict()
     in_ref_B = [0, 'D']
@@ -96,60 +96,49 @@ def test_mat_mul_ijk_csr_full(samBench, ssname, check_gold, debug_sim, fill=0):
     while not done and time_cnt < TIMEOUT:
         # Input iteration for i
         if len(in_ref_B) > 0:
-            rdscan_Bi.set_in_ref(in_ref_B.pop(0))
-        rdscan_Bi.update()
-
-        repsiggen_Bi.set_istream(rdscan_Bi.out_crd())
-        repsiggen_Bi.update()
-
-        repeat_Ci.set_in_repeat(repsiggen_Bi.out_repeat())
+            rdscan_Bi.set_in_ref(in_ref_B.pop(0), "")
+        repsiggen_Bi.set_istream(rdscan_Bi.out_crd(), rdscan_Bi)
+        repeat_Ci.set_in_repeat(repsiggen_Bi.out_repeat(), repsiggen_Bi)
         if len(in_ref_C) > 0:
-            repeat_Ci.set_in_ref(in_ref_C.pop(0))
-        repeat_Ci.update()
+            repeat_Ci.set_in_ref(in_ref_C.pop(0), "")
 
         # Input iteration for j
-        rdscan_Cj.set_in_ref(repeat_Ci.out_ref())
-        rdscan_Cj.update()
-
-        repsiggen_Cj.set_istream(rdscan_Cj.out_crd())
-        repsiggen_Cj.update()
-
-        repeat_Bj.set_in_repeat(repsiggen_Cj.out_repeat())
-        repeat_Bj.set_in_ref(rdscan_Bi.out_ref())
-        repeat_Bj.update()
+        rdscan_Cj.set_in_ref(repeat_Ci.out_ref(), repeat_Ci)
+        repsiggen_Cj.set_istream(rdscan_Cj.out_crd(), rdscan_Cj)
+        repeat_Bj.set_in_repeat(repsiggen_Cj.out_repeat(), repsiggen_Cj)
+        repeat_Bj.set_in_ref(rdscan_Bi.out_ref(), rdscan_Bi)
 
         # Input iteration for k
-        rdscan_Bk.set_in_ref(repeat_Bj.out_ref())
-        rdscan_Bk.update()
-
-        rdscan_Ck.set_in_ref(rdscan_Cj.out_ref())
-        rdscan_Ck.update()
-
-        inter1.set_in1(rdscan_Bk.out_ref(), rdscan_Bk.out_crd())
-        inter1.set_in2(rdscan_Ck.out_ref(), rdscan_Ck.out_crd())
-        inter1.update()
+        rdscan_Bk.set_in_ref(repeat_Bj.out_ref(), repeat_Bj)
+        rdscan_Ck.set_in_ref(rdscan_Cj.out_ref(), rdscan_Cj)
+        inter1.set_in1(rdscan_Bk.out_ref(), rdscan_Bk.out_crd(), rdscan_Bk)
+        inter1.set_in2(rdscan_Ck.out_ref(), rdscan_Ck.out_crd(), rdscan_Ck)
 
         # Computation
+        val_B.set_load(inter1.out_ref1(), inter1)
+        val_C.set_load(inter1.out_ref2(), inter1)
+        mul.set_in1(val_B.out_load(), val_B)
+        mul.set_in2(val_C.out_load(), val_C)
+        reduce.set_in_val(mul.out_val(), mul)
+        vals_X.set_input(reduce.out_val(), reduce)
+        wrscan_Xi.set_input(rdscan_Bi.out_crd(), rdscan_Bi)
+        wrscan_Xj.set_input(rdscan_Cj.out_crd(), rdscan_Cj)
 
-        val_B.set_load(inter1.out_ref1())
+        rdscan_Bi.update()
+        repsiggen_Bi.update()
+        repeat_Ci.update()
+        rdscan_Cj.update()
+        repsiggen_Cj.update()
+        rdscan_Bk.update()
+        repeat_Bj.update()
+        rdscan_Ck.update()
+        inter1.update()
         val_B.update()
-        val_C.set_load(inter1.out_ref2())
         val_C.update()
-
-        mul.set_in1(val_B.out_load())
-        mul.set_in2(val_C.out_load())
         mul.update()
-
-        reduce.set_in_val(mul.out_val())
         reduce.update()
-
-        vals_X.set_input(reduce.out_val())
         vals_X.update()
-
-        wrscan_Xi.set_input(rdscan_Bi.out_crd())
         wrscan_Xi.update()
-
-        wrscan_Xj.set_input(rdscan_Cj.out_crd())
         wrscan_Xj.update()
 
         if time_cnt % 100 == 0:

@@ -61,7 +61,7 @@ def test_vecmul_ij(samBench, vecname, check_gold, debug_sim, report_stats, backp
                                      back_en=backpressure, depth=int(depth), statistics=report_stats)
     repsiggen_i_10 = RepeatSigGen(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_ci_9 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    fiberlookup_cj_8 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim, statistics=report_stats
+    fiberlookup_cj_8 = CompressedCrdRdScan(crd_arr=c_crd0, seg_arr=c_seg0, debug=debug_sim, statistics=report_stats,
                                            back_en=backpressure, depth=int(depth))
     intersectj_6 = Intersect2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats,
