@@ -345,8 +345,8 @@ class SparseAccumulator1(Primitive):
         self.in_outer_crdpt = []
         self.in_inner_crdpt = []
         self.in_val = []
-        self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=maxdim, valtype=valtype, **kwargs)  # debug=self.debug, statisics=self.get_stats, name="", back_en=False, maxdim=maxdim, valtype=valtype)
-        self.crdpt_converter = CrdPtConverter(maxdim=maxdim, valtype=valtype, **kwargs)  # debug=self.debug, statisics=self.get_stats, name="", back_en=False, last_level=last_level)
+        self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=maxdim, valtype=valtype, debug=self.debug, statisics=self.get_stats, name="", back_en=False)
+        self.crdpt_converter = CrdPtConverter(last_level=last_level, debug=self.debug, statisics=self.get_stats, name="", back_en=False)
 
         self.crdpt_spacc_out_val = []
 
