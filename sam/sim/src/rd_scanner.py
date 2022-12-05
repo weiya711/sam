@@ -19,7 +19,7 @@ class CrdRdScan(Primitive, ABC):
             self.fifo_avail = True
             self.ready_backpressure = True
 
-    def set_in_ref(self, in_ref, parent):
+    def set_in_ref(self, in_ref, parent=None):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
         if self.backpressure_en:
@@ -29,11 +29,20 @@ class CrdRdScan(Primitive, ABC):
         if not backpressure:
             self.ready_backpressure = False
 
-    def out_ref(self, child=None):
-        return self.curr_ref
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
+        return True
 
-    def out_crd(self, child=None):
-        return self.curr_crd
+    def out_ref(self, child=None):
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            return self.curr_ref
+
+    def out_crd(self, child=None): 
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            return self.curr_crd
 
     def add_child(self, child, branch=""):
         if self.backpressure_en and child is not None:
@@ -74,33 +83,84 @@ class UncompressCrdRdScan(CrdRdScan):
         self.emit_tkn = False
 
         self.begin = True
+        if self.backpressure_en:
+            self.depth = depth
+            self.data_valid = True
+            self.fifo_avail = True
+            self.ready_backpressure = True
 
     def update(self):
         self.update_done()
         self.update_ready()
         if len(self.in_ref) > 0:
             self.block_start = False
-
-        if self.emit_tkn and len(self.in_ref) > 0:
-            next_in = self.in_ref[0]
-            if is_stkn(next_in):
-                self.in_ref.pop(0)
-                stkn = increment_stkn(next_in)
-            else:
-                stkn = 'S0'
-            self.curr_crd = stkn
-            self.curr_ref = stkn
-            self.emit_tkn = False
-            return
-        elif self.end_fiber and len(self.in_ref) > 0:
-            self.curr_in_ref = self.in_ref.pop(0)
-            if self.curr_in_ref == 'D':
-                self.curr_crd = 'D'
-                self.curr_ref = 'D'
-                self.done = True
-                self.end_fiber = False
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.emit_tkn and len(self.in_ref) > 0:
+                next_in = self.in_ref[0]
+                if is_stkn(next_in):
+                    self.in_ref.pop(0)
+                    stkn = increment_stkn(next_in)
+                else:
+                    stkn = 'S0'
+                self.curr_crd = stkn
+                self.curr_ref = stkn
+                self.emit_tkn = False
                 return
-            elif is_stkn(self.curr_in_ref):
+            elif self.end_fiber and len(self.in_ref) > 0:
+                self.curr_in_ref = self.in_ref.pop(0)
+                if self.curr_in_ref == 'D':
+                    self.curr_crd = 'D'
+                    self.curr_ref = 'D'
+                    self.done = True
+                    self.end_fiber = False
+                    return
+                elif is_stkn(self.curr_in_ref):
+                    if len(self.in_ref) > 0:
+                        next_in = self.in_ref[0]
+                        if is_stkn(next_in):
+                            self.in_ref.pop(0)
+                            stkn = increment_stkn(next_in)
+                        else:
+                            stkn = 'S0'
+                        self.curr_crd = stkn
+                        self.curr_ref = stkn
+                    else:
+                        self.curr_crd = ''
+                        self.curr_ref = ''
+                        self.emit_tkn = True
+                else:
+                    self.curr_crd = 0
+                    self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
+                    self.end_fiber = False
+                    return
+            elif self.end_fiber or self.emit_tkn:
+                self.curr_crd = ''
+                self.curr_ref = ''
+                return
+
+            if is_stkn(self.curr_crd) or self.begin:
+                self.begin = False
+                if len(self.in_ref) > 0:
+                    self.curr_in_ref = self.in_ref.pop(0)
+                    if self.curr_in_ref == 'D':
+                        self.curr_crd = 'D'
+                        self.curr_ref = 'D'
+                        self.done = True
+                        return
+                    else:
+                        self.curr_crd = 0
+                        self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
+                else:
+                    self.curr_crd = ''
+                    self.curr_ref = ''
+                    self.end_fiber = True
+            # run out of coordinates, move to next input reference
+            elif self.curr_crd == '' or self.curr_crd == 'D':
+                self.curr_crd = ''
+                self.curr_ref = ''
+            elif self.curr_crd >= self.meta_dim - 1:
                 if len(self.in_ref) > 0:
                     next_in = self.in_ref[0]
                     if is_stkn(next_in):
@@ -115,57 +175,13 @@ class UncompressCrdRdScan(CrdRdScan):
                     self.curr_ref = ''
                     self.emit_tkn = True
             else:
-                self.curr_crd = 0
-                self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
-                self.end_fiber = False
-                return
-        elif self.end_fiber or self.emit_tkn:
-            self.curr_crd = ''
-            self.curr_ref = ''
-            return
+                self.curr_crd += 1
+                self.curr_ref = self.curr_crd + self.curr_in_ref * self.meta_dim
 
-        if is_stkn(self.curr_crd) or self.begin:
-            self.begin = False
-            if len(self.in_ref) > 0:
-                self.curr_in_ref = self.in_ref.pop(0)
-                if self.curr_in_ref == 'D':
-                    self.curr_crd = 'D'
-                    self.curr_ref = 'D'
-                    self.done = True
-                    return
-                else:
-                    self.curr_crd = 0
-                    self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
-            else:
-                self.curr_crd = ''
-                self.curr_ref = ''
-                self.end_fiber = True
-        # run out of coordinates, move to next input reference
-        elif self.curr_crd == '' or self.curr_crd == 'D':
-            self.curr_crd = ''
-            self.curr_ref = ''
-        elif self.curr_crd >= self.meta_dim - 1:
-            if len(self.in_ref) > 0:
-                next_in = self.in_ref[0]
-                if is_stkn(next_in):
-                    self.in_ref.pop(0)
-                    stkn = increment_stkn(next_in)
-                else:
-                    stkn = 'S0'
-                self.curr_crd = stkn
-                self.curr_ref = stkn
-            else:
-                self.curr_crd = ''
-                self.curr_ref = ''
-                self.emit_tkn = True
-        else:
-            self.curr_crd += 1
-            self.curr_ref = self.curr_crd + self.curr_in_ref * self.meta_dim
-
-        if self.debug:
-            print("DEBUG: U RD SCAN: \t "
-                  "Curr inref:", self.curr_in_ref, "\tEmit tkn:", self.emit_tkn, "\tEnd Fiber", self.end_fiber,
-                  "\nCurr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
+            if self.debug:
+                print("DEBUG: U RD SCAN: \t "
+                      "Curr inref:", self.curr_in_ref, "\tEmit tkn:", self.emit_tkn, "\tEnd Fiber", self.end_fiber,
+                      "\nCurr crd:", self.curr_crd, "\t curr ref:", self.curr_ref)
 
 
 def last_stkn(skiplist):
