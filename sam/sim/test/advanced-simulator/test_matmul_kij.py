@@ -102,7 +102,7 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, bac
                                     statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_X1_1 = CompressWrScan(seg_size=Bs_seg[-1] + 1, size=Bs_seg[-1] * Bs_seg[-1], fill=fill,
                                      debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats,
                                      back_en=backpressure, depth=int(depth))
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
