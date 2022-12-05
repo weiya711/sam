@@ -5,7 +5,7 @@ from sam.sim.src.array import Array
 
 
 class WrScan(Primitive, ABC):
-    def __init__(self, size=1024, fill=0, **kwargs):
+    def __init__(self, size=1024, fill=0, backpressure_en=False, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.size = size
         self.fill = fill
@@ -13,13 +13,41 @@ class WrScan(Primitive, ABC):
         self.input = []
 
         self.arr = Array(size=size, fill=fill, debug=self.debug)
+        self.backpressure_en = False
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.depth = depth
+            self.fifo_avail = True
+            self.data_valid = True
 
-    def set_input(self, val):
+    def fifo_available(self):
+        return self.fifo_avail
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
+        return True
+
+    def update_ready(self):
+        if self.backpressure_en and len(self.input) > self.depth:
+            self.fifo_avail = False
+        else:
+            self.fifo_avail = True
+
+    def set_input(self, val, parent=None):
         # Make sure streams have correct token type
         assert (isinstance(val, int) or isinstance(val, float) or val in valid_tkns or val is None)
 
         if val != '' and val is not None:
             self.input.append(val)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def clear_arr(self):
         self.arr.clear(self.fill)
@@ -30,11 +58,6 @@ class WrScan(Primitive, ABC):
 
     def get_arr(self):
         return self.arr.get_arr()
-
-    def fifo_available(self):
-        if len(self.input) > 1:
-            return False
-        return True
 
     @abstractmethod
     def reset(self):
@@ -49,20 +72,25 @@ class ValsWrScan(WrScan):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if (len(self.input) > 0):
             self.block_start = False
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+            if len(self.input) > 0:
+                val = self.input.pop(0)
 
-        if len(self.input) > 0:
-            val = self.input.pop(0)
+                if not is_stkn(val) and val != 'D':
+                    self.arr.set_store(self.curr_addr, val)
+                    self.curr_addr += 1
+                else:
+                    self.arr.set_store(val, val)
 
-            if not is_stkn(val) and val != 'D':
-                self.arr.set_store(self.curr_addr, val)
-                self.curr_addr += 1
-            else:
-                self.arr.set_store(val, val)
-
-            self.arr.update()
-            self.done = self.arr.out_done()
+                self.arr.update()
+                self.done = self.arr.out_done()
 
     def reset(self):
         self.curr_addr = 0
@@ -97,28 +125,34 @@ class CompressWrScan(WrScan):
 
     def update(self):
         self.update_done()
+        self.update_ready()
+
         if len(self.input) > 0:
             self.block_start = False
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+            if len(self.input) > 0:
+                in_crd = self.input.pop(0)
 
-        if len(self.input) > 0:
-            in_crd = self.input.pop(0)
+                if not is_stkn(in_crd) and in_crd != 'D':
+                    self.arr.set_store(self.curr_addr, in_crd)
+                    self.curr_addr += 1
+                    self.curr_crd_cnt += 1
+                    self.end_fiber = False
+                elif is_stkn(in_crd) and not self.end_fiber:
+                    self.seg_arr.set_store(self.curr_seg_addr, self.curr_crd_cnt)
+                    self.curr_seg_addr += 1
+                    self.end_fiber = True
+                    self.arr.set_store(in_crd, in_crd)
+                else:
+                    self.arr.set_store(in_crd, in_crd)
 
-            if not is_stkn(in_crd) and in_crd != 'D':
-                self.arr.set_store(self.curr_addr, in_crd)
-                self.curr_addr += 1
-                self.curr_crd_cnt += 1
-                self.end_fiber = False
-            elif is_stkn(in_crd) and not self.end_fiber:
-                self.seg_arr.set_store(self.curr_seg_addr, self.curr_crd_cnt)
-                self.curr_seg_addr += 1
-                self.end_fiber = True
-                self.arr.set_store(in_crd, in_crd)
-            else:
-                self.arr.set_store(in_crd, in_crd)
-
-            self.arr.update()
-            self.seg_arr.update()
-            self.done = self.arr.out_done()
+                self.arr.update()
+                self.seg_arr.update()
+                self.done = self.arr.out_done()
 
         if self.debug:
             print("DEBUG: WR SCAN: \t "

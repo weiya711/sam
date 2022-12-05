@@ -98,82 +98,61 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, bac
                                                back_en=backpressure, depth=int(depth))
     spaccumulator2_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats,
                                          back_en=backpressure, depth=int(depth))
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim,
+                                    statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_X1_1 = CompressWrScan(seg_size=Bs_seg[-1] + 1, size=Bs_seg[-1] * Bs_seg[-1], fill=fill,
-                                     debug=debug_sim, statistics=report_stats)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats)
-    if backpressure:
-        fiberlookup_Bk_17.add_child(intersectk_16, "in1")
-        fiberlookup_Ck_18.add_child(intersectk_16, "in2")
-        intersectk_16.add_child(fiberlookup_Bi_15)
-        intersectk_16.add_child(repeat_Ci_12, "ref")
-        fiberlookup_Bi_15.add_child(repsiggen_i_13)
-        fiberlookup_Bi_15.add_child(crdhold_4, "outer")
-        repsiggen_i_13.add_child(repeat_Ci_12, "repsig")
-        repeat_Ci_12.add_child(fiberlookup_Cj_11)
-        fiberlookup_Cj_11.add_child(crdhold_4, "inner")
-        fiberlookup_Cj_11.add_child(repsiggen_j_9)
-        fiberlookup_Cj_11.add_child(arrayvals_C_7)
-        repeat_Ci_12.add_child(arrayvals_B_6)
-        arrayvals_C_7.add_child(mul_5)
-        arrayvals_B_6.add_child(mul_5)
-        crdhold_4.add_child(spaccumulator2_3_drop_crd_outer)
-        crdhold_4.add_child(spaccumulator2_3_drop_crd_inner)
-        mul_5.add_child(spaccumulator2_3_drop_val)
-        spaccumulator2_3_drop_crd_inner.add_child(spaccumulator2_3, "inner")
-        spaccumulator2_3_drop_crd_outer.add_child(spaccumulator2_3, "outer")
-        spaccumulator2_3_drop_val.add_child(spaccumulator2_3, "val")
-
+                                     debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats
+                                     back_en=backpressure, depth=int(depth))
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
     time_cnt = 0
-    print("hell1 ", report_stats)
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
-            fiberlookup_Bk_17.set_in_ref(in_ref_B.pop(0))
+            fiberlookup_Bk_17.set_in_ref(in_ref_B.pop(0), "")
 
         if len(in_ref_C) > 0:
-            fiberlookup_Ck_18.set_in_ref(in_ref_C.pop(0))
+            fiberlookup_Ck_18.set_in_ref(in_ref_C.pop(0), "")
 
-        intersectk_16.set_in1(fiberlookup_Bk_17.out_ref(), fiberlookup_Bk_17.out_crd())
-        intersectk_16.set_in2(fiberlookup_Ck_18.out_ref(), fiberlookup_Ck_18.out_crd())
+        intersectk_16.set_in1(fiberlookup_Bk_17.out_ref(), fiberlookup_Bk_17.out_crd(), fiberlookup_Bk_17)
+        intersectk_16.set_in2(fiberlookup_Ck_18.out_ref(), fiberlookup_Ck_18.out_crd(), fiberlookup_Ck_18)
 
-        fiberlookup_Bi_15.set_in_ref(intersectk_16.out_ref1())
+        fiberlookup_Bi_15.set_in_ref(intersectk_16.out_ref1(), intersectk_16)
 
-        repsiggen_i_13.set_istream(fiberlookup_Bi_15.out_crd())
+        repsiggen_i_13.set_istream(fiberlookup_Bi_15.out_crd(), fiberlookup_Bi_15)
 
-        repeat_Ci_12.set_in_ref(intersectk_16.out_ref2())
-        repeat_Ci_12.set_in_repsig(repsiggen_i_13.out_repsig())
+        repeat_Ci_12.set_in_ref(intersectk_16.out_ref2(), intersectk_16)
+        repeat_Ci_12.set_in_repsig(repsiggen_i_13.out_repsig(), repsiggen_i_13)
 
-        fiberlookup_Cj_11.set_in_ref(repeat_Ci_12.out_ref())
+        fiberlookup_Cj_11.set_in_ref(repeat_Ci_12.out_ref(), repeat_Ci_12)
 
-        arrayvals_C_7.set_load(fiberlookup_Cj_11.out_ref())
+        arrayvals_C_7.set_load(fiberlookup_Cj_11.out_ref(), fiberlookup_Cj_11)
 
-        crdhold_4.set_outer_crd(fiberlookup_Bi_15.out_crd())
-        crdhold_4.set_inner_crd(fiberlookup_Cj_11.out_crd())
-        repsiggen_j_9.set_istream(fiberlookup_Cj_11.out_crd())
+        crdhold_4.set_outer_crd(fiberlookup_Bi_15.out_crd(), fiberlookup_Bi_15)
+        crdhold_4.set_inner_crd(fiberlookup_Cj_11.out_crd(), fiberlookup_Cj_11)
+        repsiggen_j_9.set_istream(fiberlookup_Cj_11.out_crd(), fiberlookup_Cj_11)
 
-        repeat_Bj_8.set_in_ref(fiberlookup_Bi_15.out_ref())
-        repeat_Bj_8.set_in_repsig(repsiggen_j_9.out_repsig())
+        repeat_Bj_8.set_in_ref(fiberlookup_Bi_15.out_ref(), fiberlookup_Bi_15)
+        repeat_Bj_8.set_in_repsig(repsiggen_j_9.out_repsig(), repsiggen_j_9)
 
-        arrayvals_B_6.set_load(repeat_Bj_8.out_ref())
+        arrayvals_B_6.set_load(repeat_Bj_8.out_ref(), repeat_Bj_8)
 
-        mul_5.set_in1(arrayvals_B_6.out_val())
-        mul_5.set_in2(arrayvals_C_7.out_val())
+        mul_5.set_in1(arrayvals_B_6.out_val(), arrayvals_B_6)
+        mul_5.set_in2(arrayvals_C_7.out_val(), arrayvals_C_7)
 
-        spaccumulator2_3_drop_crd_outer.set_in_stream(crdhold_4.out_crd_outer())
-        spaccumulator2_3_drop_crd_inner.set_in_stream(crdhold_4.out_crd_inner())
-        spaccumulator2_3_drop_val.set_in_stream(mul_5.out_val())
-        spaccumulator2_3.set_crd_outer(spaccumulator2_3_drop_crd_outer.out_val())
-        spaccumulator2_3.set_crd_inner(spaccumulator2_3_drop_crd_inner.out_val())
-        spaccumulator2_3.set_val(spaccumulator2_3_drop_val.out_val())
+        spaccumulator2_3_drop_crd_outer.set_in_stream(crdhold_4.out_crd_outer(), crdhold_4)
+        spaccumulator2_3_drop_crd_inner.set_in_stream(crdhold_4.out_crd_inner(), crdhold_4)
+        spaccumulator2_3_drop_val.set_in_stream(mul_5.out_val(), mul_5)
+        spaccumulator2_3.set_crd_outer(spaccumulator2_3_drop_crd_outer.out_val(), spaccumulator2_3_drop_crd_outer)
+        spaccumulator2_3.set_crd_inner(spaccumulator2_3_drop_crd_inner.out_val(), spaccumulator2_3_drop_crd_inner)
+        spaccumulator2_3.set_val(spaccumulator2_3_drop_val.out_val(), spaccumulator2_3_drop_val)
 
-        fiberwrite_Xvals_0.set_input(spaccumulator2_3.out_val())
+        fiberwrite_Xvals_0.set_input(spaccumulator2_3.out_val(), spaccumulator2_3)
 
-        fiberwrite_X1_1.set_input(spaccumulator2_3.out_crd_inner())
+        fiberwrite_X1_1.set_input(spaccumulator2_3.out_crd_inner(), spaccumulator2_3)
 
-        fiberwrite_X0_2.set_input(spaccumulator2_3.out_crd_outer())
+        fiberwrite_X0_2.set_input(spaccumulator2_3.out_crd_outer(), spaccumulator2_3)
 
         fiberlookup_Bk_17.update()
         fiberlookup_Ck_18.update()
@@ -198,7 +177,6 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, bac
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
-        print("_____", time_cnt)
 
     fiberwrite_X0_2.autosize()
     fiberwrite_X1_1.autosize()

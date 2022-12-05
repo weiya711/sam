@@ -162,20 +162,21 @@ class CrdHold(Primitive):
         self.repeat = Repeat(debug=self.debug)
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.branches = []
+            self.ready_backpressure = True
             self.depth = depth
             self.data_ready = True
             self.fifo_avail_inner = True
             self.fifo_avail_outer = True
 
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branches[j]):
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
 
     def add_child(self, child=None, branch=""):
@@ -240,19 +241,23 @@ class CrdHold(Primitive):
 
             self.done = self.RSG.done and self.repeat.done
 
-    def set_outer_crd(self, crd):
+    def set_outer_crd(self, crd, parent=None):
         if crd != '' and crd is not None:
             self.outer_crd.append(crd)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_outer)
 
-    def set_inner_crd(self, crd):
+    def set_inner_crd(self, crd, parent=None):
         if crd != '' and crd is not None:
             self.inner_crd.append(crd)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_inner)
 
-    def out_crd_outer(self):
+    def out_crd_outer(self, parent=None):
         if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_crd
 
-    def out_crd_inner(self):
+    def out_crd_inner(self, parent=None):
         if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_inner_crd
 

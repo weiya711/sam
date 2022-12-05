@@ -19,9 +19,8 @@ class Array(Primitive):
         self.store_en = False
 
         if self.backpressure_en:
-            self.backpressure = []
+            self.ready_backpressure = True
             self.data_ready = True
-            self.branch = []
             self.depth = depth
             self.fifo_avail = True
 
@@ -33,20 +32,16 @@ class Array(Primitive):
 
         self.curr_load = ''
 
-    def add_child(self, child, branch=""):
-        if self.backpressure_en:
-            if child is not None:
-                self.backpressure.append(child)
-                self.branch.append(branch)
-
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branch[j]):
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def update(self):
         self.update_done()
@@ -78,14 +73,7 @@ class Array(Primitive):
                 self.store(store_tup[0], store_tup[1])
                 self.store_en = False
         if self.debug and self.backpressure_en:
-            print("arr: ", self.fifo_avail, self.load_addrs, self.load_en, self.check_backpressure(), self.backpressure)
-
-    def fifo_available(self, br=""):
-        if self.backpressure_en:
-            return self.fifo_avail
-            # if len(self.load_addrs) > 1:
-            #     return False
-        return True
+            print("arr: ", self.fifo_avail, self.load_addrs, self.load_en)
 
     def update_ready(self):
         if self.backpressure_en:
@@ -94,20 +82,26 @@ class Array(Primitive):
             else:
                 self.fifo_avail = True
 
-    def set_load(self, addr):
+    def set_load(self, addr, parent=None):
         if addr != '' and addr is not None:
             # self.load_en = True
             self.load_addrs.append(addr)
         else:
             pass
             # self.load_en = False
+        # print("111111111")
+        if self.backpressure_en:
+            # print("0000000000000000")
+            parent.set_backpressure(self.fifo_avail)
 
-    def set_store(self, addr, vals):
+    def set_store(self, addr, vals, parent=None):
         if addr != '' and vals != '' and addr is not None and vals is not None:
             self.store_en = True
             self.store_vals.append((addr, vals))
         else:
             self.store_en = False
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def get_arr(self):
         return self.arr

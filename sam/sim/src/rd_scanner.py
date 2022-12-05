@@ -16,13 +16,18 @@ class CrdRdScan(Primitive, ABC):
         self.in_ref = []
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.branches = []
             self.fifo_avail = True
+            self.ready_backpressure = True
 
-    def set_in_ref(self, in_ref):
+    def set_in_ref(self, in_ref, parent):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def out_ref(self, child=None):
         return self.curr_ref
@@ -216,19 +221,18 @@ class CompressedCrdRdScan(CrdRdScan):
         self.begin = True
         if self.backpressure_en:
             self.depth = depth
-            self.data_ready = True
+            self.data_valid = True
+            self.fifo_avail = True
+            self.ready_backpressure = True
 
-    def fifo_available(self, br=""):
-        if self.backpressure_en and len(self.in_ref) > self.depth:
-            return False
-        return True
-
-    def set_in_ref(self, in_ref):
+    def set_in_ref(self, in_ref, parent=None):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
+        if self.backpressure_en and parent != "":
+            parent.set_backpressure(self.fifo_avail)
 
     def out_ref(self, child=None):
-        if self.backpressure_en and self.data_ready:
+        if self.backpressure_en and self.data_valid:
             return self.curr_ref
         elif self.backpressure_en:
             return
@@ -236,7 +240,7 @@ class CompressedCrdRdScan(CrdRdScan):
             return self.curr_ref
 
     def out_crd(self, child=None):
-        if self.backpressure_en and self.data_ready:
+        if self.backpressure_en and self.data_valid:
             return self.curr_crd
         elif self.backpressure_en:
             return
@@ -287,24 +291,19 @@ class CompressedCrdRdScan(CrdRdScan):
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                # print(i)
-                # print("\n\n\n", i, i.fifo_debug(),  "\n\n\n")
-                if not i.fifo_available(self.branches[j]):
-                    # print("\nChrecked: ", i.in_ref, "\n")
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
 
     def update(self):
         self.update_done()
         self.update_ready()
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
 # Process skip token first and save
             if len(self.in_crd_skip) > 0 and self.skip_processed:
                 self.curr_skip = self.in_crd_skip.pop(0)
@@ -525,7 +524,7 @@ class CompressedCrdRdScan(CrdRdScan):
                       self.prev_crd,
                       "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt, "\t Bakcpressure: ",
                       self.check_backpressure(), "\t backpressure_len: ",
-                      self.backpressure, " ", self.branches, " :: ", self.data_ready)
+                      self.data_valid)
             elif self.debug:
                 print("DEBUG: C RD SCAN:"
                       "\n \t"
@@ -547,8 +546,8 @@ class CompressedCrdRdScan(CrdRdScan):
                       "\n skip in:", self.curr_skip, "\t skip processed", self.skip_processed, "\t prev crd:",
                       self.prev_crd,
                       "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt, "\t Bakcpressure: ",
-                      self.check_backpressure(), "\t backpressure_len: ", self.backpressure, " ",
-                      self.branches, " :: ", self.data_ready)
+                      self.check_backpressure(), "\t backpressure_len: ",
+                      self.data_valid)
             elif self.debug:
                 print("DEBUG: C RD SCAN:"
                       "\n \t"

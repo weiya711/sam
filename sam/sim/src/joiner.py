@@ -25,34 +25,26 @@ class CrdJoiner2(Joiner2, ABC):
         self.in_crd2 = []
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.data_ready = True
-            self.branches = []
+            self.ready_backpressure = True
+            self.data_valid = True
             self.depth = depth
             self.fifo_avail_in1 = True
             self.fifo_avail_in2 = True
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branches[j]):
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            # print(copy_backpressure, "intersect***********")
+            return copy_backpressure
         return True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def fifo_debug(self):
         print("Crd Joiner2 : ", self.in_ref1, " ", self.in_ref2)
-
-    def fifo_available(self, br=""):
-        if self.backpressure_en:
-            if br == "in1":  # and len(self.in_ref1) > self.depth:
-                return self.fifo_avail_in1
-                # return False
-            if br == "in2":  # and len(self.in_ref2) > self.depth:
-                return self.fifo_avail_in2
-                # return False
-        return True
 
     def update_ready(self):
         if self.backpressure_en:
@@ -70,17 +62,21 @@ class CrdJoiner2(Joiner2, ABC):
             self.backpressure.append(child)
             self.branches.append(branch)
 
-    def set_in1(self, in_ref1, in_crd1):
+    def set_in1(self, in_ref1, in_crd1, parent=None):
         if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
             # print(in_ref1, " ", in_crd1)
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in1)
 
-    def set_in2(self, in_ref2, in_crd2):
+    def set_in2(self, in_ref2, in_crd2, parent=None):
         if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
             # print(in_ref2, " ", in_crd2)
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in2)
 
     def out_crd(self):
         return self.ocrd
@@ -137,15 +133,15 @@ class Intersect2(CrdJoiner2):
         self.change_crd2 = True
 
     def out_crd(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.ocrd
 
     def out_ref1(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.oref1
 
     def out_ref2(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.oref2
 
     def _inc2(self):
@@ -176,10 +172,10 @@ class Intersect2(CrdJoiner2):
         self.update_done()
         self.update_ready()
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
             if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
                 self.block_start = False
             if self.get_stats:
@@ -286,7 +282,7 @@ class Intersect2(CrdJoiner2):
 
         if self.debug:
             if self.backpressure_en:
-                print("Intersect:", self.check_backpressure(), " ", self.data_ready)
+                print("Intersect:", self.check_backpressure(), " ", self.data_valid)
             print("DEBUG: INTERSECT: ",
                   "\n OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
                   "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
@@ -359,109 +355,117 @@ class Union2(CrdJoiner2):
         self.update_ready()
         if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
             self.block_start = False
-        if self.get_stats:
-            self.total_count += 1
-
-        if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
-            if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
-                assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
-                self.done = True
-                self.ocrd = 'D'
-                self.oref1 = 'D'
-                self.oref2 = 'D'
-            elif self.curr_crd2 == self.curr_crd1:
-                self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
-                self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
-                self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-            elif is_stkn(self.curr_crd1):
-                self.ocrd = self.curr_crd2
-                self.oref1 = 'N'
-                self.oref2 = self.curr_ref2
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-                if self.get_stats:
-                    self.two_only_count += 1
-            elif is_stkn(self.curr_crd2):
-                self.ocrd = self.curr_crd1
-                self.oref1 = self.curr_ref1
-                self.oref2 = 'N'
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                if self.get_stats:
-                    self.one_only_count += 1
-            elif is_0tkn(self.curr_crd2):
-                self.ocrd = self.curr_crd1
-                self.oref1 = self.curr_ref1
-                self.oref2 = 'N'
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                if self.get_stats:
-                    self.one_only_count += 1
-            elif is_0tkn(self.curr_crd1):
-                self.ocrd = self.curr_crd2
-                self.oref1 = 'N'
-                self.oref2 = self.curr_ref2
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-                if self.get_stats:
-                    self.two_only_count += 1
-            elif self.curr_crd1 < self.curr_crd2:
-                self.ocrd = self.curr_crd1
-                self.oref1 = self.curr_ref1
-                self.oref2 = 'N'
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                if self.get_stats:
-                    self.one_only_count += 1
-            elif self.curr_crd1 > self.curr_crd2:
-                self.ocrd = self.curr_crd2
-                self.oref1 = 'N'
-                self.oref2 = self.curr_ref2
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-                if self.get_stats:
-                    self.two_only_count += 1
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+            if self.get_stats:
+                self.total_count += 1
+            if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
+                if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
+                    assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
+                    self.done = True
+                    self.ocrd = 'D'
+                    self.oref1 = 'D'
+                    self.oref2 = 'D'
+                elif self.curr_crd2 == self.curr_crd1:
+                    self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
+                    self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
+                    self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                elif is_stkn(self.curr_crd1):
+                    self.ocrd = self.curr_crd2
+                    self.oref1 = 'N'
+                    self.oref2 = self.curr_ref2
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                    if self.get_stats:
+                        self.two_only_count += 1
+                elif is_stkn(self.curr_crd2):
+                    self.ocrd = self.curr_crd1
+                    self.oref1 = self.curr_ref1
+                    self.oref2 = 'N'
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    if self.get_stats:
+                        self.one_only_count += 1
+                elif is_0tkn(self.curr_crd2):
+                    self.ocrd = self.curr_crd1
+                    self.oref1 = self.curr_ref1
+                    self.oref2 = 'N'
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    if self.get_stats:
+                        self.one_only_count += 1
+                elif is_0tkn(self.curr_crd1):
+                    self.ocrd = self.curr_crd2
+                    self.oref1 = 'N'
+                    self.oref2 = self.curr_ref2
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                    if self.get_stats:
+                        self.two_only_count += 1
+                elif self.curr_crd1 < self.curr_crd2:
+                    self.ocrd = self.curr_crd1
+                    self.oref1 = self.curr_ref1
+                    self.oref2 = 'N'
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    if self.get_stats:
+                        self.one_only_count += 1
+                elif self.curr_crd1 > self.curr_crd2:
+                    self.ocrd = self.curr_crd2
+                    self.oref1 = 'N'
+                    self.oref2 = self.curr_ref2
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                    if self.get_stats:
+                        self.two_only_count += 1
+                else:
+                    raise Exception('Intersect2: should not enter this case')
             else:
-                raise Exception('Intersect2: should not enter this case')
-        else:
-            # Do Nothing if no inputs are detected
-            if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
-                assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
-                self.done = True
-                self.ocrd = 'D'
-                self.oref1 = 'D'
-                self.oref2 = 'D'
-                self.curr_crd1 = ''
-                self.curr_crd2 = ''
-                self.curr_ref1 = ''
-                self.curr_ref2 = ''
-            else:
-                self.ocrd = ''
-                self.oref1 = ''
-                self.oref2 = ''
-        if self.get_stats:
-            self.compute_fifos()
+                # Do Nothing if no inputs are detected
+                if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
+                    assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
+                    self.done = True
+                    self.ocrd = 'D'
+                    self.oref1 = 'D'
+                    self.oref2 = 'D'
+                    self.curr_crd1 = ''
+                    self.curr_crd2 = ''
+                    self.curr_ref1 = ''
+                    self.curr_ref2 = ''
+                else:
+                    self.ocrd = ''
+                    self.oref1 = ''
+                    self.oref2 = ''
+            if self.get_stats:
+                self.compute_fifos()
 
-        if self.debug:
-            print("DEBUG: UNION: \t OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                  "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
-                  "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
-                  "\n Union rate: ",
-                  self.return_union_rate())
+            if self.debug:
+                print("DEBUG: UNION: \t OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
+                      "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
+                      "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
+                      "\n Union rate: ",
+                      self.return_union_rate())
 
-    def set_in1(self, in_ref1, in_crd1):
+    def set_in1(self, in_ref1, in_crd1, parent=None):
         if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in1)
 
-    def set_in2(self, in_ref2, in_crd2):
+    def set_in2(self, in_ref2, in_crd2, parent=None):
         if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in2)
 
     def compute_fifos(self):
         if self.get_stats:
@@ -477,13 +481,16 @@ class Union2(CrdJoiner2):
         print("FIFO in crd 2: ", self.size_in_crd2)
 
     def out_crd(self):
-        return self.ocrd
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.ocrd
 
     def out_ref1(self):
-        return self.oref1
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.oref1
 
     def out_ref2(self):
-        return self.oref2
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.oref2
 
     def return_union_rate(self):
         if self.get_stats:

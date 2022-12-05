@@ -21,34 +21,25 @@ class Repeat(Primitive):
         self.get_next_ref_union = False
         self.meta_union_mode = union
         if self.backpressure_en:
-            self.backpressure = []
-            self.data_ready = True
-            self.branches = []
+            self.ready_backpressure = True
+            self.data_valid = True
             self.depth = depth
             self.fifo_avail_ref = True
             self.fifo_avail_repeat = True
 
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branches[j]):
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True 
+            return copy_backpressure
         return True
 
     def fifo_debug(self):
         print("Repeater: ", self.in_ref, " ", self.in_repeat)
-
-    def fifo_available(self, br=""):
-        if self.backpressure_en:
-            if br == "ref":  # and len(self.in_ref) > self.depth:
-                return self.fifo_avail_ref
-                # return False
-            if (br == "repeat" or br == "repsig"):  # len(self.in_repeat) > self.depth and (br == "repeat" or br == "repsig"):
-                return self.fifo_avail_repeat
-                # return False
-        return True
 
     def update_ready(self):
         if self.backpressure_en:
@@ -70,10 +61,10 @@ class Repeat(Primitive):
         self.update_done()
         self.update_ready()
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
             if len(self.in_ref) > 0 or len(self.in_repeat) > 0:
                 self.block_start = False
             # if len(self.in_ref) > 0 and self.get_next_ref_union:
@@ -132,7 +123,7 @@ class Repeat(Primitive):
                       "\t Get Rep:", self.get_next_rep,
                       "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn,
                       "\tStream", self.in_ref, " ", self.in_repeat, " backstream: ",
-                      self.check_backpressure(), " ", self.data_ready)
+                      self.check_backpressure(), " ", self.data_valid)
 
             repeat = ''
             if len(self.in_repeat) > 0 and self.get_next_rep:
@@ -208,22 +199,26 @@ class Repeat(Primitive):
                     print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
                           "\t Get Rep:", self.get_next_rep, "\t Rep:", repeat,
                           "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref,
-                          " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_ready)
+                          " ", self.in_repeat, " backstream: ", self.check_backpressure(), " ", self.data_valid)
         else:
             if self.debug:
                 print("DEBUG: REPEAT:", "\t Get Ref:", self.get_next_ref, "\tIn Ref:", self.curr_in_ref,
                       "\t Get Rep:", self.get_next_rep,
                       "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\tStream",
                       self.in_ref, " ", self.in_repeat, " backstream: ",
-                      self.check_backpressure(), " ", self.data_ready)
+                      self.check_backpressure(), " ", self.data_valid)
 
-    def set_in_ref(self, ref):
+    def set_in_ref(self, ref, parent=None):
         if ref != '' and ref is not None:
             self.in_ref.append(ref)
+        if self.backpressure_en and parent != "":
+            parent.set_backpressure(self.fifo_avail_ref)
 
-    def set_in_repeat(self, repeat):
+    def set_in_repeat(self, repeat, parent=None):
         if repeat != '' and repeat is not None:
             self.in_repeat.append(repeat)
+        if self.backpressure_en and parent != "":
+            parent.set_backpressure(self.fifo_avail_repeat)
     # def set_in_union_0tkn(self, union_0tkn):
     #     if union_0tkn != '':
     #         self.in_union_other_0tkn.append(union_0tkn)
@@ -232,12 +227,14 @@ class Repeat(Primitive):
     #     if union_0tkn != '':
     #         self.in_union_other_0tkn.append(union_0tkn)
 
-    def set_in_repsig(self, repeat):
+    def set_in_repsig(self, repeat, parent=None):
         if repeat != '' and repeat is not None:
             self.in_repeat.append(repeat)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_repeat)
 
     def out_ref(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_out_ref
 
     def compute_fifos(self):
@@ -269,20 +266,23 @@ class RepeatSigGen(Primitive):
         self.istream_size = 0
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.data_ready = True
-            self.branches = []
+            self.ready_backpressure = True
+            self.data_valid = True
             self.depth = depth
             self.fifo_avail = True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def update(self):
         self.update_done()
         self.update_ready()
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
             if len(self.istream) > 0:
                 self.block_start = False
 
@@ -304,32 +304,22 @@ class RepeatSigGen(Primitive):
                 print("DEBUG: REP GEN", "\t In", istream, "\t Out ", self.curr_repeat, "\t INstream", self.istream)
             elif self.backpressure_en and self.debug:
                 print("DEBUG: REP GEN:", "\t In:", istream, "\t Out:", self.curr_repeat, "\t Instream",
-                      self.istream, " backstream: ", self.check_backpressure(), " ", self.data_ready,
-                      " ", self.backpressure, " ", self.branches)
+                      self.istream, " backstream: ", self.check_backpressure(), " ", self.data_valid)
         else:
             if self.debug:
                 print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream",
                       self.istream, " backstream: ", self.check_backpressure(), " ",
-                      self.data_ready, " ", self.backpressure, " ", self.branches)
+                      self.data_valid)
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branches[j]):
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure    
         return True
 
     def fifo_debug(self):
         print("Repeat sig : ", self.istream)
-
-    def fifo_available(self, br=""):
-        if self.backpressure_en:
-            return self.fifo_avail
-            # if len(self.istream) > self.depth:
-            #     return False
-        return True
 
     def update_ready(self):
         if self.backpressure_en:
@@ -344,16 +334,18 @@ class RepeatSigGen(Primitive):
             self.branches.append(branch)
 
     # input can either be coordinates or references
-    def set_istream(self, istream):
+    def set_istream(self, istream, parent=None):
         if istream != '' and istream is not None:
             self.istream.append(istream)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def out_repeat(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_repeat
 
     def out_repsig(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_repeat
 
     def compute_fifos(self):
