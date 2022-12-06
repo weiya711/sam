@@ -297,40 +297,45 @@ def check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_val, format_
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
+def check_gold_mat_residual(ssname, debug_sim, cast, out_crds, out_segs, out_val, format_str):
     # MTX
     C_tensor = scipy.io.mmread(os.path.join(ss_dir, ssname + ".mtx")).tocsr()
     if cast:
         data = [round_sparse(x) for x in C_tensor.data]
         C_tensor = scipy.sparse.csr_matrix((data, C_tensor.indices, C_tensor.indptr), dtype=int)
 
-    b_dirname = os.path.join(ss_formatted_dir, ssname, "other")
-    b_fname = [f for f in os.listdir(b_dirname) if ssname + "-vec_mode0.tns" in f]
-    assert len(b_fname) == 1, "Should only have one 'other' folder that matches"
-    b_fname = b_fname[0]
+    b_dirname = os.path.join(ss_formatted_dir, ssname, "mat_residual")
+    b_shape = C_tensor.shape[0]
+    b0_crd_filename = os.path.join(b_dirname, "tensor_b_mode_0_crd")
+    b_crd0 = read_inputs(b0_crd_filename)
 
+    b_vals_filename = os.path.join(b_dirname, "tensor_b_mode_vals")
+    b_vals = read_inputs(b_vals_filename, float)
 
-    c_dirname = b_dirname
-    c_fname = [f for f in os.listdir(c_dirname) if ssname + "-vec_mode1.tns" in f]
-    assert len(c_fname) == 1, "Should only have one 'other' folder that matches"
-    c_fname = c_fname[0]
-    c_dirname = os.path.join(c_dirname, c_fname)
+    d_dirname = os.path.join(ss_formatted_dir, ssname, "mat_residual")
+    d_shape = C_tensor.shape[1]
+    d0_crd_filename = os.path.join(d_dirname, "tensor_d_mode_0_crd")
+    d_crd0 = read_inputs(d0_crd_filename)
+
+    d_vals_filename = os.path.join(d_dirname, "tensor_d_mode_vals")
+    d_vals = read_inputs(d_vals_filename, float)
+
 
     C_scipy = C_tensor
-    b_nd = np.zeros(c_shape)
-    d_nd = np.zeros(b_shape)
-
-    for i in range(len(c_crd0)):
-        val = c_vals[i]
-        crd = c_crd0[i]
-        c_nd[crd] = val
+    b_nd = np.zeros(b_shape)
+    d_nd = np.zeros(d_shape)
 
     for i in range(len(b_crd0)):
         val = b_vals[i]
         crd = b_crd0[i]
         b_nd[crd] = val
 
-    gold_nd = b_nd - (B_scipy @ c_nd)
+    for i in range(len(d_crd0)):
+        val = d_vals[i]
+        crd = d_crd0[i]
+        d_nd[crd] = val
+
+    gold_nd = b_nd - (C_scipy @ d_nd)
     transpose = format_str[-2:] == "10"
     if transpose:
         gold_nd = gold_nd.transpose()
@@ -342,8 +347,8 @@ def check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_val, form
         print("Out crds:", out_crds)
         print("Out vals:", out_val)
         print("Dense Vec1:\n", b_nd)
-        print("Dense Mat1:\n", B_scipy.toarray())
-        print("Dense Vec2:\n", c_nd)
+        print("Dense Mat1:\n", C_scipy.toarray())
+        print("Dense Vec2:\n", d_nd)
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
