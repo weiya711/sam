@@ -123,7 +123,7 @@ def gen_n_comp_arrs_helper(prev_nnz=1, crd_arrs=[], seg_arrs=[], lvl=1, n=1, dim
 
 
 def repeat_crds(crd_arr, seg_arr):
-    assert (len(crd_arr) + 1 == len(seg_arr))
+    assert len(crd_arr) + 1 == len(seg_arr), str(len(crd_arr)) + "!=" + str(len(seg_arr))
 
     result = []
     for i in range(len(crd_arr)):

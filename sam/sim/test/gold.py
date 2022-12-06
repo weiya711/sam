@@ -1,6 +1,8 @@
 import scipy.sparse
 import os
 import math
+import torch
+from sam.onyx.generate_matrices import *
 
 from sam.sim.src.base import *
 from sam.sim.test.test import *
@@ -658,6 +660,30 @@ def check_gold_tensor3_mttkrp(frosttname, debug_sim, out_crds, out_segs, out_val
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
         out_tup = remove_zeros(out_tup)
         assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor4_mulQK(frosttname, debug_sim, out_crds, out_segs, out_vals, format_str):
+    formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "ssss0123")
+    C_dirname = os.path.join(formatted_dir, frosttname, "other", "ssss0123")
+    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_shape = read_inputs(B_shape_filename)
+    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_shape = read_inputs(C_shape_filename)
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x').get_matrix()
+    C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x').get_matrix()
+    B_ref = torch.from_numpy(B_tens)
+    C_ref = torch.from_numpy(C_tens)
+
+    gold_ref = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref).numpy()
+    print(gold_ref)
+    pt_list = get_point_list(out_crds, out_segs, out_vals) 
+    # print(pt_list)
+    mg = create_matrix_from_point_list("A", pt_list, gold_ref.shape)
+    out_ref = mg.get_matrix()
+    print(out_ref)
+    assert (np.array_equal(out_ref, gold_ref))
+
 
 
 # ---------------- OTHER CHECKS (TODO later) ---------------- #

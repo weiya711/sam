@@ -12,6 +12,7 @@ from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
+from sam.onyx.generate_matrices import *
 import torch
 import os
 import csv
@@ -81,20 +82,26 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname + "_dense", "orig", "ssss0123")
-    C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
-    B_ref_dense = read_inputs(C_vals_filename)
-    B_ref = torch.Tensor(B_ref_dense)
-    B_ref = B_ref.view(B_shape)
+    # C_dirname = os.path.join(formatted_dir, frosttname + "_dense", "orig", "ssss0123")
+    # C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
+    # B_ref_dense = read_inputs(C_vals_filename)
+    # B_ref = torch.Tensor(B_ref_dense)
+    # B_ref = B_ref.view(B_shape)
 
-    C_dirname = os.path.join(formatted_dir, "K_dense", "orig", "ssss0123")
-    C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
-    C_ref_dense = read_inputs(C_vals_filename)
-    C_ref = torch.Tensor(C_ref_dense)
-    C_ref = C_ref.view(C_shape)
+    # C_dirname = os.path.join(formatted_dir, "K_dense", "orig", "ssss0123")
+    # C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
+    # C_ref_dense = read_inputs(C_vals_filename)
+    # C_ref = torch.Tensor(C_ref_dense)
+    # C_ref = C_ref.view(C_shape)
 
-    gold_ref = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref)
-    print(gold_ref)
+    # sparsity = 0.1
+    # B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x').get_matrix()
+    # C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x').get_matrix()
+    # B_ref = torch.from_numpy(B_tens)
+    # C_ref = torch.from_numpy(C_tens)
+
+    # gold_ref = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref)
+    # print(gold_ref)
 
     # print(B_vals)
     # print()
@@ -210,17 +217,17 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
         intersecti.update()
         fiberwrite_X0.update()
         fiberlookup_Bk.update()
+        fiberwrite_X2.update()
         repsiggen_k.update()
         repeat_Ck.update()
-        fiberwrite_X2.update()
         fiberlookup_Cl.update()
         fiberwrite_X3.update()
         repsiggen_l.update()
         repeat_Bl.update()
         fiberlookup_Bj.update()
         fiberlookup_Cj.update()
-        fiberwrite_X1.update()
         intersectj.update()
+        fiberwrite_X1.update()
         fiberlookup_Bm.update()
         fiberlookup_Cm.update()
         intersectm.update()
@@ -241,12 +248,21 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
 
     out_crds = [fiberwrite_X0.get_arr(), fiberwrite_X1.get_arr(), fiberwrite_X2.get_arr(), fiberwrite_X3.get_arr()]
     out_segs = [fiberwrite_X0.get_seg_arr(), fiberwrite_X1.get_seg_arr(), fiberwrite_X2.get_seg_arr(), fiberwrite_X3.get_seg_arr()]
+    # out_crds = [fiberwrite_X0.get_arr(), fiberwrite_X2.get_arr(), fiberwrite_X3.get_arr(), fiberwrite_X1.get_arr()]
+    # out_segs = [fiberwrite_X0.get_seg_arr(), fiberwrite_X2.get_seg_arr(), fiberwrite_X3.get_seg_arr(), fiberwrite_X1.get_seg_arr()]
     out_vals = fiberwrite_Xvals.get_arr()
 
-    print(out_segs)
     print(out_crds)
+    print(out_segs)
     print(out_vals)
-    # print(len(out_vals))
+    print(len(out_vals))
+
+    # print("shape:", gold_ref.shape)
+    # pytest.set_trace()
+    # pt_list = get_point_list(out_crds, out_segs, val_arr=out_vals)
+    # mg = create_matrix_from_point_list(name, pt_list, gold_ref.shape)
+    # test_ref = mg.get_matrix()
+    # print(test_ref)
 
 
     def bench():
@@ -333,5 +349,5 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_elemadd(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
+        check_gold_tensor4_mulQK(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
     samBench(bench, extra_info)
