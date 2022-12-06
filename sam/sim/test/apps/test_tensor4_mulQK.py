@@ -171,7 +171,7 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
 
         fiberlookup_Bk.set_in_ref(intersecti.out_ref1())
 
-        fiberwrite_X2.set_input(fiberlookup_Bk.out_crd())
+        fiberwrite_X1.set_input(fiberlookup_Bk.out_crd())
 
         repsiggen_k.set_istream(fiberlookup_Bk.out_crd())
 
@@ -180,7 +180,7 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
 
         fiberlookup_Cl.set_in_ref(repeat_Ck.out_ref())
 
-        fiberwrite_X3.set_input(fiberlookup_Cl.out_crd())
+        fiberwrite_X2.set_input(fiberlookup_Cl.out_crd())
 
         repsiggen_l.set_istream(fiberlookup_Cl.out_crd())
 
@@ -193,7 +193,7 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
         intersectj.set_in1(fiberlookup_Bj.out_ref(), fiberlookup_Bj.out_crd())
         intersectj.set_in2(fiberlookup_Cj.out_ref(), fiberlookup_Cj.out_crd())
 
-        fiberwrite_X1.set_input(intersectj.out_crd())
+        fiberwrite_X3.set_input(intersectj.out_crd())
 
         fiberlookup_Bm.set_in_ref(intersectj.out_ref1())
         fiberlookup_Cm.set_in_ref(intersectj.out_ref2())
@@ -217,17 +217,17 @@ def test_tensor4_mul(samBench, frosttname, check_gold, report_stats, debug_sim, 
         intersecti.update()
         fiberwrite_X0.update()
         fiberlookup_Bk.update()
-        fiberwrite_X2.update()
+        fiberwrite_X1.update()
         repsiggen_k.update()
         repeat_Ck.update()
         fiberlookup_Cl.update()
-        fiberwrite_X3.update()
+        fiberwrite_X2.update()
         repsiggen_l.update()
         repeat_Bl.update()
         fiberlookup_Bj.update()
         fiberlookup_Cj.update()
         intersectj.update()
-        fiberwrite_X1.update()
+        fiberwrite_X3.update()
         fiberlookup_Bm.update()
         fiberlookup_Cm.update()
         intersectm.update()
