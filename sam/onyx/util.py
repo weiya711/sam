@@ -13,7 +13,7 @@ def set_bit(old_val, bit_to_set, new_bit):
 
 
 def get_bit(val, n):
-    return (val >> n & 1)
+    return val >> n & 1
 
 
 def convert_stream_to_onyx_interp(stream):

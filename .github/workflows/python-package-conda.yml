@@ -7,7 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.8.12
@@ -21,11 +20,18 @@ jobs:
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name base
-    - name: Test with pytest
+    - name: Test all (non SuiteSparse and Frostt) tests with pytest
+      working-directory: ./sam/sim
       run: |
-        cd sam/sim
         echo $CI
         pytest
+    - name: Test all SuiteSparse tests with pytest using data/ matrices
+      working-directory: ./sam/sim
+      run: |
+        set SUITESPARSE_FORMATTED_PATH=sam/data/suitesparse-formatted/
+        set SUITESPARSE_PATH=sam/data/suitesparse/
+        for line in sam/scripts/tensor_names/suitesparse_ci.txt; do 
+        pytest --ssname $line --check-gold; done
     - name: Lint with flake8
       run: |
         conda install flake8

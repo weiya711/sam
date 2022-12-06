@@ -1,7 +1,7 @@
 # The Sparse Abstract Machine (SAM) IR, Compiler, and Simulator 
 
-[Master Makefile CI](https://github.com/weiya711/sam/actions/workflows/makefile.yml/badge.svg?branch=master)
-[Master Python CI](https://github.com/weiya711/sam/actions/workflows/python-package-conda.yml/badge.svg?branch=master)
+![Master Makefile CI](https://github.com/weiya711/sam/actions/workflows/makefile.yml/badge.svg?branch=master)
+![Master Python CI](https://github.com/weiya711/sam/actions/workflows/python-package-conda.yml/badge.svg?branch=master)
 
 ## SAM Front-end Compiler
 

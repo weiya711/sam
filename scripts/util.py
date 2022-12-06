@@ -7,56 +7,11 @@ import numpy
 import itertools
 import shutil
 import numpy as np
-import math
 
 from pathlib import Path
 from dataclasses import dataclass
 
-SUITESPARSE_PATH = os.getenv('SUITESPARSE_PATH', default="./suitessparse")
-HOSTNAME = os.getenv('HOSTNAME', default="local")
-
-
-def round_sparse(x):
-    if 0.0 <= x < 1:
-        return 1
-    elif 0.0 > x > -1:
-        return -1
-    elif x >= 0.0:
-        return math.floor(x + 0.5)
-    else:
-        return math.ceil(x - 0.5)
-
-
-# TnsFileLoader loads a tensor stored in .tns format.
-class TnsFileLoader:
-    def __init__(self, cast_int=True):
-        self.cast = cast_int
-
-    def load(self, path):
-        coordinates = []
-        values = []
-        dims = []
-        first = True
-        with open(path, 'r') as f:
-            for line in f:
-                data = line[:-1].split(' ')
-                if first:
-                    first = False
-                    dims = [0] * (len(data) - 1)
-                    for i in range(len(data) - 1):
-                        coordinates.append([])
-                data = [elem for elem in data if elem != '']
-
-                for i in range(len(data) - 1):
-                    coordinates[i].append(int(data[i]) - 1)
-                    dims[i] = max(dims[i], coordinates[i][-1] + 1)
-                # TODO (rohany): What if we want this to be an integer?
-                if self.cast:
-                    val = round_sparse(float(data[-1]))
-                    values.append(val)
-                else:
-                    values.append(float(data[-1]))
-        return dims, coordinates, values
+from sam.util import round_sparse, TnsFileLoader, HOSTNAME
 
 
 # TnsFileDumper dumps a dictionary of coordinates to values
@@ -145,23 +100,6 @@ class ScipySparseTensorLoader:
 #                 resultCoords[-1][i] = (resultCoords[-1][i] + 1) % tensor.shape[-1]
 #         return sparse.COO(resultCoords, resultValues, tensor.shape)
 
-# ScipyTensorShifter shifts all elements in the last mode
-# of the input scipy/sparse tensor by one.
-class ScipyTensorShifter:
-    def __init__(self):
-        pass
-
-    def shiftLastMode(self, tensor):
-        dok = scipy.sparse.dok_matrix(tensor)
-        result = scipy.sparse.dok_matrix(tensor.shape)
-        for coord, val in dok.items():
-            newCoord = list(coord[:])
-            newCoord[-1] = (newCoord[-1] + 1) % tensor.shape[-1]
-            # result[tuple(newCoord)] = val
-            # TODO (rohany): Temporarily use a constant as the value.
-            result[tuple(newCoord)] = 2
-        return scipy.sparse.coo_matrix(result)
-
 
 @dataclass
 class DoublyCompressedMatrix:
@@ -191,14 +129,16 @@ def shape_str(shape):
 # FIXME: This fixed point number of decimals may not be enough
 def array_str(array):
     if isinstance(array[0], float):
-        return ' '.join(['{:5.5f}'.format(item) for item in array])
+        return ' '.join([str(item) for item in array])
+        # return ' '.join(['{:5.5f}'.format(item) for item in array])
 
     return ' '.join([str(item) for item in array])
 
 
 def array_newline_str(array):
     if isinstance(array[0], float):
-        return '\n'.join(['{:5.5f}'.format(item) for item in array])
+        return '\n'.join([str(item) for item in array])
+        # return '\n'.join(['{:5.5f}'.format(item) for item in array])
 
     return '\n'.join([str(item) for item in array])
 
@@ -226,7 +166,7 @@ class InputCacheSuiteSparse:
 
 
 class FormatWriter:
-    def __init__(self, cast_int=True):
+    def __init__(self, cast_int=False):
         self.cast = cast_int
 
     def convert_format(self, coo, format_str):
@@ -649,7 +589,7 @@ def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=Fa
                 dims = line[dim_start: dim_end]
                 dims = dims.split('x')
                 shape_filename = 'tensor_' + tensorname + '_mode_shape' if \
-                                 hw_filename else tensorname + '_shape.txt'
+                    hw_filename else tensorname + '_shape.txt'
                 shapefile = os.path.join(outdir, shape_filename)
                 with open(shapefile, 'w+') as shapef:
                     shapef.write(array_newline_str(dims))
@@ -684,8 +624,7 @@ def parse_taco_format(infilename, outdir, tensorname, format_str, hw_filename=Fa
                             else:
                                 crd_filename = 'tensor_' + tensorname + '_mode_' + str(level) + '_crd' if \
                                     hw_filename else tensorname + str(level) + '_crd.txt'
-                                crdfile = os.path.join(outdir, tensorname + str(level) +
-                                                       '_crd.txt')
+                                crdfile = os.path.join(outdir, crd_filename)
                                 with open(crdfile, 'w+') as crdf:
                                     crdf.write(array_newline_str(line))
                                 level_done = True

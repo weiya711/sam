@@ -75,7 +75,7 @@ for b in ${!BENCHMARKS[@]}; do
 		SUITESPARSE_TENSOR_PATH=$matrix python $basedir/scripts/datastructure_suitesparse.py -n $line -t $bench -hw
 
 		SUITESPARSE_TENSOR_PATH=$matrix $basedir/compiler/taco/build/bin/taco-test sam.pack_other_ss    
-		python $basedir/scripts/datastructure_frostt.py -n $line -f ss01 --other -ss
+		python $basedir/scripts/datastructure_tns.py -n $line -f ss01 --other -ss
 
 		cd $basedir/garnet
 

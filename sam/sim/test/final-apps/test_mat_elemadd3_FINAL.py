@@ -25,8 +25,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
-    B_dirname = os.path.join(cwd, "tmp_mat")
+def test_mat_elemadd3_FINAL(samBench, ssname, cast, check_gold, report_stats, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, ssname, "mat_elemadd3")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -43,7 +43,7 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, report_stats, debug_si
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(cwd, "tmp_mat")
+    C_dirname = B_dirname
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -82,7 +82,8 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, report_stats, debug_si
     unioni1_12 = Union2(debug=debug_sim, statistics=report_stats)
     unioni2_12 = Union2(debug=debug_sim, statistics=report_stats)
     unioni3_12 = Union2(debug=debug_sim, statistics=report_stats)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=3 * len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=3 * len(B_crd0), fill=fill, debug=debug_sim,
+                                     statistics=report_stats)
     fiberlookup_Bj_9 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
     fiberlookup_Cj_10 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
     fiberlookup_Dj_11 = CompressedCrdRdScan(crd_arr=D_crd1, seg_arr=D_seg1, debug=debug_sim, statistics=report_stats)
@@ -296,5 +297,5 @@ def test_mat_elemadd3_FINAL(samBench, ssname, check_gold, report_stats, debug_si
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_elemadd3(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_mat_elemadd3(ssname, debug_sim, cast, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

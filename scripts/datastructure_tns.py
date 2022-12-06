@@ -20,6 +20,7 @@ parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, 
 parser.add_argument('-hw', '--hw', action='store_true', default=False,
                     help='Format filenames as in AHA SCGRA <tensor_<name>_mode_<n|type>')
 parser.add_argument('-np', '--numpy', action='store_true', default=False, help='Format numpy tensors')
+parser.add_argument('-b', '--bench', type=str, default=None, help='Name of benchmark')
 
 args = parser.parse_args()
 
@@ -52,16 +53,38 @@ if args.format is not None:
     assert args.format in formats
     levels = args.format[:-3]
     if args.other:
+        assert args.bench is not None
+
         otherfileNames = [f for f in os.listdir(taco_format_dirname) if
                           os.path.isfile(os.path.join(taco_format_dirname, f)) and args.name in f]
 
         for otherfile in otherfileNames:
             taco_format_orig_filename = os.path.join(taco_format_dirname, otherfile)
-            outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
+            outdir_other_name = os.path.join(outdir_name, args.name, args.bench)
+            # outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
             outdir_orig_path = Path(outdir_other_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
-            parse_taco_format(taco_format_orig_filename, outdir_other_name, 'C', args.format, hw_filename=args.hw)
+            
+            name = 'C'
+            if args.bench == "mat_residual":
+                if "mode0" in otherfile:
+                    name = 'b'
+                elif "mode1" in otherfile:
+                    name = 'd'
+                else:
+                    raise NotImplementedError
+            elif args.bench == "mat_mattransmul":
+                if "mode0" in otherfile:
+                    name = 'd'
+                elif "mode1" in otherfile:
+                    name = 'f'
+                else:
+                    raise NotImplementedError
+            else: 
+                raise NotImplementedError
+
+            parse_taco_format(taco_format_orig_filename, outdir_other_name, name, args.format, hw_filename=args.hw)
 
     else:
         taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')

@@ -25,8 +25,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_elemadd_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
-    B_dirname = os.path.join(cwd, "tmp_mat")
+def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, debug_sim, fill=0):
+    B_dirname = os.path.join(formatted_dir, ssname, "mat_elemadd")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -43,7 +43,7 @@ def test_mat_elemadd_FINAL(samBench, ssname, check_gold, report_stats, debug_sim
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(cwd, "tmp_mat")
+    C_dirname = B_dirname
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -196,5 +196,5 @@ def test_mat_elemadd_FINAL(samBench, ssname, check_gold, report_stats, debug_sim
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_elemadd(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_mat_elemadd(ssname, debug_sim, cast, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)

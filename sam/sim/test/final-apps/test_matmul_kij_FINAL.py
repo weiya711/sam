@@ -19,14 +19,9 @@ cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
-# FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
-def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
-    B_dirname = os.path.join(cwd, "tmp_mat")
+def test_matmul_kij_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, cast, fill=0):
+    B_dirname = os.path.join(formatted_dir, ssname, "matmul_kij")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -43,7 +38,7 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fil
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(cwd, "tmp_mat")
+    C_dirname = B_dirname
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -61,7 +56,7 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fil
     C_vals = read_inputs(C_vals_filename, float)
 
     # THIS IS FOR SIZE INFO
-    Bs_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
+    Bs_dirname = B_dirname
     Bs_seg = read_inputs(os.path.join(Bs_dirname, "tensor_B_mode_0_seg"))
 
     fiberlookup_Bk_17 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
@@ -240,5 +235,5 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fil
 
     if check_gold:
         print("Checking gold...")
-        check_gold_matmul(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_matmul(ssname, debug_sim, cast, out_crds, out_segs, out_vals, "ss01")
     samBench(bench, extra_info)
