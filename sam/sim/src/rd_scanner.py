@@ -17,6 +17,7 @@ class CrdRdScan(Primitive, ABC):
 
         if self.backpressure_en:
             self.fifo_avail = True
+            self.data_valid = True
             self.ready_backpressure = True
 
     def set_in_ref(self, in_ref, parent=None):
@@ -37,11 +38,11 @@ class CrdRdScan(Primitive, ABC):
         return True
 
     def out_ref(self, child=None):
-        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_ref
 
     def out_crd(self, child=None): 
-        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_crd
 
     def add_child(self, child, branch=""):
@@ -606,16 +607,42 @@ class BVRdScanSuper(Primitive, ABC):
         self.curr_bv = 'S0'
 
         self.in_ref = []
+        if self.backpressure_en:
+            self.fifo_avail = True
+            self.ready_backpressure = True
+            self.data_valid = True
 
-    def set_in_ref(self, in_ref):
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
+        return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_ref) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
+
+    def set_in_ref(self, in_ref, parent):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def out_ref(self):
-        return self.curr_ref
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+            return self.curr_ref
 
-    def out_bv(self):
-        return self.curr_bv
+    def out_bv(self): 
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+            return self.curr_bv
 
 
 class BVRdScan(BVRdScanSuper):
@@ -635,6 +662,11 @@ class BVRdScan(BVRdScanSuper):
         self.meta_blen = len(bv_arr)
         self.meta_nbits = nbits
         self.meta_dim = dim
+        if self.backpressure_en:
+            self.depth = depth
+            self.data_valid = True
+            self.fifo_avail = True
+            self.ready_backpressure = True
 
     def _get_bv_ref(self, addr):
         assert isinstance(addr, int), "Addresses must be integers"
@@ -645,78 +677,84 @@ class BVRdScan(BVRdScanSuper):
 
     def update(self):
         self.update_done()
-        if len(self.in_ref) > 0:
-            self.block_start = False
+        self.update_ready()
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+            if len(self.in_ref) > 0:
+                self.block_start = False
 
-        curr_in_ref = None
-        if self.curr_bv == 'D' or self.curr_ref == 'D' or self.done:
-            self.curr_addr = 0
-            self.curr_bv = ''
-            self.curr_ref = ''
-        elif len(self.in_ref) > 0 and self.emit_fiber_stkn:
-            next_in = self.in_ref[0]
-            if is_stkn(next_in):
-                self.in_ref.pop(0)
-                stkn = increment_stkn(next_in)
-            else:
-                stkn = 'S0'
-            self.curr_bv = stkn
-            self.curr_ref = stkn
-
-            self.curr_addr = 0
-            self.emit_fiber_stkn = False
-        # There exists another input reference at the segment and
-        # either at the start of computation or end of fiber
-        elif len(self.in_ref) > 0 and (self.end_fiber or self.begin):
-            self.end_fiber = False
-            self.begin = False
-
-            curr_in_ref = self.in_ref.pop(0)
-
-            if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_blen:
-                raise Exception('Not enough elements in bv array(' + str(self.meta_blen) + ')')
-
-            # See 'N' 0-token which immediately emits a stop token and ends the fiber
-            # TODO: need to figure out how this will work with bitvectors
-            elif is_0tkn(curr_in_ref):
-                self.end_fiber = True
-
-                if len(self.in_ref) > 0:
-                    next_in = self.in_ref[0]
-                    if is_stkn(next_in):
-                        self.in_ref.pop(0)
-                        stkn = increment_stkn(next_in)
-                    else:
-                        stkn = 'S0'
+            curr_in_ref = None
+            if self.curr_bv == 'D' or self.curr_ref == 'D' or self.done:
+                self.curr_addr = 0
+                self.curr_bv = ''
+                self.curr_ref = ''
+            elif len(self.in_ref) > 0 and self.emit_fiber_stkn:
+                next_in = self.in_ref[0]
+                if is_stkn(next_in):
+                    self.in_ref.pop(0)
+                    stkn = increment_stkn(next_in)
                 else:
-                    self.emit_fiber_stkn = True
-                    stkn = ''
+                    stkn = 'S0'
                 self.curr_bv = stkn
                 self.curr_ref = stkn
+
                 self.curr_addr = 0
+                self.emit_fiber_stkn = False
+            # There exists another input reference at the segment and
+            # either at the start of computation or end of fiber
+            elif len(self.in_ref) > 0 and (self.end_fiber or self.begin):
+                self.end_fiber = False
+                self.begin = False
 
-            elif is_stkn(curr_in_ref) or curr_in_ref == 'D':
-                self.curr_addr = 0
-                self.curr_bv = curr_in_ref
-                self.curr_ref = curr_in_ref
-                self.end_fiber = True
-                if curr_in_ref == 'D':
-                    self.done = True
-            else:
-                self.curr_addr = curr_in_ref
-                # End of fiber, get next input reference
-                self.end_fiber = True
+                curr_in_ref = self.in_ref.pop(0)
 
-                self.emit_fiber_stkn = True
-                self.curr_bv = self.bv_arr[self.curr_addr]
-                self.curr_ref = self._get_bv_ref(self.curr_addr)
+                if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_blen:
+                    raise Exception('Not enough elements in bv array(' + str(self.meta_blen) + ')')
 
-        else:  # elif self.curr_bv is not None and self.curr_ref is not None:
-            # Default stall (when done)
-            self.curr_ref = ''
-            self.curr_bv = ''
+                # See 'N' 0-token which immediately emits a stop token and ends the fiber
+                # TODO: need to figure out how this will work with bitvectors
+                elif is_0tkn(curr_in_ref):
+                    self.end_fiber = True
 
-        if self.debug:
-            print("DEBUG: C RD SCAN: \t "
-                  "Curr bv:", self.curr_bv, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
-                  "\t end fiber:", self.end_fiber, "\t curr input:", curr_in_ref)
+                    if len(self.in_ref) > 0:
+                        next_in = self.in_ref[0]
+                        if is_stkn(next_in):
+                            self.in_ref.pop(0)
+                            stkn = increment_stkn(next_in)
+                        else:
+                            stkn = 'S0'
+                    else:
+                        self.emit_fiber_stkn = True
+                        stkn = ''
+                    self.curr_bv = stkn
+                    self.curr_ref = stkn
+                    self.curr_addr = 0
+
+                elif is_stkn(curr_in_ref) or curr_in_ref == 'D':
+                    self.curr_addr = 0
+                    self.curr_bv = curr_in_ref
+                    self.curr_ref = curr_in_ref
+                    self.end_fiber = True
+                    if curr_in_ref == 'D':
+                        self.done = True
+                else:
+                    self.curr_addr = curr_in_ref
+                    # End of fiber, get next input reference
+                    self.end_fiber = True
+
+                    self.emit_fiber_stkn = True
+                    self.curr_bv = self.bv_arr[self.curr_addr]
+                    self.curr_ref = self._get_bv_ref(self.curr_addr)
+
+            else:  # elif self.curr_bv is not None and self.curr_ref is not None:
+                # Default stall (when done)
+                self.curr_ref = ''
+                self.curr_bv = ''
+
+            if self.debug:
+                print("DEBUG: C RD SCAN: \t "
+                      "Curr bv:", self.curr_bv, "\t curr ref:", self.curr_ref, "\t curr addr:", self.curr_addr,
+                      "\t end fiber:", self.end_fiber, "\t curr input:", curr_in_ref)
