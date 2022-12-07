@@ -1,5 +1,5 @@
 from .base import *
-from .repeater import RepeatSigGen, Repeat, Repeat_back, RepeatSigGen_back
+from .repeater import RepeatSigGen, Repeat
 
 
 class CrdDrop(Primitive):
@@ -35,7 +35,7 @@ class CrdDrop(Primitive):
 
         if self.done:
             self.curr_crd = ''
-            return
+            #return
 
         if len(self.outer_crd) > 0 and self.get_next_ocrd:
             if self.get_stats:
@@ -60,6 +60,8 @@ class CrdDrop(Primitive):
 
                 if self.curr_ocrd == 'D':
                     self.done = True
+                else:
+                    self.done = False
                 self.prev_ocrd_stkn = True
 
             self.has_crd = False
@@ -148,7 +150,7 @@ class CrdDrop(Primitive):
 
 # Converts coordinate streams to point streams
 class CrdHold(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=1, **kwargs):
         super().__init__(**kwargs)
 
         self.outer_crd = []
@@ -161,101 +163,56 @@ class CrdHold(Primitive):
         self.RSG = RepeatSigGen(debug=self.debug)
         self.repeat = Repeat(debug=self.debug)
 
-    def update(self):
-        self.update_done()
-        if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
-            self.block_start = False
-
-        if self.done:
-            self.curr_crd = ''
-            return
-
-        if len(self.inner_crd) > 0:
-            icrd = self.inner_crd.pop(0)
-            self.RSG.set_istream(icrd)
-            self.curr_inner_crd = icrd
-        else:
-            self.curr_inner_crd = ''
-        self.RSG.update()
-        self.repsig.append(self.RSG.out_repeat())
-
-        if len(self.outer_crd) > 0:
-            ocrd = self.outer_crd.pop(0)
-            self.repeat.set_in_ref(ocrd)
-        if len(self.repsig) > 0:
-            self.repeat.set_in_repeat(self.repsig.pop(0))
-
-        self.repeat.update()
-
-        self.curr_crd = self.repeat.out_ref()
-
-        self.done = self.RSG.done and self.repeat.done
-
-    def set_outer_crd(self, crd):
-        if crd != '' and crd is not None:
-            self.outer_crd.append(crd)
-
-    def set_inner_crd(self, crd):
-        if crd != '' and crd is not None:
-            self.inner_crd.append(crd)
-
-    def out_crd_outer(self):
-        return self.curr_crd
-
-    def out_crd_inner(self):
-        return self.curr_inner_crd
-
-
-# Converts coordinate streams to point streams
-class CrdHold_back(Primitive):
-    def __init__(self, depth, **kwargs):
-        super().__init__(**kwargs)
-
-        self.outer_crd = []
-        self.inner_crd = []
-
-        self.repsig = []
-        self.curr_crd = ''
-        self.curr_inner_crd = ''
-
-        self.RSG = RepeatSigGen(debug=self.debug)
-        self.repeat = Repeat(debug=self.debug)
-
-        self.backpressure = []
-        self.branches = []
-        self.depth = depth
-        self.data_ready = True
+        if self.backpressure_en:
+            self.backpressure = []
+            self.branches = []
+            self.depth = depth
+            self.data_ready = True
 
     def check_backpressure(self):
-        j =0
-        for i in self.backpressure:
-            if not i.fifo_available(self.branches[j]):
-                return False
-            j += 1
+        if self.backpressure_en:
+            j = 0
+            for i in self.backpressure:
+                if not i.fifo_available(self.branches[j]):
+                    return False
+                j += 1
         return True
 
-    def fifo_available(self, br = ""):
-        if br == "inner" and len(self.inner_crd) > self.depth:
-            return False
-        if br == "outer" and len(self.outer_crd) > self.depth:
-            return False
-        return True
-
-    def add_child(self, child= None, branch = ""):
+    def add_child(self, child=None, branch=""):
         self.backpressure.append(child)
         self.branches.append(branch)
 
+    def fifo_available(self, br=""):
+        if self.backpressure:
+            if br == "inner" and len(self.inner_crd) > self.depth:
+                return False
+            if br == "outer" and len(self.outer_crd) > self.depth:
+                return False
+        return True
+
     def update(self):
-        self.data_ready = False
-        if self.check_backpressure():
-            self.data_ready = True
-            self.update_done()
+        self.update_done()
+        if self.backpressure_en:
+            self.data_ready = False
+
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_ready = True
             if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
                 self.block_start = False
 
             if self.done:
                 self.curr_crd = ''
-                return
+                #self.done = False
+                #return
+                #print("-")
+                #print(self.RSG.print_debug())
+                #print(self.repeat.print_debug())
+                #print(self.RSG.done, self.repeat.done)
+                #print("-")
+                #self.RSG = RepeatSigGen(debug=self.debug, fifo=)
+                #self.repeat = Repeat(debug=self.debug)
+                #return
 
             if len(self.inner_crd) > 0:
                 icrd = self.inner_crd.pop(0)
@@ -263,20 +220,25 @@ class CrdHold_back(Primitive):
                 self.curr_inner_crd = icrd
             else:
                 self.curr_inner_crd = ''
-            self.RSG.update()
+            if self.debug:
+                print("crdManager:")
             self.repsig.append(self.RSG.out_repeat())
-
             if len(self.outer_crd) > 0:
                 ocrd = self.outer_crd.pop(0)
                 self.repeat.set_in_ref(ocrd)
             if len(self.repsig) > 0:
                 self.repeat.set_in_repeat(self.repsig.pop(0))
 
+            self.RSG.update()
             self.repeat.update()
 
+            if self.debug:
+                print("+++++++")
             self.curr_crd = self.repeat.out_ref()
 
             self.done = self.RSG.done and self.repeat.done
+        if self.debug:
+            print("Debug crd_manager: input: ", self.inner_crd, self.outer_crd, self.curr_crd, self.done)
 
     def set_outer_crd(self, crd):
         if crd != '' and crd is not None:
@@ -287,20 +249,18 @@ class CrdHold_back(Primitive):
             self.inner_crd.append(crd)
 
     def out_crd_outer(self):
-        if self.data_ready:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_crd
 
     def out_crd_inner(self):
-        if self.data_ready:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.curr_inner_crd
-
-
 
 
 # Converts point streams back into coordinate streams
 # Helper for the sparse accumulator
 class CrdPtConverter(Primitive):
-    def __init__(self, last_level=False, **kwargs):
+    def __init__(self, last_level=False, fifos=None, **kwargs):
         super().__init__(**kwargs)
 
         self.outer_crdpt = []
@@ -319,6 +279,12 @@ class CrdPtConverter(Primitive):
         self.waiting_next = False
 
         self.inner_last_level = last_level
+        if fifos is not None:
+            self.outer_crdpt = fifos[0]
+            self.inner_crdpt = fifos[1]
+
+    def return_fifo(self):
+        return self.outer_crdpt, self.inner_crdpt
 
     def update(self):
         self.update_done()
@@ -378,9 +344,11 @@ class CrdPtConverter(Primitive):
             self.curr_icrd = 'D'
             self.done = True
             self.emit_done = False
+            if len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0 and self.outer_crdpt[0] == 'D' and self.inner_crdpt[0] == 'D':
+                self.inner_crdpt.pop(0)
+                self.outer_crdpt.pop(0)
         elif len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0 and \
                 isinstance(self.outer_crdpt[0], int) and isinstance(self.inner_crdpt[0], int):
-
             # Both streams are coordinates
             curr_ocrdpt = self.outer_crdpt.pop(0)
             curr_icrdpt = self.inner_crdpt.pop(0)
@@ -408,8 +376,12 @@ class CrdPtConverter(Primitive):
             if isinstance(self.prev_ocrd, int):
                 self.curr_ocrd = 'S0'
                 self.curr_icrd = increment_stkn('S0') if self.inner_last_level else 'S0'
+                # self.outer_crdpt.pop(0)
+                # self.inner_crdpt.pop(0)
                 self.emit_done = True
             else:
+                self.outer_crdpt.pop(0)
+                self.inner_crdpt.pop(0)
                 self.curr_ocrd = 'D'
                 self.curr_icrd = 'D'
                 self.done = True
@@ -426,13 +398,21 @@ class CrdPtConverter(Primitive):
             print("DEBUG: CrdPtConverter \t Done:", self.out_done(),
                   "\n Curr in ocrd: ", self.inner_crdpt, "\t Curr in icrd", self.outer_crdpt,
                   "\t Curr in val", self.prev_ocrdpt, "\t Emit Tkn: ", self.emit_stkn)
+    
+    def print_debug(self):
+        print("DEBUG: CrdPtConverter \t Done:", self.out_done(),
+              "\n Curr in ocrd: ", self.inner_crdpt, "\t Curr in icrd", self.outer_crdpt,
+              "\t Curr in val", self.prev_ocrdpt, "\t Emit Tkn: ", self.emit_stkn,
+              "\n fifos: ", self.outer_crdpt, self.inner_crdpt)
 
     def set_outer_crdpt(self, crdpt):
         if crdpt != '' and crdpt is not None:
+            # print("outer:", crdpt) 
             self.outer_crdpt.append(crdpt)
 
     def set_inner_crdpt(self, crdpt):
         if crdpt != '' and crdpt is not None:
+            # print("inner:", crdpt)
             self.inner_crdpt.append(crdpt)
 
     def out_crd_outer(self):

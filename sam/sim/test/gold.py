@@ -55,7 +55,16 @@ def check_gold_matmul_tiled(tile_crd_b, tile_crd_c, ssname, debug_sim, out_crds,
         #print("Dense Mat2:\n", C_scipy.toarray())
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
-
+    
+    if debug_sim:
+        print(gold_tup, tile_crd_b, tile_crd_c)
+        print(out_crds)
+        print(out_segs)
+        print(len(gold_tup))
+        print(tile_crd_b, tile_crd_c)
+        print(len(out_crds))
+        print(len(out_segs))
+        print(len(out_val))
     if not out_val:
         assert out_val == gold_tup
     elif not gold_tup:

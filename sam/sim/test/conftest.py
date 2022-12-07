@@ -23,7 +23,10 @@ def pytest_addoption(parser):
                      help="Name of yaml file for tiling memory configuration")
     parser.addoption("--nbuffer", action="store_true", default=False,
                      help="If nbuffering is enabled")
-
+    parser.addoption("--back", action="store_true", default=False,
+                     help="Whether backpressure is enabled")
+    parser.addoption("--depth", action="store", default=2,
+                     help="fifo depth value")
 
 
 def pytest_configure(config):
@@ -57,6 +60,10 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "synth" in item.keywords:
                 item.add_marker(skip_synth)
+
+@pytest.fixture
+def backpressure(request):
+    return request.config.getoption("--back")
 
 @pytest.fixture
 def skip_empty(request):

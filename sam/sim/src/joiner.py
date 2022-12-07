@@ -24,42 +24,46 @@ class CrdJoiner2(Joiner2, ABC):
         self.in_crd1 = []
         self.in_crd2 = []
 
-        self.backpressure = []
-        self.data_ready = True
-        self.branches = []
-        self.depth = depth
+        if self.backpressure_en:
+            self.backpressure = []
+            self.data_ready = True
+            self.branches = []
+            self.depth = depth
 
     def check_backpressure(self):
-        j =0
-        for i in self.backpressure:
-            if not i.fifo_available(self.branches[j]):
-                return False
-            j += 1
+        if self.backpressure_en:
+            j = 0
+            for i in self.backpressure:
+                if not i.fifo_available(self.branches[j]):
+                    return False
+                j += 1
         return True
 
     def fifo_debug(self):
         print("Crd Joiner2 : ", self.in_ref1, " ", self.in_ref2)
 
-    def fifo_available(self, br = ""):
-        if br == "in1" and len(self.in_ref1) > self.depth:
-            return False
-        if br == "in2" and len(self.in_ref2) > self.depth:
-            return False
+    def fifo_available(self, br=""):
+        if self.backpressure_en:
+            if br == "in1" and len(self.in_ref1) > self.depth:
+                return False
+            if br == "in2" and len(self.in_ref2) > self.depth:
+                return False
         return True
 
-    def add_child(self, child= None, branch = ""):
-        self.backpressure.append(child)
-        self.branches.append(branch)
+    def add_child(self, child=None, branch=""):
+        if self.backpressure_en:
+            self.backpressure.append(child)
+            self.branches.append(branch)
 
     def set_in1(self, in_ref1, in_crd1):
         if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
-            #print(in_ref1, " ", in_crd1)
+            # print(in_ref1, " ", in_crd1)
             self.in_ref1.append(in_ref1)
             self.in_crd1.append(in_crd1)
 
     def set_in2(self, in_ref2, in_crd2):
         if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
-            #print(in_ref2, " ", in_crd2)
+            # print(in_ref2, " ", in_crd2)
             self.in_ref2.append(in_ref2)
             self.in_crd2.append(in_crd2)
 
@@ -117,229 +121,16 @@ class Intersect2(CrdJoiner2):
         self.change_crd1 = True
         self.change_crd2 = True
 
-    def _inc2(self):
-        self.ocrd = ''
-        self.oref1 = ''
-        self.oref2 = ''
-        self.curr_crd2 = self.in_crd2.pop(0)
-        self.curr_ref2 = self.in_ref2.pop(0)
-        self.change_crd2 = True
-        self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''  # Skip list
-        self.change_crd1 = False
-        if self.get_stats:
-            self.zero_token_output += 1
-
-    def _inc1(self):
-        self.ocrd = ''
-        self.oref1 = ''
-        self.oref2 = ''
-        self.curr_crd1 = self.in_crd1.pop(0)
-        self.curr_ref1 = self.in_ref1.pop(0)
-        self.change_crd1 = True
-        self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''  # Skip list
-        self.change_crd2 = False
-        if self.get_stats:
-            self.zero_token_output += 1
-
-    def update(self):
-        self.update_done()
-        if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
-            self.block_start = False
-        if self.get_stats:
-            self.total_count += 1
-
-        # Skip list
-        self.curr_skip1 = ''
-        self.curr_skip2 = ''
-
-        if len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
-            # FIXME: See when only one 'D' signal is present
-            if is_0tkn(self.curr_crd1) or is_0tkn(self.curr_crd2):
-                if is_0tkn(self.curr_crd1):
-                    assert (isinstance(self.curr_crd2, int) or is_0tkn(self.curr_crd2))
-                elif is_0tkn(self.curr_crd2):
-                    assert (isinstance(self.curr_crd1, int) or is_0tkn(self.curr_crd1))
-
-                self.ocrd = 'N'
-                self.oref1 = 'N'
-                self.oref2 = 'N'
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-                self.change_crd1 = True
-                self.change_crd2 = True
-                if self.get_stats:
-                    self.zero_token_output += 1
-
-            elif self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
-                assert self.curr_crd1 == self.curr_crd2, "Both coordinates need to be done tokens"
-                self.done = True
-                self.ocrd = 'D'
-                self.oref1 = 'D'
-                self.oref2 = 'D'
-            elif self.curr_crd2 == self.curr_crd1:
-                # Skip list
-                if is_stkn(self.curr_crd2):
-                    self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''
-                    self.curr_skip1 = self.curr_crd2 if self.change_crd2 else ''
-
-                self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
-                self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
-                self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
-                self.curr_crd1 = self.in_crd1.pop(0)
-                self.curr_crd2 = self.in_crd2.pop(0)
-                self.curr_ref1 = self.in_ref1.pop(0)
-                self.curr_ref2 = self.in_ref2.pop(0)
-                self.change_crd1 = True
-                self.change_crd2 = True
-                if self.get_stats:
-                    self.run_count = 0
-                    if self.ocrd != '':
-                        self.count += 1
-                    self.max_run_count = max(self.max_run_count, abs(self.run_count))
-            elif is_stkn(self.curr_crd1):
-                self._inc2()
-            elif is_stkn(self.curr_crd2):
-                self._inc1()
-            elif self.curr_crd1 < self.curr_crd2:
-                self._inc1()
-                if self.get_stats:
-                    if self.run_count >= 0:
-                        self.run_count += 1
-                        self.max_run_count = max(self.max_run_count, abs(self.run_count))
-                    else:
-                        self.run_count = 0
-            elif self.curr_crd1 > self.curr_crd2:
-                self._inc2()
-                if self.get_stats:
-                    if self.run_count < 0:
-                        self.run_count -= 1
-                        self.max_run_count = max(self.max_run_count, abs(self.run_count))
-                    else:
-                        self.run_count = 0
-            else:
-                raise Exception('Intersect2: should not enter this case')
-        else:
-            # Do Nothing if no inputs are detected
-            if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
-                self.done = True
-                self.ocrd = 'D'
-                self.oref1 = 'D'
-                self.oref2 = 'D'
-                self.curr_crd1 = ''
-                self.curr_crd2 = ''
-                self.curr_ref1 = ''
-                self.curr_ref2 = ''
-            else:
-                self.ocrd = ''
-                self.oref1 = ''
-                self.oref2 = ''
-            if self.get_stats:
-                self.zero_token_output += 1
-
-        if self.get_stats:
-            if isinstance(self.ocrd, int):
-                self.valid_count += 1
-            if is_stkn(self.ocrd):
-                self.stop_count += 1
-
-        if self.get_stats:
-            self.compute_fifos()
-
-        if self.debug:
-            print("DEBUG: INTERSECT: ",
-                  "\n OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                  "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
-                  "\n Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
-                  "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
-                  "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
-                  "\n Intersection rate: ",
-                  self.return_intersection_rate(), " ", self.in_ref1, self.in_ref2, self.in_crd1, self.in_crd2)
-
-    def out_crd_skip1(self):
-        return self.curr_skip1 if self.skip else ''
-
-    def out_crd_skip2(self):
-        return self.curr_skip2 if self.skip else ''
-
-    def compute_fifos(self):
-        self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
-        self.size_in_ref2 = max(self.size_in_ref2, len(self.in_ref2))
-        self.size_in_crd1 = max(self.size_in_crd1, len(self.in_crd1))
-        self.size_in_crd2 = max(self.size_in_crd2, len(self.in_crd2))
-
-    def print_fifos(self):
-        print("FIFO in ref 1: ", self.size_in_ref1)
-        print("FIFO in ref 2: ", self.size_in_ref2)
-        print("FIFO in crd 1: ", self.size_in_crd1)
-        print("FIFO in crd 2: ", self.size_in_crd2)
-
-    def return_intersection_rate(self):
-        if self.get_stats:
-            return self.count / self.total_count if self.total_count != 0 else 0
-        else:
-            return 0
-
-    def print_intersection_rate(self):
-        return print("Intersection rate: ", self.return_intersection_rate())
-
-    def return_statistics(self):
-        if self.get_stats:
-            stat_dict = {"fifos_ref_1": self.size_in_ref1, "fifos_ref_2": self.size_in_ref2,
-                         "fifos_crd_1": self.size_in_crd1, "fifos_crd_2": self.size_in_crd2,
-                         "fifo_difference": self.max_run_count, "intersection_rate": self.return_intersection_rate(),
-                         "drop_count": self.zero_token_output, "valid_output": self.valid_count,
-                         "run_count": self.max_run_count}
-            stat_dict.update(super().return_statistics())
-        else:
-            stat_dict = {}
-        return stat_dict
-
-
-class Intersect2_back(CrdJoiner2):
-    def __init__(self, skip=True, **kwargs):
-        super().__init__(**kwargs)
-        if self.get_stats:
-            self.size_in_ref1 = 0
-            self.size_in_ref2 = 0
-            self.size_in_crd1 = 0
-            self.size_in_crd2 = 0
-
-            self.difference_in_ref = 0
-            self.max_diff_in_ref = 0
-            self.zero_token_output = 0
-            self.valid_count = 0
-            self.stop_count = 0
-            self.total_count = 0
-            self.count = 0
-            self.run_count = 0
-            self.max_run_count = 0
-
-        self.ocrd = ''
-        self.oref1 = ''
-        self.oref2 = ''
-        self.curr_crd1 = None
-        self.curr_crd2 = None
-        self.curr_ref1 = None
-        self.curr_ref2 = None
-
-        self.skip = skip
-        self.curr_skip1 = ''
-        self.curr_skip2 = ''
-        self.change_crd1 = True
-        self.change_crd2 = True
-
     def out_crd(self):
-        if self.data_ready:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.ocrd
 
     def out_ref1(self):
-        if self.data_ready:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.oref1
 
     def out_ref2(self):
-        if self.data_ready:
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
             return self.oref2
 
     def _inc2(self):
@@ -367,13 +158,14 @@ class Intersect2_back(CrdJoiner2):
             self.zero_token_output += 1
 
     def update(self):
-        self.data_ready = False
-        if self.check_backpressure():
-            self.update_done()
+        self.update_done()
+        if self.backpressure_en:
+            self.data_ready = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_ready = True
             if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
                 self.block_start = False
- 
-            self.data_ready = True
             if self.get_stats:
                 self.total_count += 1
 
@@ -398,16 +190,22 @@ class Intersect2_back(CrdJoiner2):
                     self.curr_ref2 = self.in_ref2.pop(0)
                     self.change_crd1 = True
                     self.change_crd2 = True
+                    self.done = False
                     if self.get_stats:
                         self.zero_token_output += 1
 
-                elif self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
+                elif self.done and self.curr_crd1 == 'D' and self.curr_crd2 == 'D':
+                    self.done = False
+                    self._inc1()
+                    self._inc2()
+                elif self.curr_crd1 == 'D' or self.curr_crd2 == 'D' and not self.done:
                     assert self.curr_crd1 == self.curr_crd2, "Both coordinates need to be done tokens"
                     self.done = True
                     self.ocrd = 'D'
                     self.oref1 = 'D'
                     self.oref2 = 'D'
                 elif self.curr_crd2 == self.curr_crd1:
+                    self.done = False
                     # Skip list
                     if is_stkn(self.curr_crd2):
                         self.curr_skip2 = self.curr_crd1 if self.change_crd1 else ''
@@ -476,26 +274,17 @@ class Intersect2_back(CrdJoiner2):
             if self.get_stats:
                 self.compute_fifos()
 
-            if self.debug:
-                print("DEBUG: INTERSECT: ",
-                      "\n OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                      "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
-                      "\n Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
-                      "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
-                      "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
-                      "\n Intersection rate: ",
-                      self.return_intersection_rate(), " Backpressure ",self.in_ref1, " ", self.in_ref2, " ", self.in_crd1, " ", self.in_crd2 )
-        
-        else:
-            if self.debug:
-                print("DEBUG: INTERSECT: ",
-                      "\n OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                      "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
-                      "\n Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
-                      "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
-                      "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
-                      "\n Intersection rate: ",
-                      self.return_intersection_rate(), " Backpressure ", self.in_ref1, " ", self.in_ref2, " ", self.in_crd1, " ", self.in_crd2  )
+        if self.debug:
+            if self.backpressure_en:
+                print("Intersect:", self.check_backpressure(), " ", self.data_ready)
+            print("DEBUG: INTERSECT: ",
+                  "\n OutCrd:", self.ocrd, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
+                  "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
+                  "\n Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
+                  "\n Skip1:", self.curr_skip1, "\t Skip2:", self.curr_skip2,
+                  "\t Change1:", self.change_crd1, "\t Change2:", self.change_crd2,
+                  "\n Intersection rate: ",
+                  self.return_intersection_rate(), " ", self.in_ref1, self.in_ref2, self.in_crd1, self.in_crd2, self.done)
 
     def out_crd_skip1(self):
         return self.curr_skip1 if self.skip else ''
@@ -535,10 +324,6 @@ class Intersect2_back(CrdJoiner2):
         else:
             stat_dict = {}
         return stat_dict
-
-
-
-
 
 
 class Union2(CrdJoiner2):
