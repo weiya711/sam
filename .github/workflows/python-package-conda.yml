@@ -32,7 +32,7 @@ jobs:
         set SUITESPARSE_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse/
         while read line; do
                 pytest test/final-apps/ --ssname $line --check-gold
-        done < ${GITHUB_WORKSPACE}/sam/scripts/tensor_names/suitesparse_ci.txt
+        done < ${GITHUB_WORKSPACE}/scripts/tensor_names/suitesparse_ci.txt
     - name: Lint with flake8
       run: |
         conda install flake8
