@@ -18,9 +18,10 @@ validate_dir = VALIDATION_OUTPUT_PATH
 def check_gold_matmul(ssname, debug_sim, cast, out_crds, out_segs, out_val, out_format="ss01"):
     # CSR
     B_tensor = scipy.io.mmread(os.path.join(ss_dir, ssname + ".mtx")).tocsr()
+    shifter = ScipyTensorShifter()
 
     B_scipy = B_tensor
-    C_scipy = B_tensor.transopose()
+    C_scipy = shifter.shiftLastMode(B_scipy).transpose()
 
     gold_nd = (B_scipy * C_scipy).toarray()
     transpose = out_format[-2:] == "10"

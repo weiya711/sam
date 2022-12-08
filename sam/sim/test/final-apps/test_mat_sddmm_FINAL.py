@@ -23,11 +23,6 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
-# FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
 def test_mat_sddmm_locate_fused(samBench, ssname, cast, check_gold, report_stats, debug_sim, fill=0, KDIM=256):
     B_dirname = os.path.join(formatted_dir, ssname, "mat_sddmm")

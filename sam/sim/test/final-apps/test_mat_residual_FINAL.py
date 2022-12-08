@@ -21,10 +21,6 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 
 
 # FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
 def test_mat_residual(samBench, ssname, cast, check_gold, report_stats, debug_sim, fill=0):
     C_dirname = os.path.join(formatted_dir, ssname, "mat_residual")
