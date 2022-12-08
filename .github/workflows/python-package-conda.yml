@@ -28,8 +28,8 @@ jobs:
     - name: Test all SuiteSparse tests with pytest using data/ matrices
       working-directory: ./sam/sim
       run: |
-        export SUITESPARSE_FORMATTED_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse-formatted/
-        export SUITESPARSE_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse/
+        export SUITESPARSE_FORMATTED_PATH=${GITHUB_WORKSPACE}/data/suitesparse-formatted/
+        export SUITESPARSE_PATH=${GITHUB_WORKSPACE}/data/suitesparse/
         while read line; do
                 pytest test/final-apps/ --ssname $line --check-gold
         done < ${GITHUB_WORKSPACE}/scripts/tensor_names/suitesparse_ci.txt
