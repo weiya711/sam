@@ -394,6 +394,7 @@ def check_gold_mat_mattransmul(ssname, debug_sim, cast, out_crds, out_segs, out_
         print("Dense Vec1:\n", d_nd)
         print("Dense Mat1:\n", C_scipy.transpose().toarray())
         print("Dense Vec2:\n", f_nd)
+        print("Dense Intermediate:\n",  b * C_scipy.T @ d_nd)
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 

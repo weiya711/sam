@@ -38,7 +38,7 @@ def test_mat_mattransmul_FINAL(samBench, ssname, cast, check_gold, report_stats,
 
     C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
@@ -110,6 +110,7 @@ def test_mat_mattransmul_FINAL(samBench, ssname, cast, check_gold, report_stats,
     add_3 = Add2(debug=debug_sim, statistics=report_stats)
     reduce_2 = Reduce(debug=debug_sim, statistics=report_stats)
     fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape1_min, fill=fill, debug=debug_sim, statistics=report_stats)
+
     in_ref_C = [0, 'D']
     in_ref_f = [0, 'D']
     in_ref_b = [0, 'D']
