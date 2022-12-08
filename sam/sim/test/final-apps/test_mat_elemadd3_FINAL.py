@@ -19,11 +19,6 @@ cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
-# FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
 def test_mat_elemadd3_FINAL(samBench, ssname, cast, check_gold, report_stats, debug_sim, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "mat_elemadd3")
