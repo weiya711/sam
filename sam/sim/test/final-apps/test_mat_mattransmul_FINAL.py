@@ -26,8 +26,8 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
-    C_dirname = os.path.join(cwd, "tmp_mat")
+def test_mat_mattransmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debug_sim, fill=0):
+    C_dirname = os.path.join(formatted_dir, ssname, "mat_mattransmul")
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -44,11 +44,11 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
-    d_dirname = os.path.join(cwd, "tmp_mat")
-    d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode0" in f]
-    assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
-    d_fname = d_fname[0]
-    d_dirname = os.path.join(d_dirname, d_fname)
+    d_dirname = C_dirname
+#    d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode0" in f]
+#    assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
+#    d_fname = d_fname[0]
+#    d_dirname = os.path.join(d_dirname, d_fname)
 
     d_shape = [C_shape[0]]
 
@@ -60,11 +60,11 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
     d_vals_filename = os.path.join(d_dirname, "tensor_d_mode_vals")
     d_vals = read_inputs(d_vals_filename, float)
 
-    f_dirname = os.path.join(formatted_dir, ssname, "other")
-    f_fname = [f for f in os.listdir(f_dirname) if ssname + "-vec_mode1" in f]
-    assert len(f_fname) == 1, "Should only have one 'other' folder that matches"
-    f_fname = f_fname[0]
-    f_dirname = os.path.join(f_dirname, f_fname)
+    f_dirname = C_dirname #os.path.join(formatted_dir, ssname, "other")
+#    f_fname = [f for f in os.listdir(f_dirname) if ssname + "-vec_mode1" in f]
+#    assert len(f_fname) == 1, "Should only have one 'other' folder that matches"
+#    f_fname = f_fname[0]
+#    f_dirname = os.path.join(f_dirname, f_fname)
     f_shape = [C_shape[1]]
 
     f0_seg_filename = os.path.join(f_dirname, "tensor_f_mode_0_seg")
@@ -76,13 +76,13 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
     f_vals = read_inputs(f_vals_filename, float)
 
     e_shape = [0]
-    e_vals_filename = os.path.join(f_dirname, "tensor_e_mode_vals")
-    e_vals = read_inputs(e_vals_filename, float)
+#    e_vals_filename = os.path.join(f_dirname, "tensor_e_mode_vals")
+#    e_vals = read_inputs(e_vals_filename, float)
     e_vals = [2]
 
     b_shape = [0]
-    b_vals_filename = os.path.join(f_dirname, "tensor_b_mode_vals")
-    b_vals = read_inputs(e_vals_filename, float)
+#    b_vals_filename = os.path.join(f_dirname, "tensor_b_mode_vals")
+#    b_vals = read_inputs(e_vals_filename, float)
     b_vals = [2]
 
     C_shape1_min = min(C_shape[1], len(f_crd0) + len(C_crd1))
@@ -328,5 +328,5 @@ def test_mat_mattransmul_FINAL(samBench, ssname, check_gold, report_stats, debug
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_mattransmul(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_mat_mattransmul(ssname, debug_sim, cast, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)

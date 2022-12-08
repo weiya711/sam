@@ -65,8 +65,7 @@ if args.format is not None:
             outdir_orig_path = Path(outdir_other_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
-            
-            name = 'C'
+            name = None
             if args.bench == "mat_residual":
                 if "mode0" in otherfile:
                     name = 'b'
@@ -81,9 +80,17 @@ if args.format is not None:
                     name = 'f'
                 else:
                     raise NotImplementedError
+            elif "mat_vecmul" in args.bench:
+                if "mode1" in otherfile:
+                    name = 'c'
+                elif "mode0" in otherfile:
+                    continue
+                else:
+                    raise NotImplementedError
             else: 
                 raise NotImplementedError
 
+            assert name is not None, "Other tensor name was not set properly and is None"
             parse_taco_format(taco_format_orig_filename, outdir_other_name, name, args.format, hw_filename=args.hw)
 
     else:

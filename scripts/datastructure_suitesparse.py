@@ -107,7 +107,9 @@ elif args.hw:
     else:
         tensorname = "B"
     coo = inputCache.load(tensor, False)
-    if "matmul_kij" not in args.benchname:
+
+    # These benchmarks need format_str == "ss10"
+    if args.benchname not in ["matmul_kij", "mat_vecmul", "mat_mattransmul"]:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01")
 
     if "matmul_ijk" in args.benchname:
@@ -153,11 +155,13 @@ elif args.hw:
         shifted = shifter.shiftLastMode(coo)
         formatWriter.writeout_separate_sparse_only(shifted, dirname, tensorname, format_str="ss01")
 
+    elif "mat_mattransmul" in args.benchname:
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+    elif "mat_vecmul" in args.benchname:
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
     elif "mat_sddmm" in args.benchname:
         pass
-    elif "mat_mattransmul" in args.benchname or "mat_residual" in args.benchname:
-        pass
-    elif "mat_vecmul" in args.benchname:
+    elif "mat_residual" in args.benchname:
         pass
     else:
         raise NotImplementedError
