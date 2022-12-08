@@ -28,10 +28,10 @@ jobs:
     - name: Test all SuiteSparse tests with pytest using data/ matrices
       working-directory: ./sam/sim
       run: |
-        set SUITESPARSE_FORMATTED_PATH=sam/data/suitesparse-formatted/
-        set SUITESPARSE_PATH=sam/data/suitesparse/
-        for line in sam/scripts/tensor_names/suitesparse_ci.txt; do 
-        pytest --ssname $line --check-gold; done
+        set SUITESPARSE_FORMATTED_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse-formatted/
+        set SUITESPARSE_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse/
+        for line in ${GITHUB_WORKSPACE}/sam/scripts/tensor_names/suitesparse_ci.txt; do 
+                pytest test/final-apps/ --ssname $line --check-gold; done
     - name: Lint with flake8
       run: |
         conda install flake8
