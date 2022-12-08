@@ -2,7 +2,7 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
-cd /nobackup/owhsu/sparse-datasets/suitesparse 
+cd $SUITESPARSE_PATH
 
 for f in *.tar.gz; do
     tar -xvf "$f" --strip=1
