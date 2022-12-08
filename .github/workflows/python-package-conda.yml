@@ -19,7 +19,7 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda env update --file environment.yml --name base
+        conda env update --file environment_ci.yml --name base
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
       working-directory: ./sam/sim
       run: |
@@ -32,8 +32,7 @@ jobs:
         set SUITESPARSE_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse/
         while read line; do
                 pytest test/final-apps/ --ssname $line --check-gold
-        done < ${GITHUB_WORKSPACE}/sam/scripts/tensor_names/suitesparse_ci.txt; do 
-
+        done < ${GITHUB_WORKSPACE}/sam/scripts/tensor_names/suitesparse_ci.txt
     - name: Lint with flake8
       run: |
         conda install flake8
