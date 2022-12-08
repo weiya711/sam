@@ -69,6 +69,7 @@ dependencies:
   - pluggy=1.0.0=py38h06a4308_1
   - py=1.11.0=pyhd3eb1b0_0
   - py-cpuinfo=9.0.0=pyhd8ed1ab_0
+  - pydot=1.4.1=py38h06a4308_0
   - pyparsing=3.0.4=pyhd3eb1b0_0
   - pytest=7.1.2=py38h06a4308_0
   - pytest-benchmark=4.0.0=pyhd8ed1ab_0
