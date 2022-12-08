@@ -44,7 +44,7 @@ def test_mat_residual(samBench, ssname, cast, check_gold, report_stats, debug_si
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
-    b_dirname = C_dirname 
+    b_dirname = C_dirname
 #    b_fname = [f for f in os.listdir(b_dirname) if ssname + "-vec_mode0" in f]
 #    assert len(b_fname) == 1, "Should only have one 'other' folder that matches"
 #    b_fname = b_fname[0]

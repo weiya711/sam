@@ -60,7 +60,7 @@ def test_mat_mattransmul_FINAL(samBench, ssname, cast, check_gold, report_stats,
     d_vals_filename = os.path.join(d_dirname, "tensor_d_mode_vals")
     d_vals = read_inputs(d_vals_filename, float)
 
-    f_dirname = C_dirname #os.path.join(formatted_dir, ssname, "other")
+    f_dirname = C_dirname
 #    f_fname = [f for f in os.listdir(f_dirname) if ssname + "-vec_mode1" in f]
 #    assert len(f_fname) == 1, "Should only have one 'other' folder that matches"
 #    f_fname = f_fname[0]

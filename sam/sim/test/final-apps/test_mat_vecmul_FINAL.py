@@ -62,7 +62,7 @@ def test_mat_vecmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debu
     c_vals = read_inputs(c_vals_filename, float)
 
     # THIS IS FOR SIZE INFO
-    Bs_dirname = B_dirname 
+    Bs_dirname = B_dirname
     Bs_seg = read_inputs(os.path.join(Bs_dirname, "tensor_B_mode_0_seg"))
 
     fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)

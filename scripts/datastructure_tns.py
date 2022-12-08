@@ -87,7 +87,7 @@ if args.format is not None:
                     continue
                 else:
                     raise NotImplementedError
-            else: 
+            else:
                 raise NotImplementedError
 
             assert name is not None, "Other tensor name was not set properly and is None"

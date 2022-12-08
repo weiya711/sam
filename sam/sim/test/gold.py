@@ -298,7 +298,6 @@ def check_gold_mat_residual(ssname, debug_sim, cast, out_crds, out_segs, out_val
     d_vals_filename = os.path.join(d_dirname, "tensor_d_mode_vals")
     d_vals = read_inputs(d_vals_filename, float)
 
-
     C_scipy = C_tensor
     b_nd = np.zeros(b_shape)
     d_nd = np.zeros(d_shape)
@@ -394,7 +393,6 @@ def check_gold_mat_mattransmul(ssname, debug_sim, cast, out_crds, out_segs, out_
         print("Dense Vec1:\n", d_nd)
         print("Dense Mat1:\n", C_scipy.transpose().toarray())
         print("Dense Vec2:\n", f_nd)
-        print("Dense Intermediate:\n",  b * C_scipy.T @ d_nd)
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 

@@ -148,7 +148,7 @@ elif args.hw:
         tensorname = "D"
         shifted2 = shifter.shiftLastMode(shifted)
         formatWriter.writeout_separate_sparse_only(shifted2, dirname, tensorname, format_str="ss01")
-    
+
     elif "mat_elemadd" in args.benchname or "mat_elemmul" in args.benchname:
         print("Writing " + args.name + " shifted...")
         tensorname = "C"
