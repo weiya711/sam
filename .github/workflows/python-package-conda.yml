@@ -30,8 +30,10 @@ jobs:
       run: |
         set SUITESPARSE_FORMATTED_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse-formatted/
         set SUITESPARSE_PATH=${GITHUB_WORKSPACE}/sam/data/suitesparse/
-        for line in ${GITHUB_WORKSPACE}/sam/scripts/tensor_names/suitesparse_ci.txt; do 
-                pytest test/final-apps/ --ssname $line --check-gold; done
+        while read line; do
+                pytest test/final-apps/ --ssname $line --check-gold
+        done < ${GITHUB_WORKSPACE}/sam/scripts/tensor_names/suitesparse_ci.txt; do 
+
     - name: Lint with flake8
       run: |
         conda install flake8
