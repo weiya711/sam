@@ -51,35 +51,16 @@ def check_gold_matmul(ssname, debug_sim, cast, out_crds, out_segs, out_val, out_
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
-    # CSR
-    B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
-    B_shape = read_inputs(B_shape_filename)
+def check_gold_mat_elemmul(ssname, debug_sim, cast, out_crds, out_segs, out_val, format_str):
+    # MTX
+    B_tensor = scipy.io.mmread(os.path.join(ss_dir, ssname + ".mtx")).tocsr()
+    if cast:
+        data = [round_sparse(x) for x in B_tensor.data]
+        B_tensor = scipy.sparse.csr_matrix((data, B_tensor.indices, B_tensor.indptr), dtype=int)
 
-    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
-    B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
-    B1_crd = read_inputs(B1_crd_filename)
-
-    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
-    B_vals = read_inputs(B_vals_filename, float)
-
-    # CSR
-    C_dirname = os.path.join(ss_formatted_dir, ssname, "shift", "ds01")
-    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
-    C_shape = read_inputs(C_shape_filename)
-
-    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
-    C1_seg = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
-    C1_crd = read_inputs(C1_crd_filename)
-
-    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
-    C_vals = read_inputs(C_vals_filename, float)
-
-    B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
-    C_scipy = scipy.sparse.csr_matrix((C_vals, C1_crd, C1_seg), shape=C_shape)
+    shifter = ScipyTensorShifter()
+    B_scipy = B_tensor
+    C_scipy = shifter.shiftLastMode(B_scipy)
 
     gold_nd = (B_scipy.multiply(C_scipy)).toarray()
     transpose = format_str[-2:] == "10"
@@ -89,6 +70,9 @@ def check_gold_mat_elemmul(ssname, debug_sim, out_crds, out_segs, out_val, forma
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
         print("Dense Mat1:\n", B_scipy.toarray())
         print("Dense Mat2:\n", C_scipy.toarray())
         print("Dense Gold:", gold_nd)
