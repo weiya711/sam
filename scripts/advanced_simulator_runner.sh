@@ -11,8 +11,10 @@ BENCHMARKS=(
 #  matmul_FINAL
 #  mat_identity
 #   mat_identity_back2
-#  matmul_ikj
-  matmul_ikj
+#  matmul_ijk
+# mat_identity
+  matmul_ikj_new2
+#  matmul_kij
 #  mat_elemmul_FINAL
 #  mat_elemadd_FINAL
 #  mat_elemadd3_FINAL
@@ -107,7 +109,7 @@ for b in ${!BENCHMARKS[@]}; do
 
 		cd $basedir/sam/sim
 		#python -m cProfile -o test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
-		pytest test/advanced-simulator/test_$bench.py --ssname $line -s --report-stats --debug-sim --back --depth=4 --check-gold --benchmark-json=$path/$line.json
+		pytest test/advanced-simulator/test_$bench.py --ssname $line -s --report-stats --back --depth=1 --debug-sim --check-gold --benchmark-json=$path/$line.json
 		python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?
