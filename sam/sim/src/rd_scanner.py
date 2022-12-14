@@ -589,7 +589,7 @@ class CompressedCrdRdScan(CrdRdScan):
             #          "\n emit_fiber_stkn:", self.emit_fiber_stkn,
             #          "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt)
 
-    def set_crd_skip(self, in_crd, parent):
+    def set_crd_skip(self, in_crd, parent=None):
         assert in_crd is None or is_valid_crd(in_crd)
         if in_crd != '' and in_crd is not None:
             if is_stkn(in_crd):
@@ -634,7 +634,7 @@ class BVRdScanSuper(Primitive, ABC):
             else:
                 self.fifo_avail = True
 
-    def set_in_ref(self, in_ref, parent):
+    def set_in_ref(self, in_ref, parent=None):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
         if self.backpressure_en and parent != "":
