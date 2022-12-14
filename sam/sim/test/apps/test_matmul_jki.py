@@ -141,7 +141,6 @@ def test_matmul_jki(samBench, ssname, check_gold, backpressure, depth, debug_sim
 
         fiberwrite_X1_2.set_input(spaccumulator1_3.out_crd_outer(), spaccumulator1_3)
 
-
         fiberlookup_Cj_19.update()
         fiberlookup_Ck_15.update()
         repsiggen_j_17.update()

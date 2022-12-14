@@ -122,8 +122,7 @@ def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, report_stats,
         reduce_1.set_in_val(reduce_2.out_val(), reduce_2)
         fiberwrite_xvals_0.set_input(reduce_1.out_val(), reduce_1)
 
-
-        fiberlookup_Bi_14.update() 
+        fiberlookup_Bi_14.update()
         fiberlookup_Ci_15.update()
         intersecti_13.update()
         fiberlookup_Bj_11.update()
@@ -137,7 +136,7 @@ def test_tensor3_innerprod_FINAL(samBench, frosttname, check_gold, report_stats,
         mul_4.update()
         reduce_3.update()
         reduce_2.update()
-        reduce_1.update() 
+        reduce_1.update()
         fiberwrite_xvals_0.update()
         done = fiberwrite_xvals_0.out_done()
         time_cnt += 1

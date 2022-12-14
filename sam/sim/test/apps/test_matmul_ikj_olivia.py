@@ -124,20 +124,20 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, backpressure, depth
 
         arrayvals_B_5.set_load(repeat_Bj_7.out_ref(), repeat_Bj_7)
 
-
         mul_4.set_in1(arrayvals_B_5.out_load(), arrayvals_B_5)
         mul_4.set_in2(arrayvals_C_6.out_load(), arrayvals_C_6)
 
         spaccumulator1_3_crd_hold_in_ik.set_outer_crd(fiberlookup_Bi_17.out_crd(), fiberlookup_Bi_17)
         spaccumulator1_3_crd_hold_in_ik.set_inner_crd(intersectk_11.out_crd(), intersectk_11)
 
-        spaccumulator1_3_crd_hold_in_ij.set_outer_crd(spaccumulator1_3_crd_hold_in_ik.out_crd_outer(), spaccumulator1_3_crd_hold_in_ik)
+        spaccumulator1_3_crd_hold_in_ij.set_outer_crd(spaccumulator1_3_crd_hold_in_ik.out_crd_outer(),
+                                                      spaccumulator1_3_crd_hold_in_ik)
         spaccumulator1_3_crd_hold_in_ij.set_inner_crd(fiberlookup_Cj_10.out_crd(), fiberlookup_Cj_10)
 
-        spaccumulator1_3_drop_crd_in_outer.set_in_stream(spaccumulator1_3_crd_hold_in_ij.out_crd_outer(), spaccumulator1_3_crd_hold_in_ij)
+        spaccumulator1_3_drop_crd_in_outer.set_in_stream(spaccumulator1_3_crd_hold_in_ij.out_crd_outer(),
+                                                         spaccumulator1_3_crd_hold_in_ij)
         spaccumulator1_3_drop_val.set_in_stream(mul_4.out_val(), mul_4)
         spaccumulator1_3_drop_crd_in_inner.set_in_stream(fiberlookup_Cj_10.out_crd(), fiberlookup_Cj_10)
-
 
         spaccumulator1_3.crd_in_outer(spaccumulator1_3_drop_crd_in_outer.out_val(), spaccumulator1_3_drop_crd_in_outer)
         spaccumulator1_3.set_val(spaccumulator1_3_drop_val.out_val(), spaccumulator1_3_drop_val)

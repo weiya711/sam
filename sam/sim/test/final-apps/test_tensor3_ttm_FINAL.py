@@ -89,7 +89,8 @@ def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, return_stats, debug
     fiberlookup_Cl_10 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats,
                                             back_en=backpressure, depth=int(depth))
     fiberwrite_X2_1 = CompressWrScan(seg_size=len(B_crd1) + 1, size=len(B_crd1) * len(C_crd0),
-                                     fill=fill, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+                                     fill=fill, debug=debug_sim, statistics=report_stats,
+                                     back_en=backpressure, depth=int(depth))
     repsiggen_k_12 = RepeatSigGen(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_Bk_11 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberlookup_Bl_9 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim, statistics=report_stats,
@@ -136,12 +137,11 @@ def test_tensor3_ttm_FINAL(samBench, frosttname, check_gold, return_stats, debug
         reduce_4.set_in_val(mul_5.out_val(), mul_5)
         fiberwrite_Xvals_0.set_input(reduce_4.out_val(), reduce_4)
 
-
         fiberlookup_Bi_22.update()
         fiberlookup_Bj_18.update()
         fiberwrite_X0_3.update()
         repsiggen_i_20.update()
-        repeat_Ci_19.update() 
+        repeat_Ci_19.update()
         fiberwrite_X1_2.update()
         repsiggen_j_16.update()
         repeat_Cj_15.update()

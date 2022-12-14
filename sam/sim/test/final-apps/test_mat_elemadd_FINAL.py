@@ -68,7 +68,7 @@ def test_mat_elemadd_FINAL(samBench, ssname, check_gold, report_stats, backpress
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats,
                                      back_en=backpressure, depth=int(depth))
     fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats,
-                                          back_en=backpressure, depth=int(depth))
+                                           back_en=backpressure, depth=int(depth))
     fiberlookup_Cj_8 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats,
                                            back_en=backpressure, depth=int(depth))
     unionj_6 = Union2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))

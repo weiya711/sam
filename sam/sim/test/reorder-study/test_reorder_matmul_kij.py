@@ -123,7 +123,7 @@ def test_reorder_matmul_kij(samBench, sparsity, check_gold, debug_sim, backpress
                                             back_en=backpressure, depth=int(depth))
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
     crdhold_4 = CrdHold(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    repsiggen_j_9 = RepeatSigGen(debug=debug_sim,back_en=backpressure, depth=int(depth))
+    repsiggen_j_9 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_Bj_8 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
     arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
     mul_5 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))

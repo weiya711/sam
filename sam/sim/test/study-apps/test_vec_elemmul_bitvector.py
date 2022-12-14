@@ -30,7 +30,8 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
 # @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, debug_sim, backpressure, depth, max_val=999, size=2000, fill=0):
+def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, debug_sim,
+                        backpressure, depth, max_val=999, size=2000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
     if vectype == "random":

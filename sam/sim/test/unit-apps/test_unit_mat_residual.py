@@ -98,14 +98,19 @@ def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, backpressure, dep
     d_crd0 = copy.deepcopy(arrs["vj_crd"])
     d_vals = copy.deepcopy(arrs["vj_vals"])
 
-    fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     unioni_16 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=int(depth))
     repsiggen_i_14 = RepeatSigGen(debug=False, back_en=backpressure, depth=int(depth))
     repeat_di_13 = Repeat(debug=False, back_en=backpressure, depth=int(depth))
-    fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     intersectj_10 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     unionj1 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     unionj2 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
@@ -117,7 +122,8 @@ def test_unit_mat_residual_direct(arrs, check_gold, debug_sim, backpressure, dep
     arrayvals_b_4 = Array(init_arr=b_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
     add_3 = Add2(debug=debug_sim, neg2=True, back_en=backpressure, depth=int(depth))
     reduce_2 = Reduce(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
     in_ref_b = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_d = [0, 'D']
@@ -338,14 +344,19 @@ def test_unit_mat_residual_random(dim, nnz, debug_sim, backpressure, depth, max_
         print("C1:", C_seg1, C_crd1, C_vals)
         print("d:", d_seg0, d_crd0, d_vals)
 
-    fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     unioni_16 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_11 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=b_shape[0], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=int(depth))
     repsiggen_i_14 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_di_13 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_dj_12 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     intersectj_10 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     # unionj1 = Union2(debug=debug_sim)
     # unionj2 = Union2(debug=debug_sim)
@@ -357,7 +368,8 @@ def test_unit_mat_residual_random(dim, nnz, debug_sim, backpressure, depth, max_
     arrayvals_b_4 = Array(init_arr=b_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
     add_3 = Add2(debug=debug_sim, neg2=True, back_en=backpressure, depth=int(depth))
     reduce_2 = Reduce(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * b_shape[0], fill=fill, debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
     in_ref_b = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_d = [0, 'D']

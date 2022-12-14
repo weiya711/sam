@@ -70,7 +70,8 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backp
         D_vals[idx] = 1
     # D_vals = np.ones(D_shape).to_list()
 
-    fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, back_en=backpressure, depth=depth)
+    fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=depth)
     fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim, back_en=backpressure, depth=depth)
     intersecti_24 = Intersect2(debug=debug_sim, back_en=backpressure, depth=depth)
     fiberlookup_Bj_19 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim,
@@ -82,7 +83,8 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backp
     fiberlookup_Dk_14 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim, back_en=backpressure, depth=depth)
     crddrop_9 = CrdDrop(debug=debug_sim, back_en=backpressure, depth=depth)
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=depth)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, back_en=backpressure, depth=depth)
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=depth)
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim,
                                      back_en=backpressure, depth=depth)
     repeat_Cj_15 = Repeat(debug=debug_sim, back_en=backpressure, depth=depth)
@@ -96,7 +98,8 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backp
     mul_5 = Multiply2(debug=debug_sim, back_en=backpressure, depth=depth)
     mul_4 = Multiply2(debug=debug_sim, back_en=backpressure, depth=depth)
     reduce_3 = Reduce(debug=debug_sim, back_en=backpressure, depth=depth)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim, back_en=backpressure, depth=depth)
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim,
+                                    back_en=backpressure, depth=depth)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     in_ref_D = [0, 'D']

@@ -82,8 +82,10 @@ def test_matmul_FINAL(samBench, ssname, check_gold, report_stats, backpressure, 
     arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     mul_5 = Multiply2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     spaccumulator2_3 = SparseAccumulator2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    spaccumulator2_3_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats,
+                                               back_en=backpressure, depth=int(depth))
+    spaccumulator2_3_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats,
+                                               back_en=backpressure, depth=int(depth))
     spaccumulator2_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * Bs_seg[-1] * Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats,
                                     back_en=backpressure, depth=int(depth))

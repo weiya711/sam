@@ -78,8 +78,10 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
     arrayvals_c_5 = Array(init_arr=c_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     mul_3 = Multiply2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     spaccumulator1_2 = SparseAccumulator1(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    spaccumulator1_2_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    spaccumulator1_2_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    spaccumulator1_2_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats,
+                                               back_en=backpressure, depth=int(depth))
+    spaccumulator1_2_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats,
+                                               back_en=backpressure, depth=int(depth))
     spaccumulator1_2_drop_val = StknDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crdhold = CrdHold(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_xvals_0 = ValsWrScan(size=1 * Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats,
@@ -134,7 +136,6 @@ def test_mat_vecmul_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
             if is_stkn(spaccumulator1_2.out_crd_inner()) else 'D' if spaccumulator1_2.out_crd_inner() == 'D' else ''
 
         fiberwrite_x0_1.set_input(out_crdi, spaccumulator1_2)
-        
         fiberwrite_x0_1.update()
         spaccumulator1_2_drop_crd_outer.update()
         spaccumulator1_2_drop_crd_inner.update()

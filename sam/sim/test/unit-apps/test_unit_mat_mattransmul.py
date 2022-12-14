@@ -79,16 +79,21 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, backpressure, depth
     b_shape = [0]
     b_vals = [2]
 
-    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1,
+                                            debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     unioni_26 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=int(depth))
     repsiggen_i_24 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_bi_20 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_di_21 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_ei_22 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     intersectj_17 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
@@ -104,7 +109,8 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, backpressure, depth
     mul_4 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     add_3 = Add2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     reduce_2 = Reduce(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim, back_en=backpressure,
+                                    depth=int(depth))
     in_ref_C = [0, 'D']
     in_ref_f = [0, 'D']
     in_ref_b = [0, 'D']
@@ -129,7 +135,7 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, backpressure, depth
     temp13 = []
     temp14 = []
     temp_add1 = []
-    temp_add2= []
+    temp_add2 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
             fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0), "")
@@ -215,7 +221,7 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, backpressure, depth
         arrayvals_b_6.update()
         mul_5.update()
         mul_4.update()
-        reduce_2.update() 
+        reduce_2.update()
         add_3.update()
         fiberwrite_xvals_0.update()
 
@@ -357,16 +363,21 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, backpressure, depth, m
         print("C1:", C_seg1, C_crd1, C_vals)
         print("d:", d_seg0, d_crd0, d_vals)
 
-    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     unioni_26 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=int(depth))
     repsiggen_i_24 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_bi_20 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_di_21 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repeat_ei_22 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
     intersectj_17 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     repsiggen_j_16 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
     arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
@@ -382,7 +393,8 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, backpressure, depth, m
     mul_4 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     add_3 = Add2(debug=debug_sim, back_en=backpressure, depth=int(depth))
     reduce_2 = Reduce(debug=debug_sim, back_en=backpressure, depth=int(depth))
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
     in_ref_C = [0, 'D']
     in_ref_f = [0, 'D']
     in_ref_b = [0, 'D']
