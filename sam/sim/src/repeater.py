@@ -34,7 +34,7 @@ class Repeat(Primitive):
     def check_backpressure(self):
         if self.backpressure_en:
             copy_backpressure = self.ready_backpressure
-            self.ready_backpressure = True 
+            self.ready_backpressure = True
             return copy_backpressure
         return True
 
@@ -315,7 +315,7 @@ class RepeatSigGen(Primitive):
         if self.backpressure_en:
             copy_backpressure = self.ready_backpressure
             self.ready_backpressure = True
-            return copy_backpressure    
+            return copy_backpressure
         return True
 
     def fifo_debug(self):

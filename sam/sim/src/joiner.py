@@ -713,11 +713,11 @@ class IntersectBV2(BVJoiner2):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.obv
 
-    def out_ref1(self): 
+    def out_ref1(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.oref1
 
-    def out_ref2(self): 
+    def out_ref2(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.oref2
 

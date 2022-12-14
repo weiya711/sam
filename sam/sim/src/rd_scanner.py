@@ -41,7 +41,7 @@ class CrdRdScan(Primitive, ABC):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_ref
 
-    def out_crd(self, child=None): 
+    def out_crd(self, child=None):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_crd
 
@@ -644,7 +644,7 @@ class BVRdScanSuper(Primitive, ABC):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_ref
 
-    def out_bv(self): 
+    def out_bv(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_bv
 
@@ -712,9 +712,7 @@ class BVRdScan(BVRdScanSuper):
             elif len(self.in_ref) > 0 and (self.end_fiber or self.begin):
                 self.end_fiber = False
                 self.begin = False
-
                 curr_in_ref = self.in_ref.pop(0)
-
                 if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_blen:
                     raise Exception('Not enough elements in bv array(' + str(self.meta_blen) + ')')
 

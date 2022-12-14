@@ -108,11 +108,11 @@ class ChunkBV(Primitive):
 
     def out_bv(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
-            result = bin(self.curr_bv) if isinstance(self.curr_bv, int) else self.curr_bv 
+            result = bin(self.curr_bv) if isinstance(self.curr_bv, int) else self.curr_bv
             return result
 
     def out_ref(self):
-        if (self.backpressure_en and self.data_valid) or not self.backpressure_en: 
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_ref
 
 
@@ -189,11 +189,11 @@ class BV(Primitive):
         if self.backpressure_en:
             parent.set_backpressure(self.fifo_avail)
 
-    def out_bv_int(self): 
+    def out_bv_int(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_bv
 
-    def out_bv(self): 
+    def out_bv(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             result = bin(self.curr_bv) if isinstance(self.curr_bv, int) else self.curr_bv
             return result
@@ -248,7 +248,7 @@ class BVDropSuper(Primitive, ABC):
         if self.backpressure_en:
             parent.set_backpressure(self.fifo_avail_inner)
 
-    def out_bv_outer(self): 
+    def out_bv_outer(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_obv
 
@@ -373,7 +373,7 @@ class BVDrop(BVDropSuper):
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_valid = True 
+                self.data_valid = True
             if (len(self.outer_bv) > 0 or len(self.inner_bv) > 0):
                 self.block_start = False
 
