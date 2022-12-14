@@ -23,7 +23,7 @@ class CrdRdScan(Primitive, ABC):
     def set_in_ref(self, in_ref, parent=None):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
-        if self.backpressure_en:
+        if self.backpressure_en and parent != "":
             parent.set_backpressure(self.fifo_avail)
 
     def set_backpressure(self, backpressure):
@@ -70,7 +70,7 @@ class CrdRdScan(Primitive, ABC):
 
 # TODO: figure out how uncompressed read scans work with 'N' tokens
 class UncompressCrdRdScan(CrdRdScan):
-    def __init__(self, dim=0, **kwargs):
+    def __init__(self, dim=0, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.start_addr = 0
@@ -98,6 +98,8 @@ class UncompressCrdRdScan(CrdRdScan):
         if self.backpressure_en:
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
             if self.emit_tkn and len(self.in_ref) > 0:
                 next_in = self.in_ref[0]
                 if is_stkn(next_in):
@@ -587,7 +589,7 @@ class CompressedCrdRdScan(CrdRdScan):
             #          "\n emit_fiber_stkn:", self.emit_fiber_stkn,
             #          "\n Out stkn cnt:", self.out_stkn_cnt, "\t Skip stkn cnt:", self.skip_stkn_cnt)
 
-    def set_crd_skip(self, in_crd):
+    def set_crd_skip(self, in_crd, parent):
         assert in_crd is None or is_valid_crd(in_crd)
         if in_crd != '' and in_crd is not None:
             if is_stkn(in_crd):
@@ -596,6 +598,8 @@ class CompressedCrdRdScan(CrdRdScan):
                     # Flush coordinates
                     self.in_crd_skip = self.in_crd_skip[:idx + 1]
             self.in_crd_skip.append(in_crd)
+        if self.backpressure_en and parent != "":
+            parent.set_backpressure(self.fifo_avail)
 
 
 # ---------------- BV --------------#
@@ -633,20 +637,20 @@ class BVRdScanSuper(Primitive, ABC):
     def set_in_ref(self, in_ref, parent):
         if in_ref != '' and in_ref is not None:
             self.in_ref.append(in_ref)
-        if self.backpressure_en:
+        if self.backpressure_en and parent != "":
             parent.set_backpressure(self.fifo_avail)
 
     def out_ref(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_ref
 
     def out_bv(self): 
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_bv
 
 
 class BVRdScan(BVRdScanSuper):
-    def __init__(self, bv_arr=None, dim=4, nbits=4, **kwargs):
+    def __init__(self, bv_arr=None, dim=4, nbits=4, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.bv_arr = bv_arr if bv_arr is not None else [2 ** nbits - 1] * dim

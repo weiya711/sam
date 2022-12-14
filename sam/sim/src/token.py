@@ -73,7 +73,7 @@ class StknDrop(Primitive):
 
 
 class EmptyFiberStknDrop(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.in_stream = []

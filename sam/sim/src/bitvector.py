@@ -8,7 +8,7 @@ from functools import reduce
 
 # Compresses entire fiber with splitting of Bitvectors into "width" widths
 class ChunkBV(Primitive):
-    def __init__(self, width=4, size=16, **kwargs):
+    def __init__(self, width=4, size=16, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.meta_width = width
@@ -118,7 +118,7 @@ class ChunkBV(Primitive):
 
 # Always compresses entire fiber with no splitting
 class BV(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.in_crd = []
@@ -200,7 +200,7 @@ class BV(Primitive):
 
 
 class BVDropSuper(Primitive, ABC):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.outer_bv = []
@@ -360,9 +360,9 @@ class BVDrop(BVDropSuper):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.bv_drop = BVDropOnly(**kwargs)
-        self.outer_stkn_drop = EmptyFiberStknDrop(**kwargs)
-        self.inner_stkn_drop = EmptyFiberStknDrop(**kwargs)
+        self.bv_drop = BVDropOnly(back_en=False)
+        self.outer_stkn_drop = EmptyFiberStknDrop(back_en=False)
+        self.inner_stkn_drop = EmptyFiberStknDrop(back_en=False)  # **kwargs
 
         self.curr_ibv = ''
 

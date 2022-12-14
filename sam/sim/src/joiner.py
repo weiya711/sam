@@ -83,7 +83,7 @@ class CrdJoiner2(Joiner2, ABC):
 
 
 class BVJoiner2(Joiner2):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
 
     @abstractmethod
@@ -100,7 +100,7 @@ class BVJoiner2(Joiner2):
 
 
 class Intersect2(CrdJoiner2):
-    def __init__(self, skip=True, **kwargs):
+    def __init__(self, skip=True, depth=4, **kwargs):
         super().__init__(**kwargs)
         if self.get_stats:
             self.size_in_ref1 = 0
@@ -131,6 +131,15 @@ class Intersect2(CrdJoiner2):
         self.curr_skip2 = ''
         self.change_crd1 = True
         self.change_crd2 = True
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.data_valid = True
+            self.depth = depth
+            self.fifo_avail_in1 = True
+            self.fifo_avail_in2 = True
+
+    def fifo_debug(self):
+        print("Crd Joiner2 : ", self.in_ref1, " ", self.in_ref2)
 
     def out_crd(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
@@ -333,7 +342,7 @@ class Intersect2(CrdJoiner2):
 
 
 class Union2(CrdJoiner2):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
         self.curr_crd1 = None
         self.curr_crd2 = None
@@ -349,6 +358,12 @@ class Union2(CrdJoiner2):
             self.count = 0
             self.one_only_count = 0
             self.two_only_count = 0
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.data_valid = True
+            self.depth = depth
+            self.fifo_avail_in1 = True
+            self.fifo_avail_in2 = True
 
     def update(self):
         self.update_done()
@@ -514,7 +529,7 @@ class Union2(CrdJoiner2):
 
 
 class IntersectBV2(BVJoiner2):
-    def __init__(self, emit_zeros=False, **kwargs):
+    def __init__(self, emit_zeros=False, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.in_ref1 = []
@@ -544,103 +559,142 @@ class IntersectBV2(BVJoiner2):
         self.emit_refs = False
 
         self.meta_emit_zeros = emit_zeros
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.data_valid = True
+            self.depth = depth
+            self.fifo_avail_in1 = True
+            self.fifo_avail_in2 = True
+
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            # print(copy_backpressure, "intersect***********")
+            return copy_backpressure
+        return True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_ref1) > self.depth:
+                self.fifo_avail_in1 = False
+            else:
+                self.fifo_avail_in1 = True
+            if len(self.in_ref2) > self.depth:
+                self.fifo_avail_in2 = False
+            else:
+                self.fifo_avail_in2 = True
 
     def update(self):
         self.update_done()
-        if (len(self.in_bv1) > 0 or len(self.in_bv2) > 0):
-            self.block_start = False
+        self.update_ready()
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+            if (len(self.in_bv1) > 0 or len(self.in_bv2) > 0):
+                self.block_start = False
 
-        if self.done:
-            self.obv = ''
-            self.oref1 = ''
-            self.oref2 = ''
-            return
+            if self.done:
+                self.obv = ''
+                self.oref1 = ''
+                self.oref2 = ''
+                return
 
-        if self.emit_refs:
-            assert len(self.reflist1) == len(self.reflist2), "Lengths of refs must match"
-            self.obv = ''
-            self.oref1 = self.reflist1.pop(0)
-            self.oref2 = self.reflist2.pop(0)
-
-            self.emit_refs = len(self.reflist1) > 0
-            return
-        if len(self.in_bv1) > 0 and len(self.in_bv2) > 0:
-            self.curr_bv1 = self.in_bv1.pop(0)
-            self.curr_bv2 = self.in_bv2.pop(0)
-            self.curr_ref1 = self.in_ref1.pop(0)
-            self.curr_ref2 = self.in_ref2.pop(0)
-
-            # FIXME: See when only one 'D' signal is present
-            if self.curr_bv1 == 'D' or self.curr_bv2 == 'D':
-                assert self.curr_bv1 == self.curr_bv2 == self.curr_ref1 == self.curr_ref2
-                self.done = True
-                self.obv = 'D'
-                self.oref1 = 'D'
-                self.oref2 = 'D'
-            elif is_stkn(self.curr_bv1) and is_stkn(self.curr_bv2):
-                assert self.curr_bv1 == self.curr_bv2 == self.curr_ref1 == self.curr_ref2
-
-                self.obv = self.curr_bv1
-                self.oref1 = self.curr_bv1
-                self.oref2 = self.curr_bv2
-                if self.get_stats:
-                    self.total_count += 1
-            elif self.curr_bv1 & self.curr_bv2:
-                obv = self.curr_bv1 & self.curr_bv2
-
-                reflist1 = []
-                reflist2 = []
-                self.obv = obv
-                while obv:
-                    rbit = right_bit_set(obv)
-                    refbits1 = bin(self.curr_bv1 & (rbit - 1)).count('1') + self.curr_ref1
-                    refbits2 = bin(self.curr_bv2 & (rbit - 1)).count('1') + self.curr_ref2
-
-                    reflist1.append(refbits1)
-                    reflist2.append(refbits2)
-                    obv = ~rbit & obv
-
-                self.reflist1 = reflist1
-                self.reflist2 = reflist2
-
+            if self.emit_refs:
+                assert len(self.reflist1) == len(self.reflist2), "Lengths of refs must match"
+                self.obv = ''
                 self.oref1 = self.reflist1.pop(0)
                 self.oref2 = self.reflist2.pop(0)
 
                 self.emit_refs = len(self.reflist1) > 0
-                if self.get_stats:
-                    self.total_count += 1
-                    self.count += 1
-            elif not self.curr_bv1 & self.curr_bv2:
-                if self.meta_emit_zeros:
-                    self.obv = 0
+                return
+            if len(self.in_bv1) > 0 and len(self.in_bv2) > 0:
+                self.curr_bv1 = self.in_bv1.pop(0)
+                self.curr_bv2 = self.in_bv2.pop(0)
+                self.curr_ref1 = self.in_ref1.pop(0)
+                self.curr_ref2 = self.in_ref2.pop(0)
+
+                # FIXME: See when only one 'D' signal is present
+                if self.curr_bv1 == 'D' or self.curr_bv2 == 'D':
+                    assert self.curr_bv1 == self.curr_bv2 == self.curr_ref1 == self.curr_ref2
+                    self.done = True
+                    self.obv = 'D'
+                    self.oref1 = 'D'
+                    self.oref2 = 'D'
+                elif is_stkn(self.curr_bv1) and is_stkn(self.curr_bv2):
+                    assert self.curr_bv1 == self.curr_bv2 == self.curr_ref1 == self.curr_ref2
+
+                    self.obv = self.curr_bv1
+                    self.oref1 = self.curr_bv1
+                    self.oref2 = self.curr_bv2
+                    if self.get_stats:
+                        self.total_count += 1
+                elif self.curr_bv1 & self.curr_bv2:
+                    obv = self.curr_bv1 & self.curr_bv2
+
+                    reflist1 = []
+                    reflist2 = []
+                    self.obv = obv
+                    while obv:
+                        rbit = right_bit_set(obv)
+                        refbits1 = bin(self.curr_bv1 & (rbit - 1)).count('1') + self.curr_ref1
+                        refbits2 = bin(self.curr_bv2 & (rbit - 1)).count('1') + self.curr_ref2
+
+                        reflist1.append(refbits1)
+                        reflist2.append(refbits2)
+                        obv = ~rbit & obv
+
+                    self.reflist1 = reflist1
+                    self.reflist2 = reflist2
+
+                    self.oref1 = self.reflist1.pop(0)
+                    self.oref2 = self.reflist2.pop(0)
+
+                    self.emit_refs = len(self.reflist1) > 0
+                    if self.get_stats:
+                        self.total_count += 1
+                        self.count += 1
+                elif not self.curr_bv1 & self.curr_bv2:
+                    if self.meta_emit_zeros:
+                        self.obv = 0
+                    else:
+                        self.obv = ''
+                    self.oref1 = ''
+                    self.oref2 = ''
                 else:
-                    self.obv = ''
+                    raise Exception('Intersect2: should not enter this case')
+            else:
+                # Do Nothing if no inputs are detected
+                self.obv = ''
                 self.oref1 = ''
                 self.oref2 = ''
-            else:
-                raise Exception('Intersect2: should not enter this case')
-        else:
-            # Do Nothing if no inputs are detected
-            self.obv = ''
-            self.oref1 = ''
-            self.oref2 = ''
-        self.compute_fifos()
+            self.compute_fifos()
 
-        if self.debug:
-            print("DEBUG: INTERSECT: \t Outbv:", self.obv, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
-                  "\t bv1:", self.curr_bv1, "\t Ref1:", self.curr_ref1,
-                  "\t bv2:", self.curr_bv2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
-                  self.return_intersection_rate())
+            if self.debug:
+                print("DEBUG: INTERSECT: \t Outbv:", self.obv, "\t Out Ref1:", self.oref1, "\t Out Ref2:", self.oref2,
+                      "\t bv1:", self.curr_bv1, "\t Ref1:", self.curr_ref1,
+                      "\t bv2:", self.curr_bv2, "\t Ref2", self.curr_ref2, "\t Intersection rate: ",
+                      self.return_intersection_rate())
 
-    def set_in1(self, in_ref1, in_bv1):
+    def set_in1(self, in_ref1, in_bv1, parent=None):
         if in_ref1 != '' and in_bv1 != '' and in_ref1 is not None and in_bv1 is not None:
             self.in_ref1.append(in_ref1)
             self.in_bv1.append(in_bv1)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in1)
 
-    def set_in2(self, in_ref2, in_bv2):
+    def set_in2(self, in_ref2, in_bv2, parent=None):
         if in_ref2 != '' and in_bv2 != '' and in_ref2 is not None and in_bv2 is not None:
             self.in_ref2.append(in_ref2)
             self.in_bv2.append(in_bv2)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in2)
 
     def compute_fifos(self):
         if self.get_stats:
@@ -656,13 +710,16 @@ class IntersectBV2(BVJoiner2):
         print("FIFO in bv 2: ", self.size_in_bv2)
 
     def out_bv(self):
-        return self.obv
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.obv
 
-    def out_ref1(self):
-        return self.oref1
+    def out_ref1(self): 
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.oref1
 
-    def out_ref2(self):
-        return self.oref2
+    def out_ref2(self): 
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.oref2
 
     def return_intersection_rate(self):
         if self.get_stats:
