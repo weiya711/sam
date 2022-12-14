@@ -123,7 +123,7 @@ def test_vec_elemmul_skip_c_c_c(samBench, run_length, vectype, sparsity, debug_s
         val1.set_load(inter.out_ref1(), inter)
         val2.set_load(inter.out_ref2(), inter)
         mul.set_in1(val1.out_load(), val1)
-        mul.set_in2(val2.out_load(), vals2)
+        mul.set_in2(val2.out_load(), val2)
         oval_wrscan.set_input(mul.out_val(), mul)
         ocrd_wrscan.set_input(inter.out_crd(), inter)
 
