@@ -43,3 +43,10 @@ tmp_mat*/
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/
+
+# Generated formatted tensor files
+tensor_*_mode_*
+
+# Tensor files
+*.mtx
+*.tns
