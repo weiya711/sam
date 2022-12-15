@@ -459,7 +459,7 @@ class SparseAccumulator1(Primitive):
                 #print(self.crdpt_converter.print_debug())
                 f1, f2, f3 = self.crdpt_spacc.return_fifo()
                 f4, f5 = self.crdpt_converter.return_fifo()
-                #print("aaaaaaaaaaaaa", f1, f2, f3)
+                # print("aaaaaaaaaaaaa", f1, f2, f3)
                 self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=self.temp_maxdim, valtype=self.temp_valtype, fifos=[f1,f2,f3])
                 self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4,f5])
                 

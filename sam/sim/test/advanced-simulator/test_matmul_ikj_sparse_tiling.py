@@ -86,18 +86,18 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     glb_model_b = memory_block(name="GLB_B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
                                bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],
-                               debug=debug_sim)
+                               debug=debug_sim, pipeline_en=True)
     glb_model_c = memory_block(name="GLB_C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
                                bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],
-                               debug=debug_sim)
+                               debug=debug_sim, pipeline_en=True)
     mem_model_b = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
-                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
+                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     mem_model_c = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
-                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
+                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     # Output memory blocks Not used with sparse tiling figure out later
     mem_model_x = output_memory_block(name="X", element_size=memory_config["Bytes_per_element"],
@@ -380,30 +380,30 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             if report_stats and c_tile_id not in tile_id_c:
                 c_vals_size += len(C_vals)
                 tile_id_c.append(c_tile_id)
-
-            fiberlookup_Bi_19 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
-            fiberlookup_Bk_14 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
-            repsiggen_i_17 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
-            repeat_Ci_16 = Repeat(debug=debug_sim, statistics=report_stats)
-            fiberlookup_Ck_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
-            intersectk_13 = Intersect2(debug=debug_sim, statistics=report_stats)
-            crdhold_5 = CrdHold(debug=debug_sim, statistics=report_stats)
-            fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
-            arrayvals_C_8 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
-            crdhold_4 = CrdHold(debug=debug_sim, statistics=report_stats)
-            repsiggen_j_10 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
-            repeat_Bj_9 = Repeat(debug=debug_sim, statistics=report_stats)
-            arrayvals_B_7 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
-            mul_6 = Multiply2(debug=debug_sim, statistics=report_stats)
-            spaccumulator1_3 = SparseAccumulator1(debug=debug_sim, statistics=report_stats)
-            spaccumulator1_3_drop_crd_inner = StknDrop(debug=debug_sim, statistics=report_stats)
-            spaccumulator1_3_drop_crd_outer = StknDrop(debug=debug_sim, statistics=report_stats)
-            spaccumulator1_3_drop_val = StknDrop(debug=debug_sim, statistics=report_stats)
+            debug_sim2 = False #True
+            fiberlookup_Bi_19 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim2, statistics=report_stats)
+            fiberlookup_Bk_14 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim2, statistics=report_stats)
+            repsiggen_i_17 = RepeatSigGen(debug=debug_sim2, statistics=report_stats)
+            repeat_Ci_16 = Repeat(debug=debug_sim2, statistics=report_stats)
+            fiberlookup_Ck_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim2, statistics=report_stats)
+            intersectk_13 = Intersect2(debug=debug_sim2, statistics=report_stats)
+            crdhold_5 = CrdHold(debug=debug_sim2, statistics=report_stats)
+            fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2, statistics=report_stats)
+            arrayvals_C_8 = Array(init_arr=C_vals, debug=debug_sim2, statistics=report_stats)
+            crdhold_4 = CrdHold(debug=debug_sim2, statistics=report_stats)
+            repsiggen_j_10 = RepeatSigGen(debug=debug_sim2, statistics=report_stats)
+            repeat_Bj_9 = Repeat(debug=debug_sim2, statistics=report_stats)
+            arrayvals_B_7 = Array(init_arr=B_vals, debug=debug_sim2, statistics=report_stats)
+            mul_6 = Multiply2(debug=debug_sim2, statistics=report_stats)
+            spaccumulator1_3 = SparseAccumulator1(debug=debug_sim2, statistics=report_stats)
+            spaccumulator1_3_drop_crd_inner = StknDrop(debug=debug_sim2, statistics=report_stats)
+            spaccumulator1_3_drop_crd_outer = StknDrop(debug=debug_sim2, statistics=report_stats)
+            spaccumulator1_3_drop_val = StknDrop(debug=debug_sim2, statistics=report_stats)
             fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill,
-                                            debug=debug_sim, statistics=report_stats)
+                                            debug=debug_sim2, statistics=report_stats)
             fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1],
-                                             fill=fill, debug=debug_sim, statistics=report_stats)
-            fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
+                                             fill=fill, debug=debug_sim2, statistics=report_stats)
+            fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim2, statistics=report_stats)
             # print("INITIALIZE compute loop at ", time_cnt)
             initialize_cntr = time_cnt
             mem_model_b.valid_tile_recieved()
@@ -540,8 +540,8 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     pass
                 if check_gold:
                     assert B_k00 == C_k00 and B_k0 == C_k0
-                    if C_j0 == 0 and C_k0 == 0:
-                        print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
+                    if C_j0 == 0: # and C_k0 == 0:
+                        print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip, time_cnt)
                         check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
                                                 None, debug_sim, out_crds=out_crds, out_segs=out_segs,
                                                 out_val=out_vals, out_format="ss01")

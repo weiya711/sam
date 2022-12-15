@@ -44,36 +44,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     # Mem tile's sizes in a dict
     with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_1_sizes"), "rb") as ff:
         sizes_dict_level1 = pickle.load(ff)
-
-    #print(sizes_dict_level0)
-    keyB = (2, 4)    
-    keyC = (4, 2)
     cnt = 0
-    #sizes_dict_level0["B"] = {keyB : sizes_dict_level0["B"][keyB]}
-    #sizes_dict_level0["C"] = {keyC : sizes_dict_level0["C"][keyC]}
-
-    #print(sizes_dict_level0)
-    #keyB1 = (0, 3, 2, 7) #(7, 7, 0, 1) 
-    #keyB2 = (7, 7, 0, 2)
-    #keyC1 = (7, 4, 1, 2)
-    #keyC2 = (7, 4, 1, 8)
-    #keyC3 = (7, 4, 1, 2)
-    #keyC4 = (7, 4, 6, 0)
-    #keyC5 = (7, 4, 6, 7)
-    #sizes_dict_level1["B"] = {keyB1 : sizes_dict_level1["B"][keyB1], keyB2 : sizes_dict_level1["B"][keyB2]}
-    
-    #keyB2 = (3, 2, 7, 8)
-    #keyB1 = (7, 7, 0, 1)
-    #keyC1 = (7, 4, 1, 2)
-    #keyB1 = (7, 7, 0, 1)
-    #keyC2 = (7, 4, 1, 8)
-    #sizes_dict_level1["B"] = {keyB1 : sizes_dict_level1["B"][keyB1]}
-    #sizes_dict_level1["C"] = {keyB2 : sizes_dict_level1["C"][keyB2]} #, keyC2 : sizes_dict_level1["C"][keyC2]}
-
-
-    #print(sizes_dict_level1["B"])
-    #print(sizes_dict_level1["C"])
-    #return
+    keyB0 = (0, 3, 2, 3)  # (7, 7, 0, 1)
+    sizes_dict_level1_ = {"B": {}}
+    keyC0 = (7, 4, 1, 2)
+    sizes_dict_level1["B"] = {keyB0: sizes_dict_level1["B"][keyB0]}
+    sizes_dict_level1["C"] = {keyC0: sizes_dict_level1["B"][keyC0]}
     full_size = 0
     for sizes in sizes_dict_level_full:
         full_size = sizes_dict_level_full[sizes]
@@ -126,21 +102,21 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],
                                debug=debug_sim)
     mem_model_b = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
-                                   element_size=memory_config["Bytes_per_element"],
-                                   size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
+                               element_size=memory_config["Bytes_per_element"],
+                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
+                               latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     mem_model_c = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
-                                   element_size=memory_config["Bytes_per_element"],
-                                   size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
+                               element_size=memory_config["Bytes_per_element"],
+                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
+                               latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     mem_model_bk = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
                                 size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
                                 latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     mem_model_ck = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
-                                 element_size=memory_config["Bytes_per_element"],
-                                 size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                 latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
+                                element_size=memory_config["Bytes_per_element"],
+                                size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
+                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     mem_model_bi = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
                                 size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
@@ -148,15 +124,15 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     mem_model_cj = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
                                 size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim) 
-    mem_model_bvals = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
-                                element_size=memory_config["Bytes_per_element"],
-                                size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
                                 latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
+    mem_model_bvals = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
+                                   element_size=memory_config["Bytes_per_element"],
+                                   size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
+                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     mem_model_cvals = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
-                                element_size=memory_config["Bytes_per_element"],
-                                size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)  
+                                   element_size=memory_config["Bytes_per_element"],
+                                   size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
+                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
     nxt_tile_present = [True] * 6
     # Output memory blocks Not used with sparse tiling figure out later
     mem_model_x = output_memory_block(name="X", element_size=memory_config["Bytes_per_element"],
@@ -235,7 +211,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             fiberlookup_Cj0 = CompressedCrdRdScan(crd_arr=mem_arr["C_crd1"], seg_arr=mem_arr["C_seg1"], debug=debug_sim)
             repsiggen_j0 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
             repeat_Bj0 = Repeat(debug=debug_sim, statistics=report_stats)
-            #nprint("INITIALIZE Mem loop at ", time_cnt)
+            # print("INITIALIZE Mem loop at ", time_cnt)
             glb_model_b.valid_tile_received()
             glb_model_c.valid_tile_received()
 
@@ -290,15 +266,14 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                          sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
                                          glb_model_b.token())
                     mem_model_bi.add_tile(repeat_Bj0.out_ref(),
-                                         sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
-                                         glb_model_b.token())
+                                          sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
+                                          glb_model_b.token())
                     mem_model_bk.add_tile(repeat_Bj0.out_ref(),
-                                         sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
-                                         glb_model_b.token())
+                                          sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
+                                          glb_model_b.token())
                     mem_model_bvals.add_tile(repeat_Bj0.out_ref(),
-                                         sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
-                                         glb_model_b.token())
- 
+                                             sizes_dict_level1["B"][(B_i00__, B_k00__, int(mem_b_t[0]), int(mem_b_t[1]))],
+                                             glb_model_b.token())
                 else:
                     mem_model_b.add_tile(repeat_Bj0.out_ref(), 8, glb_model_b.token())
                     mem_model_bi.add_tile(repeat_Bj0.out_ref(), 8, glb_model_b.token())
@@ -330,23 +305,14 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     mem_model_ck.add_tile(fiberlookup_Cj0.out_ref(), 8, glb_model_c.token())
                     mem_model_cj.add_tile(fiberlookup_Cj0.out_ref(), 8, glb_model_c.token())
                     mem_model_cvals.add_tile(fiberlookup_Cj0.out_ref(), 8, glb_model_c.token())
-        if mem_blocks_decl_flag:
-            pass
-            #print(mem_blocks_decl_flag, fiberlookup_Bi_19.out_done(), mem_model_bi.valid_tile(), not nxt_tile_present[0])
-            #print(mem_blocks_decl_flag, fiberlookup_Cj_12.out_done(), mem_model_cj.valid_tile(), not nxt_tile_present[3])
-            #mem_model_bi.print_debug()
-            #mem_model_bk.print_debug()
-            #mem_model_bvals.print_debug()
-            #mem_model_ck.print_debug()
-            #mem_model_cj.print_debug()
 
         if mem_blocks_decl_flag and fiberlookup_Bi_19.out_done() and mem_model_bi.valid_tile() and not nxt_tile_present[0]:
-            #print("############################################## Bi")
             B_glb_nxt = ref_glb_convertor["B"][mem_model_bi.token() // 1000000].split("_")
             B_k00_nxt = int(B_glb_nxt[1])
             B_i00_nxt = int(B_glb_nxt[0])
             B_mem_nxt = ref_to_crd_convertor["B_" +
-                                             str(mem_model_bi.token() // 1000000)][mem_model_bi.token() % 1000000].split("_")
+                                             str(mem_model_bi.token() //
+                                                 1000000)][mem_model_bi.token() % 1000000].split("_")
             B_k0_nxt = int(B_mem_nxt[1])
             B_i0_nxt = int(B_mem_nxt[0])
             B_dir = "tensor_B_tile_" + str(B_i00_nxt) + "_" + str(B_k00_nxt) + "_" + str(B_i0_nxt) + "_" + str(B_k0_nxt)
@@ -358,16 +324,17 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             in_fifo = fiberlookup_Bi_19.get_fifo()
             in_fifo.append(0)
             in_fifo.append("D")
-            fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim2, statistics=report_stats, fifo=in_fifo)
+            fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
+                                                    debug=debug_sim2, statistics=report_stats, fifo=in_fifo)
             mem_model_bi.valid_tile_received()
             nxt_tile_present[0] = True
         if mem_blocks_decl_flag and fiberlookup_Bk_14.out_done() and mem_model_bk.valid_tile() and not nxt_tile_present[1]:
-            #print("############################################## Bk")
             B_glb_nxt = ref_glb_convertor["B"][mem_model_bk.token() // 1000000].split("_")
             B_k00_nxt = int(B_glb_nxt[1])
             B_i00_nxt = int(B_glb_nxt[0])
             B_mem_nxt = ref_to_crd_convertor["B_" +
-                                             str(mem_model_bk.token() // 1000000)][mem_model_bk.token() % 1000000].split("_")
+                                             str(mem_model_bk.token() //
+                                                 1000000)][mem_model_bk.token() % 1000000].split("_")
             B_k0_nxt = int(B_mem_nxt[1])
             B_i0_nxt = int(B_mem_nxt[0])
             B_dir = "tensor_B_tile_" + str(B_i00_nxt) + "_" + str(B_k00_nxt) + "_" + str(B_i0_nxt) + "_" + str(B_k0_nxt)
@@ -377,7 +344,8 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             B_seg1 = read_inputs(B1_seg_filename)
             B_crd1 = read_inputs(B1_crd_filename)
             in_fifo = fiberlookup_Bk_14.get_fifo()
-            fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim2, statistics=report_stats, fifo=in_fifo)
+            fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1,
+                                                    debug=debug_sim2, statistics=report_stats, fifo=in_fifo)
             mem_model_bk.valid_tile_received()
             nxt_tile_present[1] = True
         if mem_blocks_decl_flag and fiberlookup_Ck_15.out_done() and mem_model_ck.valid_tile() and not nxt_tile_present[2]:
@@ -385,9 +353,10 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_j00_nxt = int(C_glb_nxt[1])
             C_k00_nxt = int(C_glb_nxt[0])
             C_mem_nxt = ref_to_crd_convertor["C_" +
-                                             str(mem_model_ck.token() // 1000000)][mem_model_ck.token() % 1000000].split("_")
+                                             str(mem_model_ck.token() //
+                                                 1000000)][mem_model_ck.token() % 1000000].split("_")
             C_j0_nxt = int(C_mem_nxt[1])
-            C_k0_nxt = int(C_mem_nxt[0]) 
+            C_k0_nxt = int(C_mem_nxt[0])
             C_dir = "tensor_C_tile_" + str(C_k00_nxt) + "_" + str(C_j00_nxt) + "_" + str(C_k0_nxt) + "_" + str(C_j0_nxt)
             C_dirname = os.path.join(formatted_dir, C_dir)
             C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
@@ -395,11 +364,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_seg0 = read_inputs(C0_seg_filename)
             C_crd0 = read_inputs(C0_crd_filename)
             in_fifo = fiberlookup_Ck_15.get_fifo()
-            fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim2, statistics=report_stats, fifo=in_fifo) 
+            fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0,
+                                                    debug=debug_sim2, statistics=report_stats, fifo=in_fifo)
             mem_model_ck.valid_tile_received()
             repeat_Ci_16.set_in_ref(0)
             repeat_Ci_16.set_in_ref("D")
-            nxt_tile_present[2] = True 
+            nxt_tile_present[2] = True
         if mem_blocks_decl_flag and fiberlookup_Cj_12.out_done() and mem_model_cj.valid_tile() and not nxt_tile_present[3]:
             C_glb_nxt = ref_glb_convertor["C"][mem_model_cj.token() // 1000000].split("_")
             C_j00_nxt = int(C_glb_nxt[1])
@@ -407,7 +377,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_mem_nxt = ref_to_crd_convertor["C_" +
                                              str(mem_model_cj.token() // 1000000)][mem_model_cj.token() % 1000000].split("_")
             C_j0_nxt = int(C_mem_nxt[1])
-            C_k0_nxt = int(C_mem_nxt[0]) 
+            C_k0_nxt = int(C_mem_nxt[0])
             C_dir = "tensor_C_tile_" + str(C_k00_nxt) + "_" + str(C_j00_nxt) + "_" + str(C_k0_nxt) + "_" + str(C_j0_nxt)
             C_dirname = os.path.join(formatted_dir, C_dir)
             C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
@@ -415,16 +385,17 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_seg1 = read_inputs(C1_seg_filename)
             C_crd1 = read_inputs(C1_crd_filename)
             in_fifo = fiberlookup_Cj_12.get_fifo()
-            fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2, statistics=report_stats, fifo=in_fifo) 
+            fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2,
+                                                    statistics=report_stats, fifo=in_fifo)
             mem_model_cj.valid_tile_received()
             nxt_tile_present[3] = True
         if mem_blocks_decl_flag and arrayvals_B_7.out_done() and mem_model_bvals.valid_tile() and not nxt_tile_present[4]:
-            #print("############################################## Bvals")
             B_glb_nxt = ref_glb_convertor["B"][mem_model_bvals.token() // 1000000].split("_")
             B_k00_nxt = int(B_glb_nxt[1])
             B_i00_nxt = int(B_glb_nxt[0])
             B_mem_nxt = ref_to_crd_convertor["B_" +
-                                             str(mem_model_bvals.token() // 1000000)][mem_model_bvals.token() % 1000000].split("_")
+                                             str(mem_model_bvals.token() //
+                                                 1000000)][mem_model_bvals.token() % 1000000].split("_")
             B_k0_nxt = int(B_mem_nxt[1])
             B_i0_nxt = int(B_mem_nxt[0])
             B_dir = "tensor_B_tile_" + str(B_i00_nxt) + "_" + str(B_k00_nxt) + "_" + str(B_i0_nxt) + "_" + str(B_k0_nxt)
@@ -432,10 +403,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
             B_vals = read_inputs(B_vals_filename, float)
             in_fifo = arrayvals_B_7.get_fifo()
-            #print(B_vals, in_fifo, B_i00_nxt, B_k00_nxt, B_i0_nxt, B_k0_nxt)
-            
-            #arrayvals_B_7.reinitialize_arrs(init_arr=B_vals, fifo=in_fifo)
-            arrayvals_B_7 = Array(name="Bvals", init_arr=B_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo) 
+            arrayvals_B_7 = Array(name="Bvals", init_arr=B_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo)
             mem_model_bvals.valid_tile_received()
             nxt_tile_present[4] = True
         if mem_blocks_decl_flag and arrayvals_C_8.out_done() and mem_model_cvals.valid_tile() and not nxt_tile_present[5]:
@@ -443,9 +411,10 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_j00_nxt = int(C_glb_nxt[1])
             C_k00_nxt = int(C_glb_nxt[0])
             C_mem_nxt = ref_to_crd_convertor["C_" +
-                                             str(mem_model_cvals.token() // 1000000)][mem_model_cvals.token() % 1000000].split("_")
+                                             str(mem_model_cvals.token() //
+                                                 1000000)][mem_model_cvals.token() % 1000000].split("_")
             C_j0_nxt = int(C_mem_nxt[1])
-            C_k0_nxt = int(C_mem_nxt[0]) 
+            C_k0_nxt = int(C_mem_nxt[0])
             C_dir = "tensor_C_tile_" + str(C_k00_nxt) + "_" + str(C_j00_nxt) + "_" + str(C_k0_nxt) + "_" + str(C_j0_nxt)
             C_dirname = os.path.join(formatted_dir, C_dir)
             C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
@@ -456,7 +425,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             nxt_tile_present[5] = True
 
         if mem_blocks_decl_flag and fiberlookup_Bi_19.out_done() and nxt_tile_present[0]:
-            mem_model_bi.check_if_done(True) 
+            mem_model_bi.check_if_done(True)
             nxt_tile_present[0] = False
         else:
             mem_model_bi.check_if_done(False)
@@ -471,7 +440,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
         else:
             mem_model_cj.check_if_done(False)
         if mem_blocks_decl_flag and fiberlookup_Ck_15.out_done() and nxt_tile_present[2]:
-            mem_model_ck.check_if_done(True) 
+            mem_model_ck.check_if_done(True)
             nxt_tile_present[2] = False
         else:
             mem_model_ck.check_if_done(False)
@@ -485,8 +454,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             nxt_tile_present[4] = False
         else:
             mem_model_bvals.check_if_done(False)
- 
-
         # Mem tile ready for working compute
         if not mem_blocks_decl_flag and mem_model_b.valid_tile() and mem_model_c.valid_tile():
             # mem tile kicks in
@@ -623,16 +590,19 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             if report_stats and c_tile_id not in tile_id_c:
                 c_vals_size += len(C_vals)
                 tile_id_c.append(c_tile_id)
-            debug_sim2 = debug_sim # True #False
-             
-            fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim2, statistics=report_stats)
-            fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim2, statistics=report_stats)
+            debug_sim2 = False
+            fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
+                                                    debug=debug_sim2, statistics=report_stats)
+            fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1,
+                                                    debug=debug_sim2, statistics=report_stats)
             repsiggen_i_17 = RepeatSigGen(debug=debug_sim2, statistics=report_stats)
             repeat_Ci_16 = Repeat(debug=debug_sim2, statistics=report_stats)
-            fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim2, statistics=report_stats)
+            fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0,
+                                                    debug=debug_sim2, statistics=report_stats)
             intersectk_13 = Intersect2(debug=debug_sim2, statistics=report_stats)
             crdhold_5 = CrdHold(debug=debug_sim2, statistics=report_stats)
-            fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2, statistics=report_stats)
+            fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1,
+                                                    debug=debug_sim2, statistics=report_stats)
             arrayvals_C_8 = Array(name="C", init_arr=C_vals, debug=debug_sim2, statistics=report_stats)
             crdhold_4 = CrdHold(debug=debug_sim2, statistics=report_stats)
             repsiggen_j_10 = RepeatSigGen(debug=debug_sim2, statistics=report_stats)
@@ -647,13 +617,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                             debug=debug_sim2, statistics=report_stats)
             fiberwrite_X1_1 = CompressWrScan(name="X1", seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1],
                                              fill=fill, debug=debug_sim2, statistics=report_stats)
-            fiberwrite_X0_2 = CompressWrScan(name="X0", seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim2, statistics=report_stats)
-            #print("INITIALIZE compute loop at ", time_cnt)
-            
+            fiberwrite_X0_2 = CompressWrScan(name="X0", seg_size=2, size=B_shape[0],
+                                             fill=fill, debug=debug_sim2, statistics=report_stats)
+            # print("INITIALIZE compute loop at ", time_cnt)
             initialize_cntr = time_cnt
             mem_model_b.valid_tile_received()
             mem_model_c.valid_tile_received()
-            #check_flag = True
             # Chekc if current tile has already been computed on
             if str(B_i00) + "," + str(B_k00) + "," + str(C_j00) + ":" + \
                     "," + str(B_i0) + "," + str(B_k0) + "," + str(C_j0) in array2:
@@ -663,12 +632,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                 assert False
 
         if flag:
-            #fiberlookup_Bi_19.set_path(Bi_path)
-            #fiberlookup_Bk_14.set_path(Bk_path)
-            #fiberlookup_Ck_15.set_path(Ck_path)
-            #fiberlookup_Cj_12.set_path(Cj_path)
-            #arrayvals_B_7.set_path(Bval_path)
-            #arrayvals_C_8.set_path(Cval_path)
             if len(in_ref_B) > 0:
                 fiberlookup_Bi_19.set_in_ref(in_ref_B.pop(0))
             fiberlookup_Bk_14.set_in_ref(fiberlookup_Bi_19.out_ref())
@@ -697,14 +660,14 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             spaccumulator1_3.set_crd_outer(spaccumulator1_3_drop_crd_outer.out_val())
             spaccumulator1_3.set_crd_inner(spaccumulator1_3_drop_crd_inner.out_val())
             spaccumulator1_3.set_val(spaccumulator1_3_drop_val.out_val())
-            #print("Write: ", spaccumulator1_3.out_val(), spaccumulator1_3.out_crd_inner(), spaccumulator1_3.out_crd_outer())
+            # print("Write: ", spaccumulator1_3.out_val(), spaccumulator1_3.out_crd_inner(), spaccumulator1_3.out_crd_outer())
             fiberwrite_Xvals_0.set_input(spaccumulator1_3.out_val())
             fiberwrite_X1_1.set_input(spaccumulator1_3.out_crd_inner())
             fiberwrite_X0_2.set_input(spaccumulator1_3.out_crd_outer())
             if debug_sim2:
-                print("____________________________________", time_cnt)
+                print("____________________________________", time_cnt, tiled_done, tile_signalled)
             # If tile computed on move ahead
-            if tiled_done: #  and not tile_signalled:
+            if tiled_done:  # and not tile_signalled:
                 mem_model_b.check_if_done(tiled_done)
                 mem_model_c.check_if_done(tiled_done)
                 tile_signalled = True
@@ -723,7 +686,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
         repeat_Bj00.update()
         glb_model_b.update(time_cnt)
         glb_model_c.update(time_cnt)
-        # print("000000000000000000000000000000000000000000000000000000000000000")
         if flag_glb:
             fiberlookup_Bi0.update()
             fiberlookup_Bk0.update()
@@ -734,8 +696,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             fiberlookup_Cj0.update()
             repsiggen_j0.update()
             repeat_Bj0.update()
-        # print("1111111111111111111111111111111111111111111111111111111111111111")
-        # print("1111111111111111111111111111111111111111111111111111111111111111")
         mem_model_b.update(time_cnt)
         mem_model_c.update(time_cnt)
         mem_model_bk.update(time_cnt)
@@ -769,10 +729,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             fiberwrite_X1_1.update()
             fiberwrite_X0_2.update()
             tiled_done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
-            #print("___________________________________________________________________________", time_cnt, tiled_done)
-            # Not required used to skip tiles
-            #if not tiled_done:
-            #    tile_signalled = False
             if tiled_skip:
                 tiled_done = True
             if tiled_done:
@@ -816,7 +772,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                 if debug_sim:
                     pass
                 if check_gold:
-                    #assert B_k00 == C_k00 and B_k0 == C_k0
                     B_dir_t = "tensor_B_tile_" + str(B_i00) + "_" + str(B_k00) + "_" + str(B_i0) + "_" + str(B_k0)
                     B_dirname_t = os.path.join(formatted_dir, B_dir_t)
                     C_dir_t = "tensor_C_tile_" + str(C_k00) + "_" + str(C_j00) + "_" + str(C_k0) + "_" + str(C_j0)
@@ -844,10 +799,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     C_seg1_t = read_inputs(C1_seg_filename_t)
                     C_crd1_t = read_inputs(C1_crd_filename_t)
                     C_vals_t = read_inputs(C_vals_filename_t, float)
-                    
-                    #print(B_crd0_t, B_crd1_t, B_vals_t)
-                    #print(C_crd0_t, C_crd1_t, C_vals_t)
-                    if C_j0 == 0 and C_k0 == 0 and B_i0 == 0:
+                    if C_j0 == 0 and B_k0 == 0 and B_i0 == 0:
                         print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
                                             None, debug_sim, out_crds=out_crds, out_segs=out_segs,
@@ -887,11 +839,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                             done = True
         if not tiled_skip:
             time_cnt += 1
-            #if time_cnt > 30000:
-            #    return
         tiled_skip = False
-
-    #print("-")
     if report_stats:
         print(b_vals_size, c_vals_size)
         print(len(array), len(array2), len(array3))
