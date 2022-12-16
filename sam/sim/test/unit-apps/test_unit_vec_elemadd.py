@@ -12,7 +12,7 @@ from sam.sim.test.test import TIMEOUT, check_arr, check_seg_arr
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_vec_elemadd_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
-    assert(size > max_val)
+    assert (size > max_val)
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))

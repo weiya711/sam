@@ -17,6 +17,9 @@ def pytest_addoption(parser):
                      help="Store output to filename for functional output checking")
     parser.addoption("--synth", action="store_true", default=False,
                      help="Flag that enables functional output checking")
+    parser.addoption("--cast", action="store_true", default=False,
+                     help="Flag that runs all simulations using integer input "
+                          "and output data (used for hardware simulation comparison)")
 
 
 def pytest_configure(config):
@@ -41,7 +44,7 @@ def pytest_collection_modifyitems(config, items):
             if "frostt" in item.keywords:
                 item.add_marker(skip_frostt)
 
-    if not config.getoption("vecname"):
+    if not config.getoption("--vecname"):
         for item in items:
             if "vec" in item.keywords:
                 item.add_marker(skip_vec)
@@ -90,6 +93,11 @@ def vecname(request):
 @pytest.fixture
 def synth(request):
     return request.config.getoption("--synth")
+
+
+@pytest.fixture
+def cast(request):
+    return request.config.getoption("--cast")
 
 
 @pytest.fixture

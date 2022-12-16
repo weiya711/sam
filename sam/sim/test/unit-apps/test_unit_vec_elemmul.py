@@ -20,7 +20,7 @@ def test_unit_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0)
         print("VECTOR 1:", in_vec1)
         print("VECTOR 2:", in_vec2)
 
-    assert(len(in_vec1) == len(in_vec2))
+    assert (len(in_vec1) == len(in_vec2))
 
     gold_vec = [in_vec1[i] * in_vec2[i] for i in range(len(in_vec1))]
 
@@ -60,7 +60,7 @@ def test_unit_vec_elemmul_u_u_u(dim1, debug_sim, max_val=1000, size=100, fill=0)
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
-    assert(size > max_val)
+    assert (size > max_val)
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
@@ -143,7 +143,7 @@ def test_unit_vec_elemmul_u_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_unit_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0):
-    assert(size > max_val)
+    assert (size > max_val)
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
@@ -221,7 +221,7 @@ def test_unit_vec_elemmul_c_c_c(nnz, debug_sim, max_val=1000, size=1001, fill=0)
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_unit_vec_elemmul_c_c_u(nnz, debug_sim, dim=1000, size=1000, fill=0):
-    assert(size >= dim)
+    assert (size >= dim)
 
     crd_arr1 = [random.randint(0, dim - 1) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))

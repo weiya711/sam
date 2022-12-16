@@ -6,7 +6,7 @@ class WriteScannerNode(HWNode):
     def __init__(self, name=None) -> None:
         super().__init__(name=name)
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -77,7 +77,9 @@ class WriteScannerNode(HWNode):
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
 
     def configure(self, attributes):
-        inner_offset = 0
+
+        stop_lvl = 0
+
         # compressed = int(attributes['format'] == 'compressed')
         if 'format' in attributes and 'vals' in attributes['format'].strip('"'):
             compressed = 1
@@ -87,16 +89,22 @@ class WriteScannerNode(HWNode):
         else:
             compressed = 1
 
+        if 'spacc' in attributes:
+            spacc_mode = 1
+            init_blank = 1
+            assert 'stop_lvl' in attributes
+            stop_lvl = int(attributes['stop_lvl'].strip('"'))
+        else:
+            spacc_mode = 0
+            init_blank = 0
+
         # compressed = int(attributes['format'] == 'compressed')
         if attributes['type'].strip('"') == 'arrayvals':
             lowest_level = 1
-            stop_lvl = 0
         elif attributes['mode'].strip('"') == 'vals' or attributes['format'].strip('"') == 'vals':
             lowest_level = 1
-            stop_lvl = 0
         else:
             lowest_level = 0
-            stop_lvl = int(attributes['mode'].strip('"'))
 
         # Setting block mode if this write scanner is attached to an application read
         if attributes['type'].strip('"') == 'fiberlookup' or attributes['type'].strip('"') == 'arrayvals':
@@ -106,12 +114,14 @@ class WriteScannerNode(HWNode):
 
         # block_mode = int(attributes['type'].strip('"') == 'fiberlookup')
         # cfg_tuple = (inner_offset, compressed, lowest_level, stop_lvl, block_mode)
-        cfg_tuple = (compressed, lowest_level, stop_lvl, block_mode)
+        cfg_tuple = (compressed, lowest_level, stop_lvl, block_mode, init_blank, spacc_mode)
         cfg_kwargs = {
             # 'inner_offset': inner_offset,
             'compressed': compressed,
             'lowest_level': lowest_level,
             'stop_lvl': stop_lvl,
-            'block_mode': block_mode
+            'block_mode': block_mode,
+            'init_blank': init_blank,
+            'spacc_mode': spacc_mode
         }
         return cfg_tuple, cfg_kwargs

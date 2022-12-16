@@ -21,61 +21,57 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 
 
 # FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
-def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fill=0):
-    C_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    C_shape_filename = os.path.join(C_dirname, "B_shape.txt")
+def test_mat_residual(samBench, ssname, cast, check_gold, report_stats, debug_sim, fill=0):
+    C_dirname = os.path.join(formatted_dir, ssname, "mat_residual")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "B0_seg.txt")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "B0_crd.txt")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "B1_seg.txt")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "B1_crd.txt")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "B_vals.txt")
+    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
-    b_dirname = os.path.join(formatted_dir, ssname, "other")
-    b_fname = [f for f in os.listdir(b_dirname) if ssname + "-vec_mode0" in f]
-    assert len(b_fname) == 1, "Should only have one 'other' folder that matches"
-    b_fname = b_fname[0]
-    b_dirname = os.path.join(b_dirname, b_fname)
-    b_shape = [C_shape[0]]
+    b_dirname = C_dirname
+#    b_fname = [f for f in os.listdir(b_dirname) if ssname + "-vec_mode0" in f]
+#    assert len(b_fname) == 1, "Should only have one 'other' folder that matches"
+#    b_fname = b_fname[0]
+#    b_dirname = os.path.join(b_dirname, b_fname)
 
-    b0_seg_filename = os.path.join(b_dirname, "C0_seg.txt")
+    b_shape = [C_shape[0]]
+    b0_seg_filename = os.path.join(b_dirname, "tensor_b_mode_0_seg")
     b_seg0 = read_inputs(b0_seg_filename)
-    b0_crd_filename = os.path.join(b_dirname, "C0_crd.txt")
+    b0_crd_filename = os.path.join(b_dirname, "tensor_b_mode_0_crd")
     b_crd0 = read_inputs(b0_crd_filename)
 
-    b_vals_filename = os.path.join(b_dirname, "C_vals.txt")
+    b_vals_filename = os.path.join(b_dirname, "tensor_b_mode_vals")
     b_vals = read_inputs(b_vals_filename, float)
 
-    d_dirname = os.path.join(formatted_dir, ssname, "other")
-    d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode1" in f]
-    assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
-    d_fname = d_fname[0]
-    d_dirname = os.path.join(d_dirname, d_fname)
+    d_dirname = C_dirname
+#    d_fname = [f for f in os.listdir(d_dirname) if ssname + "-vec_mode1" in f]
+#    assert len(d_fname) == 1, "Should only have one 'other' folder that matches"
+#    d_fname = d_fname[0]
+#    d_dirname = os.path.join(d_dirname, d_fname)
 
     d_shape = [C_shape[1]]
-
-    d0_seg_filename = os.path.join(d_dirname, "C0_seg.txt")
+    d0_seg_filename = os.path.join(d_dirname, "tensor_d_mode_0_seg")
     d_seg0 = read_inputs(d0_seg_filename)
-    d0_crd_filename = os.path.join(d_dirname, "C0_crd.txt")
+    d0_crd_filename = os.path.join(d_dirname, "tensor_d_mode_0_crd")
     d_crd0 = read_inputs(d0_crd_filename)
 
-    d_vals_filename = os.path.join(d_dirname, "C_vals.txt")
+    d_vals_filename = os.path.join(d_dirname, "tensor_d_mode_vals")
     d_vals = read_inputs(d_vals_filename, float)
 
     C_shape0_min = min(len(b_vals) + len(C_crd0), b_shape[0])
+
     fiberlookup_bi_17 = CompressedCrdRdScan(crd_arr=b_crd0, seg_arr=b_seg0, debug=debug_sim, statistics=report_stats)
     fiberlookup_Ci_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
     unioni_16 = Union2(debug=debug_sim, statistics=report_stats)
@@ -245,5 +241,5 @@ def test_mat_residual(samBench, ssname, check_gold, report_stats, debug_sim, fil
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_residual(ssname, debug_sim, out_crds, out_segs, out_vals, "s0")
+        check_gold_mat_residual(ssname, debug_sim, cast, out_crds, out_segs, out_vals, "s0")
     samBench(bench, extra_info)
