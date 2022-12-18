@@ -282,6 +282,34 @@ class memory_block():
             self.load_not_valid = 0
             self.not_load_valid = 0
 
+    def stats_base(self):
+        temp_dict = {self.name + "_load_cycle": 0, self.name + "_valid_cycle": 0, self.name + "_ready_cycle": 0, 
+                     self.name + "_ready_not_valid_not_load_cycle": 0, self.name + "_not_ready_valid_not_load_cycle": 0,
+                     self.name + "_not_ready_not_valid_load": 0, self.name + "_ready_valid_not_load": 0,
+                     self.name + "_ready_not_valid_load": 0, self.name + "_not_ready_valid_load": 0, self.name + "_ready_valid_load": 0}
+        return temp_dict
+
+    def stats_cycle(self):
+        temp_dict = {self.name + "_load_cycle": self.loading, self.name + "_valid_cycle": self.valid, self.name + "_ready_cycle": self.ready, 
+                     self.name + "_ready_not_valid_not_load_cycle": self.ready and not self.valid and not self.loading,
+                     self.name + "_not_ready_valid_not_load_cycle": not self.ready and self.valid and not self.loading,
+                     self.name + "_not_ready_not_valid_load": not self.ready and not self.valid and self.loading,
+                     self.name + "_ready_valid_not_load": self.ready and self.valid and not self.loading,
+                     self.name + "_ready_not_valid_load": self.ready and not self.valid and self.loading,
+                     self.name + "_not_ready_valid_load": not self.ready and self.valid and self.loading,
+                     self.name + "_ready_valid_load": self.ready and self.valid and self.loading} 
+        # temp_dict = {self.name + "_load_cycle": self.loading, self.name + "_valid_cycle": self.valid,
+        #              self.name + "_valid_not_load_cycle": self.valid and not self.loading,
+        #              self.name + "_not_valid_load": not self.valid and self.loading}
+        return temp_dict
+
+    def stats_cycle2(self):
+        temp_dict = {self.name + "_load_cycle": self.loading, self.name + "_valid_cycle": self.valid, self.name + "_ready_cycle": self.ready} 
+        # temp_dict = {self.name + "_load_cycle": self.loading, self.name + "_valid_cycle": self.valid,
+        #              self.name + "_valid_not_load_cycle": self.valid and not self.loading,
+        #              self.name + "_not_valid_load": not self.valid and self.loading}
+        return temp_dict
+
     def update_stats(self):
         if self.get_stats:
             if self.loading:

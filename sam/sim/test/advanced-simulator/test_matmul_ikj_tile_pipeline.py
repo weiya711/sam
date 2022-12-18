@@ -33,10 +33,14 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                  skip_empty, yaml_name, nbuffer, fill=0):
     stats_dict = {"mul_6_ops": 0, "spacc1_3_rmw_ops": [], "out_arr_size": 0, "repsiggen_i_17_total_rep": 0,
                   "repsiggen_j_10_total_rep": 0, "repsiggen_i_17_max_rep": 0, "repsiggen_j_10_max_rep": 0,
-                  "fiberlookup_Bi_19_done": 0, "fiberlookup_Bk_14_done": 0, "fiberlookup_Bi_19_ttl": 0, "fiberlookup_Bk_14_ttl": 0, "repsiggen_i_17_done": 0,
-                  "repeat_Ci_16_done": 0, "repeat_Bj_9_done": 0, "fiberlookup_Ck_15_done": 0, "fiberlookup_Ck_15_ttl": 0, "intersectk_13_done": 0, "crdhold_5_done": 0,
-                  "fiberlookup_Cj_12_done": 0, "fiberlookup_Cj_12_ttl": 0, "arrayvals_C_8_done": 0, "crdhold_4_done": 0, "repsiggen_j_10_done": 0,
-                  "arrayvals_B_7_done": 0, "mul_6_done": 0, "spaccumulator1_3_done": 0, "spaccumulator1_3_inner_done": 0,
+                  "fiberlookup_Bi_19_done": 0, "fiberlookup_Bk_14_done": 0, "fiberlookup_Bi_19_ttl": 0,
+                  "fiberlookup_Bk_14_ttl": 0, "repsiggen_i_17_done": 0,
+                  "repeat_Ci_16_done": 0, "repeat_Bj_9_done": 0, "fiberlookup_Ck_15_done": 0,
+                  "fiberlookup_Ck_15_ttl": 0, "intersectk_13_done": 0, "crdhold_5_done": 0,
+                  "fiberlookup_Cj_12_done": 0, "fiberlookup_Cj_12_ttl": 0, "arrayvals_C_8_done": 0,
+                  "crdhold_4_done": 0, "repsiggen_j_10_done": 0,
+                  "arrayvals_B_7_done": 0, "mul_6_done": 0, "spaccumulator1_3_done": 0,
+                  "spaccumulator1_3_inner_done": 0,
                   "spaccumulator1_3_outer_done": 0, "spaccumulator1_3_vals_done": 0}
     # Helper Datastructures
     # Sizes for the full matrix (to get software loop sizes)
@@ -94,44 +98,54 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     # Intitialize memory blocks
     glb_model_b = memory_block(name="GLB_B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
-                               bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],
-                               debug=debug_sim)
+                               bandwidth=memory_config["Glb_tile_bandwidth"] // memory_config["Glb_tiles"],
+                               latency=memory_config["Global_Glb_latency"],
+                               debug=debug_sim, pipeline_en=True, statistics=report_stats)
     glb_model_c = memory_block(name="GLB_C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
-                               bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],
-                               debug=debug_sim)
+                               bandwidth=memory_config["Glb_tile_bandwidth"] // memory_config["Glb_tiles"],
+                               latency=memory_config["Global_Glb_latency"],
+                               debug=debug_sim, pipeline_en=True, statistics=report_stats)
     mem_model_b = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
-                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                               latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
+                               size=memory_config["Mem_memory"],
+                               bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                               latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_c = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
-                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                               latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
-    mem_model_bk = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
+                               size=memory_config["Mem_memory"],
+                               bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                               latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
+    mem_model_bk = memory_block(name="Bk", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
-                                size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
-    mem_model_ck = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
+                                size=memory_config["Mem_memory"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
+    mem_model_ck = memory_block(name="Ck", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
-                                size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
-    mem_model_bi = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
+                                size=memory_config["Mem_memory"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
+    mem_model_bi = memory_block(name="Bi", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
-                                size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
-    mem_model_cj = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
+                                size=memory_config["Mem_memory"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
+    mem_model_cj = memory_block(name="Cj", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
-                                size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
-    mem_model_bvals = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
+                                size=memory_config["Mem_memory"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
+    mem_model_bvals = memory_block(name="Bvals", skip_blocks=skip_empty, nbuffer=nbuffer,
                                    element_size=memory_config["Bytes_per_element"],
-                                   size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
-    mem_model_cvals = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
+                                   size=memory_config["Mem_memory"],
+                                   bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
+    mem_model_cvals = memory_block(name="Cvals", skip_blocks=skip_empty, nbuffer=nbuffer,
                                    element_size=memory_config["Bytes_per_element"],
-                                   size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"],
-                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim)
+                                   size=memory_config["Mem_memory"],
+                                   bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                   latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     nxt_tile_present = [True] * 6
     # Output memory blocks Not used with sparse tiling figure out later
     mem_model_x = output_memory_block(name="X", element_size=memory_config["Bytes_per_element"],
@@ -443,12 +457,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             nxt_tile_present[2] = False
         else:
             mem_model_ck.check_if_done(False)
-        if mem_blocks_decl_flag and arrayvals_C_8.out_done() and nxt_tile_present[4]:
+        if mem_blocks_decl_flag and arrayvals_C_8.out_done() and nxt_tile_present[5]:
             mem_model_cvals.check_if_done(True)
             nxt_tile_present[5] = False
         else:
             mem_model_cvals.check_if_done(False)
-        if mem_blocks_decl_flag and arrayvals_B_7.out_done() and nxt_tile_present[5]:
+        if mem_blocks_decl_flag and arrayvals_B_7.out_done() and nxt_tile_present[4]:
             mem_model_bvals.check_if_done(True)
             nxt_tile_present[4] = False
         else:
@@ -798,33 +812,32 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     C_seg1_t = read_inputs(C1_seg_filename_t)
                     C_crd1_t = read_inputs(C1_crd_filename_t)
                     C_vals_t = read_inputs(C_vals_filename_t, float)
-                    if C_j0 == 0 and B_k0 == 0 and B_i0 == 0:
+                    if C_j0 == 0 and B_k0 == 0:  # and B_i0 == 0:
                         print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
                                             None, debug_sim, out_crds=out_crds, out_segs=out_segs,
                                             out_val=out_vals, out_format="ss01")
                 if report_stats:
                     stats_dict["mul_6_ops"] = mul_6.return_statistics()["cycle_operation"]
-                    stats_dict["spacc1_3_rmw_ops"] = spaccumulator1_3.return_statistics()["rmw_ops"]
-                    stats_dict["out_arr_size"] = fiberwrite_Xvals_0.return_statistics()["size"]
+                    stats_dict["spacc1_3_rmw_ops"].append(spaccumulator1_3.return_statistics()["rmw_ops"])
+                    stats_dict["out_arr_size"] += fiberwrite_Xvals_0.return_statistics()["size"]
 
                     stats_dict["repsiggen_i_17_total_rep"] += repsiggen_i_17.cycles_curr_total
                     stats_dict["repsiggen_j_10_total_rep"] += repsiggen_j_10.cycles_curr_total
                     stats_dict["repsiggen_i_17_max_rep"] += repsiggen_i_17.cycles_curr_max
                     stats_dict["repsiggen_j_10_max_rep"] += repsiggen_j_10.cycles_curr_max
-                    stats_dict["fiberlookup_Bi_19_done"] += fiberlookup_Bi_19.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Bi_19.return_statistics_base()["start_cycle"]
-                    stats_dict["fiberlookup_Bk_14_done"] += fiberlookup_Bk_14.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Bk_14.return_statistics_base()["start_cycle"]
+                    # stats_dict["fiberlookup_Bi_19_done"] += fiberlookup_Bi_19.return_statistics_base()["done_cycles"] -\
+                    #                                         fiberlookup_Bi_19.return_statistics_base()["start_cycle"]
+                    # stats_dict["fiberlookup_Bk_14_done"] += fiberlookup_Bk_14.return_statistics_base()["done_cycles"] -\
+                    #                                         fiberlookup_Bk_14.return_statistics_base()["start_cycle"]
                     stats_dict["repsiggen_i_17_done"] += repsiggen_i_17.return_statistics_base()["done_cycles"]
                     stats_dict["repeat_Ci_16_done"] += repeat_Ci_16.return_statistics_base()["done_cycles"]
-                    stats_dict["fiberlookup_Ck_15_done"] += fiberlookup_Ck_15.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Ck_15.return_statistics_base()["start_cycle"]
+                    # stats_dict["fiberlookup_Ck_15_done"] += fiberlookup_Ck_15.return_statistics_base()["done_cycles"] -\
+                    #                                         fiberlookup_Ck_15.return_statistics_base()["start_cycle"]
                     stats_dict["intersectk_13_done"] += intersectk_13.return_statistics_base()["done_cycles"]
                     stats_dict["crdhold_5_done"] += crdhold_5.return_statistics_base()["done_cycles"]
-                    stats_dict["fiberlookup_Cj_12_done"] += fiberlookup_Cj_12.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Cj_12.return_statistics_base()["start_cycle"]
-                    
+                    # stats_dict["fiberlookup_Cj_12_done"] += fiberlookup_Cj_12.return_statistics_base()["done_cycles"] -\
+                    #                                         fiberlookup_Cj_12.return_statistics_base()["start_cycle"]
                     stats_dict["fiberlookup_Bi_19_ttl"] += fiberlookup_Bi_19.return_statistics_base()["done_cycles"]
                     stats_dict["fiberlookup_Bk_14_ttl"] += fiberlookup_Bk_14.return_statistics_base()["done_cycles"]
                     stats_dict["fiberlookup_Ck_15_ttl"] += fiberlookup_Ck_15.return_statistics_base()["done_cycles"]
@@ -865,3 +878,11 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
         print("\t Mul ops:", stats_dict["mul_6_ops"])
         print("\t Acc ops:", sum(stats_dict["spacc1_3_rmw_ops"]))
         print("\t Out size:", stats_dict["out_arr_size"])
+        print("\t Stats:", glb_model_b.print_stats())
+        print("\t Stats:", glb_model_c.print_stats())
+        print("\t Stats:", mem_model_bk.print_stats())
+        print("\t Stats:", mem_model_ck.print_stats())
+        print("\t Stats:", mem_model_bi.print_stats())
+        print("\t Stats:", mem_model_cj.print_stats())
+        print("\t Stats:", mem_model_bvals.print_stats())
+        print("\t Stats:", mem_model_cvals.print_stats())

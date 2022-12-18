@@ -47,13 +47,14 @@ def check_gold_matmul_tiled(tile_crd_b, tile_crd_c, ssname, debug_sim, out_crds,
 
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
-    if debug_sim:
+    if debug_sim and len(out_val) > 0: #debug_sim:
+        print("The  array is here")
         print("Out segs:", out_segs)
         print("Out crds:", out_crds)
         print("Out vals:", out_val)
         #print("Dense Mat1:\n", B_scipy.toarray())
         #print("Dense Mat2:\n", C_scipy.toarray())
-        print("Dense Gold:", gold_nd)
+        #print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
     
     if debug_sim:

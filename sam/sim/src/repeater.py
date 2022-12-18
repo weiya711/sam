@@ -270,9 +270,14 @@ class RepeatSigGen(Primitive):
             self.data_ready = True
             self.branches = []
             self.depth = depth
+        if self.get_stats:
+            self.cycles_curr_total = 0
+            self.cycles_curr_repeat = 0
+            self.cycles_curr_max = 0
 
     def update(self):
         self.update_done()
+        self.update_repeats()
         if self.backpressure_en:
             self.data_ready = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -312,6 +317,16 @@ class RepeatSigGen(Primitive):
     def print_debug(self):
         print("DEBUG: REP GEN", "\t In", "", "\t Out ", self.curr_repeat, "\t INstream",
               self.istream)
+
+    def update_repeats(self):
+        if self.get_stats:
+            if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+                if self.curr_repeat == "R":
+                    self.cycles_curr_repeat += 1
+                    self.cycles_curr_total += 1
+                if self.curr_repeat == "S" or self.curr_repeat == "D":
+                    self.cycles_curr_max = max(self.cycles_curr_max, self.cycles_curr_repeat)
+                    self.cycles_curr_repeat = 0
 
     def check_backpressure(self):
         if self.backpressure_en:
