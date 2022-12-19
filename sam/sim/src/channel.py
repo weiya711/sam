@@ -358,7 +358,8 @@ class memory_block():
         if tile_ptr == "D":
             self.tile_ptrs_fifo.append("D")
             self.tile_ptrs_size.append(0)
-            self.if_latency_.append(True)
+            if self.nbuffer:
+                self.if_latency_.append(True)
             return
         if self.nbuffer or self.full_buff:
             if tile_ptr != "" and isinstance(tile_ptr, int):
@@ -423,7 +424,6 @@ class memory_block():
         self.update_stats()
         if self.nbuffer:
             self.done_in = False
-            #print(self.name, len(self.if_latency_), len(self.tile_ptrs_fifo))
             if len(self.if_latency_) != len(self.tile_ptrs_fifo):
                 assert False
             assert len(self.tile_ptrs) == len(self.tile_sizes)
@@ -440,7 +440,6 @@ class memory_block():
                 assert self.curr_size == sum(self.tile_sizes) or \
                        self.curr_size == (sum(self.tile_sizes) + self.load_size) or \
                        self.curr_size == (sum(self.tile_sizes) + self.load_size + self.remove_size)
-
                 self.outputed = False
                 self.done_processed = True
                 self.valid = False
