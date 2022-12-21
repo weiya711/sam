@@ -944,7 +944,6 @@ for apath in file_paths:
                         nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                 data.add_done(v)
 
-
     output_tensor = ""
     ct = 0
     for k in tensor_format_parse.return_all_tensors():
@@ -959,6 +958,6 @@ for apath in file_paths:
     generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
 
     f.close()
-    os.system("cp " + out_name[num] + ".py " + os.getcwd()  + "/sam/sim/test/apps/test_" + out_name[num] + ".py")
+    os.system("cp " + out_name[num] + ".py " + os.getcwd() + "/sam/sim/test/apps/test_" + out_name[num] + ".py")
     os.system("rm " + out_name[num] + ".py")
     num += 1
