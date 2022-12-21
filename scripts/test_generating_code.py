@@ -11,7 +11,7 @@ suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "
                     "matmul_jki", "mat_vecmul_ij", "mat_vecmul_ji", "matmul_kji", "mat_elemadd3", "mat_sddmm.gv",
                     "mat_elemadd", "mat_mattransmul", "mat_residual", "mat_sddmm", "mat_identity_dense"]
 vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
-            "vec_scalar_mul", "vecmul", "vecmul_ij", "vecmul_ki"]
+            "vec_scalar_mul", "vecmul", "vecmul_ij", "vecmul_ki", "vec_spacc_simple"]
 
 other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij",
               "mat_vecmul_ji"]
@@ -99,6 +99,12 @@ class CodeGenerationdatasets:
     def get_if_node_done(self, v):
         return self.done_all[v]
 
+    def if_all_graph_realized(self):
+        for nodes in self.done_all.keys():
+            if self.done_all[nodes] == 0:
+                return False
+        return True
+
 
 def tab(a):
     ans = ""
@@ -170,7 +176,6 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-
     f.write("def test_" + out_name + "(samBench, " + get_dataset_name(out_name) + ", cast, check_gold, debug_sim, "
                                                                                   "report_stats, fill=0):\n")
 
@@ -708,7 +713,9 @@ for apath in file_paths:
                 data.add_done(u)
 
     # FIXME: RENAME VARIABLE FROM i. Also figure out why this in range(10) is there...
-    for i in range(10):
+    # print("FLAG ", apath, data.if_all_graph_realized(), " ", data.get_if_done())
+    while not data.if_all_graph_realized():
+        # print("FLAG ", apath, data.if_all_graph_realized(), " ", data.get_if_done())
         for u, v, _ in list(nx.edge_bfs(networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
             a = networkx_graph.get_edge_data(u, v)[0]
             if d[v]["type"] == "fiberlookup" and data.get_if_node_done(v) == 0 and parents_done(networkx_graph,
@@ -936,6 +943,7 @@ for apath in file_paths:
                                 str(data.get_edge_info(v, i)) + "())\n")
                         nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                 data.add_done(v)
+
 
     output_tensor = ""
     ct = 0
