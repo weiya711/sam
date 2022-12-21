@@ -31,13 +31,11 @@ class TensorFormat:
         return self.tensors[ten]
 
     def set_all_tensors(self, path):
-        read_f = open(apath, "r")
-        comment_line = read_f.readlines()
-        comment = comment_line[1]
-        comment = comment[comment.index("\"") + 1: -1]
-        comment = comment[0: comment.index("\"")]
-        comment = comment.split(",")
-        for tensor_info in comment:
+        graphs1 = pydot.graph_from_dot_file(path)
+        graph1 = graphs1[0]
+        networkx_graph = nx.nx_pydot.from_pydot(graph1)
+        tensor_list = graph1.get_comment().strip('"').split(",")
+        for tensor_info in tensor_list:
             node = tensor_info.split("=")
             self.add_tensor_and_format(node[0], node[1])
         return
@@ -837,7 +835,7 @@ for apath in file_paths:
                         local_edge = data.get_edge_data()[v][i]
                         f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
                                 d[u_]["object"] + ".out_val())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                    nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
                     # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                 for i in range(len(data.get_parents()[v])):
@@ -953,6 +951,6 @@ for apath in file_paths:
     generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
 
     f.close()
-    os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
+    os.system("cp " + out_name[num] + ".py " + os.getcwd()  + "/sam/sim/test/apps/test_" + out_name[num] + ".py")
     os.system("rm " + out_name[num] + ".py")
     num += 1
