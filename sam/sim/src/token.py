@@ -96,7 +96,7 @@ class EmptyFiberStknDrop(Primitive):
 
         if self.done:
             self.curr_out = ''
-            return
+            # return
 
         if self.emit_ival:
             self.curr_out = self.prev_ival
@@ -115,12 +115,14 @@ class EmptyFiberStknDrop(Primitive):
                 self.largest_stkn = ival if self.largest_stkn is None else larger_stkn(self.largest_stkn, ival)
                 self.curr_out = ''
                 self.prev_stkn = True
+                self.done = False
             elif self.prev_stkn and not self.leading_stkn:
                 self.curr_out = self.largest_stkn
                 self.largest_stkn = None
                 self.prev_stkn = False
                 self.prev_ival = ival
                 self.emit_ival = True
+                self.done = False
             elif ival == 'D':
                 self.done = True
                 self.curr_out = 'D'
@@ -129,6 +131,7 @@ class EmptyFiberStknDrop(Primitive):
             elif isinstance(ival, int):
                 self.leading_stkn = False
                 self.curr_out = ival
+                sefl.done = False
         else:
             self.curr_out = ''
 

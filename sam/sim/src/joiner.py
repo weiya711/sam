@@ -366,6 +366,7 @@ class Union2(CrdJoiner2):
                 self.curr_crd2 = self.in_crd2.pop(0)
                 self.curr_ref1 = self.in_ref1.pop(0)
                 self.curr_ref2 = self.in_ref2.pop(0)
+                self.done = False
             elif is_stkn(self.curr_crd1):
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
@@ -374,6 +375,7 @@ class Union2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 if self.get_stats:
                     self.two_only_count += 1
+                self.done = False
             elif is_stkn(self.curr_crd2):
                 self.ocrd = self.curr_crd1
                 self.oref1 = self.curr_ref1
@@ -382,6 +384,7 @@ class Union2(CrdJoiner2):
                 self.curr_ref1 = self.in_ref1.pop(0)
                 if self.get_stats:
                     self.one_only_count += 1
+                self.done = False
             elif is_0tkn(self.curr_crd2):
                 self.ocrd = self.curr_crd1
                 self.oref1 = self.curr_ref1
@@ -390,6 +393,7 @@ class Union2(CrdJoiner2):
                 self.curr_ref1 = self.in_ref1.pop(0)
                 if self.get_stats:
                     self.one_only_count += 1
+                self.done = False
             elif is_0tkn(self.curr_crd1):
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
@@ -398,6 +402,7 @@ class Union2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 if self.get_stats:
                     self.two_only_count += 1
+                self.done = False
             elif self.curr_crd1 < self.curr_crd2:
                 self.ocrd = self.curr_crd1
                 self.oref1 = self.curr_ref1
@@ -406,6 +411,7 @@ class Union2(CrdJoiner2):
                 self.curr_ref1 = self.in_ref1.pop(0)
                 if self.get_stats:
                     self.one_only_count += 1
+                self.done = False
             elif self.curr_crd1 > self.curr_crd2:
                 self.ocrd = self.curr_crd2
                 self.oref1 = 'N'
@@ -414,8 +420,10 @@ class Union2(CrdJoiner2):
                 self.curr_ref2 = self.in_ref2.pop(0)
                 if self.get_stats:
                     self.two_only_count += 1
+                self.done = False
             else:
                 raise Exception('Intersect2: should not enter this case')
+                self.done = False
         else:
             # Do Nothing if no inputs are detected
             if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
