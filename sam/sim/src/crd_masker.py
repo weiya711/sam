@@ -147,3 +147,19 @@ class CrdMask(Primitive):
             stats_dict = {}
         return stats_dict
 
+
+class RandomDropout(CrdMasker):
+    def __init__(self, drop_probability=0.5, **kwargs):
+        super().__init__(**kwargs, lambda *crds: random.random < drop_probability)
+
+class LowerTriangular2D(CrdMasker):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, lambda *crds: crds[0] >= crds[1])
+
+class UpperTriangular2D(CrdMasker):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, lambda *crds: crds[0] <= crds[1])
+
+class Diagonal2D(CrdMasker):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs, lambda *crds: crds[0] == crds[1])
