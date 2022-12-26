@@ -205,27 +205,27 @@ def test_vec_elemmul_bv_split(samBench, run_length, vectype, sparsity, backpress
         if len(in_ref2) > 0:
             bvscan2_1.set_in_ref(in_ref2.pop(0))
 
-        inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv())
-        inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv())
+        inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv(), bvscan1_1)
+        inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv(), bvscan2_1)
 
-        bvscan1_0.set_in_ref(inter1.out_ref1())
+        bvscan1_0.set_in_ref(inter1.out_ref1(), inter1)
 
-        bvscan2_0.set_in_ref(inter1.out_ref2())
+        bvscan2_0.set_in_ref(inter1.out_ref2(), inter1)
 
-        inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv())
-        inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv())
+        inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv(), bvscan1_0)
+        inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv(), bvscan2_0)
 
-        val1.set_load(inter0.out_ref1())
-        val2.set_load(inter0.out_ref2())
-        mul.set_in1(val1.out_load())
-        mul.set_in2(val2.out_load())
+        val1.set_load(inter0.out_ref1(), inter0)
+        val2.set_load(inter0.out_ref2(), inter0)
+        mul.set_in1(val1.out_load(), val1)
+        mul.set_in2(val2.out_load(), val2)
 
-        oval_wrscan.set_input(mul.out_val())
+        oval_wrscan.set_input(mul.out_val(), mul)
 
-        bvdrop.set_inner_bv(inter0.out_bv())
-        bvdrop.set_outer_bv(inter1.out_bv())
-        wrscan0.set_input(bvdrop.out_bv_inner())
-        wrscan1.set_input(bvdrop.out_bv_outer())
+        bvdrop.set_inner_bv(inter0.out_bv(), inter0)
+        bvdrop.set_outer_bv(inter1.out_bv(), inter1)
+        wrscan0.set_input(bvdrop.out_bv_inner(), bvdrop)
+        wrscan1.set_input(bvdrop.out_bv_outer(), bvdrop)
 
         bvscan1_1.update()
         bvscan2_1.update()
