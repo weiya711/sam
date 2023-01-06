@@ -15,7 +15,7 @@ BENCHMARKS=(
 #   matmul_ikj_sparse_tiling2
 #  matmul_ikj_glb_tile
 #  matmul_ikj_glb_tile2
-matmul_ikj_tile_pipeline_back_final
+matmul_ikj_tile_pipeline_final
 #  matmul_ikj_glb_tile_pipeline
 # i matmul_ikj_glb_no_pipe
 #  matmul_ikj_input_only
