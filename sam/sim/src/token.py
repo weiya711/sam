@@ -123,33 +123,41 @@ class EmptyFiberStknDrop(Primitive):
                 self.data_valid = True
             ival = ''
 
+
             if self.done:
                 self.curr_out = ''
-                return
+                # return
 
             if self.emit_ival:
                 self.curr_out = self.prev_ival
                 self.emit_ival = False
 
-                if self.prev_ival == 'D':
+                if self.emit_ival:
                     self.curr_out = self.prev_ival
-                    self.done = True
-                    self.prev_stkn = False
-                    self.leading_stkn = False
-                return
+                    self.emit_ival = False
 
-            if len(self.in_stream) > 0:
-                ival = self.in_stream.pop(0)
+                    if self.prev_ival == 'D':
+                        self.curr_out = self.prev_ival
+                        self.done = True
+                        self.prev_stkn = False
+                        self.leading_stkn = False
+                    return
+
+                if len(self.in_stream) > 0:
+                    ival = self.in_stream.pop(0)
                 if is_stkn(ival) and not self.leading_stkn:
                     self.largest_stkn = ival if self.largest_stkn is None else larger_stkn(self.largest_stkn, ival)
                     self.curr_out = ''
                     self.prev_stkn = True
+                    self.prev_stkn = True
+                    self.done = False
                 elif self.prev_stkn and not self.leading_stkn:
                     self.curr_out = self.largest_stkn
                     self.largest_stkn = None
                     self.prev_stkn = False
                     self.prev_ival = ival
                     self.emit_ival = True
+                    self.done = False
                 elif ival == 'D':
                     self.done = True
                     self.curr_out = 'D'
@@ -158,6 +166,7 @@ class EmptyFiberStknDrop(Primitive):
                 elif isinstance(ival, int):
                     self.leading_stkn = False
                     self.curr_out = ival
+                    self.done = False
             else:
                 self.curr_out = ''
 
