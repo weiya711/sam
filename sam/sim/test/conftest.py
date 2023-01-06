@@ -80,6 +80,16 @@ def debug_sim(request):
 
 
 @pytest.fixture
+def backpressure(request):
+    return request.config.getoption("--back")
+
+
+@pytest.fixture
+def depth(request):
+    return request.config.getoption("--depth")
+
+
+@pytest.fixture
 def check_gold(request):
     return request.config.getoption("--check-gold")
 

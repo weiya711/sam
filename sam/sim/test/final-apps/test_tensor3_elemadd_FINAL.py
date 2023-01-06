@@ -25,7 +25,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_elemadd_FINAL(samBench, frosttname, check_gold, report_stats, debug_sim, fill=0):
+def test_tensor3_elemadd_FINAL(samBench, frosttname, check_gold, report_stats, debug_sim, backpressure, depth, fill=0):
     B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
@@ -70,74 +70,65 @@ def test_tensor3_elemadd_FINAL(samBench, frosttname, check_gold, report_stats, d
     C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
     C_vals = read_inputs(C_vals_filename, float)
 
-    fiberlookup_Bi_14 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
-    fiberlookup_Ci_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats)
-    unioni_13 = Union2(debug=debug_sim, statistics=report_stats)
-
-    fiberwrite_X0_3 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats)
-    fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats)
-    fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats)
-    unionj_10 = Union2(debug=debug_sim, statistics=report_stats)
-
+    fiberlookup_Bi_14 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats,
+                                            back_en=backpressure, depth=int(depth))
+    fiberlookup_Ci_15 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats,
+                                            back_en=backpressure, depth=int(depth))
+    unioni_13 = Union2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    fiberwrite_X0_3 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats,
+                                     back_en=backpressure, depth=int(depth))
+    fiberlookup_Bj_11 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats,
+                                            back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_12 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim, statistics=report_stats,
+                                            back_en=backpressure, depth=int(depth))
+    unionj_10 = Union2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_X1_2 = CompressWrScan(seg_size=2 * len(B_crd0) + 1, size=2 * len(B_crd1), fill=fill,
-                                     debug=debug_sim, statistics=report_stats)
-    fiberlookup_Bk_8 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim, statistics=report_stats)
-    fiberlookup_Ck_9 = CompressedCrdRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim, statistics=report_stats)
-    unionk_7 = Union2(debug=debug_sim, statistics=report_stats)
-
+                                     debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    fiberlookup_Bk_8 = CompressedCrdRdScan(crd_arr=B_crd2, seg_arr=B_seg2, debug=debug_sim, statistics=report_stats,
+                                           back_en=backpressure, depth=int(depth))
+    fiberlookup_Ck_9 = CompressedCrdRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim, statistics=report_stats,
+                                           back_en=backpressure, depth=int(depth))
+    unionk_7 = Union2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_X2_1 = CompressWrScan(seg_size=2 * len(B_crd1) + 1, size=len(B_vals) * 2, fill=fill,
-                                     debug=debug_sim, statistics=report_stats)
-    arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
-    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
-    print("add done")
-    add_4 = Add2(debug=debug_sim, statistics=report_stats)
-    fiberwrite_Xvals_0 = ValsWrScan(size=5804660 * 2, fill=fill, debug=debug_sim, statistics=report_stats)
+                                     debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    arrayvals_C_6 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    add_4 = Add2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    fiberwrite_Xvals_0 = ValsWrScan(size=5804660 * 2, fill=fill, debug=debug_sim, statistics=report_stats,
+                                    back_en=backpressure, depth=int(depth))
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
     time_cnt = 0
-
-    if debug_sim:
-        print("blocks done")
-
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
-            fiberlookup_Bi_14.set_in_ref(in_ref_B.pop(0))
+            fiberlookup_Bi_14.set_in_ref(in_ref_B.pop(0), "")
 
         if len(in_ref_C) > 0:
-            fiberlookup_Ci_15.set_in_ref(in_ref_C.pop(0))
+            fiberlookup_Ci_15.set_in_ref(in_ref_C.pop(0), "")
 
-        unioni_13.set_in1(fiberlookup_Bi_14.out_ref(), fiberlookup_Bi_14.out_crd())
-        unioni_13.set_in2(fiberlookup_Ci_15.out_ref(), fiberlookup_Ci_15.out_crd())
+        unioni_13.set_in1(fiberlookup_Bi_14.out_ref(), fiberlookup_Bi_14.out_crd(), fiberlookup_Bi_14)
+        unioni_13.set_in2(fiberlookup_Ci_15.out_ref(), fiberlookup_Ci_15.out_crd(), fiberlookup_Ci_15)
 
-        fiberwrite_X0_3.set_input(unioni_13.out_crd())
+        fiberwrite_X0_3.set_input(unioni_13.out_crd(), unioni_13)
 
-        fiberlookup_Bj_11.set_in_ref(unioni_13.out_ref1())
+        fiberlookup_Bj_11.set_in_ref(unioni_13.out_ref1(), unioni_13)
 
-        fiberlookup_Cj_12.set_in_ref(unioni_13.out_ref2())
+        fiberlookup_Cj_12.set_in_ref(unioni_13.out_ref2(), unioni_13)
 
-        unionj_10.set_in1(fiberlookup_Bj_11.out_ref(), fiberlookup_Bj_11.out_crd())
-        unionj_10.set_in2(fiberlookup_Cj_12.out_ref(), fiberlookup_Cj_12.out_crd())
-
-        fiberwrite_X1_2.set_input(unionj_10.out_crd())
-
-        fiberlookup_Bk_8.set_in_ref(unionj_10.out_ref1())
-
-        fiberlookup_Ck_9.set_in_ref(unionj_10.out_ref2())
-
-        unionk_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd())
-        unionk_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd())
-
-        fiberwrite_X2_1.set_input(unionk_7.out_crd())
-
-        arrayvals_B_5.set_load(unionk_7.out_ref1())
-
-        arrayvals_C_6.set_load(unionk_7.out_ref2())
-
-        add_4.set_in1(arrayvals_B_5.out_val())
-        add_4.set_in2(arrayvals_C_6.out_val())
-
-        fiberwrite_Xvals_0.set_input(add_4.out_val())
+        unionj_10.set_in1(fiberlookup_Bj_11.out_ref(), fiberlookup_Bj_11.out_crd(), fiberlookup_Bj_11)
+        unionj_10.set_in2(fiberlookup_Cj_12.out_ref(), fiberlookup_Cj_12.out_crd(), fiberlookup_Cj_12)
+        fiberwrite_X1_2.set_input(unionj_10.out_crd(), unionj_10)
+        fiberlookup_Bk_8.set_in_ref(unionj_10.out_ref1(), unionj_10)
+        fiberlookup_Ck_9.set_in_ref(unionj_10.out_ref2(), unionj_10)
+        unionk_7.set_in1(fiberlookup_Bk_8.out_ref(), fiberlookup_Bk_8.out_crd(), fiberlookup_Bk_8)
+        unionk_7.set_in2(fiberlookup_Ck_9.out_ref(), fiberlookup_Ck_9.out_crd(), fiberlookup_Ck_9)
+        fiberwrite_X2_1.set_input(unionk_7.out_crd(), unionk_7)
+        arrayvals_B_5.set_load(unionk_7.out_ref1(), unionk_7)
+        arrayvals_C_6.set_load(unionk_7.out_ref2(), unionk_7)
+        add_4.set_in1(arrayvals_B_5.out_val(), arrayvals_B_5)
+        add_4.set_in2(arrayvals_C_6.out_val(), arrayvals_C_6)
+        fiberwrite_Xvals_0.set_input(add_4.out_val(), add_4)
 
         fiberlookup_Bi_14.update()
         fiberlookup_Ci_15.update()

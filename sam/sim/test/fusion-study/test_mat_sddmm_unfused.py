@@ -36,7 +36,7 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
 # def test_mat_sddmm_unfused(samBench, ssname, check_gold, debug_sim, fill=0):
-def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, fill=0):
+def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, backpressure, depth, fill=0):
 
     # DCSR
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
@@ -83,21 +83,22 @@ def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, fill=0):
     for idx in range(len(D_vals)):
         D_vals[idx] = 1
 
-    fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
-    repsiggen_i_22 = RepeatSigGen(debug=debug_sim)
-    repeat_Di_21 = Repeat(debug=debug_sim)
-    fiberlookup_Dj_20 = UncompressCrdRdScan(dim=D_shape[1], debug=debug_sim)
-    fiberlookup_Dk_14 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim)
-    repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
-    repeat_Cj_15 = Repeat(debug=debug_sim)
-    fiberlookup_Ck_13 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim)
-    intersectk_12 = Intersect2(debug=debug_sim)
-    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
-    arrayvals_D_8 = Array(init_arr=D_vals, debug=debug_sim)
-    mul_4 = Multiply2(debug=debug_sim)
-    reduce_3 = Reduce(debug=debug_sim)
+    fiberlookup_Ci_26 = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repsiggen_i_22 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_Di_21 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Dj_20 = UncompressCrdRdScan(dim=D_shape[1], debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Dk_14 = UncompressCrdRdScan(dim=D_shape[0], debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repsiggen_j_16 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_Cj_15 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Ck_13 = UncompressCrdRdScan(dim=C_shape[1], debug=debug_sim, back_en=backpressure, depth=int(depth))
+    intersectk_12 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_D_8 = Array(init_arr=D_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul_4 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    reduce_3 = Reduce(debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    fiberwrite_Tvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
+    fiberwrite_Tvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
 
     in_ref_C = [0, 'D']
     in_ref_D = [0, 'D']
@@ -106,38 +107,38 @@ def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, fill=0):
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
-            fiberlookup_Ci_26.set_in_ref(in_ref_C.pop(0))
+            fiberlookup_Ci_26.set_in_ref(in_ref_C.pop(0), "")
 
-        repsiggen_i_22.set_istream(fiberlookup_Ci_26.out_crd())
+        repsiggen_i_22.set_istream(fiberlookup_Ci_26.out_crd(), fiberlookup_Ci_26)
 
         if len(in_ref_D) > 0:
-            repeat_Di_21.set_in_ref(in_ref_D.pop(0))
-        repeat_Di_21.set_in_repsig(repsiggen_i_22.out_repsig())
+            repeat_Di_21.set_in_ref(in_ref_D.pop(0), "")
+        repeat_Di_21.set_in_repsig(repsiggen_i_22.out_repsig(), repsiggen_i_22)
 
-        fiberlookup_Dj_20.set_in_ref(repeat_Di_21.out_ref())
+        fiberlookup_Dj_20.set_in_ref(repeat_Di_21.out_ref(), repeat_Di_21)
 
-        repsiggen_j_16.set_istream(fiberlookup_Dj_20.out_crd())
+        repsiggen_j_16.set_istream(fiberlookup_Dj_20.out_crd(), fiberlookup_Dj_20)
 
-        repeat_Cj_15.set_in_ref(fiberlookup_Ci_26.out_ref())
-        repeat_Cj_15.set_in_repsig(repsiggen_j_16.out_repsig())
+        repeat_Cj_15.set_in_ref(fiberlookup_Ci_26.out_ref(), fiberlookup_Ci_26)
+        repeat_Cj_15.set_in_repsig(repsiggen_j_16.out_repsig(), repsiggen_j_16)
 
-        fiberlookup_Dk_14.set_in_ref(fiberlookup_Dj_20.out_ref())
+        fiberlookup_Dk_14.set_in_ref(fiberlookup_Dj_20.out_ref(), fiberlookup_Dj_20)
 
-        fiberlookup_Ck_13.set_in_ref(repeat_Cj_15.out_ref())
+        fiberlookup_Ck_13.set_in_ref(repeat_Cj_15.out_ref(), repeat_Cj_15)
 
-        intersectk_12.set_in1(fiberlookup_Ck_13.out_ref(), fiberlookup_Ck_13.out_crd())
-        intersectk_12.set_in2(fiberlookup_Dk_14.out_ref(), fiberlookup_Dk_14.out_crd())
+        intersectk_12.set_in1(fiberlookup_Ck_13.out_ref(), fiberlookup_Ck_13.out_crd(), fiberlookup_Ck_13)
+        intersectk_12.set_in2(fiberlookup_Dk_14.out_ref(), fiberlookup_Dk_14.out_crd(), fiberlookup_Dk_14)
 
-        arrayvals_C_7.set_load(intersectk_12.out_ref1())
+        arrayvals_C_7.set_load(intersectk_12.out_ref1(), intersectk_12)
 
-        arrayvals_D_8.set_load(intersectk_12.out_ref2())
+        arrayvals_D_8.set_load(intersectk_12.out_ref2(), intersectk_12)
 
-        mul_4.set_in1(arrayvals_C_7.out_val())
-        mul_4.set_in2(arrayvals_D_8.out_val())
+        mul_4.set_in1(arrayvals_C_7.out_val(), arrayvals_C_7)
+        mul_4.set_in2(arrayvals_D_8.out_val(), arrayvals_D_8)
 
-        reduce_3.set_in_val(mul_4.out_val())
+        reduce_3.set_in_val(mul_4.out_val(), mul_4)
 
-        fiberwrite_Tvals_0.set_input(reduce_3.out_val())
+        fiberwrite_Tvals_0.set_input(reduce_3.out_val(), reduce_3)
 
         fiberlookup_Ci_26.update()
         repsiggen_i_22.update()
@@ -158,56 +159,61 @@ def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, fill=0):
         time_cnt += 1
 
     print("First matmul done")
-    fiberlookup_Ti = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim)
-    fiberlookup_Tj = UncompressCrdRdScan(dim=D_shape[1], debug=debug_sim)
-    arrayvals_T = Array(init_arr=fiberwrite_Tvals_0.get_arr(), debug=debug_sim)
+    fiberlookup_Ti = UncompressCrdRdScan(dim=C_shape[0], debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Tj = UncompressCrdRdScan(dim=D_shape[1], debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_T = Array(init_arr=fiberwrite_Tvals_0.get_arr(), debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
-    intersecti_24 = Intersect2(debug=debug_sim)
-    fiberlookup_Bj_19 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)
-    intersectj_18 = Intersect2(debug=debug_sim)
-    crddrop_9 = CrdDrop(debug=debug_sim)
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim)
-    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
-    arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim)
-    mul_5 = Multiply2(debug=debug_sim)
+    fiberlookup_Bi_25 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, back_en=backpressure,
+                                            depth=int(depth))
+    intersecti_24 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Bj_19 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    intersectj_18 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    crddrop_9 = CrdDrop(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=int(depth))
+    fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * B_shape[1], fill=fill,
+                                     debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_B_6 = Array(init_arr=B_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1], fill=fill, debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
+    mul_5 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
 
     in_ref_B = [0, 'D']
     in_ref_T = [0, 'D']
     done = False
     while not done and time_cnt < 2 * TIMEOUT:
         if len(in_ref_B) > 0:
-            fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0))
+            fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0), "")
 
         if len(in_ref_T) > 0:
-            fiberlookup_Ti.set_in_ref(in_ref_T.pop(0))
+            fiberlookup_Ti.set_in_ref(in_ref_T.pop(0), "")
 
-        intersecti_24.set_in1(fiberlookup_Bi_25.out_ref(), fiberlookup_Bi_25.out_crd())
-        intersecti_24.set_in2(fiberlookup_Ti.out_ref(), fiberlookup_Ti.out_crd())
+        intersecti_24.set_in1(fiberlookup_Bi_25.out_ref(), fiberlookup_Bi_25.out_crd(), fiberlookup_Bi_25)
+        intersecti_24.set_in2(fiberlookup_Ti.out_ref(), fiberlookup_Ti.out_crd(), fiberlookup_Ti)
 
-        fiberlookup_Bj_19.set_in_ref(intersecti_24.out_ref1())
+        fiberlookup_Bj_19.set_in_ref(intersecti_24.out_ref1(), intersecti_24)
 
-        fiberlookup_Tj.set_in_ref(intersecti_24.out_ref2())
+        fiberlookup_Tj.set_in_ref(intersecti_24.out_ref2(), intersecti_24)
 
-        intersectj_18.set_in1(fiberlookup_Bj_19.out_ref(), fiberlookup_Bj_19.out_crd())
-        intersectj_18.set_in2(fiberlookup_Tj.out_ref(), fiberlookup_Tj.out_crd())
+        intersectj_18.set_in1(fiberlookup_Bj_19.out_ref(), fiberlookup_Bj_19.out_crd(), fiberlookup_Bj_19)
+        intersectj_18.set_in2(fiberlookup_Tj.out_ref(), fiberlookup_Tj.out_crd(), fiberlookup_Tj)
 
-        crddrop_9.set_outer_crd(intersecti_24.out_crd())
-        crddrop_9.set_inner_crd(intersectj_18.out_crd())
+        crddrop_9.set_outer_crd(intersecti_24.out_crd(), intersecti_24)
+        crddrop_9.set_inner_crd(intersectj_18.out_crd(), intersectj_18)
 
-        arrayvals_B_6.set_load(intersectj_18.out_ref1())
+        arrayvals_B_6.set_load(intersectj_18.out_ref1(), intersectj_18)
 
-        arrayvals_T.set_load(intersectj_18.out_ref2())
+        arrayvals_T.set_load(intersectj_18.out_ref2(), intersectj_18)
 
-        mul_5.set_in1(arrayvals_B_6.out_val())
-        mul_5.set_in2(arrayvals_T.out_val())
+        mul_5.set_in1(arrayvals_B_6.out_val(), arrayvals_B_6)
+        mul_5.set_in2(arrayvals_T.out_val(), arrayvals_T)
 
-        fiberwrite_Xvals_0.set_input(mul_5.out_val())
+        fiberwrite_Xvals_0.set_input(mul_5.out_val(), mul_5)
 
-        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer())
+        fiberwrite_X0_2.set_input(crddrop_9.out_crd_outer(), crddrop_9)
 
-        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner())
+        fiberwrite_X1_1.set_input(crddrop_9.out_crd_inner(), crddrop_9)
 
         fiberlookup_Bi_25.update()
         fiberlookup_Ti.update()

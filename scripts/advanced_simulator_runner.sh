@@ -15,8 +15,8 @@ BENCHMARKS=(
 #   matmul_ikj_sparse_tiling2
 #  matmul_ikj_glb_tile
 #  matmul_ikj_glb_tile2
-
- matmul_ikj_glb_tile_pipeline
+matmul_ikj_tile_pipeline_back_final
+#  matmul_ikj_glb_tile_pipeline
 # i matmul_ikj_glb_no_pipe
 #  matmul_ikj_input_only
 #  matmul_ikj_tiled_bcsstm02
@@ -115,7 +115,7 @@ for b in ${!BENCHMARKS[@]}; do
 			matrix="$sspath/$line.mtx"
 		fi
 
-		if [ "$bench" == "mat_vecmul_FINAL" ]; then
+		if [ "$bench" == "matmul_ikj" ]; then
 			echo "Generating input format files for $line..."
 			SUITESPARSE_TENSOR_PATH=$matrix python $basedir/scripts/datastructure_suitesparse.py -n $line 
 
@@ -125,7 +125,9 @@ for b in ${!BENCHMARKS[@]}; do
 
 		cd $basedir/sam/sim
 		#python -m cProfile -o test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
-		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --check-gold --skip-empty --nbuffer --yaml_name=$3 --benchmark-json=$path/$line.json 
+		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --check-gold --back --depth=1 --skip-empty --nbuffer --yaml_name=$3 --benchmark-json=$path/$line.json 
+		# pytest test/advanced-simulator/test_$bench.py --ssname $line -s --report-stats --back --depth=1 --debug-sim --check-gold --benchmark-json=$path/$line.json
+		# python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?
 		if [ $status -gt 0 ]

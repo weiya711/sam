@@ -24,27 +24,33 @@ class Reduce(Primitive):
             self.nonzero_out = 0
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.data_ready = True
-            self.branch = []
+            self.ready_backpressure = True
+            self.data_valid = True
             self.depth = depth
+            self.fifo_avail = True
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branch[j]):
-                    return False
-                j += 1
-            return True
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def fifo_available(self, br=""):
         if self.backpressure_en:
-            if len(self.in_val) > self.depth:
-                return False
-            return True
+            return self.fifo_avail
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_val) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
 
     def add_child(self, child=None, branch=""):
         if self.backpressure_en and child is not None:
@@ -52,12 +58,13 @@ class Reduce(Primitive):
             self.branch.append(branch)
 
     def update(self):
+        self.update_ready()
         self.update_done()
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
             if (len(self.in_val) > 0):
                 self.block_start = False
 
@@ -110,14 +117,16 @@ class Reduce(Primitive):
             print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
                   "\t Sum:", self.sum)
 
-    def set_in_val(self, val):
+    def set_in_val(self, val, parent=None):
         if val != '' and val is not None:
             if self.get_stats:
                 self.num_inputs += 1
             self.in_val.append(val)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def out_val(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             if self.get_stats:
                 self.num_outputs += 1
             return self.curr_out
@@ -382,9 +391,10 @@ class SparseAccumulator1(Primitive):
         self.in_outer_crdpt = []
         self.in_inner_crdpt = []
         self.in_val = []
-
-        self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=maxdim, valtype=valtype, **kwargs)
-        self.crdpt_converter = CrdPtConverter(last_level=last_level, **kwargs)
+        self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=maxdim, valtype=valtype, debug=self.debug,
+                                                   statisics=self.get_stats, name="", back_en=False)
+        self.crdpt_converter = CrdPtConverter(last_level=last_level, debug=self.debug,
+                                              statisics=self.get_stats, name="", back_en=False)
 
         self.crdpt_spacc_out_val = []
 
@@ -403,33 +413,39 @@ class SparseAccumulator1(Primitive):
             self.in_val_fifo = 0
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.data_ready = True
-            self.branch = []
+            self.ready_backpressure = True
+            self.data_valid = True
             self.depth = depth
+            self.fifo_avail_inner = True
+            self.fifo_avail_outer = True
+            self.fifo_avail_val = True
         self.temp_maxdim = maxdim
         self.temp_valtype = valtype
         self.temp_last_level = last_level
 
+
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branch[j]):
-                    return False
-                j += 1
-            return True
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
 
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
     def fifo_available(self, br=""):
+        assert False
         if self.backpressure_en:
-            if br == "inner" and len(self.in_inner_crdpt) > self.depth:
-                return False
-            if br == "outer" and len(self.in_outer_crdpt) > self.depth:
-                return False
-            if br == "val" and len(self.in_val) > self.depth:
-                return False
-            return True
+            if br == "inner":
+                # and len(self.in_inner_crdpt) > self.depth:
+                return self.fifo_avail_inner
+            if br == "outer":  # and len(self.in_outer_crdpt) > self.depth:
+                return self.fifo_avail_outer  # return False
+            if br == "val":  # and len(self.in_val) > self.depth:
+                return self.fifo_avail_val  # return False
+            # return True
         return True
 
     def add_child(self, child=None, branch=""):
@@ -438,11 +454,30 @@ class SparseAccumulator1(Primitive):
                 self.backpressure.append(child)
                 self.branch.append(branch)
 
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_inner_crdpt) > self.depth:
+                self.fifo_avail_inner = False
+            else:
+                self.fifo_avail_inner = True
+            if len(self.in_outer_crdpt) > self.depth:
+                self.fifo_avail_outer = False
+            else:
+                self.fifo_avail_outer = True
+            if len(self.in_val) > self.depth:
+                self.fifo_avail_val = False
+            else:
+                self.fifo_avail_val = True
+
+
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
             if self.debug:
                 print("====")
                 print(self.in_outer_crdpt, self.in_inner_crdpt, self.in_val)
@@ -450,37 +485,29 @@ class SparseAccumulator1(Primitive):
                 print(self.crdpt_converter.print_debug())
                 print("=====") 
             if self.done:
-                
-                #print("Done detected print%%%%%")
-                #print(self.in_outer_crdpt)
-                #print(self.in_inner_crdpt)
-
+                # print("Done detected print%%%%%")
+                # print(self.in_outer_crdpt)
+                # print(self.in_inner_crdpt)
                 # print("++++++++++++++", self.crdpt_spacc.print_debug())
-                #print(self.crdpt_converter.print_debug())
+                # print(self.crdpt_converter.print_debug())
                 f1, f2, f3 = self.crdpt_spacc.return_fifo()
                 f4, f5 = self.crdpt_converter.return_fifo()
                 # print("aaaaaaaaaaaaa", f1, f2, f3)
                 self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=self.temp_maxdim, valtype=self.temp_valtype, fifos=[f1,f2,f3])
                 self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4,f5])
-                
                 # print("--------------", self.crdpt_spacc.print_debug())
-                #print("_____")
-                #print(self.crdpt_spacc.print_debug())
-                #print(self.crdpt_converter.print_debug())
- 
-                #return
-                #self.crdpt_spacc_out_val = []
-                #self.curr_outer_crd = None
-                #self.curr_inner_crd = None
-                #self.curr_val = None
+                # print("_____")
+                # print(self.crdpt_spacc.print_debug())
+                # print(self.crdpt_converter.print_debug())
+                # return
+                # self.crdpt_spacc_out_val = []
+                # self.curr_outer_crd = None
+                # self.curr_inner_crd = None
+                # self.curr_val = None
+                # self.outer_crdpt = []
+                # self.inner_crdpt = []
+                # self.val_stkn = False
 
-                #self.outer_crdpt = []
-                #self.inner_crdpt = []
-
-                #self.val_stkn = False
-
-            if self.backpressure_en:
-                self.data_ready = True
             if len(self.in_outer_crdpt) > 0 or len(self.in_inner_crdpt) > 0:
                 self.block_start = False
 
@@ -528,69 +555,73 @@ class SparseAccumulator1(Primitive):
                   "\t CrdPtConverter Done:", self.crdpt_converter.out_done()
                   )
 
-    def set_inner_crdpt(self, crdpt):
+    def set_inner_crdpt(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_inner)
 
-    def set_outer_crdpt(self, crdpt):
+    def set_outer_crdpt(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_outer)
 
-    def crd_in_inner(self, crdpt):
+    def crd_in_inner(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_inner)
 
-    def crd_in_outer(self, crdpt):
+    def crd_in_outer(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_outer)
 
-    def set_crd_inner(self, crdpt):
+    def set_crd_inner(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in_inner_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_inner)
 
-    def set_crd_outer(self, crdpt):
+    def set_crd_outer(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_outer)
 
-    def set_val(self, val):
+    def set_val(self, val, parent=None):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
         if val != '' and val is not None:
             self.in_val.append(val)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_val)
 
     def out_outer_crd(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
-            # if self.curr_outer_crd != "" and self.curr_outer_crd is not None:
-            #     print("SparseAccu X0", self.curr_outer_crd)
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_outer_crd
 
     def out_inner_crd(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
-            # if self.curr_inner_crd != "" and self.curr_inner_crd is not None:
-            #     print("SparseAccu X1", self.curr_inner_crd) 
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_inner_crd
 
     def out_val(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
-            #if self.curr_val != "" and self.curr_val is not None:
-            #     print("SparseAccu Xval", self.curr_val) 
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_val
 
     def out_crd_outer(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
-            # if self.curr_outer_crd != "" and self.curr_outer_crd is not None:
-            #     print("SparseAccu X0", self.curr_outer_crd) 
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_outer_crd
 
     def out_crd_inner(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
-            # if self.curr_inner_crd != "" and self.curr_inner_crd is not None:
-            #     print("SparseAccu X1", self.curr_inner_crd) 
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_inner_crd
 
     def return_statistics(self):
@@ -817,31 +848,26 @@ class SparseAccumulator2(Primitive):
             self.inval_fifo = 0
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.data_ready = True
-            self.branch = []
+            self.ready_backpressure = True
+            self.data_valid = True
             self.depth = depth
+            self.fifo_avail_inner = True
+            self.fifo_avail_outer = True
+            self.fifo_avail_val = True
+        self.temp_maxdim = maxdim
+        self.temp_valtype = valtype
+        self.temp_last_level = last_level
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branch[j]):
-                    return False
-                j += 1
-            return True
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
 
-    def fifo_available(self, br=""):
-        if self.backpressure_en:
-            if br == "inner" and len(self.in_inner_crdpt) > self.depth:
-                return False
-            if br == "outer" and len(self.in_outer_crdpt) > self.depth:
-                return False
-            if br == "val" and len(self.in_val) > self.depth:
-                return False
-            return True
-        return True
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def add_child(self, child=None, branch=""):
         if self.backpressure_en:
@@ -849,13 +875,35 @@ class SparseAccumulator2(Primitive):
                 self.backpressure.append(child)
                 self.branch.append(branch)
 
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in0_crdpt) > self.depth:
+                self.fifo_avail_inner = False
+            else:
+                self.fifo_avail_inner = True
+            if len(self.in1_crdpt) > self.depth:
+                self.fifo_avail_outer = False
+            else:
+                self.fifo_avail_outer = True
+            if len(self.in_val) > self.depth:
+                self.fifo_avail_val = False
+            else:
+                self.fifo_avail_val = True
+
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if seld.done:
+                f1, f2, f3 = self.crdpt_spacc.return_fifo()
+                f4, f5 = self.crdpt_converter.return_fifo()
+                self.crdpt_spacc = SparseCrdPtAccumulator2(maxdim=self.temp_maxdim, valtype=self.temp_valtype, fifos=[f1,f2,f3])
+                self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4,f5])
+
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
             if (len(self.in1_crdpt) > 0 or len(self.in0_crdpt) > 0 or len(self.in_val) > 0):
                 self.block_start = False
 
@@ -905,31 +953,37 @@ class SparseAccumulator2(Primitive):
         self.in0_fifo = max(self.in0_fifo, len(self.in0_crdpt))
         self.inval_fifo = max(self.inval_fifo, len(self.in_val))
 
-    def set_crd_inner(self, crdpt):
+    def set_crd_inner(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in0_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_inner)
 
-    def set_crd_outer(self, crdpt):
+    def set_crd_outer(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in1_crdpt.append(crdpt)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_outer)
 
-    def set_val(self, val):
+    def set_val(self, val, parent=None):
         assert not is_stkn(val), 'Values associated with points should not have stop tokens'
         if val != '' and val is not None:
             self.in_val.append(val)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_val)
 
     def out_crd_outer(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_1_crd
 
     def out_crd_inner(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_0_crd
 
     def out_val(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_val
 
     def return_statistics(self):

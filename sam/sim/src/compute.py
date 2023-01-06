@@ -15,45 +15,48 @@ class Compute2(Primitive, ABC):
         self.curr_out = None
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.data_ready = True
-            self.branches = []
+            self.ready_backpressure = True
+            self.data_valid = True
             self.depth = depth
+            self.fifo_avail_in1 = True
+            self.fifo_avail_in2 = True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branches[j]):
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
 
-    def fifo_available(self, br=""):
+    def update_ready(self):
         if self.backpressure_en:
-            if br == "in1" and len(self.in1) > self.depth:
-                return False
-            if br == "in2" and len(self.in2) > self.depth:
-                return False
-            # if len(self.in1) > 1 or len(self.in2) > 1:
-            #    return False
-        return True
+            if len(self.in1) > self.depth:
+                self.fifo_avail_in1 = False
+            else:
+                self.fifo_avail_in1 = True
+            if len(self.in2) > self.depth:
+                self.fifo_avail_in2 = False
+            else:
+                self.fifo_avail_in2 = True
 
-    def add_child(self, child=None, branch=""):
-        if self.backpressure_en:
-            self.backpressure.append(child)
-            self.branches.append(branch)
-
-    def set_in1(self, in1):
+    def set_in1(self, in1, parent=None):
         if in1 != '' and in1 is not None:
             self.in1.append(in1)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in1)
 
-    def set_in2(self, in2):
+    def set_in2(self, in2, parent=None):
         if in2 != '' and in2 is not None:
             self.in2.append(in2)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in2)
 
     def out_val(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_out
 
     def compute_fifos(self):
@@ -89,6 +92,7 @@ class Add2(Compute2):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if len(self.in1) > 0 or len(self.in2) > 0:
             self.block_start = False
 
@@ -149,11 +153,14 @@ class Multiply2(Compute2):
 
     def update(self):
         self.update_done()
+        self.update_ready()
+        if self.backpressure_en and self.debug:
+            print("mul start: ", self.in1, self.in2)
         if self.backpressure_en:
-            self.data_ready = False
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
             if (len(self.in1) > 0 or len(self.in2) > 0):
                 self.block_start = False
 
@@ -191,6 +198,8 @@ class Multiply2(Compute2):
                     self.get2 = True
                 else:
                     # Both inputs are values
+                    if self.debug:
+                        print(self.curr_in1, self.curr_in2)
                     self.curr_out = self.curr_in1 * self.curr_in2
                     if self.get_stats:
                         self.cycles_operated += 1
@@ -202,3 +211,5 @@ class Multiply2(Compute2):
         if self.debug:
             print("DEBUG: MULT: \t "
                   "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1, "\t Curr In2:", self.curr_in2, self.done)
+        if self.backpressure_en and self.debug:
+            print("Mult: ", self.in1, self.in2)

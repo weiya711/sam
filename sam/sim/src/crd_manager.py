@@ -3,7 +3,7 @@ from .repeater import RepeatSigGen, Repeat
 
 
 class CrdDrop(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
 
         self.outer_crd = []
@@ -23,116 +23,167 @@ class CrdDrop(Primitive):
             self.outer_crd_fifo = 0
             self.ocrd_drop_cnt = 0
 
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.depth = depth
+            self.data_valid = True
+            self.fifo_avail_inner = True
+            self.fifo_avail_outer = True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
+        return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.inner_crd) > self.depth:
+                self.fifo_avail_inner = False
+            else:
+                self.fifo_avail_inner = True
+            if len(self.outer_crd) > self.depth:
+                self.fifo_avail_outer = False
+            else:
+                self.fifo_avail_outer = True
+
     def update(self):
         self.update_done()
+        self.update_ready()
         if len(self.outer_crd) > 0 or len(self.inner_crd) > 0:
             self.block_start = False
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
 
-        icrd = ""
-        if self.debug:
-            print("OuterCrds:", self.outer_crd)
-            print("InnerCrds:", self.inner_crd)
+            icrd = ""
+            if self.debug:
+                print("OuterCrds:", self.outer_crd)
+                print("InnerCrds:", self.inner_crd)
 
-        if self.done:
-            self.curr_crd = ''
-            #return
+            if self.done:
+                self.curr_crd = ''
+                #return
 
-        if len(self.outer_crd) > 0 and self.get_next_ocrd:
-            if self.get_stats:
-                self.outer_crd_fifo = max(self.outer_crd_fifo, len(self.outer_crd))
-            self.curr_ocrd = self.outer_crd.pop(0)
-            if isinstance(self.curr_ocrd, int):
-                self.get_next_icrd = True
-                self.get_next_ocrd = False
-                self.prev_ocrd_stkn = False
-                self.get_stkn = False
-            else:
-                self.curr_crd = self.curr_ocrd
-
-                if self.prev_ocrd_stkn:
+            if len(self.outer_crd) > 0 and self.get_next_ocrd:
+                if self.get_stats:
+                    self.outer_crd_fifo = max(self.outer_crd_fifo, len(self.outer_crd))
+                self.curr_ocrd = self.outer_crd.pop(0)
+                if isinstance(self.curr_ocrd, int):
                     self.get_next_icrd = True
                     self.get_next_ocrd = False
-                    self.get_stkn = True
-                else:
-                    self.get_next_icrd = False
-                    self.get_next_ocrd = True
+                    self.prev_ocrd_stkn = False
                     self.get_stkn = False
-
-                if self.curr_ocrd == 'D':
-                    self.done = True
                 else:
-                    self.done = False
-                self.prev_ocrd_stkn = True
+                    self.curr_crd = self.curr_ocrd
 
-            self.has_crd = False
-        elif self.get_next_ocrd:
-            self.curr_crd = ''
-            if self.get_stats:
-                self.ocrd_drop_cnt += 1
+                if len(self.outer_crd) > 0 and self.get_next_ocrd:
+                    if self.get_stats:
+                        self.outer_crd_fifo = max(self.outer_crd_fifo, len(self.outer_crd))
+                    self.curr_ocrd = self.outer_crd.pop(0)
+                    if isinstance(self.curr_ocrd, int):
+                        self.get_next_icrd = True
+                        self.get_next_ocrd = False
+                        self.prev_ocrd_stkn = False
+                        self.get_stkn = False
+                    else:
+                        self.curr_crd = self.curr_ocrd
 
-        if len(self.inner_crd) > 0 and self.get_next_icrd:
-            if self.get_stats:
-                self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
-            icrd = self.inner_crd.pop(0)
-            self.curr_inner_crd = icrd
-            if self.get_stkn:
-                assert is_stkn(icrd) == is_stkn(self.curr_ocrd)
-                self.get_next_ocrd = True
-                self.get_next_icrd = False
-                self.get_stkn = False
-            if isinstance(icrd, int):
-                self.has_crd = True
-                self.curr_crd = ''
-                self.get_next_ocrd = False
-                self.get_next_icrd = True
-                if self.get_stats:
-                    self.ocrd_drop_cnt += 1
-            elif is_stkn(icrd) and is_stkn(self.curr_ocrd):
-                self.get_next_ocrd = True
-                self.curr_crd = self.curr_ocrd
-                self.get_next_icrd = False
-            elif is_stkn(icrd):
-                self.get_next_ocrd = True
-                self.curr_crd = self.curr_ocrd if self.has_crd else ''
-                self.get_next_icrd = False
-            elif self.done:
-                assert (icrd == 'D')
-                self.curr_crd = 'D'
-                self.get_next_icrd = False
-                self.get_next_ocrd = False
-            else:
-                self.curr_crd = ''
-                self.get_next_icrd = False
-                self.get_next_ocrd = True
-                if self.get_stats:
-                    self.ocrd_drop_cnt += 1
-        elif self.get_next_icrd:
-            self.curr_crd = ''
-            self.curr_inner_crd = ''
-            if self.get_stats:
-                self.ocrd_drop_cnt += 1
-        else:
-            self.curr_inner_crd = ''
+                        if self.prev_ocrd_stkn:
+                            self.get_next_icrd = True
+                            self.get_next_ocrd = False
+                            self.get_stkn = True
+                        else:
+                            self.get_next_icrd = False
+                            self.get_next_ocrd = True
+                            self.get_stkn = False
 
-        if self.debug:
-            print("DEBUG: CRDDROP: Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd,
-                  "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
-                  "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd,
-                  "\n Prev Stkn:", self.prev_ocrd_stkn, "\t Get Stkn:", self.get_stkn)
+                        if self.curr_ocrd == 'D':
+                            self.done = True
+                        self.prev_ocrd_stkn = True
 
-    def set_outer_crd(self, crd):
+                    self.has_crd = False
+                elif self.get_next_ocrd:
+                    self.curr_crd = ''
+                    if self.get_stats:
+                        self.ocrd_drop_cnt += 1
+
+                if len(self.inner_crd) > 0 and self.get_next_icrd:
+                    if self.get_stats:
+                        self.inner_crd_fifo = max(self.inner_crd_fifo, len(self.inner_crd))
+                    icrd = self.inner_crd.pop(0)
+                    self.curr_inner_crd = icrd
+                    if self.get_stkn:
+                        assert is_stkn(icrd) == is_stkn(self.curr_ocrd)
+                        self.get_next_ocrd = True
+                        self.get_next_icrd = False
+                        self.get_stkn = False
+                    if isinstance(icrd, int):
+                        self.has_crd = True
+                        self.curr_crd = ''
+                        self.get_next_ocrd = False
+                        self.get_next_icrd = True
+                        if self.get_stats:
+                            self.ocrd_drop_cnt += 1
+                    elif is_stkn(icrd) and is_stkn(self.curr_ocrd):
+                        self.get_next_ocrd = True
+                        self.curr_crd = self.curr_ocrd
+                        self.get_next_icrd = False
+                    elif is_stkn(icrd):
+                        self.get_next_ocrd = True
+                        self.curr_crd = self.curr_ocrd if self.has_crd else ''
+                        self.get_next_icrd = False
+                    elif self.done:
+                        assert (icrd == 'D')
+                        self.curr_crd = 'D'
+                        self.get_next_icrd = False
+                        self.get_next_ocrd = False
+                    else:
+                        self.curr_crd = ''
+                        self.get_next_icrd = False
+                        self.get_next_ocrd = True
+                        if self.get_stats:
+                            self.ocrd_drop_cnt += 1
+                elif self.get_next_icrd:
+                    self.curr_crd = ''
+                    self.curr_inner_crd = ''
+                    if self.get_stats:
+                        self.ocrd_drop_cnt += 1
+                else:
+                    self.curr_inner_crd = ''
+
+                if self.debug:
+                    print("DEBUG: CRDDROP: Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd,
+                          "\t Curr OutputCrd:", self.curr_crd, "\tHasCrd", self.has_crd,
+                          "\t GetNext InnerCrd:", self.get_next_icrd, "\t GetNext OuterCrd:", self.get_next_ocrd,
+                          "\n Prev Stkn:", self.prev_ocrd_stkn, "\t Get Stkn:", self.get_stkn)
+
+    def set_outer_crd(self, crd, parent=None):
         if crd != '' and crd is not None:
             self.outer_crd.append(crd)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_outer)
 
-    def set_inner_crd(self, crd):
+    def set_inner_crd(self, crd, parent=None):
         if crd != '' and crd is not None:
             self.inner_crd.append(crd)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_inner)
 
     def out_crd_outer(self):
-        return self.curr_crd
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.curr_crd
 
     def out_crd_inner(self):
-        return self.curr_inner_crd
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.curr_inner_crd
 
     def print_fifos(self):
         print("Crdrop Inner crd fifos size: ", self.inner_crd_fifo)
@@ -164,18 +215,21 @@ class CrdHold(Primitive):
         self.repeat = Repeat(debug=self.debug)
 
         if self.backpressure_en:
-            self.backpressure = []
-            self.branches = []
+            self.ready_backpressure = True
             self.depth = depth
-            self.data_ready = True
+            self.data_valid = True
+            self.fifo_avail_inner = True
+            self.fifo_avail_outer = True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def check_backpressure(self):
         if self.backpressure_en:
-            j = 0
-            for i in self.backpressure:
-                if not i.fifo_available(self.branches[j]):
-                    return False
-                j += 1
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
         return True
 
     def add_child(self, child=None, branch=""):
@@ -184,20 +238,33 @@ class CrdHold(Primitive):
 
     def fifo_available(self, br=""):
         if self.backpressure:
-            if br == "inner" and len(self.inner_crd) > self.depth:
-                return False
-            if br == "outer" and len(self.outer_crd) > self.depth:
-                return False
+            if br == "inner":  # and len(self.inner_crd) > self.depth:
+                return self.fifo_avail_inner
+                # return False
+            if br == "outer":  # and len(self.outer_crd) > self.depth:
+                return self.fifo_avail_outer
+                # return False
         return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.inner_crd) > self.depth:
+                self.fifo_avail_inner = False
+            else:
+                self.fifo_avail_inner = True
+            if len(self.outer_crd) > self.depth:
+                self.fifo_avail_outer = False
+            else:
+                self.fifo_avail_outer = True
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.backpressure_en:
-            self.data_ready = False
-
+            self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
-                self.data_ready = True
+                self.data_valid = True
             if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
                 self.block_start = False
 
@@ -240,20 +307,24 @@ class CrdHold(Primitive):
         if self.debug:
             print("Debug crd_manager: input: ", self.inner_crd, self.outer_crd, self.curr_crd, self.done)
 
-    def set_outer_crd(self, crd):
+    def set_outer_crd(self, crd, parent=None):
         if crd != '' and crd is not None:
             self.outer_crd.append(crd)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_outer)
 
-    def set_inner_crd(self, crd):
+    def set_inner_crd(self, crd, parent=None):
         if crd != '' and crd is not None:
             self.inner_crd.append(crd)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_inner)
 
-    def out_crd_outer(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+    def out_crd_outer(self, parent=None):
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_crd
 
-    def out_crd_inner(self):
-        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+    def out_crd_inner(self, parent=None):
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_inner_crd
 
 

@@ -5,7 +5,7 @@ from sam.sim.src.array import Array
 
 
 class WrScan(Primitive, ABC):
-    def __init__(self, size=1024, fill=0, **kwargs):
+    def __init__(self, size=1024, fill=0, backpressure_en=False, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.size = size
         self.fill = fill
@@ -14,11 +14,37 @@ class WrScan(Primitive, ABC):
         self.fill_init = fill
 
         self.input = []
-
         self.arr = Array(size=size, fill=self.fill, debug=self.debug)
+        
         self.blk_start_ = False
+        self.backpressure_en = False
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.depth = depth
+            self.fifo_avail = True
+            self.data_valid = True
 
-    def set_input(self, val):
+    def fifo_available(self):
+        return self.fifo_avail
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
+        return True
+
+    def update_ready(self):
+        if self.backpressure_en and len(self.input) > self.depth:
+            self.fifo_avail = False
+        else:
+            self.fifo_avail = True
+
+    def set_input(self, val, parent=None):
         # Make sure streams have correct token type
         assert (isinstance(val, int) or isinstance(val, float) or val in valid_tkns or val is None)
 
@@ -26,6 +52,8 @@ class WrScan(Primitive, ABC):
             # print("Add input:", self.name, val)
             self.blk_start_ = True
             self.input.append(val)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def return_block_start(self):
         return self.blk_start_
@@ -40,11 +68,6 @@ class WrScan(Primitive, ABC):
     def get_arr(self):
         return self.arr.get_arr()
 
-    def fifo_available(self):
-        if len(self.input) > 1:
-            return False
-        return True
-    
     def return_fifo(self):
         return self.input
 
@@ -64,31 +87,39 @@ class ValsWrScan(WrScan):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.done:
             return
             if self.debug:
                 print("RESET FOR VALS", self.input)
-            #self.reset()
-            #self.done = False
             if self.debug:
                 print("post reset: ", self.arr.out_done())
 
         if (len(self.input) > 0):
             self.block_start = False
 
-        if len(self.input) > 0:
-            val = self.input.pop(0)
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en: 
+            if self.backpressure_en:
+                self.data_valid = True
 
-            if not is_stkn(val) and val != 'D':
-                self.arr.set_store(self.curr_addr, val)
-                self.curr_addr += 1
-            else:
-                self.arr.set_store(val, val)
+            if (len(self.input) > 0):
+                self.block_start = False
 
-            self.arr.update()
-            self.done = self.arr.out_done()
-        if self.debug:
-            print("Vals Wr scanner print ", self.done, self.curr_addr)
+            if len(self.input) > 0:
+                val = self.input.pop(0)
+
+                if not is_stkn(val) and val != 'D':
+                    self.arr.set_store(self.curr_addr, val)
+                    self.curr_addr += 1
+                else:
+                    self.arr.set_store(val, val)
+
+                self.arr.update()
+                self.done = self.arr.out_done()
+            if self.debug:
+                print("Vals Wr scanner print ", self.done, self.curr_addr)
 
     def reset(self):
         #print("reset vals")
@@ -131,6 +162,7 @@ class CompressWrScan(WrScan):
 
     def update(self):
         self.update_done()
+        self.update_ready()
         if self.done:
             return
             # self.arr.print_debug(name="vals")
@@ -145,6 +177,11 @@ class CompressWrScan(WrScan):
         if len(self.input) > 0:
             self.block_start = False
 
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
         if len(self.input) > 0:
             in_crd = self.input.pop(0)
 
