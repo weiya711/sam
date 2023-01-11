@@ -28,7 +28,6 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-# @pytest.mark.suitesparse
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
 def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, fill=0):
@@ -57,55 +56,17 @@ def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, fill=0):
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
-    # C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg0 = read_inputs(C0_seg_filename)
     C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
-    # C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
     C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
-    # C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C_seg1 = read_inputs(C1_seg_filename)
     C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
-    # C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
-
-    # B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
-    # B_shape = read_inputs(B_shape_filename)
-
-    # B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
-    # B_seg0 = read_inputs(B0_seg_filename)
-    # B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
-    # B_crd0 = read_inputs(B0_crd_filename)
-
-    # B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
-    # B_seg1 = read_inputs(B1_seg_filename)
-    # B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
-    # B_crd1 = read_inputs(B1_crd_filename)
-
-    # B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
-    # B_vals = read_inputs(B_vals_filename, float)
-
-    # C_dirname = os.path.join(formatted_dir, ssname, "shift-trans", "ss01")
-    # C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
-    # C_shape = read_inputs(C_shape_filename)
-
-    # C0_seg_filename = os.path.join(C_dirname, "C0_seg.txt")
-    # C_seg0 = read_inputs(C0_seg_filename)
-    # C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
-    # C_crd0 = read_inputs(C0_crd_filename)
-
-    # C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
-    # C_seg1 = read_inputs(C1_seg_filename)
-    # C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
-    # C_crd1 = read_inputs(C1_crd_filename)
-
-    # C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
-    # C_vals = read_inputs(C_vals_filename, float)
 
     fiberlookup_Bi_19 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim)
     fiberlookup_Bk_14 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim)

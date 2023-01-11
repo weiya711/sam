@@ -1,3 +1,5 @@
+TENSOR_TXT=suitesparse_ci.txt
+
 ifeq ($(BENCHES),)
 BENCHES=""
 endif
@@ -56,13 +58,15 @@ guard-%:
 # ---- Run SAM python simulator stuff ----
 csv: 
 	scripts/pytest_suitesparse_with_benchmarks.sh
+run-final: submodules
+	./scripts/run_suitesparse_final.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
 
-run: submodules
-	./scripts/pytest_suitesparse.sh
+run-gen: submodules
+	./scripts/run_suitesparse_generated.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
 
 tests: sam 
+	mkdir -p sam/sim/test/apps
 	python scripts/test_generating_code.py
-	make run
 
 # ---- Build taco and make sam graphs ----
 .PHONY: sam
