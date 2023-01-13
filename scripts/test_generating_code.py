@@ -1,20 +1,25 @@
 import pydot
 import os
+import argparse
 import networkx as nx
-import matplotlib.pyplot as plt
+import sys
 from collections import defaultdict
 
-frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_elemadd", "tensor3_innerprod",
-               "tensor3_mttkrp", "tensor3_ttv", "tensor3_identity_dense"]
-suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik",
-                    "matmul_kij", "matmul_jki", "mat_vecmul_ij", "mat_vecmul_ji", "matmul_kji",
-                    "mat_elemadd3", "mat_sddmm.gv", "mat_elemadd", "mat_mattransmul",
-                    "mat_residual", "mat_sddmm", "mat_identity_dense"]
+frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_elemadd",
+               "tensor3_innerprod", "tensor3_mttkrp", "tensor3_ttv", "tensor3_identity_dense"]
+suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki",
+                    "matmul_jik", "matmul_kij", "matmul_jki", "mat_vecmul_ij", "mat_vecmul_ji",
+                    "matmul_kji", "mat_elemadd3", "mat_sddmm.gv", "mat_elemadd", "mat_mattransmul",
+                    "mat_residual", "mat_sddmm", "mat_identity_dense", "mat_spacc_simple"]
 vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
-            "vec_scalar_mul", "vecmul", "vecmul_ij", "vecmul_ki"]
+            "vec_scalar_mul", "vecmul", "vecmul_ij", "vecmul_ki", "vec_spacc_simple",
+            "vec_sd_compression", "vec_ds_compression"]
 other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij",
               "mat_vecmul_ji"]
 
+MEM_LEVELS = 2 
+if len(sys.argv) == 2:
+    MEM_LEVELS = int(sys.argv[1])
 
 class TensorFormat:
     def __init__(self):
@@ -30,13 +35,11 @@ class TensorFormat:
         return self.tensors[ten]
 
     def set_all_tensors(self, path):
-        read_f = open(apath, "r")
-        comment_line = read_f.readlines()
-        comment = comment_line[1]
-        comment = comment[comment.index("\"") + 1: -1]
-        comment = comment[0: comment.index("\"")]
-        comment = comment.split(",")
-        for tensor_info in comment:
+        graphs1 = pydot.graph_from_dot_file(path)
+        graph1 = graphs1[0]
+        networkx_graph = nx.nx_pydot.from_pydot(graph1)
+        tensor_list = graph1.get_comment().strip('"').split(",")
+        for tensor_info in tensor_list:
             node = tensor_info.split("=")
             self.add_tensor_and_format(node[0], node[1])
         return
@@ -55,7 +58,7 @@ class TensorFormat:
 
 
 class CodeGenerationdatasets:
-    def __init__(self):
+    def __init__(self, graph=None):
         # Rememebers [parents of a node
         self.stream_join_elements = {}
         # ALl edges into a node
@@ -63,6 +66,7 @@ class CodeGenerationdatasets:
         # Not used required since intersection has special structure need to know which reference is which coordinate
         self.intersect_dataset = defaultdict(dict)
         self.done_all = {}
+        self.graph = graph
 
     def build_datasets(self, networkx_graph):
         for u, v, a in networkx_graph.edges(data=True):
@@ -100,6 +104,87 @@ class CodeGenerationdatasets:
     def get_if_node_done(self, v):
         return self.done_all[v]
 
+    def if_all_graph_realized(self):
+        if self.graph is not None:
+            print("checking if done : ", self.done_all)
+            for a in self.done_all.keys():
+                if self.done_all[a] == 0:
+                    print("                 ", a, " ", self.graph.nodes()[a])
+        for nodes in self.done_all.keys():
+            if self.done_all[nodes] == 0:
+                return False
+        return True
+
+def generate_tiling_header(f, app_name, loop_order_and_sizes=None):
+    f.write(tab(1) + "with open(os.path.join(sam_home, \"tiles/" + app_name + "/tensor_sizes\"), \"rb\") as ff:\n")
+    f.write(tab(2) + "sizes_dict_level_full = pickle.load(ff)\n")
+    for i in range(MEM_LEVELS):
+        f.write(tab(1) + "with open(os.path.join(sam_home, \"tiles/" + app_name + "/hw_level_" + str(i) + "_sizes\"), \"rb\") as ff:\n")
+        f.write(tab(2) + "sizes_dict_level" + str(i) + " = pickle.load(ff)\n")
+    f.write(tab(1) + "with open(os.path.join(sam_home, \"./sam/sim/src/tiling/\" + yaml_name), \"r\") as stream:\n")
+    f.write(tab(2) + "memory_config = yaml.safe_load(stream)\n")
+    # Get the arrays for seg and crd arrays for the higher levels
+    f.write(tab(1) + "struct = {")
+    if MEM_LEVELS == 2:
+        if loop_order_and_sizes is None:
+            index = "B"
+            val = 100
+            f.write(index + "00 : 1 + int(" + str(val) + ") // (")
+            f.write("(loop_config[\"Glb_tile_size\"] * loop_config[\"Mem_tile_size\"])), ")
+            f.write(index + "0 :  int(loop_config[\"Glb_tile_size\"])")
+        else:
+            for index in loop_order_and_sizes.keys():
+                f.write(index + "00 : 1 + int(" + loop_order_and_sizes[key] + ") // (")
+                f.write("(loop_config[\"Glb_tile_size\"] * loop_config[\"Mem_tile_size\"]))\n")
+
+            for index in loop_order_and_sizes.keys():
+                f.write(index + "0 :  int(loop_config[\"Glb_tile_size\"])")
+    f.write("\n")
+
+def generate_tiling_graph(graph):
+    g = graph.copy()
+    # Need 2 passes over the graph
+    rem_list = []
+    last_a = None
+    print(g)
+    while (last_a is None) or (last_a not in rem_list):
+        for a in list(nx.topological_sort(g)):
+            node_i = breakup_node_info(g.nodes[a]["comment"])
+            if node_i["type"] == "arrayvals":
+                if a not in rem_list:
+                    rem_list.append(a)
+            elif node_i["type"] != "arrayvals":
+                for preds in g.predecessors(a):
+                    if preds in rem_list:
+                        if a not in rem_list:
+                            rem_list.append(a)
+        last_a = a
+    print(rem_list)
+    for a in rem_list:
+        print(a)
+        print(g.nodes[a])
+        node_i = breakup_node_info(g.nodes[a]["comment"])
+        if node_i["type"] == "arrayvals":
+            print(rem_list)
+            print(a)
+            print(g.nodes[a])
+            g.nodes[a].update({'comment': '"type=memory_block,tensor=' + node_i["tensor"] + '"', 'label': '"memory_block"', 'type': '"memory_block"'})
+            print(g.nodes[a])
+        else:
+            g.remove_node(a)
+    return g
+
+def generate_tiling_end(f, mem_blks):
+    f.write(tab(2) + "done = ")
+    temp = False
+    for blk in mem_blks:
+        if not temp:
+            temp = True
+            f.write("tiled_done and " + blk + ".done()")
+        else:
+            f.write(" and " + blk + ".done()")
+    f.write("\n")
+    f.write(tab(2) + "time_cnt += 1\n\n")
 
 def tab(a):
     ans = ""
@@ -171,139 +256,176 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-
-    f.write("def test_" + out_name + "(samBench, ")
-    if out_name in frostt_list:
-        f.write("frosttname, ")
-    elif out_name in suitesparse_list:
-        f.write("ssname, ")
-    elif out_name in vec_list:
-        f.write("vecname, ")
-    f.write("check_gold, debug_sim, report_stats, fill=0):\n")
+    f.write("def test_" + out_name + "(samBench, " + get_dataset_name(out_name) + ", cast, check_gold, debug_sim, "
+                                                                                  "report_stats, fill=0):\n")
 
 
 def get_dataset_name(test_name):
     if test_name in frostt_list:
-        return "frosttname, "
+        return "frosttname"
     elif test_name in suitesparse_list:
-        return "ssname, "
+        return "ssname"
     elif test_name in vec_list:
-        return "vecname, "
+        return "vecname"
     else:
-        return ", "
+        return ""
 
 
-def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name):
-    # Assuming tje format is csr and csc:
+def get_common_test_name(test_name):
+    if "matmul" in test_name:
+        return test_name[:-4]
+    else:
+        return test_name
+
+
+def generate_tiling_output_crds(f, scope_lvl, parents=[], tensors=[]):
+    if MEM_LEVELS == 2:
+        for i in range(len(parents)):
+            tensor = tensors[i]
+            par = parents[i]
+            f.write(tab(scope_lvl) + tensor + "_glb = " + par + ".token() // 1000000\n")
+        for i in range(len(parents)):
+            tensor = tensors[i]
+            par = parents[i]
+            f.write(tab(scope_lvl) + tensor + "_mem = " + par + ".token() % 1000000\n")
+        for i in range(len(tensors)):
+            f.write(tab(scope_lvl) + tensors[i] + "_dir = \"tensor_" + tensors[i] + "_tile_\" + str(" + tensors[i] + "_glb) + str(" + tensors[i] + "_mem)\n")
+    else:
+        for lvl in range(MEM_LEVELS, 0, -1):
+            mem_lvl = "0" * lvl
+            for i in range(len(parents)):
+                tensor = tensors[i]
+                par = parents[i]
+                if lvl > 1:
+                    f.write(tab(scope_lvl) + tensor + "_" + mem_lvl + " = (" + par + ".token() // (10 ** " + str(6 * (lvl - 1)) + ") % " + str(6 * (lvl))  + ") \n")
+                elif lvl == 1:
+                    f.write(tab(scope_lvl) + tensor + "_" + mem_lvl + " = " + par + ".token() % (10 ** " + str(6 * (lvl)) + ") \n")
+        for i in range(len(tensors)):
+            f.write(tab(scope_lvl) + tensors[i] + "_dir = \"tensor_" + tensors[i] + "_tile_\"")
+        for lvl in range(MEM_LEVELS, 0, -1):
+            mem_lvl = "0" * lvl
+            f.write(" + str(" + tensors[i] + "_" + mem_lvl + ")")
+        f.write("\n")        
+    return
+
+def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name, tiling=False, parents=[], tensors=[]):
+    # Assuming the format is csr and csc:
+    f.write("\n")
+    scope_lvl += 1
+    if tiling:
+        assert len(parents) > 0
+        print(parents, tensors)
+        assert len(parents) == len(tensors)
+        if MEM_LEVELS == 2:
+            for i in range(len(parents)):
+                tensor = tensors[i]
+                par = parents[i]
+                f.write(tab(scope_lvl) + tensor + "_glb = " + par + ".token() // 1000000\n")
+            for i in range(len(parents)):
+                tensor = tensors[i]
+                par = parents[i]
+                f.write(tab(scope_lvl) + tensor + "_mem = " + par + ".token() % 1000000\n")
+            for i in range(len(tensors)):
+                f.write(tab(scope_lvl) + tensors[i] + "_dir = \"tensor_" + tensors[i] + "_tile_\" + str(" + tensors[i] + "_glb) + str(" + tensors[i] + "_mem)\n")
+
     for ten in tensor_format_parse.return_all_tensors():
         if tensor_format_parse.get_location(ten) == 0:
             continue
-        f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) + "\"" +
-                tensor_formats[ten]["information"] + "\", \"" + tensor_format_parse.get_format(ten) + "\")\n")
+        if not tiling:
+            f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + get_dataset_name(test_name) +
+                    ", \"" + test_name + "\")\n")
+        else:
+            f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, " + ten + "_dir)\n")
         f.write(
-            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
+            tab(scope_lvl) + ten + "_shape_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+            "_mode_shape\")\n")
         f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
-        # if tensor_formats.get_format(ten) == "dense":
-        #    f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \"" +
-        #       tensor_formats[ten]["information"]  + "\" \"" + tensor_formats[ten]["format"] + "\")\n")
-        #    f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
-        #       ten + "_shape.txt\")\n")
-        #    f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
         if tensor_format_parse.get_format(ten) == "ds01":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \"" +
-            #   tensor_formats[ten]["information"]  + "\" \"" + tensor_formats[ten]["format"] + "\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
-            #   ten + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname" + ",  \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_dirname" + "tensor_" + ten + "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
-            # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ds10":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \"" +
-            #   tensor_formats[ten]["information"]
-            #   + "\" \"" + tensor_formats[ten]["format"] + "\" +  )\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" +
-            # ten + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ss01":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + \""+
-            #   tensor_formats[ten]["information"] + "\" \"" +  tensor_formats[ten]["format"] + "\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" + ten
-            #   + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n"
             f.write(
-                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten +
+                "_mode_0_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ss10":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + "+
-            #   tensor_formats[ten]["information"] + "\" \"" + tensor_formats[ten]["format"] + "\" +  )\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename =
-            # os.name.join(" + ten + "_dirname, \"" + ten + "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_seg.txt\")\n")
+                tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten +
+                "_mode_0_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "0_crd.txt\")\n")
+                tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_0_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
 
         elif tensor_format_parse.get_format(ten) == "dss012":
-            # f.write(tab(scope_lvl) + ten + "_dirname = os.path.join(formatted_dir, ssname + "+
-            #   tensor_formats[ten]["information"] + "\" \"" + tensor_formats[ten]["format"] + "\" +  )\n")
-            # f.write(tab(scope_lvl) + ten + "_shape_filename = os.name.join(" + ten + "_dirname, \"" + ten +
-            #   "_shape.txt\")\n")
-            # f.write(tab(scope_lvl) + ten + "_shape = read_inputs(" + ten + "_shape_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_seg.txt\")\n")
+                tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "1_crd.txt\")\n")
+                tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_1_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
             f.write(
-                tab(scope_lvl) + ten + "2_seg_filename = os.path.join(" + ten + "_dirname, \"" + ten + "2_seg.txt\")\n")
+                tab(scope_lvl) + ten + "2_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_2_seg\" )\n")
             f.write(tab(scope_lvl) + ten + "_seg2" + " = read_inputs(" + ten + "2_seg_filename)\n")
             f.write(
-                tab(scope_lvl) + ten + "2_crd_filename = os.path.join(" + ten + "_dirname, \"" + ten + "2_crd.txt\")\n")
+                tab(scope_lvl) + ten + "2_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
+                "_mode_2_crd\" )\n")
             f.write(tab(scope_lvl) + ten + "_crd2" + " = read_inputs(" + ten + "2_crd_filename)\n\n")
         else:
             ct = 0
             for i in range(len(tensor_format_parse.get_format(ten))):
                 if tensor_format_parse.get_format(ten)[i] == "s":
                     f.write(tab(scope_lvl) + ten + str(i) + "_seg_filename = os.path.join(" +
-                            ten + "_dirname, \"" + ten + str(i) + "_seg.txt\")\n")
+                            ten + "_dirname, \"tensor_" + ten +
+                            "_mode_" + str(i) + "_seg\")\n")
                     f.write(
                         tab(scope_lvl) + ten + "_seg" + str(i) + " = read_inputs(" + ten + str(i) + "_seg_filename)\n")
                     f.write(tab(scope_lvl) + ten + str(i) + "_crd_filename = os.path.join(" +
-                            ten + "_dirname, \"" + ten + str(i) + "_crd.txt\")\n")
+                            ten + "_dirname, \"tensor_" + ten + "_mode_" + str(i) + "_crd\")\n")
                     f.write(tab(scope_lvl) + ten + "_crd" + str(i) + " = read_inputs(" + ten + str(
                         i) + "_crd_filename)\n\n")
-        f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten + "_dirname, \"" + ten + "_vals.txt\")\n")
+        f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten +
+                "_dirname, \"tensor_" + ten + "_mode_vals\")\n")
         f.write(tab(scope_lvl) + ten + "_vals" + " = read_inputs(" + ten + "_vals_filename, float)\n\n")
 
 
@@ -417,7 +539,7 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
     f.write("\n" + tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
     f.write(tab(1) + "extra_info = dict()\n")
-    f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name)[:-2] + "\n")
+    f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name) + "\n")
     f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
     ct = 0
     output_tensor = ""
@@ -436,18 +558,15 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
             f.write(tab(1) + "for k in sample_dict.keys():\n")
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] = sample_dict[k]\n\n")
 
-
 def generate_check_against_gold_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "if check_gold:\n")
     f.write(tab(2) + "print(\"Checking gold...\")\n")
     f.write(tab(2) + "check_gold_")
     check = out_name[num]
-    if "matmul" in check:
-        check = check[:-4]
-    f.write(check + "(" + get_dataset_name(test_name) + "debug_sim, out_crds, out_segs, out_vals, \"" +
+    check = get_common_test_name(check)
+    f.write(check + "(" + get_dataset_name(test_name) + ", debug_sim, cast, out_crds, out_segs, out_vals, \"" +
             tensor_format_parse.get_format(output_tensor) + "\")\n")
     f.write(tab(1) + "samBench(bench, extra_info)\n")
-
 
 def size_computation_write(a):
     ans = " 1 "
@@ -455,7 +574,6 @@ def size_computation_write(a):
     if a == 1:
         ans = " B_dim0 "
     return ans
-
 
 def size_comp_write(a):
     ans = ""
@@ -465,11 +583,9 @@ def size_comp_write(a):
     ans += "B_dim0"
     return ans
 
-
 def breakup_node_info(node_name):
     d = dict(x.split("=") for x in node_name[1: -1].split(","))
     return d
-
 
 def remove_broadcast_nodes(G):
     g = G.copy()
@@ -484,7 +600,6 @@ def remove_broadcast_nodes(G):
         g = g0
     return g
 
-
 def parents_done(G, done, u):
     g = G.copy()
     ans = True
@@ -496,7 +611,6 @@ def parents_done(G, done, u):
         else:
             ans = False
     return ans
-
 
 def array_size_computation(size_array):
     if "+" in size_array:
@@ -531,7 +645,6 @@ def array_size_computation(size_array):
     final_output_with_adds += output_array_with_adds[-1]
     return final_output_with_adds
 
-
 def get_all_files(directory_path):
     file_paths = []
     out_name = []
@@ -548,13 +661,779 @@ def get_all_files(directory_path):
     return file_paths, out_name
 
 
-DIRECTORY = './compiler/sam-outputs/dot'
-file_paths, out_name = get_all_files(DIRECTORY)
+class Parent_Child_graph:
+    def __init__(self):
+        self.parent = defaultdict(dict)
+        self.operation = defaultdict(dict)
+
+    def add_parent_child(self, parent, child, child2):
+        if parent in self.parent.keys():
+            self.parent[parent].append(child)
+            self.operation[parent].append(child2)
+        else:
+            self.parent[parent] = [child]
+            self.operation[parent] = [child2]
+
+    def get_parent(self, child):
+        for parent in self.parent:
+            # f.write("# "+ parent + " ##  " + self.parent[parent] + "  @@  " + child)
+            if self.parent[parent][0] == child:
+                return parent
+        return parent
+
+    def get_child(self, parent):
+        # f.write("# ")
+        # for a in self.parent[parent]:
+        #     f.write(", "+ a)
+        # f.write("\n")
+        return self.parent[parent][0] + self.operation[parent][0]
+
+
+class Graph_Realization:
+    def __init__(self, graph, mem_lvl, scope_lvl, f, parent=None, mem_blks_connect=None, mem_blks=[]):
+        self.mem_lvl = mem_lvl
+        self.d = {} 
+        self.f = f
+        self.networkx_graph = graph
+        self.scope_lvl = scope_lvl
+        self.intersect_dataset = defaultdict(dict)
+        self.root_nodes = []
+        self.memory_blks = mem_blks
+        self.mem_blks_connect = Parent_Child_graph()  # mem_blks_connect
+
+        self.blks_to_realize = []
+        self.parent_block = parent
+        self.tensor_list = []
+        # self.memory_blocks 
+        self.nxt_parent = None
+
+    def get_tensor_list(self):
+        return self.tensor_list
+
+    def loop_start(self):
+        self.blks_to_realize.append(tab(1) + "while not done and time_cnt < TIMEOUT:\n")
+
+
+    def output_check_nodes(self):
+        for r in self.root_nodes:
+            self.blks_to_realize.append(tab(self.scope_lvl + 1) + "in_ref_" + str(r) + self.mem_lvl + " = [0, 'D']\n")
+
+
+    def node_instantiations1(self, output_nodes, tens_fmt={}, tensor_information={}, tensor_format_parse=None, out_name=None, pipelined_tiles=False, parent=[]):
+        invalid_flag = 0
+        temp_string = ""
+        temp_string += tab(self.scope_lvl)
+        temp_flag = False
+        nxt_parents = []
+        for par in parent:
+            if not temp_flag:
+                temp_flag = True
+                temp_string += tab(self.scope_lvl) + "if " + par + ".valid_tile()"
+            else:
+                temp_string += " and " + par + ".valid_tile()"
+        if len(parent) != 0:
+            self.scope_lvl += 1
+            temp_string += ":\n"
+            self.blks_to_realize.append(temp_string)
+        self.blks_to_realize.append(tab(self.scope_lvl + 1) + "check_flag" + self.mem_lvl + " = True\n")
+        for u in list(nx.topological_sort(self.networkx_graph)):
+            node_info = breakup_node_info(self.networkx_graph.nodes[u]["comment"])
+            self.d[u] = node_info 
+            u_val = u
+            if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
+                self.root_nodes.append(node_info["tensor"])
+            if node_info["type"] == "fiberlookup":
+                if node_info["format"] == "dense":
+                    self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] +
+                                                node_info["index"] + "_" + str(u) + "_" + self.mem_lvl + " = UncompressCrdRdScan(dim=" + node_info["tensor"] +
+                                                "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim, statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+
+                if node_info["format"] == "compressed":
+                    self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
+                                                "_" + str(u) + "_" + self.mem_lvl + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
+                                                "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
+                                                "_seg" + node_info["mode"] + ", debug=debug_sim, statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+
+            elif node_info["type"] == "arrayvals":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + "_" + self.mem_lvl + " = Array(init_arr=" +
+                                            node_info["tensor"] + "_vals, " + "debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + "_" + self.mem_lvl
+
+            elif "broadcast" in self.networkx_graph.nodes[u]['comment']:
+                continue
+
+            elif node_info["type"] == "repsiggen":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl +
+                                            " = RepeatSigGen(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+
+            elif node_info["type"] == "repeat":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl +
+                                            " = Repeat(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "intersect":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl + " = Intersect2(debug=debug_sim, " +
+                                            "statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "union":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl + " = Union2(debug=debug_sim, " +
+                                            "statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+                # invalid_flag = 1
+            elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_" + self.mem_lvl + " = SparseAccumulator1(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u) + "_" + self.mem_lvl
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_drop_crd_inner" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_drop_crd_outer" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_drop_val" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+            elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_" + self.mem_lvl + " = SparseAccumulator2(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u) + "_" + self.mem_lvl
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_drop_crd_inner" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_drop_crd_outer" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                # f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                #    u) + "_drop_crd_in_2" + " = StknDrop(debug=debug_sim)\n")
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                                            u) + "_drop_val" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+            elif node_info["type"] == "crddrop":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) +
+                                            node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "crdhold":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) +
+                                            node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "mul":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) +
+                                            node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "add":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = Add2(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "reduce":
+                self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = Reduce(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "fiberwrite":
+                if node_info["mode"] == "vals":
+                    self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl +
+                                                " = ValsWrScan(size=" + array_size_computation(node_info["size"]) +
+                                                ", fill=fill, debug=debug_sim, statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl
+                elif node_info["format"] == "compressed":
+                    self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl +
+                                                " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
+                                                array_size_computation(node_info["crdsize"]) + ", fill=fill," + " debug=debug_sim, " +
+                                                "statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl
+                else:
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl
+                    continue
+                if node_info["sink"] == "true":
+                    output_nodes[self.d[u]["object"]] = node_info["mode"]
+            elif node_info["type"] == "memory_block":
+                if not pipelined_tiles:
+                    self.memory_blks.append(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl)
+                    if self.mem_lvl == "00":
+                        self.f.write(tab(1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"Glb_memory\"], bandwidth=memory_config[\"Glb_tile_bandwidth\"] // " +
+                                     "memory_config[\"Glb_tiles\"], latency=memory_config[\"Global_Glb_latency\"], debug=debug_sim)\n")
+                    elif self.mem_lvl == "0":
+                        self.f.write(tab(1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"Mem_memory\"], bandwidth=memory_config[\"Mem_tile_bandwidth\"] // " +
+                                     "memory_config[\"Mem_tiles\"], latency=memory_config[\"Glb_Mem_latency\"], debug=debug_sim)\n")
+                    else:
+                        self.f.write(tab(1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"" + self.mem_lvl + "_memory\"], bandwidth=memory_config[\"" + self.mem_lvl + "_tile_bandwidth\"] // " +
+                                     "memory_config[\"" + self.mem_lvl + "_tiles\"], latency=memory_config[\"" + self.mem_lvl + "_latency\"], debug=debug_sim)\n")
+
+                else:
+                    pass
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+                nxt_parents.append(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl)
+                self.tensor_list.append(node_info["tensor"])
+                if len(self.mem_lvl) == 2:
+                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, node_info["type"] + "_" + str(u) + "_" + self.mem_lvl[:-1], ".out_done_in()")
+                else:
+                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, "tiled_done and not tile_signalled", "")
+            else:
+                print(node_info)
+                invalid_flag = 1
+                print("Error invalid node detected", node_info["type"], "\n")
+        for par in parent:
+            self.blks_to_realize.append(tab(self.scope_lvl + 1) + par + ".valid_tile_received()\n")
+        if len(self.mem_lvl) == 0:
+            self.blks_to_realize.append(tab(self.scope_lvl + 1) + "tile_signalled = False\n")
+        self.output_check_nodes()
+        self.f.write("\n")
+        self.nxt_parent = nxt_parents
+        return self.d, invalid_flag, output_nodes, nxt_parents
+
+    
+    def write_nodes(self):
+        for node in self.blks_to_realize:
+            f.write(node)
+
+
+    def node_instantiations(self, output_nodes, tens_fmt={}, tensor_information={}, tensor_format_parse=None, out_name=None, pipelined_tiles=False, parent=[], tensor_list=[]):
+        invalid_flag = 0
+        f.write(tab(self.scope_lvl))
+        temp_flag = False
+        nxt_parents = []
+        for par in parent:
+            if not temp_flag:
+                temp_flag = True
+                self.f.write(tab(self.scope_lvl) + "if " + par + ".valid_tile()")
+            else:
+                self.f.write(" and " + par + ".valid_tile()")
+        if len(parent) != 0:
+            self.scope_lvl += 1
+            self.f.write(":\n")
+        if len(self.mem_lvl) == 0:
+            assert(len(parent) == len(tensor_list))
+            generate_datasets_code(self.f, tens_fmt, self.scope_lvl, tensor_information, tensor_format_parse, out_name, tiling=True, parents=parent, tensors=tensor_list)
+        self.f.write(tab(self.scope_lvl + 1) + "check_flag" + self.mem_lvl + " = True\n")
+        for u in list(nx.topological_sort(self.networkx_graph)):
+            node_info = breakup_node_info(self.networkx_graph.nodes[u]["comment"])
+            self.d[u] = node_info 
+            u_val = u
+            if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
+                self.root_nodes.append(node_info["tensor"])
+            if node_info["type"] == "fiberlookup":
+                if node_info["format"] == "dense":
+                    self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] +
+                                 node_info["index"] + "_" + str(u) + "_" + self.mem_lvl + " = UncompressCrdRdScan(dim=" + node_info["tensor"] +
+                                 "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim, statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+
+                if node_info["format"] == "compressed":
+                    self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
+                                 "_" + str(u) + "_" + self.mem_lvl + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
+                                 "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
+                                 "_seg" + node_info["mode"] + ", debug=debug_sim, statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+
+            elif node_info["type"] == "arrayvals":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + "_" + self.mem_lvl + " = Array(init_arr=" +
+                             node_info["tensor"] + "_vals, " + "debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + "_" + self.mem_lvl
+
+            elif "broadcast" in self.networkx_graph.nodes[u]['comment']:
+                continue
+
+            elif node_info["type"] == "repsiggen":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl +
+                             " = RepeatSigGen(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+
+            elif node_info["type"] == "repeat":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl +
+                             " = Repeat(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "intersect":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl + " = Intersect2(debug=debug_sim, " +
+                             "statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "union":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl + " = Union2(debug=debug_sim, " +
+                             "statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
+                # invalid_flag = 1
+            elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_" + self.mem_lvl + " = SparseAccumulator1(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u) + "_" + self.mem_lvl
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_drop_crd_inner" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_drop_crd_outer" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_drop_val" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+            elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_" + self.mem_lvl + " = SparseAccumulator2(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u) + "_" + self.mem_lvl
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_drop_crd_inner" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_drop_crd_outer" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                # f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
+                #    u) + "_drop_crd_in_2" + " = StknDrop(debug=debug_sim)\n")
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
+                             u) + "_drop_val" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+            elif node_info["type"] == "crddrop":
+                self.f.write(
+                           tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "crdhold":
+                self.f.write(
+                             tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "mul":
+                self.f.write(
+                             tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "add":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = Add2(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "reduce":
+                self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = Reduce(debug=debug_sim, statistics=report_stats)\n")
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+            elif node_info["type"] == "fiberwrite":
+                if node_info["mode"] == "vals":
+                    self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl +
+                                 " = ValsWrScan(size=" + array_size_computation(node_info["size"]) +
+                                 ", fill=fill, debug=debug_sim, statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl
+                elif node_info["format"] == "compressed":
+                    self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl +
+                                 " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
+                                 array_size_computation(node_info["crdsize"]) + ", fill=fill," + " debug=debug_sim, " +
+                                 "statistics=report_stats)\n")
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl
+                else:
+                    self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) + "_" + self.mem_lvl
+                    continue
+                if node_info["sink"] == "true":
+                    output_nodes[self.d[u]["object"]] = node_info["mode"]
+            elif node_info["type"] == "memory_block":
+                if not pipelined_tiles:
+                    self.memory_blks.append(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl)
+                    if self.mem_lvl == "00":
+                        self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"Glb_memory\"], bandwidth=memory_config[\"Glb_tile_bandwidth\"] // " +
+                                     "memory_config[\"Glb_tiles\"], latency=memory_config[\"Global_Glb_latency\"], debug=debug_sim)\n")
+                    elif self.mem_lvl == "0":
+                        self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"Mem_memory\"], bandwidth=memory_config[\"Mem_tile_bandwidth\"] // " +
+                                     "memory_config[\"Mem_tiles\"], latency=memory_config[\"Glb_Mem_latency\"], debug=debug_sim)\n")
+                    else:
+                        self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"" + self.mem_lvl + "_memory\"], bandwidth=memory_config[\"" + self.mem_lvl + "_tile_bandwidth\"] // " +
+                                     "memory_config[\"" + self.mem_lvl + "_tiles\"], latency=memory_config[\"" + self.mem_lvl + "_latency\"], debug=debug_sim)\n") 
+                else:
+                    pass
+                self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
+                nxt_parents.append(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl)
+                if len(self.mem_lvl) == 2:
+                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, node_info["type"] + "_" + str(u) + "_" + self.mem_lvl[:-1] + ".out_done_in()")
+                else:
+                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, "tiled_done and not tile_signalled")
+            else:
+                print(node_info)
+                invalid_flag = 1
+                print("Error invalid node detected", node_info["type"], "\n")
+        for par in parent:
+            self.f.write(tab(self.scope_lvl + 1) + par + ".valid_tile_received()\n")
+        if len(self.mem_lvl) == 0:
+            self.f.write(tab(self.scope_lvl + 1) + "tile_signalled = False\n")
+        self.output_check_nodes()
+        self.f.write("\n")
+        return self.d, invalid_flag, output_nodes, nxt_parents
+
+    def fetch_block_parent(self, node):
+        if self.parent_block == None:
+            return ""
+        par = self.parent_block.get_memory_structure()
+        return ", " + par.get_parent(node)
+
+    def get_memory_structure(self):
+        return self.mem_blks_connect
+
+    def get_memory_blocks(self):
+        return self.memory_blks
+
+    def connect_nodes(self, nodes_updating_list, data):
+        if len(self.mem_lvl) == MEM_LEVELS:
+            self.scope_lvl += 1
+        else:
+            self.scope_lvl -= 1
+        self.f.write(tab(self.scope_lvl + 1) + "if check_flag" + self.mem_lvl + ":\n") 
+        nodes_updating_list.append(tab(self.scope_lvl + 1) + "if check_flag" + self.mem_lvl + ":\n")
+        # self.scope_lvl -= 1
+        
+        for u in self.networkx_graph.nodes():
+            if self.d[u]["type"] == "fiberlookup" and u not in data.get_if_done():
+                if self.d[u]["root"] == "true":
+                    self.f.write(tab(2 + self.scope_lvl) + "if len(in_ref_" + self.d[u]["tensor"] + self.mem_lvl + ") > 0:\n")
+                    self.f.write(tab(3 + self.scope_lvl) + self.d[u]["object"] + ".set_in_ref(in_ref_" + self.d[u]["tensor"] + self.mem_lvl + ".pop(0))\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[u]["object"] + ".update()\n\n")
+                    data.add_done(u)
+     
+        # print("FLAG ", apath, data.if_all_graph_realized(), " ", data.get_if_done())
+        while not data.if_all_graph_realized():
+            # print("FLAG ", apath, data.if_all_graph_realized(), " ", data.get_if_done())
+            for u, v, _ in list(nx.edge_bfs(self.networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
+                a = self.networkx_graph.get_edge_data(u, v)[0]
+                if self.d[v]["type"] == "fiberlookup" and data.get_if_node_done(v) == 0 and parents_done(self.networkx_graph,
+                                                                                                    data.get_if_done(), v):
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in_ref(" + self.d[u_]["object"] + ".out_ref" +
+                                         str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "())\n")
+                        else:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in_ref(" +
+                                         self.d[u_]["object"] + ".out_" +
+                                         str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
+                        nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                        # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                        data.add_done(v)
+
+                if self.d[v]["type"] == "repsiggen" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for u_ in data.get_parents()[v]:
+                        self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_istream(" + str(self.d[u_]["object"]).strip('"') +
+                                     ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "repeat" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    if self.d[v]["root"] == "true":
+                        self.f.write(tab(2 + self.scope_lvl) + "if len(in_ref_" + self.d[v]["tensor"] +  self.mem_lvl + ") > 0:\n")
+                        self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] +
+                                     ".set_in_ref(in_ref_" + self.d[v]["tensor"] + self.mem_lvl + ".pop(0))\n")
+                    for u_ in data.get_parents()[v]:
+                        if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in_ref(" +
+                                         self.d[u_]["object"] + ".out_ref" +
+                                         str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "())\n")
+                        else:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in_" +
+                                         str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) +
+                                         "(" + self.d[u_]["object"] + ".out_" +
+                                         str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "arrayvals" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for u_ in data.get_parents()[v]:
+                        if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                            
+                            print(self.scope_lvl, self.d[v], self.d[u_], self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()], )
+                            
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_load(" + self.d[u_]["object"] + ".out_ref" +
+                                         str(self.intersect_dataset[d[u_]["object"]][d[v]["tensor"].upper()]) + "())\n")
+                        else:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_load(" + self.d[u_]["object"] + ".out_ref" + "())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+                if self.d[v]["type"] == "memory_block" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    # print(intersect_dataset, d[u_]["object"], d[v]["tensor"])
+                    for u_ in data.get_parents()[v]:
+                        self.f.write(tab(2 + self.scope_lvl) + "if isinstance(" + self.d[u_]["object"] + ".out_ref(), int):\n")
+                        if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                            print(self.scope_lvl, self.d[v], self.d[u_], self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()], )
+                            
+                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
+                                         str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), sizes_dict_level" +
+                                         self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
+                        else:
+                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), sizes_dict_level" +
+                                         self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
+                        self.f.write(tab(2 + self.scope_lvl) + "else:\n")
+                        if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
+                                         str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), 8)\n")
+                        else:
+                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), 8)\n")
+                    self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".check_done(" + self.mem_blks_connect.get_child(self.d[v]["object"]) + ")\n")
+                    # if len(self.mem_lvl) < MEM_LEVELS:
+                    #     if len(self.mem_lvl) 
+                    #     par = self.mem_blks_connect.get_parent(self.d[v]["object"])
+                    #     self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".check_done(" + par + ".get_done_in())\n")
+                    
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update(time_cnt)\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "intersect" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for i in range(len(data.get_parents()[v])):
+                        if i % 2 == 1:
+                            continue
+                        u_ = data.get_parents()[v][i]
+                        self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
+                                     self.d[u_]["object"] + ".out_ref(), " + self.d[u_]["object"] + ".out_crd())\n")
+                        self.intersect_dataset[self.d[v]["object"]][self.d[u_]["tensor"].upper()] = i // 2 + 1
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "union" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for i in range(len(data.get_parents()[v])):
+                        if i % 2 == 1:
+                            continue
+                        u_ = data.get_parents()[v][i]
+                        self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
+                                     self.d[u_]["object"] + ".out_ref(), " + self.d[u_]["object"] + ".out_crd())\n")
+                        self.intersect_dataset[self.d[v]["object"]][self.d[u_]["tensor"].upper()] = i // 2 + 1
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "crddrop" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for u_ in data.get_parents()[v]:
+                        index_value = data.get_edge_data()[v][data.get_parents()[v].index(u_)][-1]
+                        if index_value == self.d[v]["inner"]:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_inner_crd" + "(" + self.d[u_]["object"] + ".out_crd())\n")
+                        if index_value == self.d[v]["outer"]:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_outer_crd" + "(" + self.d[u_]["object"] + ".out_crd())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "crdhold" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        index_value = data.get_edge_data()[v][i][-1]
+                        local_edge = data.get_edge_data()[v][i][:-2]
+                        if index_value == self.d[v]["inner"]:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_inner_crd" + "(" + self.d[u_]["object"] +
+                                         ".out_" + local_edge + "())\n")
+                        if index_value == self.d[v]["outer"]:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_outer_crd" + "(" + self.d[u_]["object"] +
+                                         ".out_" + local_edge + "())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "spaccumulator" and self.d[v]["order"] == "1" and parents_done(self.networkx_graph,
+                                                                                                       data.get_if_done(), v) \
+                        and data.get_if_node_done(v) == 0:
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        local_edge = ""
+                        if "crd" in data.get_edge_data()[v][i]:
+                            local_edge = data.get_edge_data()[v][i][:-2]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
+                                         self.d[u_]["object"] + ".out_" + local_edge + "())\n")
+                        else:
+                            local_edge = data.get_edge_data()[v][i]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
+                                         self.d[u_]["object"] + ".out_val())\n")
+                        nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                        # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        local_edge = ""
+                        if "crd" in data.get_edge_data()[v][i]:
+                            local_edge = data.get_edge_data()[v][i][:-2]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_" + local_edge + "(" +
+                                         self.d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                        else:
+                            local_edge = data.get_edge_data()[v][i]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_" + local_edge + "(" +
+                                         self.d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "spaccumulator" and self.d[v]["order"] == "2" and parents_done(self.networkx_graph,
+                                                                                             data.get_if_done(), v) \
+                        and data.get_if_node_done(v) == 0:
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        local_edge = ""
+                        if "crd" in data.get_edge_data()[v][i]:
+                            local_edge = data.get_edge_data()[v][i][:-2]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
+                                         self.d[u_]["object"] + ".out_" + local_edge + "())\n")
+                        else:
+                            local_edge = data.get_edge_data()[v][i]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
+                                         self.d[u_]["object"] + ".out_val())\n")
+                        nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                        # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        local_edge = ""
+                        if "crd" in data.get_edge_data()[v][i]:
+                            local_edge = data.get_edge_data()[v][i][:-2]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_" + local_edge + "(" +
+                                         self.d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                        else:
+                            local_edge = data.get_edge_data()[v][i]
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_" + local_edge + "(" +
+                                         self.d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "mul" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
+                                     self.d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "add" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for u_ in data.get_parents()[v]:
+                        self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
+                                     self.d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "reduce" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for u_ in data.get_parents()[v]:
+                        self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_in_" +
+                                     str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "(" + self.d[u_]["object"] +
+                                     ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
+                    nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
+                    data.add_done(v)
+
+                if self.d[v]["type"] == "fiberwrite" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
+                        data.get_if_node_done(v) == 0:
+                    for i in range(len(data.get_parents()[v])):
+                        u_ = data.get_parents()[v][i]
+                        if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
+                                in self.d[u_]["object"]:
+                            local_index = data.get_edge_data()[v][i][-1]
+                            print(self.d[u_], " ", local_index, " ", apath)
+                            if self.d[u_]["in0"] == local_index:
+                                local_cord = "_inner"
+                            else:
+                                local_cord = "_outer"
+                            data.set_edge_data(v, i, "crd" + local_cord)
+                        if self.d[v]["mode"] == "vals":
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_input(" + self.d[u_]["object"] + ".out_" +
+                                    str(data.get_edge_info(v, i)) + "())\n")
+                            nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                        else:
+                            self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".set_input(" + self.d[u_]["object"] + ".out_" +
+                                         str(data.get_edge_info(v, i)) + "())\n")
+                            nodes_updating_list.append(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".update()\n")
+                    data.add_done(v)
+
+    def finish_outputs_tiled(self, elements, nodes_completed):
+        self.scope_lvl += 2
+        for i in nodes_completed:
+            self.f.write(i)
+        self.f.write("\n")
+        output_list = ""
+        # Write done statement
+        self.f.write(tab(self.scope_lvl) + "tiled_done = ")
+        elements2 = []
+        for elem in elements.keys():
+            elements2.append(elem)
+        for elem in elements.keys():
+            self.f.write(elem + ".out_done()")
+            if elem != elements2[-1]:
+                self.f.write(" and ")
+            else:
+                self.f.write("\n")
+        # TIme counter update
+        # self.f.write(tab(2) + "time_cnt += 1\n\n")
+        # Autosize all blocks
+        self.f.write(tab(self.scope_lvl) + "if tiled_done and not tile_signalled:\n")
+        self.f.write(tab(self.scope_lvl + 1) + "tile_signalled = True\n")
+        for elem in elements.keys():
+            self.f.write(tab(self.scope_lvl + 1) + elem + ".autosize()\n")
+        self.f.write("\n")
+
+        if len(elements.keys()) > 1:
+            self.f.write(tab(self.scope_lvl + 1) + "out_crds = [")
+        else:
+            self.f.write(tab(self.scope_lvl + 1) + "out_crds = []\n")
+
+        output_list += " out_crds = ["
+        count = 0
+        for elem in elements.keys():
+            if elements[elem] != "vals":
+                self.f.write(elem + ".get_arr()")
+                output_list += elem + ".get_arr()"
+                count += 1
+                if count < len(elements2) - 1:
+                    self.f.write(", ")
+                    output_list += ", "
+                else:
+                    self.f.write("]\n")
+                    output_list += "]"
+        count = 0
+        if len(elements.keys()) > 1:
+            self.f.write(tab(self.scope_lvl + 1) + "out_segs = [")
+        else:
+            self.f.write(tab(self.scope_lvl + 1) + "out_segs = []\n")
+
+        output_list += ", out_segs = ["
+        for elem in elements.keys():
+            if elements[elem] != "vals":
+                self.f.write(elem + ".get_seg_arr()")
+                output_list += elem + ".get_seg_arr()"
+                count += 1
+                if count < len(elements2) - 1:
+                    self.f.write(", ")
+                    output_list += ", "
+                else:
+                    self.f.write("]\n")
+                    output_list += "]"
+
+        self.f.write(tab(self.scope_lvl + 1) + "out_vals = ")
+        output_string = ", out_vals = "
+        for elem in elements.keys():
+            if elements[elem] == "vals":
+                self.f.write(elem + ".get_arr()\n")
+                output_string += elem + ".get_arr()"
+        output_list += output_string
+        return output_list
+
+    def return_next_parent(self):
+        return self.nxt_parent
+
+    def generate_check_against_gold_code(self, tensor_format_parse, test_name, parents=[], tensors=[]):
+        f.write(tab(self.scope_lvl + 1) + "if check_gold:\n")
+        generate_tiling_output_crds(f, self.scope_lvl + 2, parents, tensors)
+        f.write(tab(self.scope_lvl + 2) + "print(\"Checking gold...\")\n")
+        f.write(tab(self.scope_lvl + 2) + "check_gold_")
+        check = out_name[num]
+        check = get_common_test_name(check)
+        f.write(check + "(" + get_dataset_name(test_name) + ", debug_sim, cast, out_crds, out_segs, out_vals, \"" +
+                tensor_format_parse.get_format(output_tensor) + "\")\n")
+        f.write(tab(self.scope_lvl + 2) + "samBench(bench, extra_info)\n")
+
+
+
+### START OF THE CODE GENERATION FOR THE TESTS
+parser = argparse.ArgumentParser("Generate sam apps/")
+parser.add_argument("--input_dir", type=str, default="./compiler/sam-outputs/dot")
+args = parser.parse_args()
+
+file_paths, out_name = get_all_files(args.input_dir)
 num = 0
 for apath in file_paths:
-    # apath = "../compiler/sam-outputs/dot/matmul_ijk.gv"
-    # out_name[0] = "matmul_ijk"
-    # apath = os.path.join(directory, ".gv")
+    print("______________________________________________")
+    print(apath)
     graphs = pydot.graph_from_dot_file(apath)
     graph = graphs[0]
     networkx_graph = nx.nx_pydot.from_pydot(graph)
@@ -575,6 +1454,7 @@ for apath in file_paths:
     tensor_information = {}
     nodes_updating_list = []
 
+
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         if node_info["type"] == "fiberlookup":
@@ -582,381 +1462,118 @@ for apath in file_paths:
                 tensor_information[node_info["tensor"]] = 0
             if node_info["format"] == "compressed":
                 tensor_information[node_info["tensor"]] += 1 * (2 ** int(node_info["mode"]))
-    tens_fmt = {}
-    count = 0
-    data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
-    ct = 0
-    for k in tensor_format_parse.return_all_tensors():
-        if ct != 0:
-            tens_fmt[k] = {}
-            tens_fmt[k]["information"] = data_formats[ct - 1]
-        ct += 1
-    generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
-    for u in list(nx.topological_sort(networkx_graph)):
-        node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
-        d[u] = node_info
-        if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
-            root_nodes.append(node_info["tensor"])
-        if node_info["type"] == "fiberlookup":
-            if node_info["format"] == "dense":
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] +
-                        node_info["index"] + "_" + str(u) + " = UncompressCrdRdScan(dim=" + node_info["tensor"] +
-                        "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim, statistics=report_stats)\n")
-                d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
-            if node_info["format"] == "compressed":
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
-                        "_" + str(u) + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
-                        "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
-                        "_seg" + node_info["mode"] + ", debug=debug_sim, statistics=report_stats)\n")
-                d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
-
-        elif node_info["type"] == "arrayvals":
-            f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + " = Array(init_arr=" +
-                    node_info["tensor"] + "_vals, " + "debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u)
-
-        elif "broadcast" in networkx_graph.nodes[u]['comment']:
+    # generate_tiling_header()
+    if MEM_LEVELS == 2: 
+        generate_tiling_header(f, out_name[num])
+        
+        tiling_graph = generate_tiling_graph(networkx_graph)
+        d = {}
+        mem_blks = []
+        glb_lvl = Graph_Realization(tiling_graph, mem_lvl="00", scope_lvl=0, f=f, mem_blks=mem_blks)
+        
+        d, invalid_flag, output_nodes, parents = glb_lvl.node_instantiations1(output_nodes)
+        # d, invalid_flag, output_nodes, parents = node_instantiations(tiling_graph, d, f, output_nodes, scope_lvl = 0, mem_lvl="00")
+        data = CodeGenerationdatasets(tiling_graph)
+        data.build_datasets(tiling_graph)
+        output_check_nodes(f, root_nodes)
+        f.write("\n")
+        # glb_lvl.connect_nodes(nodes_updating_list, data)
+        ######################################################################################################################
+        d = {}
+        mem_lvl = Graph_Realization(tiling_graph, mem_lvl="0", scope_lvl=1, f=f, parent=glb_lvl, mem_blks=glb_lvl.get_memory_blocks())
+        d, invalid_flag, output_nodes, parents = mem_lvl.node_instantiations1(output_nodes, pipelined_tiles=False, parent=parents)
+        
+        glb_lvl.loop_start()
+        
+        glb_lvl.write_nodes()
+        
+        glb_lvl.connect_nodes(nodes_updating_list, data)
+        data = CodeGenerationdatasets(tiling_graph)
+        data.build_datasets(tiling_graph) 
+        mem_lvl.write_nodes() 
+        mem_lvl.connect_nodes(nodes_updating_list, data)
+        ######################################################################################################################
+        tens_fmt = {}
+        count = 0
+        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=1, f=f)
+        data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
+        ct = 0
+        for k in tensor_format_parse.return_all_tensors():
+            if ct != 0:
+                tens_fmt[k] = {}
+                tens_fmt[k]["information"] = data_formats[ct - 1]
+            ct += 1
+        f.write("\n")
+        # self.f, tens_fmt, 2, tensor_information, tensor_format_parse, out_name[num]
+        print(parents)
+        print(mem_lvl.get_tensor_list())
+        assert len(parents) == len(mem_lvl.get_tensor_list())
+        d, invalid_flag, output_nodes, parents = comp_lvl.node_instantiations(output_nodes, tens_fmt, tensor_information, tensor_format_parse, out_name[num], parent=parents, tensor_list=mem_lvl.get_tensor_list())
+        if invalid_flag == 1:
+            os.system("rm " + out_name[num] + ".py")
+            print(out_name[num] + " failed\n")
+            num += 1
             continue
+        f.write("\n")
+        data = CodeGenerationdatasets(networkx_graph)
+        data.build_datasets(networkx_graph)
+        comp_lvl.connect_nodes(nodes_updating_list, data)
+        output_tensor = ""
+        ct = 0
+        for k in tensor_format_parse.return_all_tensors():
+            if ct == 0:
+                output_tensor = k
+            ct += 1
+        sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
+        output_list = comp_lvl.finish_outputs_tiled(sorted_nodes, nodes_updating_list)
+        # output_list = finish_outputs(f, sorted_nodes, nodes_updating_list)
+        # generate_benchmarking_code(f, tensor_format_parse, out_name[num])
+        comp_lvl.generate_check_against_gold_code(tensor_format_parse, out_name[num], parents=mem_lvl.return_next_parent(), tensors=mem_lvl.get_tensor_list())
+        # generate_tiling_end(f)
+        mem_blks = mem_lvl.get_memory_blocks()
+        generate_tiling_end(f, mem_blks)
+ 
+    else:
+        tens_fmt = {}
+        count = 0
+        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=0, f=f)
+        data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
+        ct = 0
+        for k in tensor_format_parse.return_all_tensors():
+            if ct != 0:
+                tens_fmt[k] = {}
+                tens_fmt[k]["information"] = data_formats[ct - 1]
+            ct += 1
+        # generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
+        f.write("\n")
+        d, invalid_flag, output_nodes, parents = comp_lvl.node_instantiations(output_nodes, tens_fmt, tensor_information, tensor_format_parse, out_name[num], parent=[])
+        if invalid_flag == 1:
+            os.system("rm " + out_name[num] + ".py")
+            print(out_name[num] + " failed\n")
+            num += 1
+            continue
+        output_check_nodes(f, root_nodes)
+        f.write("\n")
+        f.write(tab(1) + "while not done and time_cnt < TIMEOUT:\n")
+        intersect_dataset = defaultdict(dict)
+        data = CodeGenerationdatasets()
+        data.build_datasets(networkx_graph)
+        comp_lvl.connect_nodes(nodes_updating_list, data) 
+        output_tensor = ""
+        ct = 0
+        for k in tensor_format_parse.return_all_tensors():
+            if ct == 0:
+                output_tensor = k
+            ct += 1
 
-        elif node_info["type"] == "repsiggen":
-            f.write(tab(1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) +
-                    " = RepeatSigGen(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u)
+        sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
+        output_list = finish_outputs(f, sorted_nodes, nodes_updating_list)
 
-        elif node_info["type"] == "repeat":
-            f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) +
-                    " = Repeat(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
-        elif node_info["type"] == "intersect":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim, " +
-                    "statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
-        elif node_info["type"] == "union":
-            f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim, " +
-                    "statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
-            # invalid_flag = 1
-        elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + " = SparseAccumulator1(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_inner" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_outer" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_val" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
-        elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + " = SparseAccumulator2(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_inner" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_crd_outer" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
-            # f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-            #    u) + "_drop_crd_in_2" + " = StknDrop(debug=debug_sim)\n")
-            f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                u) + "_drop_val" + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
-        elif node_info["type"] == "crddrop":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + str(u)
-        elif node_info["type"] == "crdhold":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + str(u)
-        elif node_info["type"] == "mul":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + str(u)
-        elif node_info["type"] == "add":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Add2(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + str(u)
-        elif node_info["type"] == "reduce":
-            f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Reduce(debug=debug_sim, statistics=report_stats)\n")
-            d[u]["object"] = node_info["type"] + "_" + str(u)
-        elif node_info["type"] == "fiberwrite":
-            if node_info["mode"] == "vals":
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                        " = ValsWrScan(size=" + array_size_computation(node_info["size"]) +
-                        ", fill=fill, debug=debug_sim, statistics=report_stats)\n")
-                d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
-            elif node_info["format"] == "compressed":
-                f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
-                        " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
-                        array_size_computation(node_info["crdsize"]) + ", fill=fill," + " debug=debug_sim, " +
-                        "statistics=report_stats)\n")
-                d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
-            else:
-                d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
-                continue
-            if node_info["sink"] == "true":
-                output_nodes[d[u]["object"]] = node_info["mode"]
-        else:
-            invalid_flag = 1
-            print("Error invalid node detected", node_info["type"], "\n")
-    if invalid_flag == 1:
-        os.system("rm " + out_name[num] + ".py")
-        print(out_name[num] + " failed\n")
-        num += 1
-        continue
-    output_check_nodes(f, root_nodes)
-    f.write("\n")
-    f.write(tab(1) + "while not done and time_cnt < TIMEOUT:\n")
-
-    intersect_dataset = defaultdict(dict)
-    data = CodeGenerationdatasets()
-    data.build_datasets(networkx_graph)
-    for u in networkx_graph.nodes():
-        if d[u]["type"] == "fiberlookup" and u not in data.get_if_done():
-            if d[u]["root"] == "true":
-                f.write(tab(2) + "if len(in_ref_" + d[u]["tensor"] + ") > 0:\n")
-                f.write(tab(3) + d[u]["object"] + ".set_in_ref(in_ref_" + d[u]["tensor"] + ".pop(0))\n")
-                nodes_updating_list.append(tab(2) + d[u]["object"] + ".update()\n\n")
-                data.add_done(u)
-
-    for i in range(10):
-        for u, v, a in list(nx.edge_bfs(networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
-            a = networkx_graph.get_edge_data(u, v)[0]
-            if d[v]["type"] == "fiberlookup" and data.get_if_node_done(v) == 0 and parents_done(networkx_graph,
-                                                                                                data.get_if_done(), v):
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    if "intersect" in d[u_]["object"] or "union" in d[u_]["object"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_ref(" + d[u_]["object"] + ".out_ref" +
-                                str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
-                    else:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
-                                d[u_]["object"] + ".out_" +
-                                str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    data.add_done(v)
-
-            if d[v]["type"] == "repsiggen" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for u_ in data.get_parents()[v]:
-                    f.write(tab(2) + d[v]["object"] + ".set_istream(" + str(d[u_]["object"]).strip('"') +
-                            ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "repeat" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                if d[v]["root"] == "true":
-                    f.write(tab(2) + "if len(in_ref_" + d[v]["tensor"] + ") > 0:\n")
-                    f.write(tab(3) + d[v]["object"] +
-                            ".set_in_ref(in_ref_" + d[v]["tensor"] + ".pop(0))\n")
-                for u_ in data.get_parents()[v]:
-                    if "intersect" in d[u_]["object"] or "union" in d[u_]["object"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_ref(" +
-                                d[u_]["object"] + ".out_ref" +
-                                str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
-                    else:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_" +
-                                str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) +
-                                "(" + d[u_]["object"] + ".out_" +
-                                str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "arrayvals" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for u_ in data.get_parents()[v]:
-                    if "intersect" in d[u_]["object"] or "union" in d[u_]["object"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"] + ".out_ref" +
-                                str(intersect_dataset[d[u_]["object"]][d[v]["tensor"]]) + "())\n")
-                    else:
-                        f.write(tab(2) + d[v]["object"] + ".set_load(" + d[u_]["object"] + ".out_ref" + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "intersect" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for i in range(len(data.get_parents()[v])):
-                    if i % 2 == 1:
-                        continue
-                    u_ = data.get_parents()[v][i]
-                    f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
-                            d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
-                    intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "union" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for i in range(len(data.get_parents()[v])):
-                    if i % 2 == 1:
-                        continue
-                    u_ = data.get_parents()[v][i]
-                    f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
-                            d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
-                    intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "crddrop" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for u_ in data.get_parents()[v]:
-                    index_value = data.get_edge_data()[v][data.get_parents()[v].index(u_)][-1]
-                    if index_value == d[v]["inner"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
-                    if index_value == d[v]["outer"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "crdhold" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    index_value = data.get_edge_data()[v][i][-1]
-                    local_edge = data.get_edge_data()[v][i][:-2]
-                    if index_value == d[v]["inner"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] +
-                                ".out_" + local_edge + "())\n")
-                    if index_value == d[v]["outer"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] +
-                                ".out_" + local_edge + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "spaccumulator" and d[v]["order"] == "1" and parents_done(networkx_graph,
-                                                                                         data.get_if_done(), v) \
-                    and data.get_if_node_done(v) == 0:
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    local_edge = ""
-                    if "crd" in data.get_edge_data()[v][i]:
-                        local_edge = data.get_edge_data()[v][i][:-2]
-                        f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                d[u_]["object"] + ".out_" + local_edge + "())\n")
-                    else:
-                        local_edge = data.get_edge_data()[v][i]
-                        f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                d[u_]["object"] + ".out_val())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
-                    # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
-
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    local_edge = ""
-                    if "crd" in data.get_edge_data()[v][i]:
-                        local_edge = data.get_edge_data()[v][i][:-2]
-                        f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                    else:
-                        local_edge = data.get_edge_data()[v][i]
-                        f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "spaccumulator" and d[v]["order"] == "2" and parents_done(networkx_graph,
-                                                                                         data.get_if_done(), v) \
-                    and data.get_if_node_done(v) == 0:
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    local_edge = ""
-                    if "crd" in data.get_edge_data()[v][i]:
-                        local_edge = data.get_edge_data()[v][i][:-2]
-                        f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                d[u_]["object"] + ".out_" + local_edge + "())\n")
-                    else:
-                        local_edge = data.get_edge_data()[v][i]
-                        f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                d[u_]["object"] + ".out_val())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
-                    # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
-
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    local_edge = ""
-                    if "crd" in data.get_edge_data()[v][i]:
-                        local_edge = data.get_edge_data()[v][i][:-2]
-                        f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                    else:
-                        local_edge = data.get_edge_data()[v][i]
-                        f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "mul" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
-                            d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "add" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for u_ in data.get_parents()[v]:
-                    f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
-                            d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "reduce" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for u_ in data.get_parents()[v]:
-                    f.write(tab(2) + d[v]["object"] + ".set_in_" +
-                            str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "(" + d[u_]["object"] +
-                            ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                data.add_done(v)
-
-            if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                    data.get_if_node_done(v) == 0:
-                for i in range(len(data.get_parents()[v])):
-                    u_ = data.get_parents()[v][i]
-                    if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
-                            in d[u_]["object"]:
-                        local_index = data.get_edge_data()[v][i][-1]
-                        print(d[u_], " ", local_index, " ", apath)
-                        if d[u_]["in0"] == local_index:
-                            local_cord = "_inner"
-                        else:
-                            local_cord = "_outer"
-                        data.set_edge_data(v, i, "crd" + local_cord)
-                    if d[v]["mode"] == "vals":
-                        f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
-                                str(data.get_edge_info(v, i)) + "())\n")
-                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                    else:
-                        f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
-                                str(data.get_edge_info(v, i)) + "())\n")
-                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                data.add_done(v)
-
-    output_tensor = ""
-    ct = 0
-    for k in tensor_format_parse.return_all_tensors():
-        if ct == 0:
-            output_tensor = k
-        ct += 1
-
-    sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
-    output_list = finish_outputs(f, sorted_nodes, nodes_updating_list)
-
-    generate_benchmarking_code(f, tensor_format_parse, out_name[num])
-    generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
+        generate_benchmarking_code(f, tensor_format_parse, out_name[num])
+        generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
 
     f.close()
-    os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
+    os.system("cp " + out_name[num] + ".py " + os.getcwd() + "/sam/sim/test/apps/test_" + out_name[num] + ".py")
     os.system("rm " + out_name[num] + ".py")
     num += 1
