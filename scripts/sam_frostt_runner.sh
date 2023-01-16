@@ -91,8 +91,8 @@ for b in ${!BENCHMARKS[@]}; do
 
 			$basedir/compiler/taco/build/bin/taco-test sam.pack_sss012
 			$basedir/compiler/taco/build/bin/taco-test sam.pack_other_frostt
-			python $basedir/scripts/datastructure_frostt.py -n $name -f sss012
-			python $basedir/scripts/datastructure_frostt.py -n $name -f sss012 --other
+			python $basedir/scripts/datastructure_tns.py -n $name -f sss012
+			python $basedir/scripts/datastructure_tns.py -n $name -f sss012 --other
 			chmod -R 775 $FROSTT_FORMATTED_PATH
 		fi
 
