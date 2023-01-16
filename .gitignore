@@ -1,19 +1,32 @@
+# Python Cache
 __pycache__/
 *.pyc
 
+# Temporary output files
 *.swp
 *.swo
 *.txt
+*.out
 
+# Files for MacOS and IDEs
 .DS_store
 .idea/
+cmake-build-*/
+.ipynb_checkpoints/
 
+# Generated SAM Graphs
+*.gv
+
+# Generated images
+*.svg
 *.png
 *.pdf
 
+# Output data files
 *.csv
 *.json
 
+# Generated folders
 build/
 logs/
 results/
@@ -21,9 +34,19 @@ results-cpu/
 suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
-cmake-build-*/
 
-*.out
-*.svg
+# Generated SAM simulator tests
+*/sim/test/apps/test_*.py
 
-*.gv
+# Temporary matrices
+tmp_mat*/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Generated formatted tensor files
+tensor_*_mode_*
+
+# Tensor files
+*.mtx
+*.tns

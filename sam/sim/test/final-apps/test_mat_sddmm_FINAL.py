@@ -23,28 +23,23 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
-# FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
 @pytest.mark.suitesparse
-def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, report_stats, debug_sim, backpressure, depth, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+def test_mat_sddmm_locate_fused(samBench, ssname, cast, check_gold, report_stats, debug_sim, backpressure, depth, fill=0, KDIM=256):
+    B_dirname = os.path.join(formatted_dir, ssname, "mat_sddmm")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     C_shape = (B_shape[0], KDIM)
@@ -266,5 +261,5 @@ def test_mat_sddmm_locate_fused(samBench, ssname, check_gold, report_stats, debu
 
     if check_gold:
         print("Checking gold...")
-        check_gold_mat_sddmm(ssname, debug_sim, out_crds, out_segs, out_vals, "ss01")
+        check_gold_mat_sddmm(ssname, debug_sim, cast, out_crds, out_segs, out_vals, "ss01", KDIM)
     samBench(bench, extra_info)

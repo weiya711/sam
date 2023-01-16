@@ -28,7 +28,6 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-# @pytest.mark.suitesparse
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
 def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, backpressure, depth, fill=0):
@@ -57,17 +56,13 @@ def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, backpress
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
-    # C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg0 = read_inputs(C0_seg_filename)
     C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
-    # C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
     C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
-    # C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C_seg1 = read_inputs(C1_seg_filename)
     C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
-    # C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
