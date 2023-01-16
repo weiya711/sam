@@ -162,6 +162,7 @@ arr_dict5 = {"seg": [0, 1], "crd": [28], "in_ref": [0, 'S0', '', '', 'S0', '',
                                                     '', 0, '', '', 'S0', '', '', 'D'],
              "out_crd": [28, 'S1', 'S1', 28, 'S1', 'D'], "out_ref": [0, 'S1', 'S1', 0, 'S1', 'D']}
 
+
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
 def test_rd_scan_c_direct_nd(arrs, debug_sim):
     seg_arr = arrs["seg"]

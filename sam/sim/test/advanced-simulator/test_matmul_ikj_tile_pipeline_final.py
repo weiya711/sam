@@ -837,7 +837,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     C_seg1_t = read_inputs(C1_seg_filename_t)
                     C_crd1_t = read_inputs(C1_crd_filename_t)
                     C_vals_t = read_inputs(C_vals_filename_t, float)
-                    if C_j0 == 0 and B_k0 == 0 and B_i0 == 0:
+                    if C_j0 == 0 and B_k0 == 0:  # and B_i00 == 0:
                         print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
                                             None, debug_sim, out_crds=out_crds, out_segs=out_segs,
@@ -875,9 +875,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     stats_dict["arrayvals_B_7_done"] += arrayvals_B_7.return_statistics_base()["done_cycles"]
                     stats_dict["mul_6_done"] += mul_6.return_statistics_base()["done_cycles"]
                     stats_dict["spaccumulator1_3_done"] += spaccumulator1_3.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_inner_done"] += spaccumulator1_3_drop_crd_inner.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_outer_done"] += spaccumulator1_3_drop_crd_outer.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_vals_done"] += spaccumulator1_3_drop_val.return_statistics_base()["done_cycles"]
+                    stats_dict["spaccumulator1_3_inner_done"] += \
+                        spaccumulator1_3_drop_crd_inner.return_statistics_base()["done_cycles"]
+                    stats_dict["spaccumulator1_3_outer_done"] += \
+                        spaccumulator1_3_drop_crd_outer.return_statistics_base()["done_cycles"]
+                    stats_dict["spaccumulator1_3_vals_done"] += \
+                        spaccumulator1_3_drop_val.return_statistics_base()["done_cycles"]
                 fiberwrite_X0_2.reset()
                 fiberwrite_X1_1.reset()
                 fiberwrite_Xvals_0.reset()

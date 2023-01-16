@@ -29,6 +29,7 @@ arr_dict5 = {"seg": [0, 1], "crd": [28], "in_ref": [0, 'S0', '', '', 'S0', '',
                                                     '', 0, '', '', 'S0', '', '', 'D'],
              "out_crd": [28, 'S1', 'S1', 28, 'S1', 'D'], "out_ref": [0, 'S1', 'S1', 0, 'S1', 'D']}
 
+
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
 def test_memory_block_nbuffer(arrs, debug_sim, skip_empty, yaml_name, report_stats, nbuffer):
     nbuffer = True
@@ -40,14 +41,12 @@ def test_memory_block_nbuffer(arrs, debug_sim, skip_empty, yaml_name, report_sta
     assert (len(gold_crd) == len(gold_ref))
     with open(os.path.join(sam_home + "/sam/sim/src/tiling/", yaml_name), "r") as stream:
         memory_config = yaml.safe_load(stream)
-
-    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)    
+    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
     mem_blk = memory_block(name="GLB_B", skip_blocks=skip_empty, nbuffer=nbuffer,
                            element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
                            bandwidth=memory_config["Glb_tile_bandwidth"] // memory_config["Glb_tiles"],
                            latency=memory_config["Global_Glb_latency"],
                            debug=debug_sim, pipeline_en=True, statistics=report_stats)
- 
     in_ref = copy.deepcopy(arrs["in_ref"])
     done = False
     time = 0
@@ -57,16 +56,13 @@ def test_memory_block_nbuffer(arrs, debug_sim, skip_empty, yaml_name, report_sta
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             crdscan.set_in_ref(in_ref.pop(0))
-
         crdscan.update()
-
         out_crd.append(crdscan.out_crd())
         out_ref.append(crdscan.out_ref())
         if isinstance(crdscan.out_ref(), int):
             out_gold.append(crdscan.out_ref())
         done = crdscan.done
         time += 1
-
     assert (remove_emptystr(out_crd) == gold_crd)
     assert (remove_emptystr(out_ref) == gold_ref)
     time = 0
@@ -96,31 +92,28 @@ def test_memory_block_nbuffer(arrs, debug_sim, skip_empty, yaml_name, report_sta
         # mem_blk.print_debug()
         # print(i)
         time += 1
-
     # print(out_ref)
     # print(out)
     # print(out_gold)
     assert out_gold == out
+
 
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
 def test_memory_block(arrs, debug_sim, skip_empty, yaml_name, report_stats, nbuffer):
     nbuffer = False
     seg_arr = arrs["seg"]
     crd_arr = arrs["crd"]
-
     gold_crd = arrs["out_crd"]
     gold_ref = arrs["out_ref"]
     assert (len(gold_crd) == len(gold_ref))
     with open(os.path.join(sam_home + "/sam/sim/src/tiling/", yaml_name), "r") as stream:
         memory_config = yaml.safe_load(stream)
-
-    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)    
+    crdscan = CompressedCrdRdScan(seg_arr=seg_arr, crd_arr=crd_arr, debug=debug_sim)
     mem_blk = memory_block(name="GLB_B", skip_blocks=skip_empty, nbuffer=nbuffer,
                            element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
                            bandwidth=memory_config["Glb_tile_bandwidth"] // memory_config["Glb_tiles"],
                            latency=memory_config["Global_Glb_latency"],
                            debug=debug_sim, pipeline_en=True, statistics=report_stats)
- 
     in_ref = copy.deepcopy(arrs["in_ref"])
     done = False
     time = 0
@@ -139,7 +132,6 @@ def test_memory_block(arrs, debug_sim, skip_empty, yaml_name, report_stats, nbuf
             out_gold.append(crdscan.out_ref())
         done = crdscan.done
         time += 1
-
     assert (remove_emptystr(out_crd) == gold_crd)
     assert (remove_emptystr(out_ref) == gold_ref)
     time = 0
