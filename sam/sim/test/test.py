@@ -263,7 +263,6 @@ def read_inputs(filename, intype=int, base=10, early_terminate=None):
                 if temp_token < 0:
                     temp_token = temp_token * -1
                 return_list.append(temp_token)
-                #return_list.append(intype(float(line.strip())))
     return return_list
 
 

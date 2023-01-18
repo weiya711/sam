@@ -44,58 +44,92 @@ def get_wget_cmd(log_file, basedir, tarname):
     return error, lines
 
 
-def get_suitesparse_online(log_file, basedir, mtx, mtx_dir, check=True):
+def get_suitesparse_online(log_file, basedir, mtx, mtx_dir, check=True, clean=False):
     # cwd = os.getcwd()
     if not os.path.isdir(mtx_dir):
         create_dir(mtx_dir)
-    else:
+    elif clean:
         clean_dir(mtx_dir)
 
     # change_dir(mtx_dir)
 
-    tarname = mtx + ".tar.gz"
-    error1, wget_cmd = get_wget_cmd(log_file, basedir, tarname)
-    error = error1
-    if not error1:
-        error |= run_process(wget_cmd[0], log_file, cwd=mtx_dir, split=True, check=check)
+    path_ = os.path.join(mtx_dir, f"{mtx}.mtx")
 
-    untar_cmd = f"tar -xvf {tarname} --strip=1"
-    if not error:
-        error |= run_process(untar_cmd, log_file, cwd=mtx_dir, split=True, check=check)
+    if not os.path.isfile(path_):
 
-    if not error1:
-        os.remove(os.path.join(mtx_dir, tarname))
+        tarname = mtx + ".tar.gz"
+        error1, wget_cmd = get_wget_cmd(log_file, basedir, tarname)
+        error = error1
+        if not error1:
+            error |= run_process(wget_cmd[0], log_file, cwd=mtx_dir, split=True, check=check)
 
-    # change_dir(cwd)
-    return error
+        untar_cmd = f"tar -xvf {tarname} --strip=1"
+        if not error:
+            error |= run_process(untar_cmd, log_file, cwd=mtx_dir, split=True, check=check)
+
+        if not error1:
+            os.remove(os.path.join(mtx_dir, tarname))
+
+        # change_dir(cwd)
+        return error
+    else:
+        return 0
 
 
 def generate_suitesparse(log_file, basedir, benchname, mtx, mtx_dir, matrix_tmp_dir, check=True):
+
+    # Generate subfolder
+    final_mat_path = os.path.join(matrix_tmp_dir, f"{mtx}")
+    if not os.path.isdir(matrix_tmp_dir):
+        os.mkdir(matrix_tmp_dir)
+    if not os.path.isdir(final_mat_path):
+        os.mkdir(final_mat_path)
+
     tensorpath = os.path.join(mtx_dir, mtx + ".mtx")
     os.environ["SUITESPARSE_TENSOR_PATH"] = tensorpath
     gen_suitesparse_cmd = ["python",
                            os.path.join(basedir, "sam/scripts/datastructure_suitesparse.py"), "-n", mtx,
-                           "-b", benchname, "-hw", "--out", matrix_tmp_dir]
+                           "-b", benchname, "-hw", "--out", final_mat_path]
     error = run_process(gen_suitesparse_cmd, log_file, check=check)
 
     return error
 
 
-def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check=True):
+def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check=True, gen_verilog=False):
     build_tb_command = ["python", os.path.join(basedir,
                                                "garnet/tests/test_memory_core/build_tb.py"), "--ic_fork",
                         "--sam_graph", os.path.join(basedir,
                                                     f"sam/compiler/sam-outputs/dot/{benchname}.gv"), "--seed", f"{0}",
                         "--dump_bitstream", "--add_pond", "--combined",
                         "--pipeline_scanner", "--base_dir", sparse_test_basedir,
-                        "--fiber_access", "--give_tensor", "--dump_glb", "--matrix_tmp_dir", matrix_tmp_dir]
-                        #"--fiber_access", "--give_tensor", "--gen_verilog", "--gen_pe", "--dump_glb", "--matrix_tmp_dir", matrix_tmp_dir]
-                        #"--fiber_access", "--give_tensor", "--trace"]
-                        #"--fiber_access", "--give_tensor", "--matrix_tmp_dir", matrix_tmp_dir, "--trace"]
+                        "--fiber_access", "--give_tensor", "--dump_glb", "--tensor_locs", matrix_tmp_dir, "--just_glb"]
+
+    if gen_verilog:
+        build_tb_command.append('--gen_verilog')
+        build_tb_command.append('--gen_pe')
+
     error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True)
 
-    print("OUTPUT TXT")
-    #print(output_txt)
+    cyc_count = 0
+
+    return error, cyc_count
+
+
+def run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
+                     matrix_tmp_dir, check=True, tname=None, compile_tb=False):
+    assert tname is not None
+    build_tb_command = ["python", os.path.join(basedir,
+                                               "garnet/tests/test_memory_core/build_tb.py"), "--ic_fork",
+                        "--sam_graph", os.path.join(basedir,
+                                                    f"sam/compiler/sam-outputs/dot/{benchname}.gv"), "--seed", f"{0}",
+                        "--dump_bitstream", "--add_pond", "--combined",
+                        "--pipeline_scanner", "--base_dir", sparse_test_basedir,
+                        "--fiber_access", "--give_tensor", "--dump_glb", "--tensor_locs", matrix_tmp_dir, "--run", f"{tname}"]
+
+    if compile_tb:
+        build_tb_command.append("--compile_tb")
+
+    error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True)
 
     split_ot = output_txt.split("\n")
 
@@ -105,8 +139,7 @@ def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_d
         if "Cycle" in line:
             print(line)
             ls = line.split()
-            cyc_count = int(ls[-1]) 
-        #print(line)
+            cyc_count = int(ls[-1])
 
     return error, cyc_count
 
@@ -115,16 +148,15 @@ def run_process(command, log_file=None, cwd=None, split=False, check=True, retur
     if split:
         command = command.split()
 
-    run_result = subprocess.run(command, cwd=cwd, check=check, capture_output=True, text=True)
-    #return_code = subprocess.run(command, cwd=cwd, check=check).returncode
-    return_code = run_result.returncode
-    output_txt = run_result.stdout
+    run_result = None
 
-    cycle_count = [line_ for line_ in output_txt if "Cycle Count" in line_]
-
-    print("FOUND CYCLE COUNT")
-    print(cycle_count)
-    #exit()
+    try:
+        run_result = subprocess.run(command, cwd=cwd, check=check, capture_output=True, text=True)
+        return_code = run_result.returncode
+        output_txt = run_result.stdout
+    except subprocess.CalledProcessError:
+        return_code = 1
+        output_txt = ""
 
     error = return_code != 0
     if error:
@@ -138,10 +170,10 @@ def run_process(command, log_file=None, cwd=None, split=False, check=True, retur
         return error
 
 
-def run_bench(benchname, args, matrices, stats):
+def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False):
     cwd = os.getcwd()
 
-    basedir = "/aha" if args.docker else cwd
+    basedir = "/aha" if args.docker else os.getenv('BASEDIR')
 
     # Hardcoded by default
     sparse_test_basedir = os.path.join(basedir,
@@ -155,30 +187,44 @@ def run_bench(benchname, args, matrices, stats):
                                                                                               "MAT_TMP_DIR")
 
     log_file = args.log if args.log is not None else os.path.join(cwd, "suitesparse_run.log")
-    if not args.append_log:
+    if not args.append_log and os.path.isfile(log_file):
         os.remove(log_file)
 
     check = not args.continue_run
+
+    gen_vlog = gen_verilog
+
+    clean_ = False
 
     for mtx in matrices:
         with open(log_file, "a+") as lf:
             lf.write(mtx + ":")
 
-        if get_suitesparse_online(log_file, basedir, mtx, mtx_dir, check):
+        if get_suitesparse_online(log_file, basedir, mtx, mtx_dir, check, clean=clean_):
             continue
         if generate_suitesparse(log_file, basedir, benchname, mtx, mtx_dir, matrix_tmp_dir, check):
             continue
-        err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check)
-        #if run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check):
-        if err:
-            continue
-        else:
-            with open(log_file, "a+") as lf:
-                lf.write("SUCCESS\n")
-            pstr = f"{benchname}, {mtx}, {cyc_count}\n"
-            stats.append(pstr)
 
-        clean_dir(mtx_dir)
+        clean_ = False
+
+    err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check, gen_vlog)
+    gen_vlog = False
+
+    comp_tb_ = compile_tb
+
+    for mtx in matrices:
+        tname = f"{benchname}_{mtx}"
+        err, cyc_count = run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
+                                          matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_)
+        comp_tb_ = False
+        pstr = f"{benchname}, {mtx}, {cyc_count}\n"
+        stats.append(pstr)
+
+    with open(log_file, "a+") as lf:
+        lf.write("SUCCESS\n")
+
+    # only generate for one matrix
+    # clean_dir(mtx_dir)
 
 
 if __name__ == "__main__":
@@ -191,12 +237,18 @@ if __name__ == "__main__":
     parser.add_argument('--log', type=str, default=None)
     parser.add_argument('--append_log', action="store_true")
     parser.add_argument('--continue_run', action="store_true")
+    parser.add_argument('--gen_verilog', action="store_true")
     parser.add_argument('--perf_log', type=str, default=None)
+    parser.add_argument('--generate', action="store_true")
+    parser.add_argument('--run', action="store_true")
     args = parser.parse_args()
 
     benchmarks = ["matmul_ijk", "mat_elemmul", "mat_elemadd", "mat_elemadd3"]
 
     full_stats = ["BENCH, MATRIX, CYCLE_COUNT\n"]
+
+    generate = args.generate
+    run = args.run
 
     # Get matrices
     matrices = None
@@ -205,20 +257,23 @@ if __name__ == "__main__":
         print(matrices)
     assert matrices is not None, "Error opening file " + args.matrix_file
 
+    gen_verilog = args.gen_verilog
+
     # Run on all benchmarks
     if args.benchname == "all":
         for benchname in benchmarks:
             print("Running for bench", benchname, "...")
-            run_bench(benchname, args, matrices, full_stats)
+            run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=True)
+            # Don't need to do it more than once.
+            gen_verilog = False
     # Only run on one
     else:
         benchname = args.benchname
         assert benchname in benchmarks
 
         print("Running for bench", benchname, "...")
-        run_bench(benchname, args, matrices, full_stats)
+        run_bench(benchname, args, matrices, full_stats, args.gen_verilog, compile_tb=True)
 
     if args.perf_log is not None:
         with open(args.perf_log, "w+") as plog_file:
             plog_file.writelines(full_stats)
-
