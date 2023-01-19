@@ -81,9 +81,9 @@ def generate_suitesparse(log_file, basedir, benchname, mtx, mtx_dir, matrix_tmp_
     # Generate subfolder
     final_mat_path = os.path.join(matrix_tmp_dir, f"{mtx}")
     if not os.path.isdir(matrix_tmp_dir):
-        os.mkdir(matrix_tmp_dir)
+        os.makedirs(matrix_tmp_dir)
     if not os.path.isdir(final_mat_path):
-        os.mkdir(final_mat_path)
+        os.makedirs(final_mat_path)
 
     tensorpath = os.path.join(mtx_dir, mtx + ".mtx")
     os.environ["SUITESPARSE_TENSOR_PATH"] = tensorpath
