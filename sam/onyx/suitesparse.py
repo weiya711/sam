@@ -170,7 +170,7 @@ def run_process(command, log_file=None, cwd=None, split=False, check=True, retur
         return error
 
 
-def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False):
+def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False, generate=True, run=True):
     cwd = os.getcwd()
 
     basedir = "/aha" if args.docker else os.getenv('BASEDIR')
@@ -207,18 +207,20 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False):
 
         clean_ = False
 
-    err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check, gen_vlog)
-    gen_vlog = False
+    if generate:
+        err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check, gen_vlog)
+        gen_vlog = False
 
     comp_tb_ = compile_tb
 
-    for mtx in matrices:
-        tname = f"{benchname}_{mtx}"
-        err, cyc_count = run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
-                                          matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_)
-        comp_tb_ = False
-        pstr = f"{benchname}, {mtx}, {cyc_count}\n"
-        stats.append(pstr)
+    if run:
+        for mtx in matrices:
+            tname = f"{benchname}_{mtx}"
+            err, cyc_count = run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
+                                            matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_)
+            comp_tb_ = False
+            pstr = f"{benchname}, {mtx}, {cyc_count}\n"
+            stats.append(pstr)
 
     with open(log_file, "a+") as lf:
         lf.write("SUCCESS\n")
@@ -263,7 +265,7 @@ if __name__ == "__main__":
     if args.benchname == "all":
         for benchname in benchmarks:
             print("Running for bench", benchname, "...")
-            run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=True)
+            run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=True, generate=generate, run=run)
             # Don't need to do it more than once.
             gen_verilog = False
     # Only run on one
@@ -272,7 +274,7 @@ if __name__ == "__main__":
         assert benchname in benchmarks
 
         print("Running for bench", benchname, "...")
-        run_bench(benchname, args, matrices, full_stats, args.gen_verilog, compile_tb=True)
+        run_bench(benchname, args, matrices, full_stats, args.gen_verilog, compile_tb=True, generate=generate, run=run)
 
     if args.perf_log is not None:
         with open(args.perf_log, "w+") as plog_file:
