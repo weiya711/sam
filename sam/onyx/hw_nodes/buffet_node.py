@@ -1,11 +1,12 @@
 from sam.onyx.hw_nodes.hw_node import *
+import kratos
 
 
 class BuffetNode(HWNode):
     def __init__(self, name=None) -> None:
         super().__init__(name=name)
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -112,10 +113,19 @@ class BuffetNode(HWNode):
             raise NotImplementedError(f'Cannot connect BuffetNode to {other_type}')
 
     def configure(self, attributes):
-        capacity_0 = 2048
-        capacity_1 = 2048
+
+        total_cap = 2048
+
+        capacity_0 = 1024
+        capacity_1 = total_cap - capacity_0
+
+        fetch_width_log = 2
+
+        cap0 = kratos.clog2(capacity_0) - fetch_width_log
+        cap1 = kratos.clog2(capacity_1) - fetch_width_log
+
         cfg_kwargs = {
-            'capacity_0': capacity_0,
-            'capacity_1': capacity_1
+            'capacity_0': cap0,
+            'capacity_1': cap1
         }
         return (capacity_0, capacity_1), cfg_kwargs
