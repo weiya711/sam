@@ -35,11 +35,11 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 )
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
-def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=0):
+def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=0, KDIM=256):
 
     # DCSR
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
