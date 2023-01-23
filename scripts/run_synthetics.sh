@@ -36,12 +36,12 @@ for b in ${!BENCHMARKS[@]}; do
 done
 
 BENCHMARKS=(
-    test_matmul_ijk
-    test_matmul_ikj
-    test_matmul_jik
-    test_matmul_jki
-    test_matmul_kij
-    test_matmul_kji
+    test_reorder_matmul_ijk
+    test_reorder_matmul_ikj
+    test_reorder_matmul_jik
+    test_reorder_matmul_jki
+    test_reorder_matmul_kij
+    test_reorder_matmul_kji
 )
 
 cwd=$(pwd)
@@ -62,8 +62,8 @@ done
 
 BENCHMARKS=(
     test_mat_sddmm_coiter_fused
-    test_mat_sddmm_locate_fused
-    test_mat_sddmm_unfused
+    # test_mat_sddmm_locate_fused
+    # test_mat_sddmm_unfused
 )
 
 cwd=$(pwd)
