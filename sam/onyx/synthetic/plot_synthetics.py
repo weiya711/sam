@@ -3,6 +3,7 @@ import matplotlib
 import argparse
 import pandas as pd
 import os
+import numpy as np
 
 matplotlib.use('agg')
 legend_keywords = {'prop': {'size': 24}}
@@ -54,7 +55,7 @@ def plot_reorder(test_dfs, test_names, legend, output_dir=None):
 
 def create_FUSION_plots(df, output_dir=None):
     # print(df.to_string())
-    small_df = df.filter(items=['name', 'cycles', 'test_name'])
+    small_df = df.filter(items=['name', 'cycles', 'test_name', 'kdim'])
 
     test_dfs = {}
 
@@ -80,18 +81,39 @@ def create_FUSION_plots(df, output_dir=None):
 
 def plot_fusion(test_dfs, test_names, legend, output_dir=None):
     fig = plt.figure()
+    unfused = []
+    coiterate = []
+    locate = []
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test]
         print(t_df)
+        for kdim in [1, 10, 100]:
+            t_df_ = t_df[t_df["kdim"] == kdim]
         # plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
-        plt.bar(t_df['test_name'], t_df['cycles'])
+            print(t_df_)
+            print("__________")
+            if "unfused" in test:
+                print(t_df_["cycles"].values[0])
+                unfused.append(t_df_["cycles"].values[0])
+            if "coiter" in test:
+                coiterate.append(t_df_["cycles"].values[0])
+            if "locate" in test:
+                locate.append(t_df_["cycles"].values[0])
+    print(unfused)
+    print(coiterate)
+    print(locate)
+    width = 0.25
+    x = np.arange(3)
+    plt.bar(x - width, unfused, width, label = "Unfused")
+    plt.bar(x, coiterate, width, label = "Coiteration")
+    plt.bar(x + width, locate, width, label = "Iterate-Locate")
+    # plt.bar(t_df['test_name'], t_df['cycles'])
+    labels = ['1', '10', '100']
     plt.legend(legend, **legend_keywords)
-    # plt.yscale('log', base=2)
-    # plt.xscale('logit', base=2)
-    # plt.xscale('logit')
-    plt.xlabel('Loop Fusion (sddmm)', **xlabel_keywords)
+    plt.xticks(x, labels)
+    plt.yscale('log')
+    plt.xlabel('Increasing K dimention for Fusion (for sddmm)', **xlabel_keywords)
     plt.ylabel('Cycles', **ylabel_keywords)
-    plt.title('Cycles vs Loop Fusion (sddmm)', **title_keywords)
     fig.set_size_inches(16, 12)
     save_figure_ASPLOS('fusion', output_dir)
 
