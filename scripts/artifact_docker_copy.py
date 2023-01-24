@@ -6,11 +6,11 @@ root_dir = "/sam-artifact/sam/"
 OUTPUT_DIR = "OUTPUT_DIR"
 
 files_to_copy = {
-    "blocks_sf.pdf": "fig13a.pdf",
-    "fusion.pdf": "fig13b.pdf",
-    "urandom_const_sf.pdf": "fig13c.pdf",
-    "reorder.pdf": "fig14a.pdf",
-    "runs_sf.pdf": "fig14b.pdf",
+    "urandom_const_sf.pdf": "fig13a.pdf",
+    "runs_sf.pdf": "fig13b.pdf",
+    "blocks_sf.pdf": "fig13c.pdf",
+    "fusion.pdf": "fig11.pdf",
+    "reorder.pdf": "fig12.pdf",
 }
 
 def docker_copy(docker_id, fp, output_dir):
