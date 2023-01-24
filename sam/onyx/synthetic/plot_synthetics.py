@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import argparse
 import pandas as pd
+import os
 
 matplotlib.use('tkagg')
 legend_keywords = {'prop': {'size': 24}}
@@ -13,9 +14,7 @@ ylabel_keywords = {'fontsize': 24}
 test_markers = ['o', "v", "^", "s", "+", "x"]
 
 
-def create_REORDER_plots(df):
-    # print(df.to_string())
-    # small_df = df.filter(items=['name', 'cycles', 'sparsity', 'test_name'])
+def create_REORDER_plots(df, output_dir=None):
     small_df = df.filter(items=['name', 'cycles', 'test_name'])
 
     test_dfs = {}
@@ -29,33 +28,28 @@ def create_REORDER_plots(df):
 
     for test in reorder_tests:
 
-        # t_df = small_df.filter(like='test')
         t_df = small_df[small_df['test_name'] == test]
         test_dfs[test] = t_df
-        # print(t_df)
 
     # First example graph - fixed split factor, vary sparsity
-    plot_reorder(test_dfs=test_dfs, test_names=reorder_tests, legend=reorder_tests)
+    plot_reorder(test_dfs=test_dfs, test_names=reorder_tests, legend=reorder_tests, output_dir=output_dir)
 
 
-def plot_reorder(test_dfs, test_names, legend):
+def plot_reorder(test_dfs, test_names, legend, output_dir=None):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test]
         # plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
         plt.bar(t_df['test_name'], t_df['cycles'])
     plt.legend(legend, **legend_keywords)
-    # plt.yscale('log', base=2)
-    # plt.xscale('logit', base=2)
-    # plt.xscale('logit')
     plt.xlabel('Reordering', **xlabel_keywords)
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Loop Reordering', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('reorder.svg')
+    save_figure_ASPLOS('reorder', output_dir)
 
 
-def create_FUSION_plots(df):
+def create_FUSION_plots(df, output_dir=None):
     # print(df.to_string())
     small_df = df.filter(items=['name', 'cycles', 'test_name'])
 
@@ -78,10 +72,10 @@ def create_FUSION_plots(df):
         # print(t_df)
 
     # First example graph - fixed split factor, vary sparsity
-    plot_fusion(test_dfs=test_dfs, test_names=fusion_names, legend=fusion_legend)
+    plot_fusion(test_dfs=test_dfs, test_names=fusion_names, legend=fusion_legend, output_dir=output_dir)
 
 
-def plot_fusion(test_dfs, test_names, legend):
+def plot_fusion(test_dfs, test_names, legend, output_dir=None):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test]
@@ -96,10 +90,10 @@ def plot_fusion(test_dfs, test_names, legend):
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Loop Fusion (sddmm)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('fusion.svg')
+    save_figure_ASPLOS('fusion', output_dir)
 
 
-def create_ACCEL_plots(df):
+def create_ACCEL_plots(df, output_dir=None):
     # print(df.to_string())
     small_df = df.filter(items=['cycles', 'vectype', 'sparsity', 'split_factor', 'test_name', 'block_size', 'run_length'])
 
@@ -127,13 +121,13 @@ def create_ACCEL_plots(df):
         # print(t_df)
 
     # First example graph - fixed split factor, vary sparsity
-    plot_urandom_const_sf(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend)
-    plot_urandom_sf_const_sp(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend)
-    plot_runs_sf(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend)
-    plot_blocks_sf(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend)
+    plot_urandom_const_sf(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend, output_dir=output_dir)
+    plot_urandom_sf_const_sp(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend, output_dir=output_dir)
+    plot_runs_sf(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend, output_dir=output_dir)
+    plot_blocks_sf(test_dfs=test_dfs, test_names=test_names, legend=test_names_legend, output_dir=output_dir)
 
 
-def plot_urandom_const_sf(test_dfs, test_names, legend):
+def plot_urandom_const_sf(test_dfs, test_names, legend, output_dir=None):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'random') &
@@ -147,10 +141,10 @@ def plot_urandom_const_sf(test_dfs, test_names, legend):
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Sparsity (random)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('urandom_const_sf.svg')
+    save_figure_ASPLOS('urandom_const_sf', output_dir)
 
 
-def plot_urandom_sf_const_sp(test_dfs, test_names, legend):
+def plot_urandom_sf_const_sp(test_dfs, test_names, legend, output_dir=None):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'random') & ((test_dfs[test]['sparsity'] == 0.9))]
@@ -163,10 +157,10 @@ def plot_urandom_sf_const_sp(test_dfs, test_names, legend):
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Split Factor (random)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('urandom_const_sp.svg')
+    save_figure_ASPLOS('urandom_const_sp', output_dir)
 
 
-def plot_runs_sf(test_dfs, test_names, legend):
+def plot_runs_sf(test_dfs, test_names, legend, output_dir=None):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'runs') &
@@ -180,10 +174,10 @@ def plot_runs_sf(test_dfs, test_names, legend):
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Split Factor (runs)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('runs_sf.svg')
+    save_figure_ASPLOS('runs_sf', output_dir)
 
 
-def plot_blocks_sf(test_dfs, test_names, legend):
+def plot_blocks_sf(test_dfs, test_names, legend, output_dir=None):
     fig = plt.figure()
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'blocks') &
@@ -197,40 +191,57 @@ def plot_blocks_sf(test_dfs, test_names, legend):
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Split Factor (blocks)', **title_keywords)
     fig.set_size_inches(16, 12)
-    plt.savefig('blocks_sf.svg')
-    plt.savefig('blocks_sf.pdf')
+    save_figure_ASPLOS('blocks_sf', output_dir)
 
 
-def create_ASPLOS_plots(csv_path, name=None):
+def create_ASPLOS_plots(csv_path, name=None, output_dir=None):
 
+    assert output_dir is not None
     assert name is not None
     df = pd.read_csv(csv_path)
 
     print(df)
 
     if name == "ACCEL":
-        create_ACCEL_plots(df)
+        create_ACCEL_plots(df, output_dir=output_dir)
     elif name == "REORDER":
-        create_REORDER_plots(df)
+        create_REORDER_plots(df, output_dir=output_dir)
     elif name == "FUSION":
-        create_FUSION_plots(df)
+        create_FUSION_plots(df, output_dir=output_dir)
     else:
         raise NotImplementedError
 
     # plt.show()
 
+def save_figure_ASPLOS(name, output_dir, file_formats=None):
+    if file_formats is None:
+        file_formats = ['pdf', 'svg']
+
+    output_path = os.path.join(output_dir, name)
+
+    for file_format in file_formats:
+        plt.savefig(f'{output_path}.{file_format}')
+
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Plot synthetics results csv')
-    parser.add_argument("--csv_path", type=str, default=None)
-    parser.add_argument("--name", type=str, default=None)
+    # parser.add_argument("--csv_path", type=str, default=None)
+    # parser.add_argument("--name", type=str, default=None)
+    parser.add_argument("--output_dir", type=str, default="./OUTPUT_DIR")
     args = parser.parse_args()
 
-    csv_path = args.csv_path
-    name = args.name
+    # csv_path = args.csv_path
+    # name = args.name
 
-    assert csv_path is not None
-    assert name is not None
+    od_ = args.output_dir
 
-    create_ASPLOS_plots(csv_path=csv_path, name=name)
+    if not os.path.isdir(od_):
+        os.mkdir(od_)
+
+    # assert csv_path is not None
+    # assert name is not None
+
+    create_ASPLOS_plots(csv_path="./SYNTH_OUT_ACCEL.csv", name="ACCEL", output_dir=od_)
+    create_ASPLOS_plots(csv_path="./SYNTH_OUT_FUSION.csv", name="FUSION", output_dir=od_)
+    create_ASPLOS_plots(csv_path="./SYNTH_OUT_REORDER.csv", name="REORDER", output_dir=od_)
