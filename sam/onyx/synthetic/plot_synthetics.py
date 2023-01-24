@@ -4,7 +4,7 @@ import argparse
 import pandas as pd
 import os
 
-matplotlib.use('tkagg')
+matplotlib.use('agg')
 legend_keywords = {'prop': {'size': 24}}
 plot_keywords = {'markersize': 18}
 title_keywords = {'fontsize': 24}
