@@ -31,11 +31,11 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
         C_dir += str(a) + "_"
     B_dir = B_dir[0:-1] + ".mtx"
     C_dir = C_dir[0:-1] + ".mtx"
-    print(B_dir, " ", C_dir)
+    # print(B_dir, " ", C_dir)
     B_filename = os.path.join(formatted_dir, B_dir)
     C_filename = os.path.join(formatted_dir, C_dir)
-    print(B_filename)
-    print(C_filename)
+    # print(B_filename)
+    # print(C_filename)
     if os.path.exists(B_filename) and os.path.exists(C_filename):
         B_scipy = scipy.io.mmread(B_filename)
         itr = 0
