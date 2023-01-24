@@ -107,6 +107,12 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=
     tempci = []
     tempcj = []
     tempck = []
+    tmp_bj_crd = []
+    tmp_bj_ref = []
+    tmp_intj = []
+    tmp_bj_out = []
+    tmp_dj_out = []
+    tmp_repeat_di = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0))
@@ -162,12 +168,23 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=
         # tempci.append(fiberlookup_Ci_26.out_ref())
         # tempcj.append(repeat_Cj_15.out_ref())
         # tempck.append(fiberlookup_Ck_13.out_ref())
+        # tmp_bj_crd.append(fiberlookup_Bj_19.out_crd())
+        # tmp_bj_ref.append(fiberlookup_Bj_19.out_ref())
+        # tmp_intj.append(intersectj_18.out_crd())
+        # tmp_bj_out.append(fiberlookup_Bj_19.out_crd())
+        # tmp_dj_out.append(fiberlookup_Dj_20.out_crd())
+        # tmp_repeat_di.append(repeat_Di_21.out_ref())
         # print("B", remove_emptystr(tempb))
         # print("C", remove_emptystr(tempc))
         # print("D", remove_emptystr(tempd))
         # print("Ci", remove_emptystr(tempci))
         # print("Cj", remove_emptystr(tempcj))
         # print("Ck", remove_emptystr(tempck))
+        # print("bj crd", remove_emptystr(tmp_bj_crd))
+        # print("bj ref", remove_emptystr(tmp_bj_ref))
+        # print("bj crd", remove_emptystr(tmp_bj_out))
+        # print("dj crd", remove_emptystr(tmp_dj_out))
+        # print("repeat_di", remove_emptystr(tmp_repeat_di))
 
         mul_5.set_in1(arrayvals_B_6.out_val())
         mul_5.set_in2(arrayvals_C_7.out_val())
@@ -189,6 +206,7 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, fill=
         fiberlookup_Bj_19.update()
         repsiggen_i_22.update()
         repeat_Di_21.update()
+        fiberlookup_Dj_20.update()
         intersectj_18.update()
         fiberlookup_Dk_14.update()
         crddrop_9.update()

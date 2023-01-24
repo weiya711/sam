@@ -62,8 +62,8 @@ done
 
 BENCHMARKS=(
     test_mat_sddmm_coiter_fused
-    # test_mat_sddmm_locate_fused
-    # test_mat_sddmm_unfused
+    test_mat_sddmm_locate_fused
+    test_mat_sddmm_unfused
 )
 
 cwd=$(pwd)
