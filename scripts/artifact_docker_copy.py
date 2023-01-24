@@ -6,18 +6,18 @@ root_dir = "/sam-artifact/sam/"
 OUTPUT_DIR = "OUTPUT_DIR"
 
 files_to_copy = {
-    "blocks_sf.pdf": "fig13a.pdf",
-    "fusion.pdf": "fig13b.pdf",
-    "urandom_const_sf.pdf": "fig13c.pdf",
-    "reorder.pdf": "fig14a.pdf",
-    "runs.pdf": "fig14b.pdf",
+    "urandom_const_sf.pdf": "fig13a.pdf",
+    "runs_sf.pdf": "fig13b.pdf",
+    "blocks_sf.pdf": "fig13c.pdf",
+    "fusion.pdf": "fig11.pdf",
+    "reorder.pdf": "fig12.pdf",
 }
 
 def docker_copy(docker_id, fp, output_dir):
 
     docker_cp_command = ['docker', 'cp', f'{docker_id}:{fp}', f'{output_dir}']
-    ret_code = subprocess.run(command = docker_cp_command)
-    assert ret_code == 0, f"Failed to copy from docker"
+    ret_code = subprocess.run(docker_cp_command)
+    print(ret_code)
 
 
 if __name__ == "__main__":
@@ -38,4 +38,5 @@ if __name__ == "__main__":
 
     for file_in_, file_out_ in files_to_copy.items():
         synth_path = os.path.join(root_dir, OUTPUT_DIR, file_in_)
-        docker_copy(did_, synth_path, od_)
+        out_p = os.path.join(od_, file_out_)
+        docker_copy(did_, synth_path, out_p)
