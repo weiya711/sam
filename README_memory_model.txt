@@ -1,0 +1,23 @@
+# Setup for generating files for getting plots that model memory and allow fior a simulation result that recreates some of the results that extensor captures
+# Generates files and stores in extensor_mtx folder to be run in the main directory
+# This creates a extensor_mtx diorectory in the home directory of the project and creates matrixes sweeping across dimensions for different number of non-zeros
+# 6 mins to build it
+./scripts/generate_sparsity_sweep_mem_model.sh
+
+# mkdir extensor_mtx && cd extensor_mtx && python ../sam/onyx/synthetic/generate_fixed_nnz_mats.py && cd ..
+
+# To run the entire test that generates a csv file with numbers for figure 15:
+# Put 0 as the second command if you dont want to check against gold as you go along the simulation (results in faster simulation)
+# Put 1 as second command if want to check agqinst gold
+./scripts/full_memory_model_runner.sh memory_config_extensor_17M_llb.yaml 0 
+
+# Generate the figure 15:
+# TODO: add the matplotlib script
+
+# To run a restricted set of tests (from the nnz we choose only 5000 and 25000)
+./scripts/few_points_memory_model.sh memory_config_extensor_17M_llb.yaml 0
+
+# TODO:matplotlib script for above? 
+
+# Verify any single point
+./scripts/ext_runner.sh extensor_"# of nnzs"_"dim size".mtx
