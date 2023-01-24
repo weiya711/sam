@@ -58,6 +58,7 @@ else
         export PATH="/data/scratch/owhsu/miniconda/bin:$PATH"
     fi
 fi
+
 unset __conda_setup
 conda activate aha
 
