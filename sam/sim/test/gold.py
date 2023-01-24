@@ -88,20 +88,14 @@ def check_gold_mat_elemmul(ssname, debug_sim, cast, out_crds, out_segs, out_val,
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_mat_identity(ssname, debug_sim, out_crds, out_segs, out_val, format_str):
-    B_dirname = os.path.join(ss_formatted_dir, ssname, "orig", "ds01")
-    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
-    B_shape = read_inputs(B_shape_filename)
+def check_gold_mat_identity(ssname, debug_sim, cast, out_crds, out_segs, out_val, format_str):
+    # MTX
+    B_tensor = scipy.io.mmread(os.path.join(ss_dir, ssname + ".mtx")).tocsr()
+    if cast:
+        data = [round_sparse(x) for x in B_tensor.data]
+        B_tensor = scipy.sparse.csr_matrix((data, B_tensor.indices, B_tensor.indptr), dtype=int)
 
-    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
-    B1_seg = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
-    B1_crd = read_inputs(B1_crd_filename)
-
-    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
-    B_vals = read_inputs(B_vals_filename, float)
-
-    B_scipy = scipy.sparse.csr_matrix((B_vals, B1_crd, B1_seg), shape=B_shape)
+    B_scipy = B_tensor
 
     gold_nd = B_scipy.toarray()
     gold_tup = convert_ndarr_point_tuple(gold_nd)
