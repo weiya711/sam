@@ -12,7 +12,7 @@ title_keywords = {'fontsize': 24}
 xlabel_keywords = {'fontsize': 24}
 ylabel_keywords = {'fontsize': 24}
 
-test_markers = ['o', "v", "^", "s", "+", "x"]
+test_markers = ['o', "v", "^", "s", "*", "D"]
 
 
 def create_REORDER_plots(df, output_dir=None):
@@ -157,12 +157,15 @@ def plot_urandom_const_sf(test_dfs, test_names, legend, output_dir=None):
     for idx, test in enumerate(test_names):
         t_df = test_dfs[test][(test_dfs[test]['vectype'] == 'random') &
                               ((test_dfs[test]['split_factor'] == 1) | (test_dfs[test]['split_factor'] == 64))]
-        plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        # plt.plot(t_df['sparsity'], t_df['cycles'], marker=test_markers[idx], **plot_keywords)
+        # Have percent of 0's in sparsity
+        plt.plot(2000 - (t_df['sparsity'] * 2000), t_df['cycles'], marker=test_markers[idx], **plot_keywords)
     plt.legend(legend, **legend_keywords)
     plt.yscale('log')
-    # plt.xscale('logit', base=2)
-    plt.xscale('logit')
-    plt.xlabel('Sparsity (% nonzeros)', **xlabel_keywords)
+    plt.xscale('log')
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+    plt.xlabel('# nonzeros', **xlabel_keywords)
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Sparsity (random)', **title_keywords)
     fig.set_size_inches(16, 12)
