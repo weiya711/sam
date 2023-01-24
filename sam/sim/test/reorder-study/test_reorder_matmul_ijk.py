@@ -202,8 +202,8 @@ def test_reorder_matmul_ijk(samBench, sparsity, check_gold, debug_sim, fill=0):
 
     extra_info = dict()
     # extra_info["dataset"] = ssname
-    extra_info["test_name"] = "ijk"
     extra_info["dataset"] = "synthetic"
+    extra_info["test_name"] = "ijk"
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape

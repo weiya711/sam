@@ -6,7 +6,7 @@ import os
 
 matplotlib.use('agg')
 legend_keywords = {'prop': {'size': 24}}
-plot_keywords = {'markersize': 18}
+plot_keywords = {'markersize': 24}
 title_keywords = {'fontsize': 24}
 xlabel_keywords = {'fontsize': 24}
 ylabel_keywords = {'fontsize': 24}
@@ -45,6 +45,9 @@ def plot_reorder(test_dfs, test_names, legend, output_dir=None):
     plt.xlabel('Reordering', **xlabel_keywords)
     plt.ylabel('Cycles', **ylabel_keywords)
     plt.title('Cycles vs Loop Reordering', **title_keywords)
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+    plt.yscale('log')
     fig.set_size_inches(16, 12)
     save_figure_ASPLOS('reorder', output_dir)
 
