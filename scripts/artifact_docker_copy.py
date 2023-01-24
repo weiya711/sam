@@ -39,4 +39,4 @@ if __name__ == "__main__":
     for file_in_, file_out_ in files_to_copy.items():
         synth_path = os.path.join(root_dir, OUTPUT_DIR, file_in_)
         out_p = os.path.join(od_, file_out_)
-        docker_copy(did_, synth_path, od_)
+        docker_copy(did_, synth_path, out_p)
