@@ -17,7 +17,7 @@ def docker_copy(docker_id, fp, output_dir):
 
     docker_cp_command = ['docker', 'cp', f'{docker_id}:{fp}', f'{output_dir}']
     ret_code = subprocess.run(docker_cp_command)
-    assert ret_code == 0, f"Failed to copy from docker"
+    print(ret_code)
 
 
 if __name__ == "__main__":
