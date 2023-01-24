@@ -10,13 +10,13 @@ files_to_copy = {
     "fusion.pdf": "fig13b.pdf",
     "urandom_const_sf.pdf": "fig13c.pdf",
     "reorder.pdf": "fig14a.pdf",
-    "runs.pdf": "fig14b.pdf",
+    "runs_sf.pdf": "fig14b.pdf",
 }
 
 def docker_copy(docker_id, fp, output_dir):
 
     docker_cp_command = ['docker', 'cp', f'{docker_id}:{fp}', f'{output_dir}']
-    ret_code = subprocess.run(command = docker_cp_command)
+    ret_code = subprocess.run(docker_cp_command)
     assert ret_code == 0, f"Failed to copy from docker"
 
 
@@ -38,4 +38,5 @@ if __name__ == "__main__":
 
     for file_in_, file_out_ in files_to_copy.items():
         synth_path = os.path.join(root_dir, OUTPUT_DIR, file_in_)
+        out_p = os.path.join(od_, file_out_)
         docker_copy(did_, synth_path, od_)
