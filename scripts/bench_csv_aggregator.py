@@ -7,6 +7,7 @@ import argparse
 
 csv.field_size_limit(sys.maxsize)
 
+
 def aggregateTacoBenches(folder, outfile, taco=False, labelSet=None):
     first = True
     outputFile = open(outfile, 'w+')
