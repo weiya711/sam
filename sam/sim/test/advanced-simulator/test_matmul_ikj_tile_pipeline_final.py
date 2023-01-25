@@ -30,7 +30,7 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 )
 @pytest.mark.suitesparse
 def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report_stats,
-                                 skip_empty, yaml_name, nbuffer, backpressure, depth, fill=0):
+                                 skip_empty, yaml_name, nbuffer, backpressure, depth, nnz_value, fill=0):
     depth = int(depth)
     stats_dict = {"mul_6_ops": 0, "spacc1_3_rmw_ops": [], "out_arr_size": 0, "repsiggen_i_17_total_rep": 0,
                   "repsiggen_j_10_total_rep": 0, "repsiggen_i_17_max_rep": 0, "repsiggen_j_10_max_rep": 0,
@@ -914,3 +914,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
         print("\t Stats:", mem_model_cj.print_stats())
         print("\t Stats:", mem_model_bvals.print_stats())
         print("\t Stats:", mem_model_cvals.print_stats())
+
+    def bench():
+        time.sleep(0.01)
+
+    extra_info = dict()
+    extra_info["dim_size"] = str(sizes_dict_level_full["B"][0])
+    extra_info["nnz"] = str(nnz_value)
+    extra_info["cycles"] = time_cnt
+    samBench(bench, extra_info)
