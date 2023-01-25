@@ -27,6 +27,8 @@ def pytest_addoption(parser):
                      help="Whether backpressure is enabled")
     parser.addoption("--depth", action="store", default=2,
                      help="fifo depth value")
+    parser.addoption("--nnz-value", action="store", default=5000,
+                     help="nnz value for stats") 
     parser.addoption("--cast", action="store_true", default=False,
                      help="Flag that runs all simulations using integer input "
                           "and output data (used for hardware simulation comparison)")
@@ -91,6 +93,9 @@ def backpressure(request):
 def depth(request):
     return request.config.getoption("--depth")
 
+@pytest.fixture
+def nnz_value(request):
+    return request.config.getoption("--nnz-value")
 
 @pytest.fixture
 def check_gold(request):

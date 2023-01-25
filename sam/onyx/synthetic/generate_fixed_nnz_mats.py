@@ -11,7 +11,8 @@ def write_mtx(path, t):
 if __name__ == "__main__":
    seed = 0
    np.random.seed(seed)
-   dims = list(range(1024, 16390, 668)) 
+   # 1024
+   dims = list(range(1024, 15721, 1336)).append[15720]
    nnzs = [5000, 10000, 25000, 50000]
 
    for nnz in nnzs:
