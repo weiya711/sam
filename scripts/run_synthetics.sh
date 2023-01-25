@@ -29,7 +29,7 @@ for b in ${!BENCHMARKS[@]}; do
     mkdir -p $resultdir/
     echo "Testing $bench..."
 
-    pytest sam/sim/test/study-apps/$bench.py --synth -k "random-40 or 0.2-blocks or 0.2-runs" --benchmark-json="$path/$bench.json"
+    pytest sam/sim/test/study-apps/$bench.py --synth --check-gold -k "random-40 or 0.2-blocks or 0.2-runs" --benchmark-json="$path/$bench.json"
     python $cwd/scripts/converter.py --json_name $path/$bench.json
     python $cwd/scripts/bench_csv_aggregator.py $path $cwd/SYNTH_OUT_ACCEL.csv
 
