@@ -163,6 +163,8 @@ elif args.hw:
         pass
     elif "mat_residual" in args.benchname:
         pass
+    elif "mat_identity" in args.benchname:
+        pass
     else:
         raise NotImplementedError
 

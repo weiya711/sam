@@ -172,14 +172,15 @@ class CompressedCrdRdScan(CrdRdScan):
         # Statistics
         if self.get_stats:
             self.unique_refs = []
-            self.unique_crds = []
+            # self.unique_crds = []
             self.total_outputs = 0
             self.elements_skipped = 0
             self.skip_cnt = 0
             self.intersection_behind_cnt = 0
             self.fiber_behind_cnt = 0
             self.stop_count = 0
-        self.skip_stkn_cnt = 0
+            self.empty_tkn_cnt = 0
+        self.skip_stkn_cnt = 0  # also used as a statistic
         self.out_stkn_cnt = 0
 
         self.begin = True
@@ -207,19 +208,20 @@ class CompressedCrdRdScan(CrdRdScan):
         self.curr_ref = self.curr_addr
         self.curr_crd = self.crd_arr[self.curr_addr]
         if self.get_stats:
-            if self.curr_ref not in self.unique_refs:
-                self.unique_refs.append(self.curr_ref)
-            if self.curr_crd not in self.unique_crds:
-                self.unique_crds.append(self.curr_crd)
+            # if self.curr_ref not in self.unique_refs:
+            #    self.unique_refs.append(self.curr_ref)
+            # if self.curr_crd not in self.unique_crds:
+            #    self.unique_crds.append(self.curr_crd)
             self.total_outputs += 1
 
     def return_statistics(self):
         if self.get_stats:
             dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
-                   "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
+                   "unique_refs": len(self.unique_refs),
                    "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
                    "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
-                   "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count}
+                   "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count,
+                   "skip_stp_tkn_cnt": self.skip_stkn_cnt}
             dic.update(super().return_statistics())
         else:
             dic = {}
@@ -333,6 +335,8 @@ class CompressedCrdRdScan(CrdRdScan):
             # Default case where input reference is an integer value
             # which means to get the segment
             else:
+                if self.get_stats and curr_in_ref not in self.unique_refs:
+                    self.unique_refs.append[curr_in_ref]
                 self.start_addr = self.seg_arr[curr_in_ref]
                 self.stop_addr = self.seg_arr[curr_in_ref + 1]
                 self.curr_addr = self.start_addr
@@ -359,7 +363,7 @@ class CompressedCrdRdScan(CrdRdScan):
                                     self.elements_skipped += curr_range.index(self.curr_skip) + 1
                                     self.skip_cnt += 1
 
-                            # Else emit smallest coordinate larger than the one provided by skip
+                            # Else emit the smallest coordinate larger than the one provided by skip
                             else:
                                 larger = [i for i in curr_range if i > self.curr_skip]
                                 if not larger:
@@ -450,6 +454,9 @@ class CompressedCrdRdScan(CrdRdScan):
 
         if self.get_stats and is_stkn(self.curr_crd):
             self.stop_count += 1
+
+        if self.get_stats and not self.done and self.begin and self.curr_ref == '' and self.curr_crd == '':
+            self.empty_tkn_cnt += 1
 
         # Debugging print statements
         if self.debug:
@@ -727,7 +734,7 @@ class BVRdScan(BVRdScanSuper):
                 self.curr_bv = self.bv_arr[self.curr_addr]
                 self.curr_ref = self._get_bv_ref(self.curr_addr)
 
-        else:   # elif self.curr_bv is not None and self.curr_ref is not None:
+        else:  # elif self.curr_bv is not None and self.curr_ref is not None:
             # Default stall (when done)
             self.curr_ref = ''
             self.curr_bv = ''

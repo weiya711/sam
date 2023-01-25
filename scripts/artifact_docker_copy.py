@@ -13,6 +13,7 @@ files_to_copy = {
     "reorder.pdf": "fig12.pdf",
 }
 
+
 def docker_copy(docker_id, fp, output_dir):
 
     docker_cp_command = ['docker', 'cp', f'{docker_id}:{fp}', f'{output_dir}']
