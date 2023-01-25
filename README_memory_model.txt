@@ -9,7 +9,10 @@
 # To run the entire test that generates a csv file with numbers for figure 15:
 # Put 0 as the second command if you dont want to check against gold as you go along the simulation (results in faster simulation)
 # Put 1 as second command if want to check agqinst gold
-./scripts/full_memory_model_runner.sh memory_config_extensor_17M_llb.yaml 0 
+# These will generate a directory called "Tiles" with the pre-tiled matrix for the current test and then create a directory called suitesparse-bench_simulator/sam/"test_name" (test name is matmul_ikj_tile_pipeline_final)
+# Inside this directory a json and a csv for each # of nnz and dimension size is created
+# After all such matrices are done they are aggregated into a single csv (which is used by the script to create fig 15) the aggregated csv is suitesparse_matmul_ikj_tile_pipeline_final.csv in suitesparse-bench_simulator/sam/ under home dir
+./scripts/full_memory_model_runner2.sh memory_config_extensor_17M_llb.yaml 0 
 
 # Generate the figure 15:
 # TODO: add the matplotlib script
