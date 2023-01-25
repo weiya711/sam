@@ -690,7 +690,7 @@ class Parent_Child_graph:
 
 
 class Graph_Realization:
-    def __init__(self, graph, mem_lvl, scope_lvl, f, parent=None, mem_blks_connect=None, mem_blks=[]):
+    def __init__(self, graph, mem_lvl, scope_lvl, f, parent=None, mem_blks_connect=None, mem_blks=[], pipelined_tiles=False):
         self.mem_lvl = mem_lvl
         self.d = {} 
         self.f = f
@@ -706,6 +706,7 @@ class Graph_Realization:
         self.tensor_list = []
         # self.memory_blocks 
         self.nxt_parent = None
+        self.pipelined_tiles = pipelined_tiles
 
     def get_tensor_list(self):
         return self.tensor_list
@@ -1026,7 +1027,19 @@ class Graph_Realization:
                                      "size=memory_config[\"" + self.mem_lvl + "_memory\"], bandwidth=memory_config[\"" + self.mem_lvl + "_tile_bandwidth\"] // " +
                                      "memory_config[\"" + self.mem_lvl + "_tiles\"], latency=memory_config[\"" + self.mem_lvl + "_latency\"], debug=debug_sim)\n") 
                 else:
-                    pass
+                    assert self.memory_channels is not None
+                    tensor_indexes = self.memory_channels[node_info["tensor"]]
+                    for ind in tensor_indexes:
+                        self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_" + str(ind) + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"" + self.mem_lvl + "_memory\"], bandwidth=memory_config[\"" + self.mem_lvl + "_tile_bandwidth\"] // " +
+                                     "memory_config[\"" + self.mem_lvl + "_tiles\"], latency=memory_config[\"" + self.mem_lvl + "_latency\"], debug=debug_sim)\n")
+                    if len(self.mem_lvl) == 1:
+                        self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + str(u) + "_val" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
+                                     "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                     "size=memory_config[\"" + self.mem_lvl + "_memory\"], bandwidth=memory_config[\"" + self.mem_lvl + "_tile_bandwidth\"] // " +
+                                     "memory_config[\"" + self.mem_lvl + "_tiles\"], latency=memory_config[\"" + self.mem_lvl + "_latency\"], debug=debug_sim)\n")
+                
                 self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
                 nxt_parents.append(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl)
                 if len(self.mem_lvl) == 2:
@@ -1140,23 +1153,46 @@ class Graph_Realization:
                 if self.d[v]["type"] == "memory_block" and parents_done(self.networkx_graph, data.get_if_done(), v) and \
                         data.get_if_node_done(v) == 0:
                     # print(intersect_dataset, d[u_]["object"], d[v]["tensor"])
-                    for u_ in data.get_parents()[v]:
-                        self.f.write(tab(2 + self.scope_lvl) + "if isinstance(" + self.d[u_]["object"] + ".out_ref(), int):\n")
-                        if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
-                            print(self.scope_lvl, self.d[v], self.d[u_], self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()], )
-                            
-                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
-                                         str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), sizes_dict_level" +
-                                         self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
-                        else:
-                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), sizes_dict_level" +
-                                         self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
-                        self.f.write(tab(2 + self.scope_lvl) + "else:\n")
-                        if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
-                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
-                                         str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), 8)\n")
-                        else:
-                            self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), 8)\n")
+                    if not self.pipelined_tiles:
+                        for u_ in data.get_parents()[v]:
+                            self.f.write(tab(2 + self.scope_lvl) + "if isinstance(" + self.d[u_]["object"] + ".out_ref(), int):\n")
+                            if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                                print(self.scope_lvl, self.d[v], self.d[u_], self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()], )
+                                
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
+                                             str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), sizes_dict_level" +
+                                             self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
+                            else:
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), sizes_dict_level" +
+                                             self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
+                            self.f.write(tab(2 + self.scope_lvl) + "else:\n")
+                            if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
+                                             str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), 8)\n")
+                            else:
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), 8)\n")
+                    else:
+                       ## Need to make this run for all possible memory nodes
+                       # Also need to make initialization of each blocks
+
+                        for u_ in data.get_parents()[v]:
+                            self.f.write(tab(2 + self.scope_lvl) + "if isinstance(" + self.d[u_]["object"] + ".out_ref(), int):\n")
+                            if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                                print(self.scope_lvl, self.d[v], self.d[u_], self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()], )
+                                
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
+                                             str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), sizes_dict_level" +
+                                             self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
+                            else:
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), sizes_dict_level" +
+                                             self.mem_lvl + "[\"" + self.d[v]["tensor"] + "\"][" + self.d[u]["object"] + ".out_ref()]" + self.fetch_block_parent(self.d[v]["object"]) + ".token())\n")
+                            self.f.write(tab(2 + self.scope_lvl) + "else:\n")
+                            if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" +
+                                             str(self.intersect_dataset[self.d[u_]["object"]][self.d[v]["tensor"].upper()]) + "(), 8)\n")
+                            else:
+                                self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), 8)\n")
+ 
                     self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".check_done(" + self.mem_blks_connect.get_child(self.d[v]["object"]) + ")\n")
                     # if len(self.mem_lvl) < MEM_LEVELS:
                     #     if len(self.mem_lvl) 
