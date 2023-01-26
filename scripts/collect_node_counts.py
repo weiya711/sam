@@ -60,7 +60,7 @@ if __name__ == "__main__":
         'tensor3_elemadd': 'Plus2',
     }
 
-    csv_header = ['Expression', 'Lvl Scan', 'repeat', 'intersect', 'union', 'ALU', 'reduce', 'crddrop', 'Lvl Wr']
+    figure_header = ['Lvl Scan', 'repeat', 'intersect', 'union', 'ALU', 'reduce', 'crddrop', 'Lvl Wr', 'Array']
 
     sam_graphs = args.sam_graphs
 
@@ -83,4 +83,10 @@ if __name__ == "__main__":
         combine_alu_ops(prim_count)
 
         print(mapped_name)
-        print(prim_count)
+        ps_ = ""
+        for fh_ in figure_header:
+            num = 0
+            if fh_ in prim_count:
+                num = prim_count[fh_]
+            ps_ += f"{fh_}: {num}\t"
+        print(ps_)
