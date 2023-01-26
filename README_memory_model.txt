@@ -1,7 +1,7 @@
 # Setup for generating files for getting plots that model memory and allow fior a simulation result that recreates some of the results that extensor captures
 # Generates files and stores in extensor_mtx folder to be run in the main directory
 # This creates a extensor_mtx diorectory in the home directory of the project and creates matrixes sweeping across dimensions for different number of non-zeros
-# 6 mins to build it
+# ~8 mins to build it
 ./scripts/generate_sparsity_sweep_mem_model.sh
 
 # mkdir extensor_mtx && cd extensor_mtx && python ../sam/onyx/synthetic/generate_fixed_nnz_mats.py && cd ..
