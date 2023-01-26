@@ -12,7 +12,7 @@ if __name__ == "__main__":
    seed = 0
    np.random.seed(seed)
    # 1024
-   dims = list(range(1024, 15721, 1336)).append[15720]
+   dims = list(range(1024, 15721, 1336))
    nnzs = [5000, 10000, 25000, 50000]
 
    for nnz in nnzs:

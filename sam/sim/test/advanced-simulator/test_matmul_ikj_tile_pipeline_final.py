@@ -99,53 +99,53 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     # Intitialize memory blocks
     glb_model_b = memory_block(name="GLB_B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
-                               bandwidth=memory_config["Glb_tile_bandwidth"] // memory_config["Glb_tiles"],
+                               bandwidth=memory_config["Glb_tile_bandwidth"] / memory_config["Glb_tiles"],
                                latency=memory_config["Global_Glb_latency"],
                                debug=debug_sim, pipeline_en=True, statistics=report_stats)
     glb_model_c = memory_block(name="GLB_C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
-                               bandwidth=memory_config["Glb_tile_bandwidth"] // memory_config["Glb_tiles"],
+                               bandwidth=memory_config["Glb_tile_bandwidth"] / memory_config["Glb_tiles"],
                                latency=memory_config["Global_Glb_latency"],
                                debug=debug_sim, pipeline_en=True, statistics=report_stats)
     mem_model_b = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
                                size=memory_config["Mem_memory"],
-                               bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                               bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_c = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
                                size=memory_config["Mem_memory"],
-                               bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                               bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_bk = memory_block(name="Bk", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
                                 size=memory_config["Mem_memory"],
-                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                 latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_ck = memory_block(name="Ck", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
                                 size=memory_config["Mem_memory"],
-                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                 latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_bi = memory_block(name="Bi", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
                                 size=memory_config["Mem_memory"],
-                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                 latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_cj = memory_block(name="Cj", skip_blocks=skip_empty, nbuffer=nbuffer,
                                 element_size=memory_config["Bytes_per_element"],
                                 size=memory_config["Mem_memory"],
-                                bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                 latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_bvals = memory_block(name="Bvals", skip_blocks=skip_empty, nbuffer=nbuffer,
                                    element_size=memory_config["Bytes_per_element"],
                                    size=memory_config["Mem_memory"],
-                                   bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                   bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                    latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_cvals = memory_block(name="Cvals", skip_blocks=skip_empty, nbuffer=nbuffer,
                                    element_size=memory_config["Bytes_per_element"],
                                    size=memory_config["Mem_memory"],
-                                   bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                                   bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                    latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     nxt_tile_present = [True] * 6
     # Output memory blocks Not used with sparse tiling figure out later

@@ -6,7 +6,7 @@ import shutil
 
 from pathlib import Path
 
-from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
+from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 
 
 all_formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]

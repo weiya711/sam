@@ -58,10 +58,10 @@ for b in ${!BENCHMARKS[@]}; do
 
 			line=random_sparsity
 			cd $basedir/sam/sim
-			if [$2 -eq 1]; then
+			if [ $2 -eq 1 ]; then
 				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
 			else
-				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --skip-empty --nbuffer --yaml_name=$2 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
+				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
 			fi
 			python $basedir/scripts/converter.py --json_name $path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json	
 			    
@@ -85,3 +85,4 @@ done
 
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 printf "$ELAPSED"
+printf "\n"

@@ -14,25 +14,19 @@ BENCHMARKS=(
 NNZ=(
   5000
 #  10000
-#  25000
+  25000
 #  50000
 )
 
 DIMENSIONS=(
- 	#1024
+ 1024
 # 2360
  3696
- 6368
+# 6368
  9040
- 11712
- 13716
- 15720
- 
- # 5032
-# 7704
-# 9040
 # 11712
-# 15720
+# 13716
+ 15720
 )
 
 
@@ -92,3 +86,4 @@ done
 
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 printf "$ELAPSED"
+printf "\n"
