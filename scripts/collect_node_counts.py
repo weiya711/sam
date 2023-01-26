@@ -42,6 +42,9 @@ if __name__ == "__main__":
     parser.add_argument('--sam_graphs',
                         type=str,
                         default="/sam-artifact/sam/compiler/sam-outputs/dot/")
+    parser.add_argument('--output_log',
+                        type=str,
+                        default="/sam-artifact/sam/primitive_counts.log")
 
     args = parser.parse_args()
 
@@ -63,30 +66,36 @@ if __name__ == "__main__":
     figure_header = ['Lvl Scan', 'repeat', 'intersect', 'union', 'ALU', 'reduce', 'crddrop', 'Lvl Wr', 'Array']
 
     sam_graphs = args.sam_graphs
+    nc_log = args.output_log
 
-    for graph_, mapped_name in graphs_to_count.items():
-        gv_path = os.path.join(sam_graphs, f"{graph_}.gv")
-        graphs = pydot.graph_from_dot_file(gv_path)
-        graph = graphs[0]
+    with open(nc_log, 'w+') as nc_log_f_:
 
-        prim_count = {}
+        for graph_, mapped_name in graphs_to_count.items():
+            gv_path = os.path.join(sam_graphs, f"{graph_}.gv")
+            graphs = pydot.graph_from_dot_file(gv_path)
+            graph = graphs[0]
 
-        for node in graph.get_nodes():
-            node_attr = node.get_attributes()
-            type = node_attr['type'].strip('"')
-            if type not in prim_count:
-                prim_count[type] = 1
-            else:
-                prim_count[type] += 1
+            prim_count = {}
 
-        clean_prim_count(prim_count)
-        combine_alu_ops(prim_count)
+            for node in graph.get_nodes():
+                node_attr = node.get_attributes()
+                type = node_attr['type'].strip('"')
+                if type not in prim_count:
+                    prim_count[type] = 1
+                else:
+                    prim_count[type] += 1
 
-        print(mapped_name)
-        ps_ = ""
-        for fh_ in figure_header:
-            num = 0
-            if fh_ in prim_count:
-                num = prim_count[fh_]
-            ps_ += f"{fh_}: {num}\t"
-        print(ps_)
+            clean_prim_count(prim_count)
+            combine_alu_ops(prim_count)
+
+            print(mapped_name)
+            ps_ = ""
+            for fh_ in figure_header:
+                num = 0
+                if fh_ in prim_count:
+                    num = prim_count[fh_]
+                ps_ += f"{fh_}: {num}\t"
+            print(ps_)
+
+            nc_log_f_.write(f"{mapped_name}\n")
+            nc_log_f_.write(f"{ps_}\n")
