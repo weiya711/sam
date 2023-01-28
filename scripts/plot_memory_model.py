@@ -9,7 +9,7 @@ from ast import literal_eval
 
 LEGEND = {5000: ['-^', 'y'], 10000: ['-D', 'r'], 25000: ['-s', 'b'], 50000: ['-o', 'g']}
 
-def plot_memory_model(input_csv, outfile):
+def plot_memory_model(input_csv, outfile, default_outfile="./memory_model_plot.csv"):
     dim_sizes = dict()
     cycles = dict()
 
@@ -42,6 +42,8 @@ def plot_memory_model(input_csv, outfile):
             plt.plot(dim_size_sorted, cycles_sorted, marker, color=color, label=str(nnz), markeredgecolor='black')
         plt.legend()
 
+        # Need default outfile location for copying script out of docker
+        plt.savefig(default_outfile)
         plt.savefig(outfile)
         plt.show()
 
