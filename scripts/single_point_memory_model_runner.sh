@@ -36,6 +36,6 @@ pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --s
 
 python $basedir/scripts/converter.py --json_name $path/${line}_${nnz}_${dim}.json	
 
-python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
+python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
 
 popd

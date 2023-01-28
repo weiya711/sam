@@ -75,7 +75,7 @@ for b in ${!BENCHMARKS[@]}; do
 			cd $basedir
 		done
 	done
-	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
+	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
 	
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do
