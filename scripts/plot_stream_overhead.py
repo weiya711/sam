@@ -56,7 +56,7 @@ def plot_stream_overhead(input_csv, outfile, default_outfile="./stream_overhead_
         nrows = len(mtx_names)
 
         fig, (ax1, ax2) = plt.subplots(2)
-        fig.suptitle('Stream overhead')
+        fig.suptitle('Stream Overhead Plots, Figure 14')
 
         red_patch = mpatches.Patch(color='red', label='stop')
         blue_patch = mpatches.Patch(color='blue', label='noncontrol')
@@ -72,6 +72,7 @@ def plot_stream_overhead(input_csv, outfile, default_outfile="./stream_overhead_
                 outer_stream_stop[i] + outer_stream_done[i] for i in range(nrows)],
                 color='g')
         ax1.set_xticklabels([])
+        ax1.title.set_text("Outer-level Bi Stream Breakdown")
 
         ax2.bar(mtx_names, inner_stream_nonctrl, color='b')
         ax2.bar(mtx_names, inner_stream_stop, bottom=inner_stream_nonctrl, color='r')
@@ -81,7 +82,11 @@ def plot_stream_overhead(input_csv, outfile, default_outfile="./stream_overhead_
                 inner_stream_stop[i] + inner_stream_done[i] for i in range(nrows)],
                 color='g')
         ax2.set_xticklabels(mtx_names, fontsize=10, rotation=45)
+        ax2.title.set_text("Inner-level Bj Stream Breakdown")
+
         fig.subplots_adjust(bottom=0.25)
+        plt.xlabel("Suitesparse Matrix Name")
+
         # Need a default outfile location for copying script out of the docker
         plt.savefig(default_outfile)
         plt.savefig(outfile)
