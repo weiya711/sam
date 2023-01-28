@@ -5,6 +5,8 @@
 #SBATCH --exclusive
 #SBATCH --mail-user=oliviahsu1107@gmail.com
 
+basedir=$(pwd)
+
 rm -rf $basedir/tiles/*
 
 ./scripts/tile_ext.sh $1 memory_config_extensor_17M_llb.yaml

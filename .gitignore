@@ -53,3 +53,4 @@ tmp_mat*/
 tensor_*_mode_*
 
 # Tensor files
+tiles/
