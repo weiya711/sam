@@ -838,7 +838,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     C_crd1_t = read_inputs(C1_crd_filename_t)
                     C_vals_t = read_inputs(C_vals_filename_t, float)
                     if C_j0 == 0 and B_k0 == 0:  # and B_i00 == 0:
-                        print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
+                        print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " tiled_skip:", tiled_skip)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
                                             None, debug_sim, out_crds=out_crds, out_segs=out_segs,
                                             out_val=out_vals, out_format="ss01")
