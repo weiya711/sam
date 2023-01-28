@@ -12,16 +12,23 @@
 # These will generate a directory called "Tiles" with the pre-tiled matrix for the current test and then create a directory called suitesparse-bench_simulator/sam/"test_name" (test name is matmul_ikj_tile_pipeline_final)
 # Inside this directory a json and a csv for each # of nnz and dimension size is created
 # After all such matrices are done they are aggregated into a single csv (which is used by the script to create fig 15) the aggregated csv is suitesparse_matmul_ikj_tile_pipeline_final.csv in suitesparse-bench_simulator/sam/ under home dir
-# Runs stuff from smallest to greatest 
+# Runs stuff from smallest to greatest
+# Without gold check this takes it takes 63 hrs 9 mins to run
 ./scripts/full_memory_model_runner2.sh memory_config_extensor_17M_llb.yaml 0 
 
 # Generate the figure 15:
 # TODO: add the matplotlib script
 
-# To run a restricted set of tests (from the nnz we choose only 5000 and 25000)
-./scripts/few_points_memory_model.sh memory_config_extensor_17M_llb.yaml 0
+# To run a restricted set of tests (from the nnz we choose only 5000 and 25000 for dimension sizes 1024, 3696, 9040, 15720)
+# Without gold takes 8hrs 2min hrs to run 
+# With gold takes 19hrs 46min hrs to run
+./scripts/few_points_model_runner.sh memory_config_extensor_17M_llb.yaml 0
 
 # TODO:matplotlib script for above? 
 
-# Verify any single point
+# Verify any single point (by default gold check is on)
+# Smallest case 5000 nnz and dimension size 1024: 23 mins 22 sec
+# Largest case 50000 nnz and dimension size 15720: 16hrs 59min 22sec
+# Memory requirement with gold is for the largest matrix is 1.8 Gb (15720 dim and 50000 nnzs)
+# Doesnt add anything o the csv currently just prints out the number of cycles  
 ./scripts/ext_runner.sh extensor_"# of nnzs"_"dim size".mtx
