@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 from ast import literal_eval
 
 
-def plot_stream_overhead(input_csv, outfile):
+def plot_stream_overhead(input_csv, outfile, default_outfile="./stream_overhead_plots.png"):
     mtx_names = []
-    dims = []
+    cycles = []
     # Inner stream counts
     inner_stream_idle = []
     inner_stream_done = []
@@ -29,7 +29,7 @@ def plot_stream_overhead(input_csv, outfile):
             mtx_name = row['dataset']
             mtx_names.append(mtx_name)
 
-            dims.append(np.prod(literal_eval(row['tensor_B_shape'])))
+            cycles.append(int(row['cycles']))
 
             # Only ever 1 done token at the end of a stream
             outer_total = 1 + int(row['stream_Bi_empty']) + int(row['stream_Bi_noncontrol']) + \
@@ -47,16 +47,16 @@ def plot_stream_overhead(input_csv, outfile):
             inner_stream_nonctrl.append(int(row['stream_Bj_noncontrol']) / inner_total)
             inner_stream_stop.append(int(row['stream_Bj_stop']) / inner_total)
 
-        dims, mtx_names, outer_stream_done, outer_stream_idle, outer_stream_nonctrl, \
+        cycles, mtx_names, outer_stream_done, outer_stream_idle, outer_stream_nonctrl, \
             outer_stream_stop, inner_stream_done, inner_stream_idle, inner_stream_nonctrl, inner_stream_stop =\
-            zip(*sorted(zip(dims, mtx_names, outer_stream_done, outer_stream_idle, outer_stream_nonctrl,
+            zip(*sorted(zip(cycles, mtx_names, outer_stream_done, outer_stream_idle, outer_stream_nonctrl,
                             outer_stream_stop, inner_stream_done, inner_stream_idle, inner_stream_nonctrl,
                             inner_stream_stop)))
 
         nrows = len(mtx_names)
 
         fig, (ax1, ax2) = plt.subplots(2)
-        fig.suptitle('Stream overhead')
+        fig.suptitle('Stream Overhead Plots, Figure 14')
 
         red_patch = mpatches.Patch(color='red', label='stop')
         blue_patch = mpatches.Patch(color='blue', label='noncontrol')
@@ -72,6 +72,7 @@ def plot_stream_overhead(input_csv, outfile):
                 outer_stream_stop[i] + outer_stream_done[i] for i in range(nrows)],
                 color='g')
         ax1.set_xticklabels([])
+        ax1.title.set_text("Outer-level Bi Stream Breakdown")
 
         ax2.bar(mtx_names, inner_stream_nonctrl, color='b')
         ax2.bar(mtx_names, inner_stream_stop, bottom=inner_stream_nonctrl, color='r')
@@ -80,8 +81,14 @@ def plot_stream_overhead(input_csv, outfile):
         ax2.bar(mtx_names, inner_stream_idle, bottom=[inner_stream_nonctrl[i] +
                 inner_stream_stop[i] + inner_stream_done[i] for i in range(nrows)],
                 color='g')
-        ax2.set_xticklabels(mtx_names, fontsize=5, rotation=90)
+        ax2.set_xticklabels(mtx_names, fontsize=10, rotation=45)
+        ax2.title.set_text("Inner-level Bj Stream Breakdown")
 
+        fig.subplots_adjust(bottom=0.25)
+        plt.xlabel("Suitesparse Matrix Name")
+
+        # Need a default outfile location for copying script out of the docker
+        plt.savefig(default_outfile)
         plt.savefig(outfile)
         # plt.show()
 
