@@ -664,6 +664,9 @@ class SparseCrdPtAccumulator2(Primitive):
             self.zero_out = 0
             self.nonzero_out = 0
 
+    def return_fifo(self):
+        return self.in_crdpt0, self.in_crdpt1, self.in_val
+
     def update(self):
         self.update_done()
         if len(self.in_crdpt0) > 0 or len(self.in_crdpt0) > 0 or len(self.in_val) > 0:

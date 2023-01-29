@@ -24,11 +24,7 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 
 
 # FIXME: Figureout formats
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
-@pytest.mark.suitesparse
+@pytest.mark.skip(reason="Manual test for debugging needs to be parameterized")
 def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report_stats,
                                  skip_empty, yaml_name, nbuffer, fill=0):
     stats_dict = {"mul_6_ops": 0, "spacc1_3_rmw_ops": [], "out_arr_size": 0}
