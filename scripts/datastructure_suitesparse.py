@@ -108,6 +108,8 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
         pass
     elif "mat_vecmul" in args.benchname:
         pass
+    elif "mat_identity" in args.benchname:
+        pass
     else:
         raise NotImplementedError
 

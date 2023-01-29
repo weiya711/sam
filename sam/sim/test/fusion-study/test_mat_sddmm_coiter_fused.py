@@ -35,11 +35,12 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 )
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
-def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backpressure, depth, fill=0):
+@pytest.mark.parametrize("KDIM", [1, 10, 100])
+def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backpressure, depth, KDIM, fill=0):
 
     # DCSR
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
@@ -112,6 +113,12 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backp
     tempci = []
     tempcj = []
     tempck = []
+    tmp_bj_crd = []
+    tmp_bj_ref = []
+    tmp_intj = []
+    tmp_bj_out = []
+    tmp_dj_out = []
+    tmp_repeat_di = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_25.set_in_ref(in_ref_B.pop(0), "")
@@ -166,6 +173,30 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backp
         mul_4.set_in1(mul_5.out_val(), mul_5)
         mul_4.set_in2(arrayvals_D_8.out_val(), arrayvals_D_8)
 
+        # tempb.append(arrayvals_B_6.out_val())
+        # tempc.append(arrayvals_C_7.out_val())
+        # tempd.append(arrayvals_D_8.out_val())
+        # tempci.append(fiberlookup_Ci_26.out_ref())
+        # tempcj.append(repeat_Cj_15.out_ref())
+        # tempck.append(fiberlookup_Ck_13.out_ref())
+        # tmp_bj_crd.append(fiberlookup_Bj_19.out_crd())
+        # tmp_bj_ref.append(fiberlookup_Bj_19.out_ref())
+        # tmp_intj.append(intersectj_18.out_crd())
+        # tmp_bj_out.append(fiberlookup_Bj_19.out_crd())
+        # tmp_dj_out.append(fiberlookup_Dj_20.out_crd())
+        # tmp_repeat_di.append(repeat_Di_21.out_ref())
+        # print("B", remove_emptystr(tempb))
+        # print("C", remove_emptystr(tempc))
+        # print("D", remove_emptystr(tempd))
+        # print("Ci", remove_emptystr(tempci))
+        # print("Cj", remove_emptystr(tempcj))
+        # print("Ck", remove_emptystr(tempck))
+        # print("bj crd", remove_emptystr(tmp_bj_crd))
+        # print("bj ref", remove_emptystr(tmp_bj_ref))
+        # print("bj crd", remove_emptystr(tmp_bj_out))
+        # print("dj crd", remove_emptystr(tmp_dj_out))
+        # print("repeat_di", remove_emptystr(tmp_repeat_di))
+
         reduce_3.set_in_val(mul_4.out_val(), mul_4)
 
         fiberwrite_Xvals_0.set_input(reduce_3.out_val(), reduce_3)
@@ -180,6 +211,7 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backp
         fiberlookup_Bj_19.update()
         repsiggen_i_22.update()
         repeat_Di_21.update()
+        fiberlookup_Dj_20.update()
         intersectj_18.update()
         fiberlookup_Dk_14.update()
         crddrop_9.update()
@@ -219,6 +251,7 @@ def test_mat_sddmm_coiter_fused(samBench, sparsity, check_gold, debug_sim, backp
     extra_info["dataset"] = "synthetic"
     extra_info["test_name"] = "sddmm_coiter_fused"
     extra_info["cycles"] = time_cnt
+    extra_info["kdim"] = KDIM
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
     extra_info["tensor_D_shape"] = D_shape

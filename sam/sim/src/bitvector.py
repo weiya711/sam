@@ -277,7 +277,7 @@ class BVDropOnly(BVDropSuper):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
-            if (len(self.inner_bv) > 0 or len(self.outer_bv) > 0):
+            if len(self.inner_bv) > 0 or len(self.outer_bv) > 0:
                 self.block_start = False
 
             ibv = ""
@@ -374,7 +374,7 @@ class BVDrop(BVDropSuper):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
-            if (len(self.outer_bv) > 0 or len(self.inner_bv) > 0):
+            if len(self.outer_bv) > 0 or len(self.inner_bv) > 0:
                 self.block_start = False
 
             if len(self.outer_bv) > 0:
