@@ -3,6 +3,7 @@
 #SBATCH --mem 120000
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
+
 SECONDS=0
 set -u
 
@@ -40,7 +41,7 @@ export SAM_HOME=$basedir
 export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
 export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 
-benchout=suitesparse-bench_simulator/sam
+benchout=memory_model_out
 
 mkdir -p "$benchout"
 
@@ -53,8 +54,8 @@ for b in ${!BENCHMARKS[@]}; do
 				./scripts/prepare_files.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
 			fi
 			bench=${BENCHMARKS[$b]}
-			path=$basedir/$benchout/$bench
-			mkdir -p $basedir/$benchout/$bench
+			path=$basedir/$benchout
+			mkdir -p $path
 			echo "Testing $bench..."
 
 			line=random_sparsity
@@ -74,7 +75,7 @@ for b in ${!BENCHMARKS[@]}; do
 			cd $basedir
 		done
 	done
-	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
+	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
 	
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do
