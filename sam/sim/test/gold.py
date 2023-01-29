@@ -11,7 +11,6 @@ from sam.sim.test.test import check_point_tuple, remove_zeros, convert_point_tup
     get_point_list, read_inputs
 from sam.util import TnsFileLoader, round_sparse, ScipyTensorShifter, \
     SUITESPARSE_FORMATTED_PATH, SUITESPARSE_PATH, FROSTT_PATH, VALIDATION_OUTPUT_PATH
-KDIM = 256
 
 cwd = os.getcwd()
 ss_dir = SUITESPARSE_PATH
@@ -19,17 +18,6 @@ ss_formatted_dir = SUITESPARSE_FORMATTED_PATH
 frostt_dir = FROSTT_PATH
 validate_dir = VALIDATION_OUTPUT_PATH
 tiled_output_path = os.getenv('TILED_OUTPUT_PATH', default=os.path.join(cwd, 'mode-formats'))
-
-def _shiftLastMode(tensor):
-    dok = scipy.sparse.dok_matrix(tensor)
-    result = scipy.sparse.dok_matrix(tensor.shape)
-    for coord, val in dok.items():
-        newCoord = list(coord[:])
-        newCoord[-1] = (newCoord[-1] + 1) % tensor.shape[-1]
-        # result[tuple(newCoord)] = val
-        # TODO (rohany): Temporarily use a constant as the value.
-        result[tuple(newCoord)] = 2
-    return scipy.sparse.coo_matrix(result)
 
 
 def check_gold_matmul_tiled(tile_crd_b, tile_crd_c, ssname, debug_sim, out_crds, out_segs, out_val, out_format="ss01"):
