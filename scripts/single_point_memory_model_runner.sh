@@ -26,6 +26,8 @@ export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 
 pushd .
 
+mkdir -p $path
+
 mkdir -p $basedir/tiles/
 rm -rf $basedir/tiles/*
 

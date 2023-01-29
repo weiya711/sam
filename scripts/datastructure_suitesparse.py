@@ -26,7 +26,7 @@ def write_datastructure_tiles(args, tensor, out_path, tile_name):
     tensorname = tile_name.split("_")[1]
 
     coo = inputCache.load(tensor, False)
-    formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01")
+    formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=False)
 
 
 def write_datastructure_bench(args, tensor, out_path, tiles=None):
@@ -189,7 +189,7 @@ elif args.hw:
     if args.tiles and tensor is not None:
         for i, ten in enumerate(tensor):
             tile_name = os.path.split(mtx_files[i])[1].split(".")[0]
-            write_datastructure_tiles(args, tensor, out_path, tile_name)
+            write_datastructure_tiles(args, ten, out_path, tile_name)
     else:
         write_datastructure_bench(args, tensor, out_path)
 
