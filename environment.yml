@@ -99,7 +99,7 @@ dependencies:
   - numpy=1.21.2=py38h20f2e39_0
   - numpy-base=1.21.2=py38h79a1101_0
   - olefile=0.46=pyh9f0ad1d_1
-  - openssl=1.1.1s=h7f8727e_0
+  - openssl=1.1.1q=h7f8727e_0
   - packaging=21.3=pyhd3eb1b0_0
   - pandas=1.4.1=py38h295c915_1
   - pandocfilters=1.5.0=pyhd3eb1b0_0

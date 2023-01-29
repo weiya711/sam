@@ -7,8 +7,8 @@
 set -u
 
 BENCHMARKS=(
-  mat_vecmul_FINAL
-#  matmul_FINAL
+#  mat_vecmul_FINAL
+  matmul_FINAL
 #  mat_elemadd_FINAL
 #  mat_elemadd3_FINAL
 #  mat_residual_FINAL
@@ -94,7 +94,7 @@ for b in ${!BENCHMARKS[@]}; do
 
 		cd $basedir/sam/sim
 
-		pytest test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
+		pytest test/final-apps/test_$bench.py --ssname $line -s --report-stats --benchmark-json=$path/$line.json 
 		python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?
