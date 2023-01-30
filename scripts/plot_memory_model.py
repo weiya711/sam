@@ -9,7 +9,7 @@ from ast import literal_eval
 
 LEGEND = {5000: ['-^', 'y'], 10000: ['-D', 'r'], 25000: ['-s', 'b'], 50000: ['-o', 'g']}
 
-def plot_memory_model(input_csv, outfile, default_outfile="./memory_model_plot.png"):
+def plot_memory_model(input_csv, outfile, default_outfile="./fig15.pdf"):
     dim_sizes = dict()
     cycles = dict()
 

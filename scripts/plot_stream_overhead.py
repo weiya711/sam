@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from ast import literal_eval
 
 
-def plot_stream_overhead(input_csv, outfile, default_outfile="./stream_overhead_plots.png"):
+def plot_stream_overhead(input_csv, outfile, default_outfile="./fig14.pdf"):
     mtx_names = []
     cycles = []
     # Inner stream counts
