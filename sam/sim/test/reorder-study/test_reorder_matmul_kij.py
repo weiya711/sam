@@ -180,7 +180,7 @@ def test_reorder_matmul_kij(samBench, sparsity, check_gold, debug_sim, backpress
         spaccumulator2_3_drop_val.set_in_stream(mul_5.out_val(), mul_5)
         spaccumulator2_3.set_crd_outer(spaccumulator2_3_drop_crd_outer.out_val(), spaccumulator2_3_drop_crd_outer)
         spaccumulator2_3.set_crd_inner(spaccumulator2_3_drop_crd_inner.out_val(), spaccumulator2_3_drop_crd_inner)
-        spaccumulator2_3.set_val(spaccumulator2_3_drop_val.out_val(), spaccumulator2_3_drop_crd_val)
+        spaccumulator2_3.set_val(spaccumulator2_3_drop_val.out_val(), spaccumulator2_3_drop_val)
 
         fiberwrite_Xvals_0.set_input(spaccumulator2_3.out_val(), spaccumulator2_3)
 

@@ -247,18 +247,18 @@ class CompressedCrdRdScan(CrdRdScan):
             self.set_fifo(fifo)
 
     def reinitialize_arrs(self, seg_arr, crd_arr, fifo):
-        #assert False
+        # assert False
         self.start_addr = 0
         self.stop_addr = 0
         self.end_fiber = False
-        #self.curr_ref = ''
-        #self.curr_crd = ''
+        # self.curr_ref = ''
+        # self.curr_crd = ''
         self.emit_fiber_stkn = False
         self.meta_clen = len(crd_arr)
         self.meta_slen = len(seg_arr)
         self.skip_stkn_cnt = 0
         self.out_stkn_cnt = 0
-        #self.begin = True
+        # self.begin = True
         self.seg_arr = seg_arr
         self.crd_arr = crd_arr
         print(fifo)
@@ -266,13 +266,11 @@ class CompressedCrdRdScan(CrdRdScan):
             print(self.in_ref)
             self.in_ref.append(a_)
 
-        #if fifo is not None:
-        #    self.set_fifo(fifo)
-        
-        #assert False
+        # if fifo is not None:
+        #     self.set_fifo(fifo)
+        # assert False
         self.done = False
-        
-        print("+++++++++")
+        # print("+++++++++")
         return
 
     def set_fifo(self, fifo):

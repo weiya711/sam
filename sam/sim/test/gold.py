@@ -22,9 +22,11 @@ tiled_output_path = os.getenv('TILED_OUTPUT_PATH', default=os.path.join(cwd, 'mo
 
 def check_gold_matmul_tiled(tile_crd_b, tile_crd_c, ssname, debug_sim, out_crds, out_segs, out_val, out_format="ss01"):
     # CSR
-    gold_file_path = "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_b[2]) + "_" + str(tile_crd_b[3]) + "_" + str(tile_crd_c[3]) + ".mtx"
+    gold_file_path = "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" +\
+        str(tile_crd_c[1]) + "_" + str(tile_crd_b[2]) + "_" + str(tile_crd_b[3]) +\
+        "_" + str(tile_crd_c[3]) + ".mtx"
     gold_path = os.path.join(tiled_output_path, gold_file_path)
-    #print(gold_path)
+    # print(gold_path)
     if not os.path.exists(gold_path):
         if len(out_val) == 0:
             return
@@ -40,16 +42,15 @@ def check_gold_matmul_tiled(tile_crd_b, tile_crd_c, ssname, debug_sim, out_crds,
 
     gold_tup = convert_ndarr_point_tuple(gold_nd)
 
-    if debug_sim and len(out_val) > 0: #debug_sim:
+    if debug_sim and len(out_val) > 0:  # debug_sim:
         print("The  array is here")
         print("Out segs:", out_segs)
         print("Out crds:", out_crds)
         print("Out vals:", out_val)
-        #print("Dense Mat1:\n", B_scipy.toarray())
-        #print("Dense Mat2:\n", C_scipy.toarray())
-        #print("Dense Gold:", gold_nd)
+        # print("Dense Mat1:\n", B_scipy.toarray())
+        # print("Dense Mat2:\n", C_scipy.toarray())
+        # print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
-    
     if debug_sim:
         print(gold_tup, tile_crd_b, tile_crd_c)
         print(out_crds)
