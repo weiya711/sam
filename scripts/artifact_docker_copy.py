@@ -14,11 +14,11 @@ files_to_copy = {
 }
 
 stream_overhead = [
-    'stream_overhead_plots.png'
+    'fig14.pdf'
 ]
 
 memory_model = [
-    'memory_model_plot.png'
+    'fig15.pdf'
 ]
 
 
