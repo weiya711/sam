@@ -343,6 +343,15 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             fiberwrite_X0_2.set_input(spaccumulator1_3.out_crd_outer())
             mem_model_b.check_if_done(tiled_done)
             mem_model_c.check_if_done(tiled_done)
+            # mem_model_x.add_upstream(tilecoord=[B_i00, C_k00, C_j00, B_i0, C_k0, C_j0],
+            #                         data=[fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr(),
+            #                               fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr(),
+            #                               fiberwrite_Xvals_0.get_arr()], valid = tiled_done)
+            # glb_model_x.add_upstream(tilecoord=mem_model_x.token(),
+            #                          data = mem_model_x.get_size(),
+            #                        valid = mem_model_x.out_done())
+
+        mem_model_x.set_child_ready(glb_model_x.out_ready())
         fiberlookup_Bi00.update()
         fiberlookup_Bk00.update()
         repsiggen_i00.update()
@@ -388,6 +397,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
             fiberwrite_X1_1.update()
             fiberwrite_X0_2.update()
             tiled_done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
+            # mem_model_x.update(time_cnt)
+            # glb_model_x.uipdate(time_cnt)
             if tiled_skip:
                 tiled_done = True
             if tiled_done and check_flag:
