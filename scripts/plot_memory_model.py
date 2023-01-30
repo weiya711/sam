@@ -33,19 +33,30 @@ def plot_memory_model(input_csv, outfile, default_outfile="./memory_model_plot.p
 #                            inner_stream_stop)))
 #
 
+        plt.figure(figsize=(7, 4), dpi=80)
+
         for nnz, dim_size_list in dim_sizes.items():
             # Sort the dim_size_list and permute cycles to match using the Schwartzian Transform 
             dim_size_sorted, cycles_sorted = zip(*sorted(zip(dim_size_list, cycles[nnz])))
             print(dim_size_sorted)
             print(cycles_sorted)
             marker, color = LEGEND[nnz]
-            plt.plot(dim_size_sorted, cycles_sorted, marker, color=color, label=str(nnz), markeredgecolor='black')
-        plt.legend()
+            plt.plot(dim_size_sorted, cycles_sorted, marker, color=color, label=str(nnz) + " NNZ", markeredgecolor='black')
+        plt.title("Recreation of Figure 19 from the ExTensor Paper,\n SAM Paper Figure 15")
+        plt.xticks(fontsize=14)
+        plt.xlabel("Matrix Dimension Size", fontsize=16)
+
+        plt.gca().yaxis.get_offset_text().set_fontsize(14)
+        plt.yticks(fontsize=14)
+        plt.ylabel("Runtime (Cycles)", fontsize=16)
+
+        plt.tight_layout()
+        plt.legend(fontsize=12, loc='upper right')
 
         # Need default outfile location for copying script out of docker
         plt.savefig(default_outfile)
         plt.savefig(outfile)
-        plt.show()
+#        plt.show()
 
 
 parser = argparse.ArgumentParser()
