@@ -42,6 +42,7 @@ export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
 export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 benchout=memory_model_out
 
+pushd .
 mkdir -p "$benchout"
 
 for b in ${!BENCHMARKS[@]}; do
@@ -53,8 +54,8 @@ for b in ${!BENCHMARKS[@]}; do
 				./scripts/prepare_files_no_gold.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
 			fi
 			bench=${BENCHMARKS[$b]}
-			path=$basedir/$benchout/$bench
-			mkdir -p $basedir/$benchout/$bench
+			path=$basedir/$benchout
+			mkdir -p $path
 			echo "Testing $bench..."
 
 			line=random_sparsity
@@ -84,6 +85,9 @@ for b in ${!BENCHMARKS[@]}; do
 	echo -e "${NC}"
 done
 
+popd
+
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 printf "$ELAPSED"
 printf "\n"
+
