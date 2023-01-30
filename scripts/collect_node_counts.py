@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     graphs_to_count = {
         'mat_vecmul_ij': 'SpMV',
-        'matmul_ijk': 'SpM*SpM',
+        'matmul_ijk': 'SpM*SpM (IJK Only)',
         'mat_sddmm': 'SDDMM',
         'tensor3_innerprod': 'InnerProd',
         'tensor3_ttv': 'TTV',
