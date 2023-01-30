@@ -226,14 +226,15 @@ class CompressedCrdRdScan(CrdRdScan):
         # Statistics
         if self.get_stats:
             self.unique_refs = []
-            self.unique_crds = []
+            # self.unique_crds = []
             self.total_outputs = 0
             self.elements_skipped = 0
             self.skip_cnt = 0
             self.intersection_behind_cnt = 0
             self.fiber_behind_cnt = 0
             self.stop_count = 0
-        self.skip_stkn_cnt = 0
+            self.empty_tkn_cnt = 0
+        self.skip_stkn_cnt = 0  # also used as a statistic
         self.out_stkn_cnt = 0
 
         self.begin = True
@@ -331,19 +332,20 @@ class CompressedCrdRdScan(CrdRdScan):
         self.curr_ref = self.curr_addr
         self.curr_crd = self.crd_arr[self.curr_addr]
         if self.get_stats:
-            if self.curr_ref not in self.unique_refs:
-                self.unique_refs.append(self.curr_ref)
-            if self.curr_crd not in self.unique_crds:
-                self.unique_crds.append(self.curr_crd)
+            # if self.curr_ref not in self.unique_refs:
+            #    self.unique_refs.append(self.curr_ref)
+            # if self.curr_crd not in self.unique_crds:
+            #    self.unique_crds.append(self.curr_crd)
             self.total_outputs += 1
 
     def return_statistics(self):
         if self.get_stats:
             dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
-                   "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
+                   "unique_refs": len(self.unique_refs),
                    "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
                    "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
-                   "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count}
+                   "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count,
+                   "skip_stp_tkn_cnt": self.skip_stkn_cnt}
             dic.update(super().return_statistics())
         else:
             dic = {}

@@ -303,66 +303,66 @@ class FormatWriter:
 
             os.chmod(filename, 0o666)
 
-    def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01"):
-
-        if format_str == "ss01":
-            dcsr_dir = Path(dir_path)
-            dcsr_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
-            dcsr = self.convert_format(coo, "dcsr")
-
-            filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_seg")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsr.seg0))
-
-            filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_crd")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsr.crd0))
-
-            filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_1_seg")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsr.seg1))
-
-            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_1_crd")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsr.crd1))
-
-            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsr.data))
-
-            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsr.shape))
-
-        elif format_str == "ss10":
-            dcsc_dir = Path(dir_path)
-            dcsc_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
-
-            dcsc = self.convert_format(coo, "dcsc")
-
-            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_shape")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsc.shape))
-
-            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_1_seg")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsc.seg0))
-
-            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_1_crd")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsc.crd0))
-
-            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_seg")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsc.seg1))
-
-            filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_crd")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsc.crd1))
-
-            filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
-            with open(filename, "w") as ofile:
-                ofile.write(array_newline_str(dcsc.data))
+    # def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01"):
+    #
+    #     if format_str == "ss01":
+    #         dcsr_dir = Path(dir_path)
+    #         dcsr_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
+    #         dcsr = self.convert_format(coo, "dcsr")
+    #
+    #         filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_seg")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsr.seg0))
+    #
+    #         filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_crd")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsr.crd0))
+    #
+    #         filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_1_seg")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsr.seg1))
+    #
+    #         filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_1_crd")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsr.crd1))
+    #
+    #         filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsr.data))
+    #
+    #         filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsr.shape))
+    #
+    #     elif format_str == "ss10":
+    #         dcsc_dir = Path(dir_path)
+    #         dcsc_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
+    #
+    #         dcsc = self.convert_format(coo, "dcsc")
+    #
+    #         filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_shape")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsc.shape))
+    #
+    #         filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_1_seg")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsc.seg0))
+    #
+    #         filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_1_crd")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsc.crd0))
+    #
+    #         filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_seg")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsc.seg1))
+    #
+    #         filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_crd")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsc.crd1))
+    #
+    #         filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
+    #         with open(filename, "w") as ofile:
+    #             ofile.write(array_newline_str(dcsc.data))
 
     def writeout_separate(self, coo, dir_path, tensorname, omit_dense=True):
 
@@ -482,7 +482,7 @@ class FormatWriter:
                     shutil.chown(path, group='sparsity')
                     os.chmod(path, 0o775)
 
-    def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01", hw=False):
+    def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01", hw=True):
 
         if format_str == "ss01":
             dcsr_dir = Path(dir_path)
@@ -538,42 +538,42 @@ class FormatWriter:
             dcsc = self.convert_format(coo, "dcsc")
 
             if not hw:
-                filename = os.path.join(dcsr_dir, tensorname + "_shape.txt")
+                filename = os.path.join(dcsc_dir, tensorname + "_shape.txt")
             else:
                 filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dcsc.shape))
 
             if not hw:
-                filename = os.path.join(dcsr_dir, tensorname + "1_seg.txt")
+                filename = os.path.join(dcsc_dir, tensorname + "1_seg.txt")
             else:
-                filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_1_seg")
+                filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_1_seg")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dcsc.seg0))
 
             if not hw:
-                filename = os.path.join(dcsr_dir, tensorname + "1_crd.txt")
+                filename = os.path.join(dcsc_dir, tensorname + "1_crd.txt")
             else:
                 filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_1_crd")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dcsc.crd0))
 
             if not hw:
-                filename = os.path.join(dcsr_dir, tensorname + "0_seg.txt")
+                filename = os.path.join(dcsc_dir, tensorname + "0_seg.txt")
             else:
-                filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_seg")
+                filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_seg")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dcsc.seg1))
 
             if not hw:
-                filename = os.path.join(dcsr_dir, tensorname + "0_crd.txt")
+                filename = os.path.join(dcsc_dir, tensorname + "0_crd.txt")
             else:
-                filename = os.path.join(dcsr_dir, "tensor_" + tensorname + "_mode_0_crd")
+                filename = os.path.join(dcsc_dir, "tensor_" + tensorname + "_mode_0_crd")
             with open(filename, "w") as ofile:
                 ofile.write(array_newline_str(dcsc.crd1))
 
             if not hw:
-                filename = os.path.join(dcsr_dir, tensorname + "_vals.txt")
+                filename = os.path.join(dcsc_dir, tensorname + "_vals.txt")
             else:
                 filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
             with open(filename, "w") as ofile:

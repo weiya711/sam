@@ -33,8 +33,8 @@ GEN_KERNEL_NAMES=(
   tensor3_ttv
   tensor3_ttm
   mat_sddmm
-  mat_mattransmul_WRONG
-  mat_residual_WRONG
+  mat_mattransmul
+  mat_residual
   mat_elemadd3
   tensor3_mttkrp
   vec_spacc_simple
@@ -44,10 +44,10 @@ GEN_KERNEL_NAMES=(
 )
 
 HAND_KERNEL_NAMES=(
-  mat_residual
-  mat_mattransmul
-  vec_sd_compression
-  vec_ds_compression
+  mat_residual_HAND
+  mat_mattransmul_HAND
+  vec_sd_compression_HAND
+  vec_ds_compression_HAND
 )
 
 TACO_ARGS=(

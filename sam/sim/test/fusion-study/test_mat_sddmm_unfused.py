@@ -35,12 +35,12 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 # @pytest.mark.suitesparse
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
-# def test_mat_sddmm_unfused(samBench, ssname, check_gold, debug_sim, fill=0):
-def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, backpressure, depth, fill=0):
+@pytest.mark.parametrize("KDIM", [1, 10, 100])
+def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, backpressure, depth, KDIM, fill=0):
 
     # DCSR
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
@@ -250,6 +250,7 @@ def test_mat_sddmm_unfused(samBench, sparsity, check_gold, debug_sim, backpressu
     extra_info["dataset"] = "synthetic"
     extra_info["test_name"] = "sddmm_unfused"
     extra_info["cycles"] = time_cnt
+    extra_info["kdim"] = KDIM
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
     extra_info["tensor_D_shape"] = D_shape

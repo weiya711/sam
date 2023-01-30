@@ -34,7 +34,7 @@ def test_reorder_matmul_kji(samBench, sparsity, check_gold, debug_sim, backpress
 
     # DCSC
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSC/B_random_sp_{sparsity}/")
-    B_shape_filename = os.path.join(B_dirname, "shape")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
@@ -56,7 +56,7 @@ def test_reorder_matmul_kji(samBench, sparsity, check_gold, debug_sim, backpress
 
     # DCSR
     C_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/C_random_sp_{sparsity}/")
-    C_shape_filename = os.path.join(C_dirname, "shape")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
