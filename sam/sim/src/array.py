@@ -33,7 +33,7 @@ class Array(Primitive):
         self.path = None
         if fifo is not None:
             self.set_fifo(fifo)
-   
+
     def print_debug(self, name=""):
         print(name, self.load_addrs)
 
@@ -61,11 +61,11 @@ class Array(Primitive):
 
     def initialize_array(self, path):
         return
-        #assert (isinstance(path[0], list)
-        #self.arr = path[0]
-        #self.size = len(path[0])
-        #self.done = False
-        
+        # assert (isinstance(path[0], list)
+        # self.arr = path[0]
+        # self.size = len(path[0])
+        # self.done = False
+
     def check_backpressure(self):
         if self.backpressure_en:
             copy_backpressure = self.ready_backpressure
@@ -85,7 +85,6 @@ class Array(Primitive):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.debug:
                 print("arr", self.name, self.load_addrs, self.done)
-            
             if self.done and self.path is not None:
                 self.initialize_array(self.path)
             if self.backpressure_en:

@@ -221,7 +221,7 @@ def test_unit_vec_elemmul_c_c_c(nnz, debug_sim, backpressure, depth, max_val=100
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 def test_unit_vec_elemmul_c_c_u(nnz, debug_sim, backpressure, depth, dim=1000, size=1000, fill=0):
-    assert(size >= dim)
+    assert (size >= dim)
     crd_arr1 = [random.randint(0, dim - 1) for _ in range(nnz)]
     crd_arr1 = sorted(set(crd_arr1))
     seg_arr1 = [0, len(crd_arr1)]

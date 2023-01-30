@@ -180,7 +180,6 @@ class Repeat(Primitive):
                               "\t Get Rep:", self.get_next_rep, "\t Rep:", repeat,
                               "\t Out Ref:", self.curr_out_ref, "\tEmit Stkn", self.emit_stkn, "\t Streams", self.in_ref, " ",
                               self.in_repeat)
- 
                         raise Exception("Both repeat and ref signal need to end in 'D'")
                     self.get_next_ref = True
                     self.get_next_rep = False

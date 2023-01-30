@@ -70,7 +70,7 @@ class CrdDrop(Primitive):
 
             if self.done:
                 self.curr_crd = ''
-                #return
+                # return
 
             if len(self.outer_crd) > 0 and self.get_next_ocrd:
                 if self.get_stats:
@@ -256,16 +256,16 @@ class CrdHold(Primitive):
 
             if self.done:
                 self.curr_crd = ''
-                #self.done = False
-                #return
-                #print("-")
-                #print(self.RSG.print_debug())
-                #print(self.repeat.print_debug())
-                #print(self.RSG.done, self.repeat.done)
-                #print("-")
-                #self.RSG = RepeatSigGen(debug=self.debug, fifo=)
-                #self.repeat = Repeat(debug=self.debug)
-                #return
+                # self.done = False
+                # return
+                # print("-")
+                # print(self.RSG.print_debug())
+                # print(self.repeat.print_debug())
+                # print(self.RSG.done, self.repeat.done)
+                # print("-")
+                # self.RSG = RepeatSigGen(debug=self.debug, fifo=)
+                # self.repeat = Repeat(debug=self.debug)
+                # return
 
             if len(self.inner_crd) > 0:
                 icrd = self.inner_crd.pop(0)
@@ -401,7 +401,8 @@ class CrdPtConverter(Primitive):
             self.curr_icrd = 'D'
             self.done = True
             self.emit_done = False
-            if len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0 and self.outer_crdpt[0] == 'D' and self.inner_crdpt[0] == 'D':
+            if len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0 and \
+                    self.outer_crdpt[0] == 'D' and self.inner_crdpt[0] == 'D':
                 self.inner_crdpt.pop(0)
                 self.outer_crdpt.pop(0)
         elif len(self.outer_crdpt) > 0 and len(self.inner_crdpt) > 0 and \
@@ -455,7 +456,7 @@ class CrdPtConverter(Primitive):
             print("DEBUG: CrdPtConverter \t Done:", self.out_done(),
                   "\n Curr in ocrd: ", self.inner_crdpt, "\t Curr in icrd", self.outer_crdpt,
                   "\t Curr in val", self.prev_ocrdpt, "\t Emit Tkn: ", self.emit_stkn)
-    
+
     def print_debug(self):
         print("DEBUG: CrdPtConverter \t Done:", self.out_done(),
               "\n Curr in ocrd: ", self.inner_crdpt, "\t Curr in icrd", self.outer_crdpt,
@@ -464,7 +465,7 @@ class CrdPtConverter(Primitive):
 
     def set_outer_crdpt(self, crdpt):
         if crdpt != '' and crdpt is not None:
-            # print("outer:", crdpt) 
+            # print("outer:", crdpt)
             self.outer_crdpt.append(crdpt)
 
     def set_inner_crdpt(self, crdpt):
