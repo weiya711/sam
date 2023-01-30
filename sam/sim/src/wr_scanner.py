@@ -15,7 +15,6 @@ class WrScan(Primitive, ABC):
 
         self.input = []
         self.arr = Array(size=size, fill=self.fill, debug=self.debug)
-        
         self.blk_start_ = False
         self.backpressure_en = False
         if self.backpressure_en:
@@ -100,7 +99,7 @@ class ValsWrScan(WrScan):
 
         if self.backpressure_en:
             self.data_valid = False
-        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en: 
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
 
@@ -122,14 +121,14 @@ class ValsWrScan(WrScan):
                 print("Vals Wr scanner print ", self.done, self.curr_addr)
 
     def reset(self):
-        #print("reset vals")
-        #arr_fifo = self.return_fifo()
+        # print("reset vals")
+        # arr_fifo = self.return_fifo()
         self.done = False
         self.curr_addr = 0
-        #print("RESET VALS to ", self.size_init, self.fill)
-        #self.clear_arr()
+        # print("RESET VALS to ", self.size_init, self.fill)
+        # self.clear_arr()
         self.arr = Array(size=self.size_init, fill=self.fill_init, debug=self.debug)
-        #self.set_fifo(arr_fifo)
+        # self.set_fifo(arr_fifo)
 
     def autosize(self):
         self.resize_arr(self.curr_addr)
@@ -169,8 +168,8 @@ class CompressWrScan(WrScan):
             # self.seg_arr.print_debug(name="seg")
             if self.debug:
                 print("RESET WR SCAN ", self.input)
-            #self.reset()
-            #self.done = False
+            # self.reset()
+            # self.done = False
             if self.debug:
                 print("post reset: ", self.arr.out_done())
 
@@ -184,9 +183,7 @@ class CompressWrScan(WrScan):
                 self.data_valid = True
         if len(self.input) > 0:
             in_crd = self.input.pop(0)
-
             if not is_stkn(in_crd) and in_crd != 'D':
-                
                 self.arr.set_store(self.curr_addr, in_crd)
                 self.curr_addr += 1
                 self.curr_crd_cnt += 1
@@ -211,18 +208,18 @@ class CompressWrScan(WrScan):
                   "\t end fiber:", self.end_fiber, "\t", self.input)
 
     def reset(self):
-        #print("reset crd arr")
+        # print("reset crd arr")
         self.done = False
         self.curr_addr = 0
         self.curr_seg_addr = 1
         self.curr_crd_cnt = 0
         self.end_fiber = True
-        #arr_fifo = self.return_fifo()
-        #self.clear_seg_arr()
-        #self.clear_arr()
-        self.seg_arr = Array(size=self.seg_size_init, fill=0, debug=self.debug) 
+        # arr_fifo = self.return_fifo()
+        # self.clear_seg_arr()
+        # self.clear_arr()
+        self.seg_arr = Array(size=self.seg_size_init, fill=0, debug=self.debug)
         self.arr = Array(size=self.size_init, fill=self.fill_init, debug=self.debug)
-        #self.set_fifo(arr_fifo)
+        # self.set_fifo(arr_fifo)
 
     def clear_seg_arr(self):
         self.seg_arr.clear(self.fill)

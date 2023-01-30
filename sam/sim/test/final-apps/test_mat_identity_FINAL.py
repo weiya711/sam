@@ -93,10 +93,13 @@ def test_mat_identity(samBench, ssname, cast, check_gold, debug_sim, report_stat
         time.sleep(0.01)
 
     extra_info = dict()
-    print()
-    print("Bi stream", B_lvl0)
-    print("Bj stream", B_lvl1)
-    print("Bvals stream", B_vals)
+
+    if debug_sim:
+        print()
+        print("Bi stream", B_lvl0)
+        print("Bj stream", B_lvl1)
+        print("Bvals stream", B_vals)
+
     extra_info["stream_Bi_noncontrol"] = sum([1 for x in B_lvl0 if isinstance(x, int)])
     extra_info["stream_Bi_stop"] = sum([1 for x in B_lvl0 if isinstance(x, str) and is_stkn(x)])
     extra_info["stream_Bi_empty"] = sum([1 for x in B_lvl0 if isinstance(x, str) and x == ''])

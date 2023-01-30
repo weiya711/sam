@@ -47,7 +47,7 @@ class StknDrop(Primitive):
 
             if self.done:
                 self.curr_out = ''
-                #return
+                # return
 
             if len(self.in_stream) > 0:
                 ival = self.in_stream.pop(0)
@@ -122,7 +122,6 @@ class EmptyFiberStknDrop(Primitive):
             if self.backpressure_en:
                 self.data_valid = True
             ival = ''
-
 
             if self.done:
                 self.curr_out = ''

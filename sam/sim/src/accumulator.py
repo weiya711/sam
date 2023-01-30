@@ -105,7 +105,7 @@ class Reduce(Primitive):
                 elif is_stkn(self.curr_out):
                     self.stop_token_out += 1
                 else:
-                    if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
+                    if (isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
                         self.zero_out += 1
                     else:
                         self.nonzero_out += 1
@@ -215,7 +215,7 @@ class SparseCrdPtAccumulator1(Primitive):
                 self.print_debug()
             if len(self.outer_crdpt) > 0 and self.outer_crdpt[0] == "D":
                 print("outercrd", self.outer_crdpt, self.inner_crdpt, self.in_val, self.emit_output,
-                      self.curr_in_outer_crdpt, self.curr_in_inner_crdpt, self.curr_val) 
+                      self.curr_in_outer_crdpt, self.curr_in_inner_crdpt, self.curr_val)
                 self.print_debug()
 
         if len(self.outer_crdpt) > 0 or len(self.inner_crdpt) > 0:
@@ -245,11 +245,11 @@ class SparseCrdPtAccumulator1(Primitive):
             #     print("######", ocrd,  self.curr_in_outer_crdpt, self.curr_in_inner_crdpt, self.emit_output)
             # print(self.in_val, self.outer_crdpt, self.inner_crdpt, ocrd
             # self.curr_in_outer_crdpt, self.curr_in_inner_crdpt, self.curr_in_val)
-            
-            emit_output = ocrd != self.curr_in_outer_crdpt and self.curr_in_outer_crdpt is not None and self.curr_in_outer_crdpt != "D"
+            emit_output = ocrd != self.curr_in_outer_crdpt and self.curr_in_outer_crdpt is not None and\
+                self.curr_in_outer_crdpt != "D"
             if emit_output:
                 self.emit_output.append([self.curr_in_outer_crdpt, -1])
-                #print("@@@@@", self.curr_in_outer_crdpt)
+                # print("@@@@@", self.curr_in_outer_crdpt)
             self.curr_in_outer_crdpt = ocrd
             if self.curr_in_outer_crdpt in self.storage.keys():
                 inner_dict = self.storage[self.curr_in_outer_crdpt]
@@ -271,7 +271,6 @@ class SparseCrdPtAccumulator1(Primitive):
                 self.seen_done = True
             else:
                 self.storage[self.curr_in_outer_crdpt] = {self.curr_in_inner_crdpt: self.valtype(self.curr_in_val)}
-        
         # if self.curr_in_outer_crdpt == "D":
         #     print("__________", self.emit_output, self.seen_done)
 
@@ -279,12 +278,10 @@ class SparseCrdPtAccumulator1(Primitive):
             fiber = self.emit_output[0]
 
             self.curr_outer_crdpt = fiber[0]
-            #print("===, ", self.storage)
-            #print(fiber)
-            #print(self.emit_output)
-            
-            #print(self.storage[self.curr_outer_crdpt].keys(), fiber[1])
-
+            # print("===, ", self.storage)
+            # print(fiber)
+            # print(self.emit_output)
+            # print(self.storage[self.curr_outer_crdpt].keys(), fiber[1])
             self.curr_inner_crdpt = min(
                 [item for item in self.storage[self.curr_outer_crdpt].keys() if item > fiber[1]])
             self.curr_val = self.storage[self.curr_outer_crdpt][self.curr_inner_crdpt]
@@ -424,7 +421,6 @@ class SparseAccumulator1(Primitive):
         self.temp_valtype = valtype
         self.temp_last_level = last_level
 
-
     def check_backpressure(self):
         if self.backpressure_en:
             copy_backpressure = self.ready_backpressure
@@ -470,7 +466,6 @@ class SparseAccumulator1(Primitive):
             else:
                 self.fifo_avail_val = True
 
-
     def update(self):
         self.update_done()
         self.update_ready()
@@ -484,13 +479,14 @@ class SparseAccumulator1(Primitive):
                 print(self.in_outer_crdpt, self.in_inner_crdpt, self.in_val)
                 print(self.crdpt_spacc.print_debug())
                 print(self.crdpt_converter.print_debug())
-                print("=====") 
+                print("=====")
             if self.done:
                 f1, f2, f3 = self.crdpt_spacc.return_fifo()
                 f4, f5 = self.crdpt_converter.return_fifo()
                 # print("aaaaaaaaaaaaa", f1, f2, f3)
-                self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=self.temp_maxdim, valtype=self.temp_valtype, fifos=[f1,f2,f3])
-                self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4,f5])
+                self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=self.temp_maxdim,
+                                                           valtype=self.temp_valtype, fifos=[f1, f2, f3])
+                self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4, f5])
 
             if self.backpressure_en:
                 self.data_ready = True
@@ -888,8 +884,9 @@ class SparseAccumulator2(Primitive):
             if self.done:
                 f1, f2, f3 = self.crdpt_spacc.return_fifo()
                 f4, f5 = self.crdpt_converter.return_fifo()
-                self.crdpt_spacc = SparseCrdPtAccumulator2(maxdim=self.temp_maxdim, valtype=self.temp_valtype, fifos=[f1,f2,f3])
-                self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4,f5])
+                self.crdpt_spacc = SparseCrdPtAccumulator2(maxdim=self.temp_maxdim, valtype=self.temp_valtype,
+                                                           fifos=[f1, f2, f3])
+                self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4, f5])
             if self.backpressure_en:
                 self.data_valid = True
             if (len(self.in1_crdpt) > 0 or len(self.in0_crdpt) > 0 or len(self.in_val) > 0):

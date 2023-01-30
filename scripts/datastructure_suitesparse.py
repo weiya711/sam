@@ -118,7 +118,7 @@ parser.add_argument('-f', '--format', metavar='ssformat', type=str, action='stor
 parser.add_argument('-comb', '--combined', action='store_true', default=False, help='Whether the formatted datastructures '
                                                                                  'should be in separate files')
 parser.add_argument('-o', '--omit-dense', action='store_true', default=False, help='Do not create fully dense format')
-parser.add_argument('-cast', '--cast', action='store_true', default=True, help='Safe sparsity cast to int for values')
+parser.add_argument('-cast', '--cast', action='store_true', default=False, help='Safe sparsity cast to int for values')
 parser.add_argument('-hw', '--hw', action='store_true', default=False,
                     help='Only generate formats used for hardware testing (all sparse'
                          'levels, concordant)')
