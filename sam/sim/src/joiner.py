@@ -45,7 +45,7 @@ class CrdJoiner2(Joiner2, ABC):
 
     def fifo_debug(self):
         print("Crd Joiner2 : ", self.in_ref1, " ", self.in_ref2)
-    
+
     def update_ready(self):
         if self.backpressure_en:
             if len(self.in_ref1) > self.depth:
@@ -381,7 +381,7 @@ class Union2(CrdJoiner2):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
- 
+
             if self.get_stats:
                 self.total_count += 1
 

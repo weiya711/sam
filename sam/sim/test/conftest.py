@@ -28,7 +28,7 @@ def pytest_addoption(parser):
     parser.addoption("--depth", action="store", default=2,
                      help="fifo depth value")
     parser.addoption("--nnz-value", action="store", default=5000,
-                     help="nnz value for stats") 
+                     help="nnz value for stats")
     parser.addoption("--cast", action="store_true", default=False,
                      help="Flag that runs all simulations using integer input "
                           "and output data (used for hardware simulation comparison)")
@@ -66,13 +66,16 @@ def pytest_collection_modifyitems(config, items):
             if "synth" in item.keywords:
                 item.add_marker(skip_synth)
 
+
 @pytest.fixture
 def backpressure(request):
     return request.config.getoption("--back")
 
+
 @pytest.fixture
 def skip_empty(request):
     return request.config.getoption("--skip-empty")
+
 
 @pytest.fixture
 def nbuffer(request):
@@ -93,9 +96,11 @@ def backpressure(request):
 def depth(request):
     return request.config.getoption("--depth")
 
+
 @pytest.fixture
 def nnz_value(request):
     return request.config.getoption("--nnz-value")
+
 
 @pytest.fixture
 def check_gold(request):
@@ -131,9 +136,11 @@ def vecname(request):
 def synth(request):
     return request.config.getoption("--synth")
 
+
 @pytest.fixture
 def yaml_name(request):
     return request.config.getoption("--yaml_name")
+
 
 @pytest.fixture
 def cast(request):

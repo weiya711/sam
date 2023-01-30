@@ -33,9 +33,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                  skip_empty, yaml_name, nbuffer, fill=0):
     stats_dict = {"mul_6_ops": 0, "spacc1_3_rmw_ops": [], "out_arr_size": 0, "repsiggen_i_17_total_rep": 0,
                   "repsiggen_j_10_total_rep": 0, "repsiggen_i_17_max_rep": 0, "repsiggen_j_10_max_rep": 0,
-                  "fiberlookup_Bi_19_done": 0, "fiberlookup_Bk_14_done": 0, "fiberlookup_Bi_19_ttl": 0, "fiberlookup_Bk_14_ttl": 0, "repsiggen_i_17_done": 0,
-                  "repeat_Ci_16_done": 0, "repeat_Bj_9_done": 0, "fiberlookup_Ck_15_done": 0, "fiberlookup_Ck_15_ttl": 0, "intersectk_13_done": 0, "crdhold_5_done": 0,
-                  "fiberlookup_Cj_12_done": 0, "fiberlookup_Cj_12_ttl": 0, "arrayvals_C_8_done": 0, "crdhold_4_done": 0, "repsiggen_j_10_done": 0,
+                  "fiberlookup_Bi_19_done": 0, "fiberlookup_Bk_14_done": 0, "fiberlookup_Bi_19_ttl": 0,
+                  "fiberlookup_Bk_14_ttl": 0, "repsiggen_i_17_done": 0,
+                  "repeat_Ci_16_done": 0, "repeat_Bj_9_done": 0, "fiberlookup_Ck_15_done": 0,
+                  "fiberlookup_Ck_15_ttl": 0, "intersectk_13_done": 0, "crdhold_5_done": 0,
+                  "fiberlookup_Cj_12_done": 0, "fiberlookup_Cj_12_ttl": 0,
+                  "arrayvals_C_8_done": 0, "crdhold_4_done": 0, "repsiggen_j_10_done": 0,
                   "arrayvals_B_7_done": 0, "mul_6_done": 0, "spaccumulator1_3_done": 0, "spaccumulator1_3_inner_done": 0,
                   "spaccumulator1_3_outer_done": 0, "spaccumulator1_3_vals_done": 0}
     # Helper Datastructures
@@ -101,11 +104,13 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                debug=debug_sim, pipeline_en=True, statistics=report_stats)
     mem_model_b = memory_block(name="B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
-                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                               size=memory_config["Mem_memory"],
+                               bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     mem_model_c = memory_block(name="C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"],
-                               size=memory_config["Mem_memory"], bandwidth=memory_config["Mem_tile_bandwidth"] // memory_config["Mem_tiles"],
+                               size=memory_config["Mem_memory"],
+                               bandwidth=memory_config["Mem_tile_bandwidth"] / memory_config["Mem_tiles"],
                                latency=memory_config["Glb_Mem_latency"], debug=debug_sim, statistics=report_stats)
     # Output memory blocks Not used with sparse tiling figure out later
     mem_model_x = output_memory_block(name="X", element_size=memory_config["Bytes_per_element"],
@@ -551,9 +556,9 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     assert B_k00 == C_k00 and B_k0 == C_k0
                     if C_j0 == 0 and C_k0 == 0:
                         print("Checking gold... ", B_i00, B_k00, B_i0, B_k0, C_k00, C_j00, C_k0, C_j0, " ", tiled_skip)
-                        #check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
-                        #                        None, debug_sim, out_crds=out_crds, out_segs=out_segs,
-                        #                        out_val=out_vals, out_format="ss01")
+                        # check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
+                        #                         None, debug_sim, out_crds=out_crds, out_segs=out_segs,
+                        #                         out_val=out_vals, out_format="ss01")
                 if report_stats and not tiled_skip:
                     stats_dict["mul_6_ops"] += mul_6.return_statistics()["cycle_operation"]
                     stats_dict["spacc1_3_rmw_ops"].append(spaccumulator1_3.return_statistics()["rmw_ops"])
@@ -568,23 +573,21 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     stats_dict["repsiggen_i_17_max_rep"] += repsiggen_i_17.cycles_curr_max
                     stats_dict["repsiggen_j_10_max_rep"] += repsiggen_j_10.cycles_curr_max
                     stats_dict["fiberlookup_Bi_19_done"] += fiberlookup_Bi_19.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Bi_19.return_statistics_base()["start_cycle"]
+                        fiberlookup_Bi_19.return_statistics_base()["start_cycle"]
                     stats_dict["fiberlookup_Bk_14_done"] += fiberlookup_Bk_14.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Bk_14.return_statistics_base()["start_cycle"]
+                        fiberlookup_Bk_14.return_statistics_base()["start_cycle"]
                     stats_dict["repsiggen_i_17_done"] += repsiggen_i_17.return_statistics_base()["done_cycles"]
                     stats_dict["repeat_Ci_16_done"] += repeat_Ci_16.return_statistics_base()["done_cycles"]
                     stats_dict["fiberlookup_Ck_15_done"] += fiberlookup_Ck_15.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Ck_15.return_statistics_base()["start_cycle"]
+                        fiberlookup_Ck_15.return_statistics_base()["start_cycle"]
                     stats_dict["intersectk_13_done"] += intersectk_13.return_statistics_base()["done_cycles"]
                     stats_dict["crdhold_5_done"] += crdhold_5.return_statistics_base()["done_cycles"]
                     stats_dict["fiberlookup_Cj_12_done"] += fiberlookup_Cj_12.return_statistics_base()["done_cycles"] -\
-                                                            fiberlookup_Cj_12.return_statistics_base()["start_cycle"]
-                    
+                        fiberlookup_Cj_12.return_statistics_base()["start_cycle"]
                     stats_dict["fiberlookup_Bi_19_ttl"] += fiberlookup_Bi_19.return_statistics_base()["done_cycles"]
                     stats_dict["fiberlookup_Bk_14_ttl"] += fiberlookup_Bk_14.return_statistics_base()["done_cycles"]
                     stats_dict["fiberlookup_Ck_15_ttl"] += fiberlookup_Ck_15.return_statistics_base()["done_cycles"]
                     stats_dict["fiberlookup_Cj_12_ttl"] += fiberlookup_Cj_12.return_statistics_base()["done_cycles"]
-
                     stats_dict["arrayvals_C_8_done"] += arrayvals_C_8.return_statistics_base()["done_cycles"]
                     stats_dict["crdhold_4_done"] += crdhold_4.return_statistics_base()["done_cycles"]
                     stats_dict["repsiggen_j_10_done"] += repsiggen_j_10.return_statistics_base()["done_cycles"]
@@ -592,11 +595,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     stats_dict["arrayvals_B_7_done"] += arrayvals_B_7.return_statistics_base()["done_cycles"]
                     stats_dict["mul_6_done"] += mul_6.return_statistics_base()["done_cycles"]
                     stats_dict["spaccumulator1_3_done"] += spaccumulator1_3.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_inner_done"] += spaccumulator1_3_drop_crd_inner.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_outer_done"] += spaccumulator1_3_drop_crd_outer.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_vals_done"] += spaccumulator1_3_drop_val.return_statistics_base()["done_cycles"]
- 
-
             if debug_sim and glb_model_b.out_done() == "D":
                 print(mem_model_c.token(), " ", mem_model_b.token())
                 print("GLB reader done ", glb_model_x.out_done(), " ", mem_model_x.out_done())
@@ -604,7 +602,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             if debug_sim and mem_model_c.token() == "D" and mem_model_b.token() == "D":
                 print("Mem reader done ", glb_model_x.out_done(), " ", mem_model_x.out_done())
                 print(glb_model_c.token() == "D" and glb_model_b.token() == "D")
-
             if tiled_done:
                 if mem_model_c.out_done():
                     if glb_model_c.out_done():
@@ -628,7 +625,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
         print("outputs compressed: ", sum(array4))
         print("compute ", sum(array))
     print("tiles: ", len(sizes_dict_level1["B"].keys()))
-    print("TOTAL_TIME = ", time_cnt, time_cnt_sum - 2*len(array) + 2)
+    print("TOTAL_TIME = ", time_cnt, time_cnt_sum - 2 * len(array) + 2)
     if report_stats:
         print("\t Mul ops:", stats_dict["mul_6_ops"])
         print("\t Acc ops:", sum(stats_dict["spacc1_3_rmw_ops"]))
@@ -641,4 +638,4 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             if "spacc1_3" not in a or "spacc1_3_rmw_ops" not in a:
                 print(a)
                 if isinstance(stats_dict[a], float) or isinstance(stats_dict[a], int):
-                    print(stats_dict[a]/max(len(array), len(array2)))
+                    print(stats_dict[a] / max(len(array), len(array2)))

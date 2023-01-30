@@ -4,6 +4,8 @@ from collections import defaultdict
 import waterfall_chart
 import matplotlib.pyplot as plt
 import pandas as pd
+
+
 class waveform_collector():
     def __init__(self, memory_blocks):
         self.memory_blocks = memory_blocks

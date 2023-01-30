@@ -293,7 +293,7 @@ if __name__ == "__main__":
     else:
         assert args.input_tensor is not None
         SS_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(cwd, 'suitesparse'))
-        #print("PATH:", SS_PATH)
+        # print("PATH:", SS_PATH)
         tensor_path = os.path.join(SS_PATH, args.input_tensor + ".mtx")
         ss_tensor = SuiteSparseTensor(tensor_path)
         tensor = inputCache.load(ss_tensor, False)
