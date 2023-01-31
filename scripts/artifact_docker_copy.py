@@ -19,6 +19,10 @@ stream_overhead = [
 
 memory_model = [
     'memory_model_plot.png'
+    # Table 1
+    'prim_data.log',
+    # Table 2
+    'primitive_counts.log'
 ]
 
 
