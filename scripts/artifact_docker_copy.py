@@ -20,10 +20,12 @@ stream_overhead = [
 memory_model = [
     'fig15.pdf',
     # Table 1
-    '../taco-website/prim_data.log',
+    '../taco-website/tab2.log',
     # Table 2
-    'primitive_counts.log'
+    'tab1.log'
 ]
+
+
 
 
 def docker_copy(docker_id, fp, output_dir, root=False):
