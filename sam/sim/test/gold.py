@@ -251,10 +251,11 @@ def check_gold_mat_vecmul(ssname, debug_sim, cast, out_crds, out_segs, out_val, 
         print("Out segs:", out_segs)
         print("Out crds:", out_crds)
         print("Out vals:", out_val)
+        print("Gold:", gold_tup)
+        print()
         print("Dense Mat1:\n", B_scipy.toarray())
         print("Dense Vec2:\n", c_nd)
         print("Dense Gold:", gold_nd)
-        print("Gold:", gold_tup)
 
     if not out_val:
         assert out_val == gold_tup

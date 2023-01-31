@@ -245,7 +245,7 @@ class SparseCrdPtAccumulator1(Primitive):
             #     print("######", ocrd,  self.curr_in_outer_crdpt, self.curr_in_inner_crdpt, self.emit_output)
             # print(self.in_val, self.outer_crdpt, self.inner_crdpt, ocrd
             # self.curr_in_outer_crdpt, self.curr_in_inner_crdpt, self.curr_in_val)
-            emit_output = ocrd != self.curr_in_outer_crdpt and self.curr_in_outer_crdpt is not None and\
+            emit_output = ocrd != self.curr_in_outer_crdpt and self.curr_in_outer_crdpt is not None and \
                 self.curr_in_outer_crdpt != "D"
             if emit_output:
                 self.emit_output.append([self.curr_in_outer_crdpt, -1])
@@ -417,6 +417,7 @@ class SparseAccumulator1(Primitive):
             self.fifo_avail_inner = True
             self.fifo_avail_outer = True
             self.fifo_avail_val = True
+
         self.temp_maxdim = maxdim
         self.temp_valtype = valtype
         self.temp_last_level = last_level
@@ -432,6 +433,7 @@ class SparseAccumulator1(Primitive):
         if not backpressure:
             self.ready_backpressure = False
 
+    # FIXME: (owhsu) This code is unreachable
     def fifo_available(self, br=""):
         assert False
         if self.backpressure_en:
@@ -475,19 +477,17 @@ class SparseAccumulator1(Primitive):
             if self.backpressure_en:
                 self.data_valid = True
             if self.debug:
-                print("====")
                 print(self.in_outer_crdpt, self.in_inner_crdpt, self.in_val)
                 print(self.crdpt_spacc.print_debug())
                 print(self.crdpt_converter.print_debug())
-                print("=====")
             if self.done:
                 f1, f2, f3 = self.crdpt_spacc.return_fifo()
                 f4, f5 = self.crdpt_converter.return_fifo()
-                # print("aaaaaaaaaaaaa", f1, f2, f3)
                 self.crdpt_spacc = SparseCrdPtAccumulator1(maxdim=self.temp_maxdim,
                                                            valtype=self.temp_valtype, fifos=[f1, f2, f3])
                 self.crdpt_converter = CrdPtConverter(last_level=self.temp_last_level, fifos=[f4, f5])
 
+            # FIXME: (owhsu) self.data_ready not defined in init
             if self.backpressure_en:
                 self.data_ready = True
             if len(self.in_outer_crdpt) > 0 or len(self.in_inner_crdpt) > 0:
@@ -509,7 +509,7 @@ class SparseAccumulator1(Primitive):
                 self.crdpt_spacc.set_val(self.in_val.pop(0))
 
             self.crdpt_spacc.update()
-
+            print(">>>>>>>>>>>>SPACC:", self.crdpt_spacc.out_outer_crdpt(), self.crdpt_spacc.out_inner_crdpt())
             self.crdpt_converter.set_outer_crdpt(self.crdpt_spacc.out_outer_crdpt())
             self.crdpt_converter.set_inner_crdpt(self.crdpt_spacc.out_inner_crdpt())
 

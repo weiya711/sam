@@ -9,6 +9,7 @@ from ast import literal_eval
 
 LEGEND = {5000: ['-^', 'y'], 10000: ['-D', 'r'], 25000: ['-s', 'b'], 50000: ['-o', 'g']}
 
+
 def plot_memory_model(input_csv, outfile, default_outfile="./fig15.pdf"):
     dim_sizes = dict()
     cycles = dict()
@@ -21,7 +22,7 @@ def plot_memory_model(input_csv, outfile, default_outfile="./fig15.pdf"):
             if nnz not in cycles:
                 cycles[nnz] = []
             cycles[nnz].append(int(row['cycles']))
-    
+
             if nnz not in dim_sizes:
                 dim_sizes[nnz] = []
             dim_sizes[nnz].append(int(row['dim_size']))
@@ -36,7 +37,7 @@ def plot_memory_model(input_csv, outfile, default_outfile="./fig15.pdf"):
         plt.figure(figsize=(7, 4), dpi=80)
 
         for nnz, dim_size_list in dim_sizes.items():
-            # Sort the dim_size_list and permute cycles to match using the Schwartzian Transform 
+            # Sort the dim_size_list and permute cycles to match using the Schwartzian Transform
             dim_size_sorted, cycles_sorted = zip(*sorted(zip(dim_size_list, cycles[nnz])))
             print(dim_size_sorted)
             print(cycles_sorted)

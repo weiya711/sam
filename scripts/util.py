@@ -482,6 +482,58 @@ class FormatWriter:
                     shutil.chown(path, group='sparsity')
                     os.chmod(path, 0o775)
 
+    def writeout_separate_vec(self, vec, dir_path, tensorname, format_str="s0", hw=True):
+        vec_shape = [len(vec)]
+
+        if format_str == "s0":
+            vec_dir = Path(dir_path)
+            vec_dir.mkdir(parents=True, exist_ok=True, mode=0o777)
+            vec_sp = [x for x in vec if x != 0]
+            vec_crd = [i for i, x in enumerate(vec) if x != 0]
+
+            if not hw:
+                filename = os.path.join(vec_dir, tensorname + "0_seg.txt")
+            else:
+                filename = os.path.join(vec_dir, "tensor_" + tensorname + "_mode_0_seg")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str([0, len(vec_sp) + 1]))
+
+            if not hw:
+                filename = os.path.join(vec_dir, tensorname + "0_crd.txt")
+            else:
+                filename = os.path.join(vec_dir, "tensor_" + tensorname + "_mode_0_crd")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(vec_crd))
+
+            if not hw:
+                filename = os.path.join(vec_dir, tensorname + "_vals.txt")
+            else:
+                filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(vec_sp))
+
+            if not hw:
+                filename = os.path.join(vec_dir, tensorname + "_shape.txt")
+            else:
+                filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(vec_shape))
+
+        if format_str == "d0":
+            if not hw:
+                filename = os.path.join(vec_dir, tensorname + "_vals.txt")
+            else:
+                filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_vals")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(vec))
+
+            if not hw:
+                filename = os.path.join(vec_dir, tensorname + "_shape.txt")
+            else:
+                filename = os.path.join(dir_path, "tensor_" + tensorname + "_mode_shape")
+            with open(filename, "w") as ofile:
+                ofile.write(array_newline_str(vec_shape))
+
     def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01", hw=True):
 
         if format_str == "ss01":

@@ -1,11 +1,12 @@
 from sam.onyx.parse_dot import *
 import os
 
+
 def combine_alu_ops(count_dict):
 
     add = 0
     mul = 0
-    
+
     if 'add' in count_dict:
         add = count_dict['add']
         del count_dict['add']
@@ -35,6 +36,7 @@ def clean_prim_count(count_dict):
     if 'arrayvals' in count_dict:
         count_dict['Array'] = count_dict['arrayvals']
         del count_dict['arrayvals']
+
 
 if __name__ == "__main__":
 

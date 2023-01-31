@@ -1,6 +1,8 @@
 import argparse
 import os
 import shutil
+import scipy.sparse
+import numpy as np
 
 from pathlib import Path
 
@@ -48,9 +50,10 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
         tensorname = "B"
 
     coo = inputCache.load(tensor, False)
+    shape = coo.shape
 
     # These benchmarks need format_str == "ss10"
-    if args.benchname not in ["matmul_kij", "mat_vecmul", "mat_mattransmul"]:
+    if args.benchname not in ["matmul_kij", "matmul_kji", "matmul_jki", "mat_vecmul", "mat_vecmul_ji", "mat_mattransmul"]:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01")
 
     if "matmul_ijk" in args.benchname:
@@ -61,6 +64,13 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
         trans_shifted = shifted.transpose()
         formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss10")
 
+    elif "matmul_jik" in args.benchname:
+        shifted = shifter.shiftLastMode(coo)
+
+        print("Writing " + args.name + " shifted and transposed...")
+        tensorname = "C"
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss10")
     elif "matmul_ikj" in args.benchname:
         shifted = shifter.shiftLastMode(coo)
 
@@ -69,7 +79,27 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
         trans_shifted = shifted.transpose()
         formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss01")
 
+    elif "matmul_jki" in args.benchname:
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+
+        shifted = shifter.shiftLastMode(coo)
+
+        print("Writing " + args.name + " shifted and transposed...")
+        tensorname = "C"
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss10")
+
     elif "matmul_kij" in args.benchname:
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+
+        shifted = shifter.shiftLastMode(coo)
+
+        print("Writing " + args.name + " shifted and transposed...")
+        tensorname = "C"
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss01")
+
+    elif "matmul_kji" in args.benchname:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
 
         shifted = shifter.shiftLastMode(coo)
@@ -98,12 +128,38 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
 
     elif "mat_mattransmul" in args.benchname:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
-    elif "mat_vecmul" in args.benchname:
+        if not args.no_gen_other:
+            tensorname = 'd'
+            vec = scipy.sparse.random(shape[0], 1, density=args.density, data_rvs=np.ones)
+            vec = vec.toarray().flatten()
+            formatWriter.writeout_separate_vec(vec, dirname, tensorname)
+
+            tensorname = 'f'
+            vec = scipy.sparse.random(shape[1], 1, density=args.density, data_rvs=np.ones)
+            vec = vec.toarray().flatten()
+            formatWriter.writeout_separate_vec(vec, dirname, tensorname)
+    elif "mat_vecmul" == args.benchname or "mat_vecmul_ji" in args.benchname:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+        if not args.no_gen_other:
+            tensorname = 'c'
+            vec = scipy.sparse.random(shape[1], 1, density=args.density, data_rvs=np.ones)
+            vec = vec.toarray().flatten()
+            formatWriter.writeout_separate_vec(vec, dirname, tensorname)
+    elif "mat_vecmul_ij" in args.benchname:
+        pass
     elif "mat_sddmm" in args.benchname:
         pass
     elif "mat_residual" in args.benchname:
-        pass
+        if not args.no_gen_other:
+            tensorname = 'b'
+            vec = scipy.sparse.random(shape[0], 1, density=args.density, data_rvs=np.ones)
+            vec = vec.toarray().flatten()
+            formatWriter.writeout_separate_vec(vec, dirname, tensorname)
+
+            tensorname = 'd'
+            vec = scipy.sparse.random(shape[1], 1, density=args.density, data_rvs=np.ones)
+            vec = vec.toarray().flatten()
+            formatWriter.writeout_separate_vec(vec, dirname, tensorname)
     elif "mat_identity" in args.benchname:
         pass
     else:
@@ -116,7 +172,7 @@ parser.add_argument('-n', '--name', metavar='ssname', type=str, action='store', 
 parser.add_argument('-f', '--format', metavar='ssformat', type=str, action='store', help='The format that the tensor '
                                                                                          'should be converted to')
 parser.add_argument('-comb', '--combined', action='store_true', default=False, help='Whether the formatted datastructures '
-                                                                                 'should be in separate files')
+                    'should be in separate files')
 parser.add_argument('-o', '--omit-dense', action='store_true', default=False, help='Do not create fully dense format')
 parser.add_argument('-cast', '--cast', action='store_true', default=False, help='Safe sparsity cast to int for values')
 parser.add_argument('-hw', '--hw', action='store_true', default=False,
@@ -127,7 +183,13 @@ parser.add_argument('-b', '--benchname', type=str, default=None, help='test name
 parser.add_argument('--input_path', type=str, default=None)
 parser.add_argument('--output_dir_path', type=str, default=None)
 parser.add_argument('--tiles', action='store_true')
+parser.add_argument('--no_gen_other', action='store_true', help="Whether this"
+                    "script should generate the randmo 'other' tensors")
+parser.add_argument('--seed', type=int, default=0, help='Random seed needed for gen_other')
+parser.add_argument('--density', type=int, default=0.25, help='If gen_other, used for density of "other" tensor')
 args = parser.parse_args()
+
+np.random.seed(args.seed)
 
 inputCache = InputCacheSuiteSparse()
 formatWriter = FormatWriter(args.cast)

@@ -10,6 +10,8 @@ import argparse
 
 from pathlib import Path
 
+
+# FIXME: (owhsu) this should be imported from util
 def round_sparse(x):
     if 0.0 <= x < 1:
         return 1
@@ -19,6 +21,7 @@ def round_sparse(x):
         return math.floor(x + 0.5)
     else:
         return math.ceil(x - 0.5)
+
 
 def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01"):
     # CSR
@@ -39,22 +42,22 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
     if os.path.exists(B_filename) and os.path.exists(C_filename):
         B_scipy = scipy.io.mmread(B_filename)
         itr = 0
-        #print(B_scipy)
+        # print(B_scipy)
         for i, j, v in zip(B_scipy.row, B_scipy.col, B_scipy.data):
             # print(B_scipy.data)
             # print(i, " ", j, " ", v)
             B_scipy.data[itr] = round_sparse(B_scipy.data[itr])
-            #if B_scipy.data[itr] < 1 and B_scipy.data[itr] > 0:
+            # if B_scipy.data[itr] < 1 and B_scipy.data[itr] > 0:
             #    B_scipy.data[itr] = 1
-            #elif B_scipy.data[itr] < 0 and B_scipy.data[itr] > -1:
+            # elif B_scipy.data[itr] < 0 and B_scipy.data[itr] > -1:
             #    B_scipy.data[itr] = -1
-            #else:
+            # else:
             #    B_scipy.data[itr] = int(B_scipy.data[itr])
             itr += 1
         B_scipy = B_scipy.tocsr()
         C_scipy = scipy.io.mmread(C_filename)
-        #print("___________________") 
-        #print(B_scipy)
+        # print("___________________")
+        # print(B_scipy)
         itr = 0
         for i, j, v in zip(C_scipy.row, C_scipy.col, C_scipy.data):
             if C_scipy.data[itr] < 1 and C_scipy.data[itr] > 0:
@@ -68,7 +71,10 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
         gold_nd = (B_scipy @ C_scipy)
         gold_out = gold_nd.tocoo()
         assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[2]
-        scipy.io.mmwrite(dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_b[2]) + "_" + str(tile_crd_c[2]) + "_" + str(tile_crd_c[3]) + ".mtx", gold_out)
+        scipy.io.mmwrite(
+            dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_c[1]) + "_" + str(
+                tile_crd_b[2]) + "_" + str(tile_crd_c[2]) + "_" + str(tile_crd_c[3]) + ".mtx", gold_out)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate tiled output gold")
@@ -78,20 +84,24 @@ if __name__ == "__main__":
     outpath = Path(outdir)
     outpath.mkdir(parents=True, exist_ok=True)
 
-    #generate_gold_matmul_tiled([0, 1, 2, 9], [1, 0, 9, 0], outdir)
-    
-    #generate_gold_matmul_tiled([0, 1, 0, 7], [1, 0, 7, 0], outdir)
-    #quit()    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
- 
+    # generate_gold_matmul_tiled([0, 1, 2, 9], [1, 0, 9, 0], outdir)
+
+    # generate_gold_matmul_tiled([0, 1, 0, 7], [1, 0, 7, 0], outdir)
+    # quit()    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
+
     with open("./tiles/matmul_ikj/tensor_sizes", "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
 
     with open("./sam/sim/src/tiling/" + args.yaml_name, "r") as stream:
         loop_config = yaml.safe_load(stream)
 
-    struct = {"i00": 1 + int(sizes_dict_level_full["B"][0])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "k00": 1 + int(sizes_dict_level_full["B"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "j00": 1 + int(sizes_dict_level_full["C"][1])//(loop_config["Glb_tile_size"]*loop_config["Mem_tile_size"]), "i0": loop_config["Glb_tile_size"], "k0": loop_config["Glb_tile_size"], "j0": loop_config["Glb_tile_size"]}
+    struct = {
+        "i00": 1 + int(sizes_dict_level_full["B"][0]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
+        "k00": 1 + int(sizes_dict_level_full["B"][1]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
+        "j00": 1 + int(sizes_dict_level_full["C"][1]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
+        "i0": loop_config["Glb_tile_size"], "k0": loop_config["Glb_tile_size"], "j0": loop_config["Glb_tile_size"]}
     print(struct)
-    #quit()
+    # quit()
     for i00 in range(struct["i00"]):
         for k00 in range(struct["k00"]):
             for j00 in range(struct["j00"]):

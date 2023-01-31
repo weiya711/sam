@@ -84,6 +84,7 @@ def test_mat_vecmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debu
     fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=Bs_seg[-1], fill=fill, debug=debug_sim, statistics=report_stats,
                                      back_en=backpressure, depth=int(depth))
 
+    into_spacc_outer, into_spacc_inner, into_spacc_val = [], [], []
     tvals = []
     t0 = []
     tintj = []
@@ -127,7 +128,10 @@ def test_mat_vecmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debu
         spaccumulator1_2_drop_crd_inner.set_in_stream(crdhold.out_crd_inner(), crdhold)
         spaccumulator1_2_drop_val.set_in_stream(mul_3.out_val(), mul_3)
 
-        spaccumulator1_2.set_crd_outer(spaccumulator1_2_drop_crd_outer.out_val(), spaccumulator1_2_drop_crd_outer)
+        spacc_outer_val = 0 if isinstance(spaccumulator1_2_drop_crd_outer.out_val(), int) else \
+            spaccumulator1_2_drop_crd_outer.out_val()
+
+        spaccumulator1_2.set_crd_outer(spacc_outer_val, spaccumulator1_2_drop_crd_outer)
         spaccumulator1_2.set_crd_inner(spaccumulator1_2_drop_crd_inner.out_val(), spaccumulator1_2_drop_crd_inner)
         spaccumulator1_2.set_val(spaccumulator1_2_drop_val.out_val(), spaccumulator1_2_drop_val)
 
@@ -140,6 +144,9 @@ def test_mat_vecmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debu
 
         fiberwrite_x0_1.set_input(out_crdi, spaccumulator1_2)
 
+        into_spacc_outer.append(spaccumulator1_2_drop_crd_outer.out_val())
+        into_spacc_inner.append(spaccumulator1_2_drop_crd_inner.out_val())
+        into_spacc_val.append(spaccumulator1_2_drop_val.out_val())
         tvals.append(spaccumulator1_2.out_val())
         t0.append(out_crdi)
         tintj.append(intersectj_10.out_crd())
@@ -147,12 +154,6 @@ def test_mat_vecmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debu
         tBvals.append(arrayvals_B_4.out_val())
         tcvals.append(arrayvals_c_5.out_val())
 
-        fiberwrite_x0_1.update()
-        spaccumulator1_2_drop_crd_outer.update()
-        spaccumulator1_2_drop_crd_inner.update()
-        spaccumulator1_2_drop_val.update()
-        spaccumulator1_2.update()
-        fiberwrite_xvals_0.update()
         fiberlookup_Bj_11.update()
         fiberlookup_cj_12.update()
         intersectj_10.update()
@@ -163,6 +164,12 @@ def test_mat_vecmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debu
         arrayvals_c_5.update()
         mul_3.update()
         crdhold.update()
+        spaccumulator1_2_drop_crd_outer.update()
+        spaccumulator1_2_drop_crd_inner.update()
+        spaccumulator1_2_drop_val.update()
+        spaccumulator1_2.update()
+        fiberwrite_x0_1.update()
+        fiberwrite_xvals_0.update()
 
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1
@@ -170,12 +177,18 @@ def test_mat_vecmul_FINAL(samBench, ssname, cast, check_gold, report_stats, debu
     fiberwrite_x0_1.autosize()
     fiberwrite_xvals_0.autosize()
 
-    print("intj", remove_emptystr(tintj))
-    print("i", remove_emptystr(ti))
-    print("Bvals", remove_emptystr(tBvals))
-    print("cvals", remove_emptystr(tcvals))
-    print("out_vals", remove_emptystr(tvals))
-    print("out_crdi", remove_emptystr(t0))
+    if debug_sim:
+        print("intj", remove_emptystr(tintj))
+        print("i", remove_emptystr(ti))
+        print("Bvals", remove_emptystr(tBvals))
+        print("cvals", remove_emptystr(tcvals))
+        print()
+        print("into spacc outer", remove_emptystr(into_spacc_outer))
+        print("into spacc inner", remove_emptystr(into_spacc_inner))
+        print("into spacc val", remove_emptystr(into_spacc_val))
+
+        print("out_vals", remove_emptystr(tvals))
+        print("out_crdi", remove_emptystr(t0))
 
     out_crds = [fiberwrite_x0_1.get_arr()]
     out_segs = [fiberwrite_x0_1.get_seg_arr()]
