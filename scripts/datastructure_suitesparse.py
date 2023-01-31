@@ -50,10 +50,18 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
     coo = inputCache.load(tensor, False)
 
     # These benchmarks need format_str == "ss10"
-    if args.benchname not in ["matmul_kij", "mat_vecmul", "mat_mattransmul"]:
+    if args.benchname not in ["matmul_kij", "matmul_kji", "matmul_jki", "mat_vecmul", "mat_vecmul_ji", "mat_mattransmul"]:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01")
 
     if "matmul_ijk" in args.benchname:
+        shifted = shifter.shiftLastMode(coo)
+
+        print("Writing " + args.name + " shifted and transposed...")
+        tensorname = "C"
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss10")
+
+    elif "matmul_jik" in args.benchname:
         shifted = shifter.shiftLastMode(coo)
 
         print("Writing " + args.name + " shifted and transposed...")
@@ -69,6 +77,16 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
         trans_shifted = shifted.transpose()
         formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss01")
 
+    elif "matmul_jki" in args.benchname:
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+
+        shifted = shifter.shiftLastMode(coo)
+
+        print("Writing " + args.name + " shifted and transposed...")
+        tensorname = "C"
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss10")
+
     elif "matmul_kij" in args.benchname:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
 
@@ -79,6 +97,15 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
         trans_shifted = shifted.transpose()
         formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss01")
 
+    elif "matmul_kji" in args.benchname:
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+
+        shifted = shifter.shiftLastMode(coo)
+
+        print("Writing " + args.name + " shifted and transposed...")
+        tensorname = "C"
+        trans_shifted = shifted.transpose()
+        formatWriter.writeout_separate_sparse_only(trans_shifted, dirname, tensorname, format_str="ss01")
     elif "mat_elemadd3" in args.benchname:
         print("Writing " + args.name + " shifted...")
         tensorname = "C"
@@ -98,8 +125,10 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
 
     elif "mat_mattransmul" in args.benchname:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
-    elif "mat_vecmul" in args.benchname:
+    elif "mat_vecmul" == args.benchname or "mat_vecmul_ji" in args.benchname:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+    elif "mat_vecmul_ij" in args.benchname:
+        pass
     elif "mat_sddmm" in args.benchname:
         pass
     elif "mat_residual" in args.benchname:

@@ -6,7 +6,23 @@ download_script=scripts/download_suitesparse_stream_overhead.sh
 
 mkdir -p $path
 
-bench=$2
+BENCHMARKS=(
+	matmul_jki
+	matmul_ikj
+	matmul_kji
+	matmul_kij
+	matmul_ijk
+	matmul_jik
+	mat_elemadd
+	mat_elemmul
+	mat_identity
+	mat_elemadd3
+	mat_mattransmul
+	mat_residual
+	mat_vecmul_ij
+	mat_vecmul_ji
+	mat_sddmm
+)
 
 # Create download_script that downloads ONLY the suitesparse matrices listed in the text file that is passed in as the first argument of this script
 [ -e $download_script ] && rm $download_script
@@ -25,8 +41,11 @@ chmod ugo+x $download_script
 # Unpack the downloaded suitesparse files since they come in .tar format
 ./scripts/unpack_suitesparse.sh $(realpath $1)
 
-while read line; do
-	echo "Generating input format files for $line..."
-	sspath=${SUITESPARSE_PATH}/$line
-	SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $line -hw -b $bench 
-done <$(realpath $1)
+for b in ${!BENCHMARKS[@]}; do
+	bench=${BENCHMARKS[$b]}
+	while read line; do
+		echo "Generating input format files for $line..."
+		sspath=${SUITESPARSE_PATH}/$line
+		SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $line -hw -b $bench 
+	done <$(realpath $1)
+done
