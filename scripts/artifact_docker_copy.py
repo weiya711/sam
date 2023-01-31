@@ -65,5 +65,5 @@ if __name__ == "__main__":
 
     for file_in_ in memory_model:
         synth_path = os.path.join(root_dir, file_in_)
-        out_p = os.path.join(od_, file_in_)
+        out_p = os.path.join(od_, os.path.basename(file_in_))
         docker_copy(did_, synth_path, out_p)
