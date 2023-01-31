@@ -18,7 +18,7 @@ stream_overhead = [
 ]
 
 memory_model = [
-    'fig15.pdf'
+    'fig15.pdf',
     # Table 1
     'prim_data.log',
     # Table 2
