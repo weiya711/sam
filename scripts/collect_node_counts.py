@@ -46,7 +46,7 @@ if __name__ == "__main__":
                         default="/sam-artifact/sam/compiler/sam-outputs/dot/")
     parser.add_argument('--output_log',
                         type=str,
-                        default="/sam-artifact/sam/primitive_counts.log")
+                        default="/sam-artifact/sam/tab1.log")
 
     args = parser.parse_args()
 

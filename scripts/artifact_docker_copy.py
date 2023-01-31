@@ -20,10 +20,12 @@ stream_overhead = [
 memory_model = [
     'fig15.pdf',
     # Table 1
-    '../taco-website/prim_data.log',
+    '../taco-website/tab2.log',
     # Table 2
-    'primitive_counts.log'
+    'tab1.log'
 ]
+
+
 
 
 def docker_copy(docker_id, fp, output_dir, root=False):
@@ -63,5 +65,5 @@ if __name__ == "__main__":
 
     for file_in_ in memory_model:
         synth_path = os.path.join(root_dir, file_in_)
-        out_p = os.path.join(od_, file_in_)
+        out_p = os.path.join(od_, os.path.basename(file_in_))
         docker_copy(did_, synth_path, out_p)
