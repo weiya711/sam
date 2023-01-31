@@ -48,6 +48,7 @@ def plot_reorder(test_dfs, test_names, legend, output_dir=None):
     plt.title('Cycles vs Loop Reordering', **title_keywords)
     plt.xticks(fontsize=24)
     plt.yticks(fontsize=24)
+    plt.ylim([10000, 1000000])
     plt.yscale('log')
     fig.set_size_inches(16, 12)
     save_figure_ASPLOS('reorder', output_dir)
