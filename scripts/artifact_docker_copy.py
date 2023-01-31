@@ -20,7 +20,7 @@ stream_overhead = [
 memory_model = [
     'fig15.pdf',
     # Table 1
-    'prim_data.log',
+    '../taco-website/prim_data.log',
     # Table 2
     'primitive_counts.log'
 ]
