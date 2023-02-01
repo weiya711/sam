@@ -58,12 +58,34 @@ class MatrixGenerator():
     def _create_fiber_tree(self):
         self.fiber_tree = FiberTree(tensor=self.array)
 
+    def transpose_tensor(self, axes=None):
+        '''
+        Transposes the tensor using specified axes
+        '''
+        if axes is not None:
+            self.array = numpy.transpose(self.array, axes)
+            self.shape = self.array.shape
+            self.fiber_tree = FiberTree(tensor=self.array)
+    
+    def set_dump_dir(self, dump_dir):
+        if dump_dir is not None:
+            self.dump_dir = dump_dir
+            if not os.path.isdir(self.dump_dir):
+                os.mkdir(self.dump_dir)
+            # else:
+            #     # Otherwise clean it
+            #     for filename in os.listdir(self.dump_dir):
+            #         ret = os.remove(self.dump_dir + "/" + filename)
+
     def dump_outputs(self, format=None, tpose=False, dump_shape=True):
         '''
         Dump the matrix into many files depending on matrix format
         '''
         print(f"Using dump directory - {self.dump_dir}")
 
+        debug_coord_arr = []
+        debug_seg_arr = []
+        debug_val_arr = []
         # Transpose it first if necessary
         if tpose is True:
             self.array = numpy.transpose(self.array)
@@ -84,6 +106,9 @@ class MatrixGenerator():
             self.write_array(seg_arr, name=f"{self.name}0_seg.txt")
             self.write_array(coord_arr, name=f"{self.name}0_crd.txt")
 
+            debug_coord_arr.append(coord_arr)
+            debug_seg_arr.append(seg_arr)
+
             at_vals = False
             i = 1
             while at_vals is False:
@@ -102,10 +127,14 @@ class MatrixGenerator():
                 if at_vals:
                     # If at vals, we don't need to dump csf, we have the level
                     self.write_array(tmp_lvl_list, name=f"{self.name}_vals.txt")
+                    # print("values:")
+                    debug_val_arr.append(tmp_lvl_list)
                 else:
                     seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
                     self.write_array(seg_arr, name=f"{self.name}{i}_seg.txt")
                     self.write_array(coord_arr, name=f"{self.name}{i}_crd.txt")
+                    debug_coord_arr.append(coord_arr)
+                    debug_seg_arr.append(seg_arr)
                 i = i + 1
         elif self.format == "UNC":
             flat_array = []
@@ -133,6 +162,15 @@ class MatrixGenerator():
 
         if dump_shape:
             self.write_array(self.array.shape, name=f"{self.name}_shape.txt")
+
+        print(debug_coord_arr)
+        print()
+        print(debug_seg_arr)
+        print()
+        print(debug_val_arr)
+        print()
+        print("sizes:", [len(arr) for arr in debug_coord_arr])
+        print("sizes:", [len(arr) for arr in debug_seg_arr])
 
         # Transpose it back
         if tpose is True:
@@ -351,7 +389,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
     dims = len(shape)
 
     # Get vals first since all formats will have vals
-    val_f = [fil for fil in all_files if name in fil and f'mode_vals' in fil][0]
+    val_f = [fil for fil in all_files if name in fil and f'vals' in fil][0]
     vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate)
 
     mg = None
@@ -363,8 +401,8 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
         segs = []
         crds = []
         for mode in range(dims):
-            seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
-            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
+            seg_f = [fil for fil in all_files if name in fil and f'{mode}' in fil and 'seg' in fil][0]
+            crd_f = [fil for fil in all_files if name in fil and f'{mode}' in fil and 'crd' in fil][0]
             segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate))
             crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
 
@@ -373,7 +411,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
     elif format == 'COO':
         crds = []
         for mode in range(dims):
-            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
+            crd_f = [fil for fil in all_files if name in fil and f'{mode}' in fil and 'crd' in fil][0]
             crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
 
         pt_list = copy.deepcopy(crds)
