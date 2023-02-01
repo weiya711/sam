@@ -11,7 +11,10 @@ import pickle
 import yaml
 cwd = os.getcwd()
 formatted_dir = os.getenv('TILED_SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-sam_home = os.getenv('SAM_HOME')
+# sam_home = os.getenv('SAM_HOME')
+fp_dir = os.path.dirname(__file__)
+sam_home = os.path.join(fp_dir, "..", "..", "..")
+
 
 ################################
 # Unit test for memory channel #
