@@ -28,7 +28,7 @@ jobs:
         echo $VIRTUAL_ENV/bin >> $GITHUB_PATH
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
       run: |
-        export SAM_HOME=/home/runner/work/sam/
+        export SAM_HOME=/home/runner/work/sam
         echo $CI
         pytest ./sam/sim/
     - name: Test all SuiteSparse tests with pytest using data/ matrices
