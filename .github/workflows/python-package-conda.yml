@@ -27,7 +27,6 @@ jobs:
         pip install -e .
         echo $VIRTUAL_ENV/bin >> $GITHUB_PATH
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
-      working-directory: ./
       run: |
         export SAM_HOME=$(pwd)
         echo $CI
