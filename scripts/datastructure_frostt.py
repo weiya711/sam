@@ -6,7 +6,7 @@ from util import parse_taco_format
 cwd = os.getcwd()
 
 
-formats = ["sss012", "ss01", "dss", "dds", "ddd", "dsd", "sdd", "sds", "ssd"]
+formats = ["sss012", "ssss0213", "ss01", "dss", "dds", "ddd", "dsd", "sdd", "sds", "ssd"]
 
 parser = argparse.ArgumentParser(description="Process some Frostt tensors into per-level datastructures")
 parser.add_argument('-n', '--name', metavar='fname', type=str, action='store',
@@ -14,8 +14,8 @@ parser.add_argument('-n', '--name', metavar='fname', type=str, action='store',
 parser.add_argument('-f', '--format', metavar='fformat', type=str, action='store',
                     help='The format that the tensor should be converted to')
 parser.add_argument('-i', '--int', action='store_false', default=True, help='Safe sparsity cast to int for values')
-parser.add_argument('-s', '--shift', action='store_false', default=True, help='Also format shifted tensor')
-parser.add_argument('-o', '--other', action='store_true', default=False, help='Format other tensor')
+parser.add_argument('-s', '--shift', action='store_false', default=False, help='Also format shifted tensor')
+parser.add_argument('-o', '--other', action='store_true', default=True, help='Format other tensor')
 parser.add_argument('-ss', '--suitesparse', action='store_true', default=False, help='Format suitesparse other tensor')
 args = parser.parse_args()
 
@@ -45,8 +45,10 @@ if args.name is None:
 
 
 if args.format is not None:
+    print(args.format)
     assert args.format in formats
-    levels = args.format[:-3]
+    levels = args.format[:-4]
+    print(levels)
     if args.other:
         otherfileNames = [f for f in os.listdir(taco_format_dirname) if
                           os.path.isfile(os.path.join(taco_format_dirname, f)) and args.name in f]
@@ -61,7 +63,6 @@ if args.format is not None:
 
     else:
         taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
-        taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
 
         # Original
         outdir_orig_name = os.path.join(outdir_name, args.name, 'orig', args.format)
@@ -72,6 +73,7 @@ if args.format is not None:
 
         # Shifted
         if args.shift:
+            taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
             outdir_shift_name = os.path.join(outdir_name, args.name, 'shift', args.format)
             outdir_shift_path = Path(outdir_shift_name)
             outdir_shift_path.mkdir(parents=True, exist_ok=True)
