@@ -2,12 +2,11 @@ import copy
 import random
 import numpy as np
 from functools import reduce
-import math
 
 from sam.sim.src.wr_scanner import WrScan, CompressWrScan
 from sam.sim.src.array import Array
 
-TIMEOUT = 10000000
+TIMEOUT = 10000000000000
 
 
 def check_arr(arr_obj, gold):
@@ -184,7 +183,7 @@ def remove_zeros(pt_tup):
 
 # Given two array of struct format point lists,
 # make sure they are equivalent
-def check_point_tuple(pt_tup1, pt_tup2):
+def check_point_tuple(pt_tup1, pt_tup2, err=1e-12):
     tup1 = sorted(pt_tup1)
     tup2 = sorted(pt_tup2)
     assert len(tup1) == len(tup2), "Pts1 length (" + str(len(tup1)) + " != Pts2 length (" + str(len(tup2)) + ")"
@@ -192,8 +191,8 @@ def check_point_tuple(pt_tup1, pt_tup2):
 
     for i in range(len(tup1)):
         if tup1[i] != tup2[i]:
-            if abs(tup1[i][-1] - tup2[i][-1]) > 1e-7:
-                print(str(i) + ":", tup1[i], "!=", tup2[i])
+            if abs(tup1[i][-1] - tup2[i][-1]) > max(abs(tup1[i][-1]) * err, err):
+                print(str(i) + ":", tup1[i], "!=", )
                 return False
     return True
 
@@ -216,48 +215,6 @@ def gen_val_arr(size=4, max_val=100, min_val=-100):
     result = [random.randint(min_val, max_val) for _ in range(size)]
     result = [x if x != 0 else 1 for x in result]
     return result
-
-
-def round_sparse(x):
-    if 0.0 <= x < 1:
-        return 1
-    elif 0.0 > x > -1:
-        return -1
-    elif x >= 0.0:
-        return math.floor(x + 0.5)
-    else:
-        return math.ceil(x - 0.5)
-
-
-class TnsFileLoader:
-    def __init__(self, cast_int=True):
-        self.cast = cast_int
-
-    def load(self, path):
-        coordinates = []
-        values = []
-        dims = []
-        first = True
-        with open(path, 'r') as f:
-            for line in f:
-                data = line[:-1].split(' ')
-                if first:
-                    first = False
-                    dims = [0] * (len(data) - 1)
-                    for i in range(len(data) - 1):
-                        coordinates.append([])
-                data = [elem for elem in data if elem != '']
-
-                for i in range(len(data) - 1):
-                    coordinates[i].append(int(data[i]) - 1)
-                    dims[i] = max(dims[i], coordinates[i][-1] + 1)
-                # TODO (rohany): What if we want this to be an integer?
-                if self.cast:
-                    val = round_sparse(float(data[-1]))
-                    values.append(val)
-                else:
-                    values.append(float(data[-1]))
-        return dims, coordinates, values
 
 
 def read_combined_inputs(filename, formatlist):

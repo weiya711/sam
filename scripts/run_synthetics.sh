@@ -29,19 +29,19 @@ for b in ${!BENCHMARKS[@]}; do
     mkdir -p $resultdir/
     echo "Testing $bench..."
 
-    pytest sam/sim/test/study-apps/$bench.py --synth -k "random-40 or 0.2-blocks or 0.2-runs" --benchmark-json="$path/$bench.json"
+    pytest sam/sim/test/study-apps/$bench.py --synth --check-gold -k "random-40 or 0.2-blocks or 0.2-runs" --benchmark-json="$path/$bench.json"
     python $cwd/scripts/converter.py --json_name $path/$bench.json
     python $cwd/scripts/bench_csv_aggregator.py $path $cwd/SYNTH_OUT_ACCEL.csv
 
 done
 
 BENCHMARKS=(
-    test_matmul_ijk
-    test_matmul_ikj
-    test_matmul_jik
-    test_matmul_jki
-    test_matmul_kij
-    test_matmul_kji
+    test_reorder_matmul_ijk
+    test_reorder_matmul_ikj
+    test_reorder_matmul_jik
+    test_reorder_matmul_jki
+    test_reorder_matmul_kij
+    test_reorder_matmul_kji
 )
 
 cwd=$(pwd)

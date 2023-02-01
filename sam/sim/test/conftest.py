@@ -17,6 +17,21 @@ def pytest_addoption(parser):
                      help="Store output to filename for functional output checking")
     parser.addoption("--synth", action="store_true", default=False,
                      help="Flag that enables functional output checking")
+    parser.addoption("--skip-empty", action="store_true", default=False,
+                     help="Flag that enables functional output checking")
+    parser.addoption("--yaml_name", type=str, default="memory_config_real.yaml",
+                     help="Name of yaml file for tiling memory configuration")
+    parser.addoption("--nbuffer", action="store_true", default=False,
+                     help="If nbuffering is enabled")
+    parser.addoption("--back", action="store_true", default=False,
+                     help="Whether backpressure is enabled")
+    parser.addoption("--depth", action="store", default=2,
+                     help="fifo depth value")
+    parser.addoption("--nnz-value", action="store", default=5000,
+                     help="nnz value for stats")
+    parser.addoption("--cast", action="store_true", default=False,
+                     help="Flag that runs all simulations using integer input "
+                          "and output data (used for hardware simulation comparison)")
 
 
 def pytest_configure(config):
@@ -41,7 +56,7 @@ def pytest_collection_modifyitems(config, items):
             if "frostt" in item.keywords:
                 item.add_marker(skip_frostt)
 
-    if not config.getoption("vecname"):
+    if not config.getoption("--vecname"):
         for item in items:
             if "vec" in item.keywords:
                 item.add_marker(skip_vec)
@@ -53,8 +68,38 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture
+def backpressure(request):
+    return request.config.getoption("--back")
+
+
+@pytest.fixture
+def skip_empty(request):
+    return request.config.getoption("--skip-empty")
+
+
+@pytest.fixture
+def nbuffer(request):
+    return request.config.getoption("--nbuffer")
+
+
+@pytest.fixture
 def debug_sim(request):
     return request.config.getoption("--debug-sim")
+
+
+@pytest.fixture
+def backpressure(request):
+    return request.config.getoption("--back")
+
+
+@pytest.fixture
+def depth(request):
+    return request.config.getoption("--depth")
+
+
+@pytest.fixture
+def nnz_value(request):
+    return request.config.getoption("--nnz-value")
 
 
 @pytest.fixture
@@ -90,6 +135,16 @@ def vecname(request):
 @pytest.fixture
 def synth(request):
     return request.config.getoption("--synth")
+
+
+@pytest.fixture
+def yaml_name(request):
+    return request.config.getoption("--yaml_name")
+
+
+@pytest.fixture
+def cast(request):
+    return request.config.getoption("--cast")
 
 
 @pytest.fixture

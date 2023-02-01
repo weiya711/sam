@@ -5,7 +5,7 @@ class RepeatNode(HWNode):
     def __init__(self, name=None) -> None:
         super().__init__(name=name)
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -20,6 +20,7 @@ class RepeatNode(HWNode):
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         repeat = self.get_name()
         new_conns = None
@@ -72,12 +73,27 @@ class RepeatNode(HWNode):
             raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == FiberAccessNode:
+            print("REPEAT TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect RepeatNode to {other_type}')
 
         return new_conns
 
     def configure(self, attributes):
+
+        spacc_mode = 0
+        if 'spacc' in attributes:
+            spacc_mode = 1
+
         print("Repeat stop")
         root = 0
         stop_lvl = 1
@@ -87,6 +103,7 @@ class RepeatNode(HWNode):
         print(attributes)
         cfg_kwargs = {
             'stop_lvl': stop_lvl,
-            'root': root
+            'root': root,
+            'spacc_mode': spacc_mode
         }
-        return (stop_lvl, root), cfg_kwargs
+        return (stop_lvl, root, spacc_mode), cfg_kwargs

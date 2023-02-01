@@ -8,7 +8,7 @@ dot_dir=$dir/dot
 png_dir=$dir/png
 taco_exe=./taco/build/bin/taco
 
-KERNEL_NAMES=(
+GEN_KERNEL_NAMES=(
   matmul_kij
   matmul_kji
   matmul_ikj
@@ -37,10 +37,23 @@ KERNEL_NAMES=(
   mat_residual
   mat_elemadd3
   tensor3_mttkrp
+<<<<<<< HEAD
   #tensor3_lin
   tensor4_multiply
+=======
+  vec_spacc_simple
+  mat_spacc_simple
+  vec_sd_compression_WRONG
+  vec_ds_compression_WRONG
+>>>>>>> 3b505dc4d3dcd0f9d1dd6b369deab9f81f136ab6
 )
 
+HAND_KERNEL_NAMES=(
+  mat_residual_HAND
+  mat_mattransmul_HAND
+  vec_sd_compression_HAND
+  vec_ds_compression_HAND
+)
 
 TACO_ARGS=(
   "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"
@@ -70,20 +83,29 @@ TACO_ARGS=(
   "x(i)=b*C(j,i)*d(j)+e*f(i) -f=x:s -f=C:ss:1,0 -f=d:s -f=f:s"
   "x(i)=b(i)-C(i,j)*d(j) -f=x:s -f=C:ss -f=b:s -f=d:s"
   "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss"
-  "X(i,j)=B(i,k,l)*C(j,k)*D(j,l) -f=X:ss -f=B:sss -f=C:ss -f=D:ss"
-  "X(i,j,k)=(B(j,l)*C(i,l,k))+D(j) -f=X:sss:0,1,2 -f=B:ss:0,1 -f=C:sss:0,3,2 -f=D:s"
-  "X(i,j,k,l)=B(i,k,j,m)*C(i,l,j,m) -f=X:ssss:0,1,2,3 -f=B:ssss:0,2,1,3 -f=C:ssss:0,2,1,3 -s=reorder(i,j,k,l,m)"
+  "X(i,j)=B(i,k,l)*C(j,k)*D(j,l) -f=X:ss -f=B:sss -f=C:ss -f=D:ss" 
+  "x(j)=B(i,j) -f=x:s -f=B:ss"
+  "X(j,k)=B(i,j,k) -f=X:ss -f=B:sss"
+  "x(i)=b(i) -f=b:s -f=x:d"
+  "x(i)=b(i) -f=b:d -f=x:s"
 )
 
 mkdir -p $dir
 mkdir -p $dot_dir
 mkdir -p $png_dir
 
-for i in ${!KERNEL_NAMES[@]}; do
-    name=${KERNEL_NAMES[$i]}
+for i in ${!GEN_KERNEL_NAMES[@]}; do
+    name=${GEN_KERNEL_NAMES[$i]}
     args=${TACO_ARGS[$i]}
 
     $taco_exe $args --print-sam-graph="$dot_dir/$name.gv"
+    dot -Tpng $dot_dir/$name.gv -o $png_dir/$name.png
+    echo "Generating sam for $name to $dir"
+done
+
+for i in ${!HAND_KERNEL_NAMES[@]}; do
+    name=${HAND_KERNEL_NAMES[$i]}
+
     dot -Tpng $dot_dir/$name.gv -o $png_dir/$name.png
     echo "Generating sam for $name to $dir"
 done
