@@ -29,7 +29,7 @@ jobs:
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
       working-directory: ./
       run: |
-        export SAM_HOME=.
+        export SAM_HOME=$(pwd)
         echo $CI
         pytest ./sam/sim/
     - name: Test all SuiteSparse tests with pytest using data/ matrices
