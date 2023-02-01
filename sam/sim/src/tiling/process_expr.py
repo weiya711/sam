@@ -985,7 +985,7 @@ def find_expr(lines, primitive, is_dense=False, debug=False):
         for i, line in enumerate(lines):
             try:
                 dictionary.append(parse_all(line))
-            except:
+            except KeyError:
                 print(i, "FAILED")
                 assert line[0] == '"' or '"struggle=ZGllKEBtZ' in line[0], line[0]
                 failed_lines.append(i)
@@ -1011,7 +1011,7 @@ def find_expr(lines, primitive, is_dense=False, debug=False):
                     else:
                         print(i, line)
                 count += int(has_sparse_mul)
-            except:
+            except KeyError:
                 print(i, "FAILED")
                 assert line[0] == '"' or '"struggle=ZGllKEBtZ' in line[0], line[0]
                 failed_lines.append(i)
@@ -1038,7 +1038,7 @@ def find_expr(lines, primitive, is_dense=False, debug=False):
                     else:
                         print(i, line)
                 count += int(has_sparse_mul)
-            except:
+            except KeyError:
                 print(i, "FAILED")
                 assert line[0] == '"' or '"struggle=ZGllKEBtZ' in line[0], line[0]
                 failed_lines.append(i)
@@ -1049,7 +1049,7 @@ def find_expr(lines, primitive, is_dense=False, debug=False):
         for i, line in enumerate(lines):
             try:
                 dictionary.append(parse_all(line))
-            except:
+            except KeyError:
                 print(i, "FAILED")
                 assert line[0] == '"' or '"struggle=ZGllKEBtZ' in line[0], line[0]
                 failed_lines.append(i)
@@ -1072,7 +1072,7 @@ def find_expr(lines, primitive, is_dense=False, debug=False):
         for i, line in enumerate(lines):
             try:
                 dictionary.append(parse_all(line))
-            except:
+            except KeyError:
                 print(i, "FAILED")
                 assert line[0] == '"' or '"struggle=ZGllKEBtZ' in line[0], line[0]
                 failed_lines.append(i)
@@ -1093,7 +1093,7 @@ def find_expr(lines, primitive, is_dense=False, debug=False):
                     else:
                         print(i, line)
                 count += int(needs_crdhold)
-            except:
+            except KeyError:
                 print(i, "FAILED")
                 assert line[0] == '"' or '"struggle=ZGllKEBtZ' in line[0], line[0]
                 failed_lines.append(i)
@@ -1102,7 +1102,7 @@ def find_expr(lines, primitive, is_dense=False, debug=False):
         for i, line in enumerate(lines):
             try:
                 dictionary.append(parse_all(line))
-            except:
+            except KeyError:
                 print(i, "FAILED")
                 assert line[0] == '"' or '"struggle=ZGllKEBtZ' in line[0], line[0]
                 failed_lines.append(i)
