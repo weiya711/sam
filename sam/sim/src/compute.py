@@ -208,12 +208,13 @@ class Multiply2(Compute2):
                 self.compute_fifos()
             else:
                 # Both inputs are values
-                self.curr_out = self.curr_in1 * self.curr_in2
-                if self.get_stats:
-                    self.cycles_operated += 1
-                self.get1 = True
-                self.get2 = True
-            self.compute_fifos()
+                self.curr_out = ''
+                #self.curr_out = self.curr_in1 * self.curr_in2
+                #if self.get_stats:
+                #    self.cycles_operated += 1
+                #self.get1 = True
+                #self.get2 = True
+            #self.compute_fifos()
             if self.debug:
                 print("DEBUG: MULT: \t "
                       "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1, "\t Curr In2:", self.curr_in2)
