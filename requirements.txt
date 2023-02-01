@@ -3,6 +3,7 @@ contourpy==1.0.7
 cycler==0.11.0
 exceptiongroup==1.1.0
 fonttools==4.38.0
+graphviz==0.16
 iniconfig==2.0.0
 kiwisolver==1.4.4
 matplotlib==3.6.3
