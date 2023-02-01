@@ -27,11 +27,11 @@ jobs:
         pip install -e .
         echo $VIRTUAL_ENV/bin >> $GITHUB_PATH
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
-      working-directory: ./sam/sim
+      working-directory: ./
       run: |
-        export SAM_HOME=../../
+        export SAM_HOME=.
         echo $CI
-        pytest
+        pytest ./sam/sim/
     - name: Test all SuiteSparse tests with pytest using data/ matrices
       working-directory: ./sam/sim
       run: |
