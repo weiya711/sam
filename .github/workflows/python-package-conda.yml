@@ -8,6 +8,7 @@ jobs:
     strategy:
       max-parallel: 5
     steps:
+    - uses: tlylt/install-graphviz@v1
     - uses: actions/checkout@v3
     - name: Set up Python 3.8.12
       uses: actions/setup-python@v3
@@ -26,7 +27,6 @@ jobs:
         pip install -r requirements.txt
         pip install -e .
         echo $VIRTUAL_ENV/bin >> $GITHUB_PATH
-        apt-get install -y graphviz
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
       run: |
         export SAM_HOME=$(pwd)
