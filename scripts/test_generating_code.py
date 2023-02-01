@@ -4,8 +4,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_elemadd", "tensor3_innerprod",
-               "tensor3_mttkrp", "tensor3_ttv", "tensor3_identity_dense", "test_tensor3_linear", "tensor4_mul", "tensor3_lin"]
+frostt_list = ["tensor3_linear", "tensor4_multiply2"]
+# frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_elemadd", "tensor3_innerprod",
+#                "tensor3_mttkrp", "tensor3_ttv", "tensor3_identity_dense", "tensor4_multiply"]
 suitesparse_list = ["mat_elemmul", "mat_identity", "matmul_ijk", "matmul_ikj", "matmul_jki", "matmul_jik", "matmul_kij",
                     "matmul_jki", "mat_vecmul_ij", "mat_vecmul_ji", "matmul_kji", "mat_elemadd3", "mat_sddmm.gv",
                     "mat_elemadd", "mat_mattransmul", "mat_residual", "mat_sddmm", "mat_identity_dense"]
