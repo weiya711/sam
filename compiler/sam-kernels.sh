@@ -37,10 +37,8 @@ KERNEL_NAMES=(
   mat_residual
   mat_elemadd3
   tensor3_mttkrp
-  tensor3_lin
-  tensor3_var
-  # tensor3_linear
-  # tensor_multiply
+  #tensor3_lin
+  tensor4_multiply
 )
 
 
@@ -73,9 +71,8 @@ TACO_ARGS=(
   "x(i)=b(i)-C(i,j)*d(j) -f=x:s -f=C:ss -f=b:s -f=d:s"
   "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss"
   "X(i,j)=B(i,k,l)*C(j,k)*D(j,l) -f=X:ss -f=B:sss -f=C:ss -f=D:ss"
-  "X(i,j,k)=(B(j,l)*C(i,l,k))+D(j) -f=X:sss -f=B:ss -f=C:sss -f=D:s"
-  "X(i,j)=sum(k, B(i,l,k)) -f=X:ss -f=B:sss"
-  # "X(i,j,k,l)=B(i,k,j,m)*C(i,l,j,m) -f=X:dddd -f=B:dddd -f=C:dddd"
+  "X(i,j,k)=(B(j,l)*C(i,l,k))+D(j) -f=X:sss:0,1,2 -f=B:ss:0,1 -f=C:sss:0,3,2 -f=D:s"
+  "X(i,j,k,l)=B(i,k,j,m)*C(i,l,j,m) -f=X:ssss:0,1,2,3 -f=B:ssss:0,2,1,3 -f=C:ssss:0,2,1,3 -s=reorder(i,j,k,l,m)"
 )
 
 mkdir -p $dir
