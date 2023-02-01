@@ -16,7 +16,6 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
 # FIXME: Figureout formats
@@ -24,9 +23,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     os.getenv('CI', 'false') == 'true',
     reason='CI lacks datasets',
 )
-@pytest.mark.frostt
-def test_tensor4_multiply(samBench, frosttname, check_gold, debug_sim, report_stats, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+def test_tensor4_multiply(samBench, check_gold, debug_sim, report_stats, fill=0):
+    B_dirname = os.path.join(formatted_dir, , "orig", "ssss0213")
     B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
     B_shape = read_inputs(B_shape_filename)
 
@@ -53,7 +51,7 @@ def test_tensor4_multiply(samBench, frosttname, check_gold, debug_sim, report_st
     B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname, "other", "ssss0213")
+    C_dirname = os.path.join(formatted_dir, , "other", "ssss0213")
     C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
     C_shape = read_inputs(C_shape_filename)
 
@@ -190,7 +188,7 @@ def test_tensor4_multiply(samBench, frosttname, check_gold, debug_sim, report_st
         time.sleep(0.01)
 
     extra_info = dict()
-    extra_info["dataset"] = frosttname
+    extra_info["dataset"] = 
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
@@ -284,5 +282,5 @@ def test_tensor4_multiply(samBench, frosttname, check_gold, debug_sim, report_st
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor4_multiply(frosttname, debug_sim, out_crds, out_segs, out_vals, "ssss0123")
+        check_gold_tensor4_multiply(, debug_sim, out_crds, out_segs, out_vals, "ssss0123")
     samBench(bench, extra_info)
