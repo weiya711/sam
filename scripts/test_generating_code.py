@@ -800,6 +800,8 @@ for apath in file_paths:
                     data.get_if_node_done(v) == 0:
                 for u_ in data.get_parents()[v]:
                     index_value = data.get_edge_data()[v][data.get_parents()[v].index(u_)][-1]
+                    # FIXME: Cannot assume out_crd. Parent may be a crddrop
+                    # which only has out_inner_crd() and out_outer_crd()
                     if index_value == d[v]["inner"]:
                         f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     if index_value == d[v]["outer"]:
