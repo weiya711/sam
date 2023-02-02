@@ -30,7 +30,8 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 )
 @pytest.mark.suitesparse
 def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report_stats,
-                                 skip_empty, yaml_name, nbuffer, backpressure, depth, nnz_value, fill=0):
+                                 skip_empty, yaml_name, nbuffer, backpressure, depth, memory_model, nnz_value,
+                                 fill=0):
     depth = int(depth)
     stats_dict = {"mul_6_ops": 0, "spacc1_3_rmw_ops": [], "out_arr_size": 0, "repsiggen_i_17_total_rep": 0,
                   "repsiggen_j_10_total_rep": 0, "repsiggen_i_17_max_rep": 0, "repsiggen_j_10_max_rep": 0,
@@ -340,7 +341,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             in_fifo.append("D")
             fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
                                                     debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             mem_model_bi.valid_tile_received()
             nxt_tile_present[0] = True
         if mem_blocks_decl_flag and fiberlookup_Bk_14.out_done() and mem_model_bk.valid_tile() and not nxt_tile_present[1]:
@@ -361,7 +362,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             in_fifo = fiberlookup_Bk_14.get_fifo()
             fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1,
                                                     debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             mem_model_bk.valid_tile_received()
             nxt_tile_present[1] = True
         if mem_blocks_decl_flag and fiberlookup_Ck_15.out_done() and mem_model_ck.valid_tile() and not nxt_tile_present[2]:
@@ -382,7 +383,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             in_fifo = fiberlookup_Ck_15.get_fifo()
             fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0,
                                                     debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             mem_model_ck.valid_tile_received()
             repeat_Ci_16.set_in_ref(0, "")
             repeat_Ci_16.set_in_ref("D", "")
@@ -404,7 +405,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             in_fifo = fiberlookup_Cj_12.get_fifo()
             fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2,
                                                     statistics=report_stats, fifo=in_fifo,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             mem_model_cj.valid_tile_received()
             nxt_tile_present[3] = True
         if mem_blocks_decl_flag and arrayvals_B_7.out_done() and mem_model_bvals.valid_tile() and not nxt_tile_present[4]:
@@ -422,7 +423,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             B_vals = read_inputs(B_vals_filename, float)
             in_fifo = arrayvals_B_7.get_fifo()
             arrayvals_B_7 = Array(name="Bvals", init_arr=B_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                  back_en=backpressure, depth=depth)
+                                  back_en=backpressure, depth=depth, memory_model_en=memory_model)
             mem_model_bvals.valid_tile_received()
             nxt_tile_present[4] = True
         if mem_blocks_decl_flag and arrayvals_C_8.out_done() and mem_model_cvals.valid_tile() and not nxt_tile_present[5]:
@@ -440,7 +441,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_vals = read_inputs(C_vals_filename, float)
             in_fifo = arrayvals_C_8.get_fifo()
             arrayvals_C_8 = Array(name="Cvals", init_arr=C_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                  back_en=backpressure, depth=depth)
+                                  back_en=backpressure, depth=depth, memory_model_en=memory_model)
             mem_model_cvals.valid_tile_received()
             nxt_tile_present[5] = True
 
@@ -613,50 +614,50 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             debug_sim2 = False  # True  # False
             fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
                                                     debug=debug_sim2, statistics=report_stats,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1,
                                                     debug=debug_sim2, statistics=report_stats,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             repsiggen_i_17 = RepeatSigGen(debug=debug_sim2, statistics=report_stats,
-                                          back_en=backpressure, depth=depth)
+                                          back_en=backpressure, depth=depth, memory_model_en=memory_model)
             repeat_Ci_16 = Repeat(debug=debug_sim2, statistics=report_stats,
-                                  back_en=backpressure, depth=depth)
+                                  back_en=backpressure, depth=depth, memory_model_en=memory_model)
             fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0,
                                                     debug=debug_sim2, statistics=report_stats,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             intersectk_13 = Intersect2(debug=debug_sim2, statistics=report_stats,
-                                       back_en=backpressure, depth=depth)
+                                       back_en=backpressure, depth=depth, memory_model_en=memory_model)
             crdhold_5 = CrdHold(debug=debug_sim2, statistics=report_stats, back_en=backpressure,
-                                depth=depth)
+                                depth=depth, memory_model_en=memory_model)
             fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1,
                                                     debug=debug_sim2, statistics=report_stats,
-                                                    back_en=backpressure, depth=depth)
+                                                    back_en=backpressure, depth=depth, memory_model_en=memory_model)
             arrayvals_C_8 = Array(name="C", init_arr=C_vals, debug=debug_sim2, statistics=report_stats,
-                                  back_en=backpressure, depth=depth)
+                                  back_en=backpressure, depth=depth, memory_model_en=memory_model)
             crdhold_4 = CrdHold(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
             repsiggen_j_10 = RepeatSigGen(debug=debug_sim2, statistics=report_stats, back_en=backpressure,
-                                          depth=depth)
+                                          depth=depth, memory_model_en=memory_model)
             repeat_Bj_9 = Repeat(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
             arrayvals_B_7 = Array(name="B", init_arr=B_vals, debug=debug_sim2, statistics=report_stats,
-                                  back_en=backpressure, depth=depth)
+                                  back_en=backpressure, depth=depth, memory_model_en=memory_model)
             mul_6 = Multiply2(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
             spaccumulator1_3 = SparseAccumulator1(debug=debug_sim2, statistics=report_stats,
-                                                  back_en=backpressure, depth=depth)
+                                                  back_en=backpressure, depth=depth, memory_model_en=memory_model)
             spaccumulator1_3_drop_crd_inner = StknDrop(debug=debug_sim2, statistics=report_stats,
-                                                       back_en=backpressure, depth=depth)
+                                                       back_en=backpressure, depth=depth, memory_model_en=memory_model)
             spaccumulator1_3_drop_crd_outer = StknDrop(debug=debug_sim2, statistics=report_stats,
-                                                       back_en=backpressure, depth=depth)
+                                                       back_en=backpressure, depth=depth, memory_model_en=memory_model)
             spaccumulator1_3_drop_val = StknDrop(debug=debug_sim2, statistics=report_stats,
-                                                 back_en=backpressure, depth=depth)
+                                                 back_en=backpressure, depth=depth, memory_model_en=memory_model)
             fiberwrite_Xvals_0 = ValsWrScan(name="vals", size=1 * B_shape[0] * C_shape[1], fill=fill,
                                             debug=debug_sim2, statistics=report_stats,
-                                            back_en=backpressure, depth=depth)
+                                            back_en=backpressure, depth=depth, memory_model_en=memory_model)
             fiberwrite_X1_1 = CompressWrScan(name="X1", seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1],
                                              fill=fill, debug=debug_sim2, statistics=report_stats,
-                                             back_en=backpressure, depth=depth)
+                                             back_en=backpressure, depth=depth, memory_model_en=memory_model)
             fiberwrite_X0_2 = CompressWrScan(name="X0", seg_size=2, size=B_shape[0],
                                              fill=fill, debug=debug_sim2, statistics=report_stats,
-                                             back_en=backpressure, depth=depth)
+                                             back_en=backpressure, depth=depth, memory_model_en=memory_model)
             # print("INITIALIZE compute loop at ", time_cnt)
             initialize_cntr = time_cnt
             mem_model_b.valid_tile_received()

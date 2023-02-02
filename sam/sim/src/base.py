@@ -67,7 +67,7 @@ def larger_stkn(a, b):
 
 
 class Primitive(ABC):
-    def __init__(self, debug=False, statistics=False, name="", back_en=False, **kwargs):
+    def __init__(self, debug=False, statistics=False, name="", back_en=False, memory_model_en=False, **kwargs):
         self.name = name
         self.done = False
         self.debug = debug
@@ -78,6 +78,7 @@ class Primitive(ABC):
         self.get_stats = statistics
 
         self.backpressure_en = back_en
+        self.memory_model_en = memory_model_en
 
     def out_done(self):
         return self.done

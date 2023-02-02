@@ -78,7 +78,7 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate tiled output gold")
-    parser.add_argument("--yaml_name", type=str, default="memory_config_real.yaml")
+    parser.add_argument("--yaml_name", type=str, default="memory_config_onyx.yaml")
     args = parser.parse_args()
     outdir = "./tiles/matmul_ikj/output/"
     outpath = Path(outdir)
