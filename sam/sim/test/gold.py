@@ -13,7 +13,7 @@ from sam.sim.test.test import *
 from sam.sim.test.test import check_point_tuple, remove_zeros, convert_point_tuple, convert_ndarr_point_tuple, \
     get_point_list, read_inputs
 from sam.util import TnsFileLoader, round_sparse, ScipyTensorShifter, \
-    SUITESPARSE_FORMATTED_PATH, SUITESPARSE_PATH, FROSTT_PATH, VALIDATION_OUTPUT_PATH
+    SUITESPARSE_FORMATTED_PATH, SUITESPARSE_PATH, FROSTT_PATH, VALIDATION_OUTPUT_PATH, FROSTT_FORMATTED_PATH
 
 cwd = os.getcwd()
 ss_dir = SUITESPARSE_PATH
@@ -715,18 +715,18 @@ def check_gold_tensor4_multiply(frosttname, debug_sim, out_crds, out_segs, out_v
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_tensor4_multiply2(frosttname, debug_sim, out_crds, out_segs, out_vals, format_str):
-    formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "ssss0123")
-    C_dirname = os.path.join(formatted_dir, frosttname, "other", "ssss0123")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+def check_gold_tensor4_multiply2(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
-    C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
+
     B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
     C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
-    B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
-    C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
     # mode1 = (0,2,1,3)
     # mode2 = (0,2,3,1)
     # B_tens.transpose_tensor(mode1)
@@ -740,9 +740,15 @@ def check_gold_tensor4_multiply2(frosttname, debug_sim, out_crds, out_segs, out_
     # pytest.set_trace()
 
     # pytest.set_trace()
+    print("B numpy shape:", B_tens.shape)
+    print("C numpy shape:", C_tens.shape)
+
     B_ref = torch.from_numpy(B_tens.get_matrix())
     C_ref = torch.from_numpy(C_tens.get_matrix())
 
+    B_ref = torch.permute(B_ref, (0, 2, 1, 3))
+    C_ref = torch.permute(C_ref, (0, 3, 1, 2))
+    
     print(B_ref.shape)
     print(C_ref.shape)
     pytest.set_trace()

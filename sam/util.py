@@ -23,6 +23,7 @@ SUITESPARSE_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(SAM_HOME, 
 SUITESPARSE_FORMATTED_PATH = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(SAM_HOME, "data",
                                                                                           "suitesparse-formatted"))
 FROSTT_PATH = os.getenv('FROSTT_PATH', default=os.path.join(SAM_HOME, "data", "frostt"))
+FROSTT_FORMATTED_PATH = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(SAM_HOME, "frostt-formatted"))
 VALIDATION_OUTPUT_PATH = os.getenv('VALIDATION_OUTPUT_PATH', default=os.path.join(SAM_HOME, "data", "gold"))
 
 
