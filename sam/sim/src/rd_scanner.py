@@ -80,11 +80,11 @@ class UncompressCrdRdScan(CrdRdScan):
     def update(self):
         self.update_done()
         self.update_ready()
-        if len(self.in_ref) > 0:
-            self.block_start = False
         if self.backpressure_en:
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if len(self.in_ref) > 0:
+                self.block_start = False
             if self.backpressure_en:
                 self.data_valid = True
             if self.emit_tkn and len(self.in_ref) > 0:
@@ -350,6 +350,9 @@ class CompressedCrdRdScan(CrdRdScan):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
+            if len(self.in_ref) > 0:
+                self.block_start = False
+ 
             # Process skip token first and save
             if len(self.in_crd_skip) > 0 and self.skip_processed:
                 self.curr_skip = self.in_crd_skip.pop(0)
