@@ -191,6 +191,7 @@ def get_dataset_name(test_name):
 def get_default_obj_str():
     return "debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth)"
 
+
 def get_common_test_name(test_name):
     if "matmul" in test_name:
         return test_name[:-4]
@@ -549,7 +550,8 @@ for apath in file_paths:
     # apath = "../compiler/sam-outputs/dot/matmul_ijk.gv"
     # out_name[0] = "matmul_ijk"
     # apath = os.path.join(directory, ".gv")
-    if out_name[num] in frostt_list or out_name[num] in suitesparse_list or out_name[num] in vec_list or out_name[num] in other_list: 
+    if out_name[num] in frostt_list or out_name[num] in suitesparse_list\
+            or out_name[num] in vec_list or out_name[num] in other_list:
         graphs = pydot.graph_from_dot_file(apath)
         graph = graphs[0]
         networkx_graph = nx.nx_pydot.from_pydot(graph)
@@ -805,10 +807,16 @@ for apath in file_paths:
                         data.get_if_node_done(v) == 0:
                     for u_ in data.get_parents()[v]:
                         index_value = data.get_edge_data()[v][data.get_parents()[v].index(u_)][-1]
+                        edge_name = data.get_edge_data()[v][data.get_parents()[v].index(u_)][:-2]
+                        if edge_name[-2:] == "in":
+                            # Handle special case of crd_in vs crd names. This might be incorrect in the compiler
+                            edge_name = edge_name[:-3]
                         if index_value == d[v]["inner"]:
-                            f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                            f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] +
+                                    ".out_" + edge_name + "())\n")
                         if index_value == d[v]["outer"]:
-                            f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                            f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] +
+                                    ".out_" + edge_name + "())\n")
                     nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                     # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
@@ -837,8 +845,19 @@ for apath in file_paths:
                         local_edge = ""
                         if "crd" in data.get_edge_data()[v][i]:
                             local_edge = data.get_edge_data()[v][i][:-2]
-                            f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                    d[u_]["object"] + ".out_" + local_edge + "())\n")
+                            index_value = data.get_edge_data()[v][i][-1]
+                            if "in0" not in d[v].keys() or "in1" not in d[v].keys():
+                                print("ERROR: ", d[v]["object"], " block is missing one input")
+                                # exit()
+                            if index_value == d[v]["in0"]:
+                                f.write(tab(2) + d[v]["object"] + "_drop_crd_inner.set_in_stream(" +
+                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
+                            elif index_value == d[v]["in1"]:
+                                f.write(tab(2) + d[v]["object"] + "_drop_crd_outer.set_in_stream(" +
+                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
+                            else:
+                                print("ERROR: ", d[v]["object"], " block has extra input")
+                                # exit()
                         else:
                             local_edge = data.get_edge_data()[v][i]
                             f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
@@ -869,8 +888,19 @@ for apath in file_paths:
                         local_edge = ""
                         if "crd" in data.get_edge_data()[v][i]:
                             local_edge = data.get_edge_data()[v][i][:-2]
-                            f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                    d[u_]["object"] + ".out_" + local_edge + "())\n")
+                            index_value = data.get_edge_data()[v][i][-1]
+                            if "in0" not in d[v].keys() or "in1" not in d[v].keys():
+                                print("ERROR: ", d[v]["object"], " block is missing one input")
+                                # exit()
+                            elif index_value == d[v]["in0"]:
+                                f.write(tab(2) + d[v]["object"] + "_drop_crd_inner.set_in_stream(" +
+                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
+                            elif index_value == d[v]["in1"]:
+                                f.write(tab(2) + d[v]["object"] + "_drop_crd_outer.set_in_stream(" +
+                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
+                            else:
+                                print("ERROR: ", d[v]["object"], " block has extra input")
+                                # exit()
                         else:
                             local_edge = data.get_edge_data()[v][i]
                             f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
@@ -929,7 +959,6 @@ for apath in file_paths:
                         if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
                                 in d[u_]["object"]:
                             local_index = data.get_edge_data()[v][i][-1]
-                            print(d[u_], " ", local_index, " ", apath)
                             if d[u_]["in0"] == local_index:
                                 local_cord = "_inner"
                             else:

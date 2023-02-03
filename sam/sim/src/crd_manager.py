@@ -218,20 +218,6 @@ class CrdHold(Primitive):
             return copy_backpressure
         return True
 
-    def add_child(self, child=None, branch=""):
-        self.backpressure.append(child)
-        self.branches.append(branch)
-
-    def fifo_available(self, br=""):
-        if self.backpressure:
-            if br == "inner":  # and len(self.inner_crd) > self.depth:
-                return self.fifo_avail_inner
-                # return False
-            if br == "outer":  # and len(self.outer_crd) > self.depth:
-                return self.fifo_avail_outer
-                # return False
-        return True
-
     def update_ready(self):
         if self.backpressure_en:
             if len(self.inner_crd) > self.depth:
