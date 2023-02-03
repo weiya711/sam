@@ -46,7 +46,7 @@ class Array(Primitive):
 
     def set_path(self, path):
         self.path = path
-    
+
     # FIXME(ritvik): fix the initialization of array
     def reintilialize_arrs(self, load_vals, fifo):
         self.arr = load_vals
@@ -105,7 +105,6 @@ class Array(Primitive):
                 store_tup = self.store_vals.pop(0)
                 self.store(store_tup[0], store_tup[1])
                 self.store_en = False
-
 
     def update_ready(self):
         if self.backpressure_en:

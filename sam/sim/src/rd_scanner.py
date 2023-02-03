@@ -352,7 +352,7 @@ class CompressedCrdRdScan(CrdRdScan):
                 self.data_valid = True
             if len(self.in_ref) > 0:
                 self.block_start = False
- 
+
             # Process skip token first and save
             if len(self.in_crd_skip) > 0 and self.skip_processed:
                 self.curr_skip = self.in_crd_skip.pop(0)

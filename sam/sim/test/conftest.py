@@ -94,7 +94,6 @@ def debug_sim(request):
     return request.config.getoption("--debug-sim")
 
 
-
 @pytest.fixture
 def depth(request):
     return request.config.getoption("--depth")
