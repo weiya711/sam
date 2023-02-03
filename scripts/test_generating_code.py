@@ -849,7 +849,7 @@ for apath in file_paths:
                             if "in0" not in d[v].keys() or "in1" not in d[v].keys():
                                 print("ERROR: ", d[v]["object"], " block is missing one input")
                                 # exit()
-                            if index_value == d[v]["in0"]:
+                            elif index_value == d[v]["in0"]:
                                 f.write(tab(2) + d[v]["object"] + "_drop_crd_inner.set_in_stream(" +
                                         d[u_]["object"] + ".out_" + local_edge + "())\n")
                             elif index_value == d[v]["in1"]:
@@ -860,9 +860,14 @@ for apath in file_paths:
                                 # exit()
                         else:
                             local_edge = data.get_edge_data()[v][i]
-                            f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                    d[u_]["object"] + ".out_val())\n")
-                        nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                            if local_edge != "crd":
+                                f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
+                                        d[u_]["object"] + ".out_val())\n")
+                            else:
+                                # Should be an error
+                                pass
+                        if local_edge != "crd":
+                            nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
                         # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                     for i in range(len(data.get_parents()[v])):
@@ -870,12 +875,18 @@ for apath in file_paths:
                         local_edge = ""
                         if "crd" in data.get_edge_data()[v][i]:
                             local_edge = data.get_edge_data()[v][i][:-2]
-                            f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                    d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                            if local_edge != "crd":
+                                f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
+                                        d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                            else:
+                                # Should be an error
+                                pass
                         else:
                             local_edge = data.get_edge_data()[v][i]
+                            # if local_edge != "crd":
                             f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
                                     d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+
                     nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                     # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
@@ -905,7 +916,8 @@ for apath in file_paths:
                             local_edge = data.get_edge_data()[v][i]
                             f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
                                     d[u_]["object"] + ".out_val())\n")
-                        nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
+                        if local_edge != "crd":
+                            nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
                         # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
                     for i in range(len(data.get_parents()[v])):
@@ -913,8 +925,12 @@ for apath in file_paths:
                         local_edge = ""
                         if "crd" in data.get_edge_data()[v][i]:
                             local_edge = data.get_edge_data()[v][i][:-2]
-                            f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                    d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                            if local_edge != "crd":
+                                f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
+                                        d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                            else:
+                                # Should be an error
+                                pass
                         else:
                             local_edge = data.get_edge_data()[v][i]
                             f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
