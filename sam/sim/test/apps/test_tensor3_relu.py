@@ -27,26 +27,26 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "orig", "sss012")
-    B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    B_dirname = os.path.join(formatted_dir, frosttname, "tensor3_relu")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B0_seg_filename = os.path.join(B_dirname, "B0_seg.txt")
+    B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
+    B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "B1_seg.txt")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    B2_seg_filename = os.path.join(B_dirname, "B2_seg.txt")
+    B2_seg_filename = os.path.join(B_dirname, "tensor_B_mode_2_seg")
     B_seg2 = read_inputs(B2_seg_filename)
-    B2_crd_filename = os.path.join(B_dirname, "B2_crd.txt")
+    B2_crd_filename = os.path.join(B_dirname, "tensor_B_mode_2_crd")
     B_crd2 = read_inputs(B2_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
+    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
     fiberlookup_Bi_14 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
@@ -74,6 +74,8 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
     if debug_sim:
         print("blocks done")
 
+    arr_vals = []
+    out_arr = []
     max_1.set_in2(0)
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
@@ -90,8 +92,14 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         # print(max_1.out_val())
 
         drop_1.set_outer_crd(fiberlookup_Bk_8.out_crd())
-        drop_1.set_inner_crd(fiberlookup_Bj_11.out_crd())
-        # drop_1.set_inner_crd(max_1.out_val())
+        # drop_1.set_outer_crd(fiberlookup_Bi_14.out_crd())
+        # drop_1.set_inner_crd(fiberlookup_Bj_11.out_crd())
+
+        arr_vals.append(max_1.out_val())
+        out_arr.append(fiberlookup_Bi_14.out_crd())
+        print(arr_vals)
+        print(out_arr)
+        drop_1.set_inner_crd(max_1.out_val())
 
         drop_2.set_outer_crd(fiberlookup_Bj_11.out_crd())
         drop_2.set_inner_crd(drop_1.out_crd_outer())
@@ -99,15 +107,15 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         drop_3.set_outer_crd(fiberlookup_Bi_14.out_crd())
         drop_3.set_inner_crd(drop_2.out_crd_outer())
 
-        fiberwrite_X0_3.set_input(fiberlookup_Bi_14.out_crd())
-        fiberwrite_X1_2.set_input(fiberlookup_Bj_11.out_crd())
-        fiberwrite_X2_1.set_input(fiberlookup_Bk_8.out_crd())
-        # fiberwrite_X0_3.set_input(drop_3.out_crd_outer())
-        # fiberwrite_X1_2.set_input(drop_3.out_crd_inner())
-        # fiberwrite_X2_1.set_input(drop_2.out_crd_inner())
+        # fiberwrite_X0_3.set_input(fiberlookup_Bi_14.out_crd())
+        # fiberwrite_X1_2.set_input(fiberlookup_Bj_11.out_crd())
+        # fiberwrite_X2_1.set_input(fiberlookup_Bk_8.out_crd())
+        fiberwrite_X0_3.set_input(drop_3.out_crd_outer())
+        fiberwrite_X1_2.set_input(drop_3.out_crd_inner())
+        fiberwrite_X2_1.set_input(drop_2.out_crd_inner())
 
-        fiberwrite_Xvals_0.set_input(max_1.out_val())
-        # fiberwrite_Xvals_0.set_input(drop_1.out_crd_inner())
+        # fiberwrite_Xvals_0.set_input(max_1.out_val())
+        fiberwrite_Xvals_0.set_input(drop_1.out_crd_inner())
 
         fiberlookup_Bi_14.update()
         fiberlookup_Bj_11.update()
@@ -115,8 +123,8 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         arrayvals_B_5.update()
         max_1.update()
         drop_1.update()
-        # drop_2.update()
-        # drop_3.update()
+        drop_2.update()
+        drop_3.update()
 
         fiberwrite_X0_3.update()
         fiberwrite_X1_2.update()
@@ -135,7 +143,11 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
     out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr(), fiberwrite_X2_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
 
+    # print(arr_vals)
+    print("Values:")
     print(out_vals)
+
+    pytest.set_trace()
 
     def bench():
         time.sleep(0.01)
