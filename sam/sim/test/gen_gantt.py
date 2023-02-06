@@ -16,8 +16,11 @@ def gen_gantt(extra_info, testname):
             finish_c = extra_info[k]
         elif ("start_cycle" in k) and (sam_name in k.split('/')[0]):
             start_c = extra_info[k]
-            if isinstance(start_c, int):
-                block_list.append(sam_name)
+            block_list.append(sam_name)
+            if not isinstance(start_c, int):
+                start_list.append(int(start_c))
+                duration_list.append(finish_c - int(start_c))
+            else:
                 start_list.append(start_c)
                 duration_list.append(finish_c - start_c)
 
