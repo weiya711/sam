@@ -4,7 +4,7 @@ import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
-from sam.sim.src.compute import Multiply2, Add2
+from sam.sim.src.compute import Multiply2, Add2, Divider2
 from sam.sim.src.unary_alu import Max
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
@@ -61,7 +61,7 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
     fiberwrite_X2_1 = CompressWrScan(seg_size=2 * len(B_crd1) + 1, size=len(B_vals) * 2, fill=fill,
                                      debug=debug_sim, statistics=report_stats)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
-    max_1 = Max(debug=debug_sim, statistics=report_stats)
+    max_1 = Max(in2=0, debug=debug_sim, statistics=report_stats)
     drop_1 = CrdDrop(debug=debug_sim, statistics=report_stats)
     drop_2 = CrdDrop(debug=debug_sim, statistics=report_stats)
     drop_3 = CrdDrop(debug=debug_sim, statistics=report_stats)
@@ -76,30 +76,38 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
 
     arr_vals = []
     out_arr = []
-    max_1.set_in2(0)
+    out1_arr = []
+    input_arr = []
+    val_arr = []
+
+    drop_arr = []
+    drop1_arr = []
+    # max_1.set_in2(0)
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_14.set_in_ref(in_ref_B.pop(0))
 
-        fiberlookup_Bj_11.set_in_ref(fiberlookup_Bi_14.out_ref())
+        fiberlookup_Bj_11.set_in_ref(fiberlookup_Bi_14.out_crd())
 
-        fiberlookup_Bk_8.set_in_ref(fiberlookup_Bj_11.out_ref())
+        fiberlookup_Bk_8.set_in_ref(fiberlookup_Bj_11.out_crd())
 
         arrayvals_B_5.set_load(fiberlookup_Bk_8.out_ref())
 
+        input_arr.append(arrayvals_B_5.out_load())
         max_1.set_in1(arrayvals_B_5.out_load())
         # print(arrayvals_B_5.out_load())
         # print(max_1.out_val())
 
+        drop_1.set_inner_crd(max_1.out_val())
         drop_1.set_outer_crd(fiberlookup_Bk_8.out_crd())
+        drop_arr.append(drop_1.out_crd_inner())
+        drop1_arr.append(drop_1.out_crd_outer())
+        print("drop_inner", drop_arr)
+        print("drop_outer", drop1_arr)
         # drop_1.set_outer_crd(fiberlookup_Bi_14.out_crd())
         # drop_1.set_inner_crd(fiberlookup_Bj_11.out_crd())
 
-        arr_vals.append(max_1.out_val())
-        out_arr.append(fiberlookup_Bi_14.out_crd())
-        print(arr_vals)
-        print(out_arr)
-        drop_1.set_inner_crd(max_1.out_val())
+        # print(out_arr)
 
         drop_2.set_outer_crd(fiberlookup_Bj_11.out_crd())
         drop_2.set_inner_crd(drop_1.out_crd_outer())
@@ -125,14 +133,29 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         drop_1.update()
         drop_2.update()
         drop_3.update()
+        arr_vals.append(max_1.out_val())
+        out_arr.append(fiberlookup_Bk_8.out_crd())
+        out1_arr.append(fiberlookup_Bk_8.out_ref())
+        # print(input_arr)
+        # print(arr_vals)
+        print("bk", out_arr)
+        # print(out1_arr)
 
         fiberwrite_X0_3.update()
         fiberwrite_X1_2.update()
         fiberwrite_X2_1.update()
         fiberwrite_Xvals_0.update()
+        val_arr.append(fiberwrite_Xvals_0.get_arr())
 
-        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and \
-            fiberwrite_Xvals_0.out_done()
+        # done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and \
+        #     fiberwrite_Xvals_0.out_done()
+        print(drop_1.out_done())
+        print(drop_2.out_done())
+        print(drop_3.out_done())
+        # done = drop_1.out_done() and drop_2.out_done() and drop_3.out_done()
+        done = max_1.out_done()
+
+        time_cnt += 1
 
     fiberwrite_X0_3.autosize()
     fiberwrite_X1_2.autosize()
@@ -145,6 +168,8 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
 
     # print(arr_vals)
     print("Values:")
+    print(out_crds)
+    print(out_segs)
     print(out_vals)
 
     pytest.set_trace()
