@@ -54,3 +54,5 @@ tensor_*_mode_*
 
 # Tensor files
 tiles/
+
+sam.egg-info/
