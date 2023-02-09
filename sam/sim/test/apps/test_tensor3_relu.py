@@ -4,7 +4,7 @@ import scipy.sparse
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
-from sam.sim.src.compute import Multiply2, Add2, Divider2
+from sam.sim.src.compute import Multiply2, Add2 #, Divider2
 from sam.sim.src.unary_alu import Max
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
@@ -80,6 +80,8 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
     input_arr = []
     val_arr = []
 
+    dropin = []
+    dropin1 = []
     drop_arr = []
     drop1_arr = []
     # max_1.set_in2(0)
@@ -100,10 +102,14 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
 
         drop_1.set_inner_crd(max_1.out_val())
         drop_1.set_outer_crd(fiberlookup_Bk_8.out_crd())
+        dropin.append(max_1.out_val())
+        dropin1.append(fiberlookup_Bk_8.out_crd())
         drop_arr.append(drop_1.out_crd_inner())
         drop1_arr.append(drop_1.out_crd_outer())
-        print("drop_inner", drop_arr)
-        print("drop_outer", drop1_arr)
+        print("drop_in_inner", remove_emptystr(dropin))
+        print("drop_in_outer", remove_emptystr(dropin1))
+        print("drop_inner", remove_emptystr(drop_arr))
+        print("drop_outer", remove_emptystr(drop1_arr))
         # drop_1.set_outer_crd(fiberlookup_Bi_14.out_crd())
         # drop_1.set_inner_crd(fiberlookup_Bj_11.out_crd())
 
@@ -138,7 +144,7 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         out1_arr.append(fiberlookup_Bk_8.out_ref())
         # print(input_arr)
         # print(arr_vals)
-        print("bk", out_arr)
+        print("bk", remove_emptystr(out_arr))
         # print(out1_arr)
 
         fiberwrite_X0_3.update()

@@ -9,6 +9,8 @@ class Compression(Primitive):
         self.in_crd = []
 
         self.curr_crd = ''
+        self.curr_val = ''
+
         if self.backpressure_en:
             self.ready_backpressure = True
             self.data_valid = True
@@ -49,13 +51,31 @@ class Compression(Primitive):
             if len(self.in_val) > 0 or len(self.in_crd) > 0:
                 self.block_start = False
 
-            icrd = ""
+            icrd = ''
+            ival = ''
 
             if self.done:
                 self.curr_crd = ''
                 return
             elif len(self.in_val) > 0 and len(self.in_crd) > 0:
-                icrd = self
+                ival = self.in_val.pop(0)
+                icrd = self.in_crd.pop(0)
+
+                if isinstance(ival, int):
+                    assert isinstance(icrd, int), "both val and crd need ot match"
+                    if ival == 0:
+                        self.curr_crd = ''
+                        self.curr_val = ''
+                    else:
+                        self.curr_crd = icrd
+                        self.curr_val = ival
+                elif isinstance(ival, str):
+                    assert isinstance(icrd, str), "both val and coord need to match"
+                    self.curr_crd = icrd
+                    self.curr_val = ival
+                else:
+                    self.curr_crd = icrd
+                    self.curr_val = ival
 
             if self.debug:
                 print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd,
@@ -77,3 +97,7 @@ class Compression(Primitive):
     def out_crd(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_crd
+
+    def out_val(self):
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            return self.curr_val
