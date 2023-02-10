@@ -17,6 +17,8 @@ sspath=$SUITESPARSE_PATH
  	lanka=OFF
  	neva=ON
  else
+ 	lanka=OFF
+ 	neva=OFF
  fi
 
 out=suitesparse-bench/taco
@@ -24,7 +26,7 @@ out=suitesparse-bench/taco
 mkdir -p "$out"
 
 while read line; do
-	if [ $LANKA -eq 1 ]; then
+	if [ $2 -eq 1 ]; then
 		matrix="$sspath/$line/$line.mtx"
     else
 		matrix="$sspath/$line.mtx"
