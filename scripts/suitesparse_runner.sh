@@ -8,28 +8,25 @@ set -u
 
 cwd=$(pwd)
 sspath=$SUITESPARSE_PATH
+
 # LANKA
-if [ $2 -eq 1 ]; then
-	lanka=ON
-	neva=OFF
-elif [ $2 -eq 2 ]; then
-	lanka=OFF
-	neva=ON
-else
-	lanka=OFF
-	neva=OFF
-fi
+ if [ $2 -eq 1 ]; then
+ 	lanka=ON
+ 	neva=OFF
+ elif [ $2 -eq 2 ]; then
+ 	lanka=OFF
+ 	neva=ON
+ else
+ fi
 
 out=suitesparse-bench/taco
 
 mkdir -p "$out"
 
 while read line; do
-	if [ $2 -eq 1 ]; then
+	if [ $LANKA -eq 1 ]; then
 		matrix="$sspath/$line/$line.mtx"
-	elif [ $2 -eq 2 ]; then
-		matrix="$sspath/$line.mtx"
-	else
+    else
 		matrix="$sspath/$line.mtx"
 	fi
 	csvout="$out/result-$line.csv"

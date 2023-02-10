@@ -31,12 +31,12 @@ endif
 
 ifeq ("$(NEVA)","ON")
 	CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
-	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
-	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
-	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
-	export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
+	#export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
+	#export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
+	#export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+	#export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+	#export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
+	#export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
 else ifeq ("$(LANKA)", "ON")
 	CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,24,26,28,30,32,34 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
 	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
