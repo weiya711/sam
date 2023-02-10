@@ -69,10 +69,17 @@ class Compression(Primitive):
                     else:
                         self.curr_crd = icrd
                         self.curr_val = ival
-                elif isinstance(ival, str):
+                elif isinstance(ival, str) and ival != 'D':
+                    print("ival", ival)
+                    print("icrd", icrd)
                     assert isinstance(icrd, str), "both val and coord need to match"
                     self.curr_crd = icrd
                     self.curr_val = ival
+                elif ival == 'D':
+                    assert icrd == 'D'
+                    self.curr_val = ival
+                    self.curr_crd = icrd
+                    self.done = True
                 else:
                     self.curr_crd = icrd
                     self.curr_val = ival

@@ -1,6 +1,7 @@
 import pytest
 import time
 import scipy.sparse
+from sam.sim.src.compression import Compression
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
@@ -49,6 +50,10 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
+    print(B_vals)
+
+    # pytest.set_trace()
+
     fiberlookup_Bi_14 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
 
     fiberwrite_X0_3 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats)
@@ -62,7 +67,8 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
                                      debug=debug_sim, statistics=report_stats)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
     max_1 = Max(in2=0, debug=debug_sim, statistics=report_stats)
-    drop_1 = CrdDrop(debug=debug_sim, statistics=report_stats)
+    drop_1 = Compression(debug=debug_sim, statistics=report_stats)
+    # drop_1 = CrdDrop(debug=debug_sim, statistics=report_stats)
     drop_2 = CrdDrop(debug=debug_sim, statistics=report_stats)
     drop_3 = CrdDrop(debug=debug_sim, statistics=report_stats)
     fiberwrite_Xvals_0 = ValsWrScan(size=5804660 * 2, fill=fill, debug=debug_sim, statistics=report_stats)
@@ -89,9 +95,9 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         if len(in_ref_B) > 0:
             fiberlookup_Bi_14.set_in_ref(in_ref_B.pop(0))
 
-        fiberlookup_Bj_11.set_in_ref(fiberlookup_Bi_14.out_crd())
+        fiberlookup_Bj_11.set_in_ref(fiberlookup_Bi_14.out_ref())
 
-        fiberlookup_Bk_8.set_in_ref(fiberlookup_Bj_11.out_crd())
+        fiberlookup_Bk_8.set_in_ref(fiberlookup_Bj_11.out_ref())
 
         arrayvals_B_5.set_load(fiberlookup_Bk_8.out_ref())
 
@@ -100,13 +106,17 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         # print(arrayvals_B_5.out_load())
         # print(max_1.out_val())
 
-        drop_1.set_inner_crd(max_1.out_val())
-        drop_1.set_outer_crd(fiberlookup_Bk_8.out_crd())
+        # drop_1.set_inner_crd(max_1.out_val())
+        # drop_1.set_outer_crd(fiberlookup_Bk_8.out_crd())
+        drop_1.set_val(max_1.out_val())
+        drop_1.set_crd(fiberlookup_Bk_8.out_crd())
         dropin.append(max_1.out_val())
         dropin1.append(fiberlookup_Bk_8.out_crd())
-        drop_arr.append(drop_1.out_crd_inner())
-        drop1_arr.append(drop_1.out_crd_outer())
-        print("drop_in_inner", remove_emptystr(dropin))
+
+        drop_arr.append(drop_1.out_val())
+        drop1_arr.append(drop_1.out_crd())
+        print("input_max (", len(remove_emptystr(input_arr)), ")", remove_emptystr(input_arr))
+        print("drop_in_inner (", len(remove_emptystr(dropin)), ")",  remove_emptystr(dropin))
         print("drop_in_outer", remove_emptystr(dropin1))
         print("drop_inner", remove_emptystr(drop_arr))
         print("drop_outer", remove_emptystr(drop1_arr))
@@ -116,7 +126,8 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         # print(out_arr)
 
         drop_2.set_outer_crd(fiberlookup_Bj_11.out_crd())
-        drop_2.set_inner_crd(drop_1.out_crd_outer())
+        # drop_2.set_inner_crd(drop_1.out_crd())
+        drop_2.set_inner_crd(drop_1.out_crd())
 
         drop_3.set_outer_crd(fiberlookup_Bi_14.out_crd())
         drop_3.set_inner_crd(drop_2.out_crd_outer())
@@ -129,7 +140,8 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         fiberwrite_X2_1.set_input(drop_2.out_crd_inner())
 
         # fiberwrite_Xvals_0.set_input(max_1.out_val())
-        fiberwrite_Xvals_0.set_input(drop_1.out_crd_inner())
+        # fiberwrite_Xvals_0.set_input(drop_1.out_crd_inner())
+        fiberwrite_Xvals_0.set_input(drop_1.out_val())
 
         fiberlookup_Bi_14.update()
         fiberlookup_Bj_11.update()
@@ -144,7 +156,7 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         out1_arr.append(fiberlookup_Bk_8.out_ref())
         # print(input_arr)
         # print(arr_vals)
-        print("bk", remove_emptystr(out_arr))
+        # print("bk", remove_emptystr(out_arr))
         # print(out1_arr)
 
         fiberwrite_X0_3.update()
@@ -153,13 +165,13 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
         fiberwrite_Xvals_0.update()
         val_arr.append(fiberwrite_Xvals_0.get_arr())
 
-        # done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and \
-        #     fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and \
+            fiberwrite_Xvals_0.out_done()
         print(drop_1.out_done())
         print(drop_2.out_done())
         print(drop_3.out_done())
         # done = drop_1.out_done() and drop_2.out_done() and drop_3.out_done()
-        done = max_1.out_done()
+        # done = max_1.out_done()
 
         time_cnt += 1
 
@@ -260,5 +272,5 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_elemadd(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
+        check_gold_tensor3_relu(frosttname, debug_sim, out_crds, out_segs, out_vals, "sss012")
     samBench(bench, extra_info)
