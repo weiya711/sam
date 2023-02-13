@@ -49,6 +49,14 @@ def test_reorder_direct(arrs, debug_sim):
 
     crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=4, debug=debug_sim)
     
+    crd_k = repeated_token_dopper(name="crdk")
+    ref_k = repeated_token_dopper(name="refk")
+    crd_i = repeated_token_dopper(name="crdi")
+    ref_i = repeated_token_dopper(name="refi")
+    
+    crd_k_out = repeated_token_dopper(name="crdkout")
+    ref_k_out = repeated_token_dopper(name="refkout")
+
 
     
     in_ref = copy.deepcopy(arrs["in_ref"])
@@ -64,21 +72,37 @@ def test_reorder_direct(arrs, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
             crdscan.set_input(in_ref.pop(0), in_crd.pop(0))
-        crdscan.update()
-        if crdscan.out_crd_k() != "":
-            out_crd.append(crdscan.out_crd_k())
-            out_ref.append(crdscan.out_ref_k())
-        if crdscan.out_crd_i() != "":
-            out_crd_i.append(crdscan.out_crd_i())
-            out_ref_i.append(crdscan.out_ref_i())
-        if crdscan.out_crd_k_outer() != "":
-            out_crd_k_out.append(crdscan.out_crd_k_outer())
-            out_ref_k_out.append(crdscan.out_ref_k_outer())
+        crd_k.add_token(crdscan.out_crd_k())
+        ref_k.add_token(crdscan.out_ref_k())
+        crd_i.add_token(crdscan.out_crd_i())
+        ref_i.add_token(crdscan.out_ref_i())
+        crd_k_out.add_token(crdscan.out_crd_k_outer())
+        ref_k_out.add_token(crdscan.out_ref_k_outer())
+ 
 
+        crdscan.update()
+        crd_k.update()
+        ref_k.update()
+        crd_i.update()
+        ref_i.update()
+        crd_k_out.update()
+        ref_k_out.update()
+
+        if crd_k.get_token() != "":
+            out_crd.append(crd_k.get_token())
+            out_ref.append(ref_k.get_token())
+        if crd_i.get_token() != "":
+            out_crd_i.append(crd_i.get_token())
+            out_ref_i.append(ref_i.get_token())
+        if crd_k_out.get_token() != "":
+            out_crd_k_out.append(crd_k_out.get_token())
+            out_ref_k_out.append(ref_k_out.get_token())
+ 
 
         print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
         print("______________________________________________________________________")
-        done = crdscan.done
+        
+        done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
         time += 1
         if time > 10000:
             break
