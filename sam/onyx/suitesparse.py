@@ -152,6 +152,7 @@ def run_process(command, log_file=None, cwd=None, split=False, check=True, retur
 
     try:
         run_result = subprocess.run(command, cwd=cwd, check=check, capture_output=True, text=True)
+        # run_result = subprocess.run(command, cwd=cwd, check=check)
         return_code = run_result.returncode
         output_txt = run_result.stdout
     except subprocess.CalledProcessError:
@@ -217,7 +218,7 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False, g
         for mtx in matrices:
             tname = f"{benchname}_{mtx}"
             err, cyc_count = run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
-                                            matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_)
+                                              matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_)
             comp_tb_ = False
             pstr = f"{benchname}, {mtx}, {cyc_count}\n"
             stats.append(pstr)
@@ -231,7 +232,7 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False, g
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Suitesparse Tester for SCGRA')
-    parser.add_argument('--benchname', type=str, default="all")
+    parser.add_argument('--benchname', type=str, default=None, nargs='+')
     parser.add_argument('--matrix_file', type=str, default=None)
     parser.add_argument('--docker', action="store_true")
     parser.add_argument('--matrix_tmp_dir', type=str, default=None)
@@ -243,6 +244,7 @@ if __name__ == "__main__":
     parser.add_argument('--perf_log', type=str, default=None)
     parser.add_argument('--generate', action="store_true")
     parser.add_argument('--run', action="store_true")
+    parser.add_argument('--compile_tb', action="store_true")
     args = parser.parse_args()
 
     benchmarks = ["matmul_ijk", "mat_elemmul", "mat_elemadd", "mat_elemadd3"]
@@ -260,21 +262,24 @@ if __name__ == "__main__":
     assert matrices is not None, "Error opening file " + args.matrix_file
 
     gen_verilog = args.gen_verilog
+    compile_tb = args.compile_tb
 
-    # Run on all benchmarks
-    if args.benchname == "all":
-        for benchname in benchmarks:
-            print("Running for bench", benchname, "...")
-            run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=True, generate=generate, run=run)
-            # Don't need to do it more than once.
-            gen_verilog = False
-    # Only run on one
+    # Process benchname
+    bname_arg = args.benchname
+
+    use_bmarks = None
+
+    if bname_arg is None:
+        use_bmarks = benchmarks
     else:
-        benchname = args.benchname
-        assert benchname in benchmarks
+        use_bmarks = bname_arg
 
+    # Run on all benchmarks specified
+    for benchname in use_bmarks:
         print("Running for bench", benchname, "...")
-        run_bench(benchname, args, matrices, full_stats, args.gen_verilog, compile_tb=True, generate=generate, run=run)
+        run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=compile_tb, generate=generate, run=run)
+        # Don't need to do it more than once.
+        gen_verilog = False
 
     if args.perf_log is not None:
         with open(args.perf_log, "w+") as plog_file:
