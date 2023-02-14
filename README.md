@@ -5,14 +5,23 @@
 
 ## SAM Front-end Compiler
 
-Overview:
-tensor expression + format language + schedule
--->
-SAM Graph 
---> 
-dot file and png of dot file
--->        
-RTL Graph or Simulator Graph
+The following is an overview of the process of creating a SAM (structured assembly) graph from a tensor expression and a format language: 
+
+
+
+Start by creating a tensor expression in a format language of your choice. This could be in a programming language, like python or C, or a domain-specific language, such as TensorFlow or PyTorch. 
+
+
+Using the expression, create a SAM graph. This graph will contain all of the nodes, edges, and connections between nodes that are necessary to construct the tensor. 
+
+
+Once the SAM graph is constructed, it can be exported as a dot file. This file can be used to visualize the structure and connections in the graph. 
+
+
+Once the dot file is generated, the graph can be rendered as a PNG image. This image can be used to inspect the structure of the graph in more detail. 
+
+
+Finally, the SAM graph can be converted into either an RTL graph or a simulator graph. This graph will contain all the necessary components to simulate the tensor expression.
 
 ### Compiling SAM graphs
 Init the taco/ repo as a submodule
