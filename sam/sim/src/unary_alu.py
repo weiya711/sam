@@ -105,7 +105,7 @@ class Exp(UnaryALU):
                 # Input is stop token
                 self.curr_out = self.curr_in1
                 self.get1 = True
-            else:
+            elif isinstance(self.curr_in1, float):
                 # Input is value stream
                 self.curr_out = math.exp(self.curr_in1)
                 if self.get_stats:
@@ -235,12 +235,14 @@ class Max(UnaryALU):
                 self.get1 = True
                 # self.done = True
                 # self.get2 = True
-            else:
+            elif isinstance(self.curr_in1, float):
                 # Input is value stream
                 self.curr_out = max(self.curr_in1, self.curr_in2)
                 if self.get_stats:
                     self.cycles_operated += 1
                 self.get1 = True
+            # else:
+            #     self.curr_out = self.curr_in1
             self.compute_fifos()
             if self.debug:
                 print("DEBUG: EXP: \t "
@@ -249,8 +251,115 @@ class Max(UnaryALU):
             self.curr_out = ''
 
 
-class ScalarMult(UnaryALU):
+class Square(UnaryALU):
     def __init__(self, **kwargs):
+        super().__init__( **kwargs)
+        self.fill_value = 0
+
+        self.get1 = True
+        # self.get2 = True
+
+        self.curr_in1 = ''
+        self.curr_in2 = None
+
+    def update(self):
+        self.update_done()
+        # if self.out_done():
+            # return
+        self.update_ready()
+        if (len(self.in1) > 0):
+            self.block_start = False
+
+        if len(self.in1) > 0:
+            if self.get1:
+                self.curr_in1 = self.in1.pop(0)
+            # if self.get2:
+            #     self.curr_in2 = self.in2
+            #     self.get2 = False
+            if self.curr_in1 == 'D':
+                # Inputs is done token
+                self.curr_out = self.curr_in1 
+                self.get1 = True
+                # self.get2 = True
+                self.done = True
+            elif is_stkn(self.curr_in1):
+                # Input is stop token
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                # self.done = True
+                # self.get2 = True
+            elif isinstance(self.curr_in1, float):
+                # Input is value stream
+                self.curr_out = pow(self.curr_in1, 2)
+                if self.get_stats:
+                    self.cycles_operated += 1
+                self.get1 = True
+            # else:
+            #     self.curr_out = self.curr_in1
+            self.compute_fifos()
+            if self.debug:
+                print("DEBUG: EXP: \t "
+                      "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1)
+        else:
+            self.curr_out = ''
+
+
+class SquareRoot(UnaryALU):
+    def __init__(self, **kwargs):
+        super().__init__( **kwargs)
+        self.fill_value = 0
+
+        self.get1 = True
+        # self.get2 = True
+
+        self.curr_in1 = ''
+        self.curr_in2 = None
+
+    def update(self):
+        self.update_done()
+        # if self.out_done():
+            # return
+        self.update_ready()
+        if (len(self.in1) > 0):
+            self.block_start = False
+
+        if len(self.in1) > 0:
+            if self.get1:
+                self.curr_in1 = self.in1.pop(0)
+            # if self.get2:
+            #     self.curr_in2 = self.in2
+            #     self.get2 = False
+            if self.curr_in1 == 'D':
+                # Inputs is done token
+                self.curr_out = self.curr_in1 
+                self.get1 = True
+                # self.get2 = True
+                self.done = True
+            elif is_stkn(self.curr_in1):
+                # Input is stop token
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                # self.done = True
+                # self.get2 = True
+            elif isinstance(self.curr_in1, float):
+                # Input is value stream
+                self.curr_out = math.sqrt(self.curr_in1)
+                if self.get_stats:
+                    self.cycles_operated += 1
+                self.get1 = True
+            # else:
+            #     self.curr_out = self.curr_in1
+            self.compute_fifos()
+            if self.debug:
+                print("DEBUG: EXP: \t "
+                      "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1)
+        else:
+            self.curr_out = ''
+
+
+
+class ScalarMult(UnaryALU):
+    def __init__(self, in2=1, **kwargs):
         super().__init__(**kwargs)
         self.fill_value = 0
 
@@ -258,7 +367,7 @@ class ScalarMult(UnaryALU):
         self.get2 = True
 
         self.curr_in1 = ''
-        self.curr_in2 = 0
+        self.curr_in2 = in2
 
     def update(self):
         self.update_done()
@@ -268,8 +377,6 @@ class ScalarMult(UnaryALU):
         if len(self.in1) > 0:
             if self.get1:
                 self.curr_in1 = self.in1.pop(0)
-            if self.get2:
-                self.curr_in2 = self.in2
             if self.curr_in1 == 'D':
                 # Inputs is done token
                 self.curr_out = self.curr_in1
@@ -281,7 +388,7 @@ class ScalarMult(UnaryALU):
                 self.curr_out = self.curr_in1
                 self.get1 = True
                 # self.get2 = True
-            else:
+            elif isinstance(self.curr_in1, float):
                 # Input is value stream
                 self.curr_out = self.curr_in1 * self.curr_in2
                 if self.get_stats:
