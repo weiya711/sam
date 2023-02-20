@@ -116,7 +116,8 @@ def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_d
 
 
 def run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
-                     matrix_tmp_dir, check=True, tname=None, compile_tb=False):
+                     matrix_tmp_dir, check=True, tname=None, compile_tb=False,
+                     debug=False, trace=False):
     assert tname is not None
     build_tb_command = ["python", os.path.join(basedir,
                                                "garnet/tests/test_memory_core/build_tb.py"), "--ic_fork",
@@ -129,7 +130,10 @@ def run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
     if compile_tb:
         build_tb_command.append("--compile_tb")
 
-    error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True)
+    if trace:
+        build_tb_command.append("--trace")
+
+    error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True, debug=debug)
 
     split_ot = output_txt.split("\n")
 
@@ -144,15 +148,18 @@ def run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
     return error, cyc_count
 
 
-def run_process(command, log_file=None, cwd=None, split=False, check=True, return_stdout=False):
+def run_process(command, log_file=None, cwd=None, split=False, check=True, return_stdout=False, debug=False):
     if split:
         command = command.split()
 
     run_result = None
 
     try:
-        run_result = subprocess.run(command, cwd=cwd, check=check, capture_output=True, text=True)
-        # run_result = subprocess.run(command, cwd=cwd, check=check)
+        if debug:
+            # Command should die after this...
+            run_result = subprocess.run(command, cwd=cwd, check=check)
+        else:
+            run_result = subprocess.run(command, cwd=cwd, check=check, capture_output=True, text=True)
         return_code = run_result.returncode
         output_txt = run_result.stdout
     except subprocess.CalledProcessError:
@@ -171,7 +178,8 @@ def run_process(command, log_file=None, cwd=None, split=False, check=True, retur
         return error
 
 
-def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False, generate=True, run=True):
+def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False,
+              generate=True, run=True, debug=False, trace=False):
     cwd = os.getcwd()
 
     basedir = "/aha" if args.docker else os.getenv('BASEDIR')
@@ -218,7 +226,8 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False, g
         for mtx in matrices:
             tname = f"{benchname}_{mtx}"
             err, cyc_count = run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
-                                              matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_)
+                                              matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_,
+                                              debug=debug, trace=trace)
             comp_tb_ = False
             pstr = f"{benchname}, {mtx}, {cyc_count}\n"
             stats.append(pstr)
@@ -245,6 +254,8 @@ if __name__ == "__main__":
     parser.add_argument('--generate', action="store_true")
     parser.add_argument('--run', action="store_true")
     parser.add_argument('--compile_tb', action="store_true")
+    parser.add_argument('--debug', action="store_true")
+    parser.add_argument('--trace', action="store_true")
     args = parser.parse_args()
 
     benchmarks = ["matmul_ijk", "mat_elemmul", "mat_elemadd", "mat_elemadd3"]
@@ -253,6 +264,8 @@ if __name__ == "__main__":
 
     generate = args.generate
     run = args.run
+    trace = args.trace
+    dbg = args.debug
 
     # Get matrices
     matrices = None
@@ -277,7 +290,8 @@ if __name__ == "__main__":
     # Run on all benchmarks specified
     for benchname in use_bmarks:
         print("Running for bench", benchname, "...")
-        run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=compile_tb, generate=generate, run=run)
+        run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=compile_tb,
+                  generate=generate, run=run, debug=dbg, trace=trace)
         # Don't need to do it more than once.
         gen_verilog = False
 
