@@ -149,7 +149,7 @@ def create_array(shape=5, sparsity=0.995, path=""):
 @pytest.mark.parametrize("arrs", [arr_dict]) #, arr_dict2, arr_dict3])
 def test_reorder_direct_transpose(arrs, debug_sim):
     shape = [1000] #, 2000]
-    sparsity = [0.75, 0.9, 0.99, 0.995]
+    sparsity = [0.5, 0.75, 0.9, 0.99, 0.995]
     plot_arr = []
     plot_arr2 = []
     for sp in sparsity:
@@ -167,7 +167,7 @@ def test_reorder_direct_transpose(arrs, debug_sim):
             gold_ref_i = arrs["out_ref_i"]
             # debug_sim = True
             assert (len(gold_crd_i) == len(gold_ref_i))
-            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=1, debug=debug_sim)
+            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=1, debug=debug_sim, statistics=True)
             
             crd_k = repeated_token_dopper(name="crdk")
             ref_k = repeated_token_dopper(name="refk")
@@ -245,9 +245,8 @@ def test_reorder_direct_transpose(arrs, debug_sim):
 
             # print("outer crd: ", out_crd_k_out)
             # print(out_ref_k_out)
-
-
-
+            print("_______")
+            print(crdscan.return_statistics())
             assert (out_crd_i == gold_crd_i)
             assert (out_crd_k_out == arrs["out_crd_k_outer"])
     print(plot_arr)

@@ -105,10 +105,18 @@ class Reorder_and_split(CrdRdScan):
 
         self.last_state_ = "none"
 
+        if self.get_stats:
+            self.num_min_calls = 0
+            self.num_min_values_returned = 0
+
     def set_input(self, ref, crd):
-        if crd != "":
+        if crd != "" and ref != "":
             self.in_ref.append(ref)
             self.in_crd.append(crd)
+        elif crd != "" and self.in_ref == "":
+            self.in_crd.append(crd)
+        elif ref != "" and self.in_crd == "":
+            self.in_ref.append(ref)
 
     def out_crd_i(self):
         #if not self.output:
@@ -150,6 +158,9 @@ class Reorder_and_split(CrdRdScan):
                     min_val = self.nxt_state_table[a]
         if self.debug:
             print("MIN VALUE Calc ", min_val)
+        if self.get_stats:
+            self.num_min_calls += 1
+
         return min_val // self.split_factor
 
     def check_len(self, arr):
@@ -158,6 +169,15 @@ class Reorder_and_split(CrdRdScan):
             if self.nxt_state_table[a] != -1:
                 i += 1
         return i
+
+    def return_statistics(self):
+        if not self.get_stats:
+            return {}
+        dic = {}
+        dic["next_item_table_size"] = len(self.nxt_state_table.keys())
+        dic["next_min_called"] = self.num_min_calls
+        dic["num_min_vals_returned"] = self.num_min_values_returned / self.num_min_calls
+        return dic
 
 
     def get_valid_streams(self):
@@ -175,6 +195,8 @@ class Reorder_and_split(CrdRdScan):
             k += 1
         if self.debug:
             print("FLAG printing the min of the table and ge the vals ", return_crd, return_ref)
+        if self.get_stats:
+            self.num_min_values_returned += len(return_crd)
         return return_crd, return_ref, flag
 
     def update(self):
@@ -194,6 +216,10 @@ class Reorder_and_split(CrdRdScan):
             elif not isinstance(self.curr_ref_i, int) and self.curr_ref_i == "D":
                 self.state = "done_state"
             else:
+                # print(self.in_ref, self.in_crd, self.curr_ref_i, self.curr_crd_i)
+                # print("---------------------")
+                # print(self.curr_ref_i)
+                # print(self.seg_arr[self.curr_ref_i], self.seg_arr[self.curr_ref_i + 1])
                 self.crd_sub_arr = self.crd_arr[self.seg_arr[self.curr_ref_i] : self.seg_arr[self.curr_ref_i + 1]]
                 self.seg_tuple[self.curr_crd_i] = [self.seg_arr[self.curr_ref_i], self.seg_arr[self.curr_ref_i + 1]]
                 self.state = "reading_row"
@@ -467,17 +493,6 @@ class Reorder_and_split(CrdRdScan):
                 self.unique_crds.append(self.curr_crd)
             self.total_outputs += 1
 
-    def return_statistics(self):
-        if self.get_stats:
-            dic = {"total_size": len(self.crd_arr), "outputs_by_block": self.total_outputs,
-                   "unique_crd": len(self.unique_crds), "unique_refs": len(self.unique_refs),
-                   "skip_list_fifo": len(self.in_crd_skip), "total_elements_skipped": self.elements_skipped,
-                   "total_skips_encountered": self.skip_cnt, "intersection_behind_rd": self.intersection_behind_cnt,
-                   "intersection_behind_fiber": self.fiber_behind_cnt, "stop_tokens": self.stop_count}
-            dic.update(super().return_statistics())
-        else:
-            dic = {}
-        return dic
 
     def update_not_used(self):
         self.update_done()

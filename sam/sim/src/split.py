@@ -2,7 +2,7 @@ from .base import *
 
 
 class Split(Primitive):
-    def __init__(self, split_factor=4, orig_crd=True, **kwargs):
+    def __init__(self, split_factor=16, orig_crd=True, **kwargs):
         super().__init__(**kwargs)
 
         self.in_crd = []
