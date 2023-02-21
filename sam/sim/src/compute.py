@@ -251,12 +251,12 @@ class Divide2(Compute2):
                 self.get1 = True
                 self.get2 = True
                 self.done = True
-            elif is_stkn(self.curr_in1) and isinstance(self.curr_in2, int):
+            elif is_stkn(self.curr_in1) and isinstance(self.curr_in2, float):
                 # FIXME: Patch for union for b(i)+C(i,j)*d(j)
                 self.curr_out = self.fill_value
                 self.get1 = False
                 self.get2 = True
-            elif is_stkn(self.curr_in2) and isinstance(self.curr_in1, int):
+            elif is_stkn(self.curr_in2) and isinstance(self.curr_in1, float):
                 # FIXME: Patch for union for b(i)+C(i,j)*d(j)
                 self.curr_out = self.fill_value
                 self.get1 = True
