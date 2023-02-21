@@ -509,7 +509,6 @@ class SparseAccumulator1(Primitive):
                 self.crdpt_spacc.set_val(self.in_val.pop(0))
 
             self.crdpt_spacc.update()
-            print(">>>>>>>>>>>>SPACC:", self.crdpt_spacc.out_outer_crdpt(), self.crdpt_spacc.out_inner_crdpt())
             self.crdpt_converter.set_outer_crdpt(self.crdpt_spacc.out_outer_crdpt())
             self.crdpt_converter.set_inner_crdpt(self.crdpt_spacc.out_inner_crdpt())
 
@@ -545,20 +544,6 @@ class SparseAccumulator1(Primitive):
             parent.set_backpressure(self.fifo_avail_inner)
 
     def set_outer_crdpt(self, crdpt, parent=None):
-        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '' and crdpt is not None:
-            self.in_outer_crdpt.append(crdpt)
-        if self.backpressure_en:
-            parent.set_backpressure(self.fifo_avail_outer)
-
-    def crd_in_inner(self, crdpt, parent=None):
-        assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
-        if crdpt != '' and crdpt is not None:
-            self.in_inner_crdpt.append(crdpt)
-        if self.backpressure_en:
-            parent.set_backpressure(self.fifo_avail_inner)
-
-    def crd_in_outer(self, crdpt, parent=None):
         assert not is_stkn(crdpt), 'Coordinate points should not have stop tokens'
         if crdpt != '' and crdpt is not None:
             self.in_outer_crdpt.append(crdpt)
