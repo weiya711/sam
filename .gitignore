@@ -7,6 +7,7 @@ __pycache__/
 *.swo
 *.txt
 *.out
+*.log
 
 # Files for MacOS and IDEs
 .DS_store
@@ -34,6 +35,7 @@ results-cpu/
 suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
+sam/sim/test/apps/
 
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
@@ -50,3 +52,7 @@ tensor_*_mode_*
 # Tensor files
 *.mtx
 *.tns
+
+# From instaling as pip package
+sam.egg-info/
+
