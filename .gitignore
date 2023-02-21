@@ -58,7 +58,6 @@ tmp_mat*/
 tensor_*_mode_*
 
 # Tensor files
-<<<<<<< HEAD
 *.mtx
 *.tns
 
