@@ -35,10 +35,18 @@ results-cpu/
 suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
-sam/sim/test/apps/
+
+# Generated folder for SAM tiling 
+tiles/
 
 # Generated SAM simulator tests
-*/sim/test/apps/test_*.py
+sam/sim/test/apps/
+sam/sim/test/apps/test_*.py
+
+*.gv
+
+*.mtx
+*.tns
 
 # Temporary matrices
 tmp_mat*/
@@ -50,9 +58,9 @@ tmp_mat*/
 tensor_*_mode_*
 
 # Tensor files
+<<<<<<< HEAD
 *.mtx
 *.tns
 
 # From instaling as pip package
 sam.egg-info/
-

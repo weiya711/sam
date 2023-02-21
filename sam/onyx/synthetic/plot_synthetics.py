@@ -48,6 +48,7 @@ def plot_reorder(test_dfs, test_names, legend, output_dir=None):
     plt.title('Cycles vs Loop Reordering', **title_keywords)
     plt.xticks(fontsize=24)
     plt.yticks(fontsize=24)
+    plt.ylim([10000, 1000000])
     plt.yscale('log')
     fig.set_size_inches(16, 12)
     save_figure_ASPLOS('reorder', output_dir)
@@ -104,9 +105,9 @@ def plot_fusion(test_dfs, test_names, legend, output_dir=None):
     print(locate)
     width = 0.25
     x = np.arange(3)
-    plt.bar(x - width, unfused, width, label = "Unfused")
-    plt.bar(x, coiterate, width, label = "Coiteration")
-    plt.bar(x + width, locate, width, label = "Iterate-Locate")
+    plt.bar(x - width, unfused, width, label="Unfused")
+    plt.bar(x, coiterate, width, label="Coiteration")
+    plt.bar(x + width, locate, width, label="Iterate-Locate")
     # plt.bar(t_df['test_name'], t_df['cycles'])
     labels = ['1', '10', '100']
     plt.legend(legend, **legend_keywords)
@@ -240,6 +241,7 @@ def create_ASPLOS_plots(csv_path, name=None, output_dir=None):
         raise NotImplementedError
 
     # plt.show()
+
 
 def save_figure_ASPLOS(name, output_dir, file_formats=None):
     if file_formats is None:

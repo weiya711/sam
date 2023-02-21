@@ -13,10 +13,24 @@ files_to_copy = {
     "reorder.pdf": "fig12.pdf",
 }
 
+stream_overhead = [
+    'fig14.pdf'
+]
 
-def docker_copy(docker_id, fp, output_dir):
+memory_model = [
+    'fig15.pdf',
+    # Table 1
+    '../taco-website/tab2.log',
+    # Table 2
+    'tab1.log'
+]
+
+
+def docker_copy(docker_id, fp, output_dir, root=False):
 
     docker_cp_command = ['docker', 'cp', f'{docker_id}:{fp}', f'{output_dir}']
+    if root:
+        docker_cp_command.insert(0, 'sudo')
     ret_code = subprocess.run(docker_cp_command)
     print(ret_code)
 
@@ -40,4 +54,14 @@ if __name__ == "__main__":
     for file_in_, file_out_ in files_to_copy.items():
         synth_path = os.path.join(root_dir, OUTPUT_DIR, file_in_)
         out_p = os.path.join(od_, file_out_)
+        docker_copy(did_, synth_path, out_p)
+
+    for file_in_ in stream_overhead:
+        synth_path = os.path.join(root_dir, file_in_)
+        out_p = os.path.join(od_, file_in_)
+        docker_copy(did_, synth_path, out_p)
+
+    for file_in_ in memory_model:
+        synth_path = os.path.join(root_dir, file_in_)
+        out_p = os.path.join(od_, os.path.basename(file_in_))
         docker_copy(did_, synth_path, out_p)

@@ -1,11 +1,12 @@
 from sam.onyx.parse_dot import *
 import os
 
+
 def combine_alu_ops(count_dict):
 
     add = 0
     mul = 0
-    
+
     if 'add' in count_dict:
         add = count_dict['add']
         del count_dict['add']
@@ -36,6 +37,7 @@ def clean_prim_count(count_dict):
         count_dict['Array'] = count_dict['arrayvals']
         del count_dict['arrayvals']
 
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='SAM DOT Node Counting Script')
@@ -44,13 +46,13 @@ if __name__ == "__main__":
                         default="/sam-artifact/sam/compiler/sam-outputs/dot/")
     parser.add_argument('--output_log',
                         type=str,
-                        default="/sam-artifact/sam/primitive_counts.log")
+                        default="/sam-artifact/sam/tab1.log")
 
     args = parser.parse_args()
 
     graphs_to_count = {
         'mat_vecmul_ij': 'SpMV',
-        'matmul_ijk': 'SpM*SpM',
+        'matmul_ijk': 'SpM*SpM (IJK Only)',
         'mat_sddmm': 'SDDMM',
         'tensor3_innerprod': 'InnerProd',
         'tensor3_ttv': 'TTV',

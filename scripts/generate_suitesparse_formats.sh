@@ -6,12 +6,12 @@ BENCHMARKS=(
   matmul_ikj
   matmul_ijk
   matmul_kij
-#  matmul_
   mat_elemmul
   mat_elemadd
   mat_elemadd3
   mat_residual
   mat_mattransmul
+  mat_identity
 )
 
 # This is a list of benchmarks that have "other" tensors that are generated
