@@ -1062,3 +1062,45 @@ def check_gold_tensor3_pos_encoder_mult(frosttname, debug_sim, cast, out_crds, o
         print("ref:", out_tup)
         print("gold:", gold_tup)
         assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_softmax")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+
+    # gold_ref = torch.clamp(B_ref, min=0.0)
+    print(B_ref.shape)
+    print(out_vals)
+    gold_ref = torch.nn.functional.softmax(B_ref, dim=3)
+    gold_ref = gold_ref.numpy()
+
+    print(gold_ref)
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        print("gold:", gold_tup)
+        print("size: ", len(gold_tup))
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
