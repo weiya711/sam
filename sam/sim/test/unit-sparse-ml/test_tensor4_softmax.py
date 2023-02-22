@@ -75,6 +75,11 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     done = False
     time_cnt = 0
 
+    print("B seg2", B_seg2)
+    print("B seg3", B_seg3)
+
+    # pytest.set_trace()
+
     out_debug = []
 
     div_in = []
@@ -83,7 +88,9 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     div1_out = []
 
     repeater = []
+    reducer = []
     fiber_crd = []
+    repsig = []
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
@@ -111,16 +118,25 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         div_6.set_in2(repeat_Bl_12.out_ref())
 
         # fiber_crd.append(fiberlookup_Bl_6.out_crd())
-        repeater.append(reduce_5.out_val())
+        reducer.append(reduce_5.out_val())
+        repeater.append(repeat_Bl_12.out_ref())
+        repsig.append(repsiggen_l_13.out_repsig())
 
         # print("crd:", remove_emptystr(fiber_crd))
-        print("Reduce:", remove_emptystr(repeater))
+        print('=' * 100)
+        print("Reduce:", remove_emptystr(reducer))
+        print("Repeater:", remove_emptystr(repeater))
+        print()
+        print("Repsig:", remove_emptystr(repsig))
 
         div_in.append(exp_1.out_val())
         div1_in.append(repeat_Bl_12.out_ref())
         out_debug.append(div_6.out_val())
+        print()
         print("div0 in", remove_emptystr(div_in))
+        print()
         print("div1 in", remove_emptystr(div1_in))
+        print()
         print("div out", remove_emptystr(out_debug))
         fiberwrite_Xvals_0.set_input(div_6.out_val())
         fiberlookup_Bi_7.update()
@@ -135,13 +151,14 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         arrayvals_B_4.update()
         exp_1.update()
         reduce_5.update()
-        repsiggen_l_13.update()
         # arrayvals_B_10.update()
+        repsiggen_l_13.update()
         repeat_Bl_12.update()
         div_6.update()
         fiberwrite_Xvals_0.update()
 
-        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()
+        # done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()
+        done = exp_1.out_done()
         time_cnt += 1
 
     fiberwrite_X0_3.autosize()
@@ -152,6 +169,11 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     out_crds = [fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr(), fiberwrite_X2_1.get_arr()]
     out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr(), fiberwrite_X2_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+
+    print(out_crds)
+    print(out_segs)
+
+    pytest.set_trace()
 
     def bench():
         time.sleep(0.01)

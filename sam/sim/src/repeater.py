@@ -127,11 +127,11 @@ class Repeat(Primitive):
                       self.check_backpressure(), " ", self.data_valid)
 
             repeat = ''
-            if len(self.in_repeat) > 0 and self.get_next_rep:
+            if len(self.in_repeat) > 0 and self.curr_in_ref != '' and self.get_next_rep:
                 repeat = self.in_repeat.pop(0)
                 # FIXME: See if self.meta_union_mode is ever needed?
                 if repeat == 'S' and self.empty_rep_fiber and self.meta_union_mode:
-                    if isinstance(self.curr_in_ref, int):
+                    if isinstance(self.curr_in_ref, int) or isinstance(self.curr_in_ref, float):
                         self.curr_out_ref = self.curr_in_ref
                         self.emit_stkn = True
                     elif is_0tkn(self.curr_in_ref):
@@ -155,7 +155,7 @@ class Repeat(Primitive):
                 if repeat == 'S':
                     self.get_next_ref = True
                     self.get_next_rep = False
-                    if isinstance(self.curr_in_ref, int) or is_0tkn(self.curr_in_ref):
+                    if isinstance(self.curr_in_ref, int) or isinstance(self.curr_in_ref, float) or is_0tkn(self.curr_in_ref):
                         if len(self.in_ref) > 0:
                             next_in = self.in_ref[0]
                             if is_stkn(next_in):
