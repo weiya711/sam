@@ -17,7 +17,6 @@ cwd = os.getcwd()
 
 formatted_dir = os.getenv('SYNTHETIC_PATH',  default=os.path.join(cwd, 'synthetic'))
 
-@pytest.mark.skip
 def create_array(shape=5, sparsity=0.995, path=""):
    
     os.system("python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity " +
@@ -127,110 +126,174 @@ def create_array(shape=5, sparsity=0.995, path=""):
     return arr_dict, time_cnt1, time_cnt2
 
 
-def test_reorder_direct_transpose(debug_sim):
-    
-    
-    shape = [1000]
-    sparsity = [0.8, 0.9, 0.95, 0.99, 0.9995]
-    plot_arr = []
-    plot_arr2 = []
-    for sp in sparsity:
-        for s in shape:
-            arrs, read_num1, read_num2 = create_array(shape=s, sparsity=sp)
-            seg_arr = arrs["seg"]
-            crd_arr = arrs["crd"]
+@pytest.mark.skip
+def test_reorder_direct_transpose(debug_sim, test_random_sparsity=False):
+    if True: #test_randomly_sparse:
+        shape = [1000]
+        sparsity = [0.8, 0.9, 0.95, 0.99, 0.9995]
+        plot_arr = []
+        plot_arr2 = []
+        for sp in sparsity:
+            for s in shape:
+                arrs, read_num1, read_num2 = create_array(shape=s, sparsity=sp)
+                seg_arr = arrs["seg"]
+                crd_arr = arrs["crd"]
 
-            gold_crd_i = arrs["out_crd_i"]
-            gold_ref_i = arrs["out_ref_i"]
-            assert (len(gold_crd_i) == len(gold_ref_i))
-            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=1, debug=debug_sim, statistics=True)
-            
-            crd_k = repeated_token_dopper(name="crdk")
-            ref_k = repeated_token_dopper(name="refk")
-            crd_i = repeated_token_dopper(name="crdi")
-            ref_i = repeated_token_dopper(name="refi")
-            
-            crd_k_out = repeated_token_dopper(name="crdkout")
-            ref_k_out = repeated_token_dopper(name="refkout")
-
-
-            
-            in_ref = copy.deepcopy(arrs["in_ref"])
-            in_crd = copy.deepcopy(arrs["in_crd"])
-            done = False
-            time = 0
-            out_crd = []
-            out_ref = []
-            out_crd_i = []
-            out_ref_i = []
-            out_crd_k_out = []
-            out_ref_k_out = []
-            while not done and time < TIMEOUT:
-                if len(in_ref) > 0:
-                    crdscan.set_input(in_ref.pop(0), in_crd.pop(0))
-                crd_k.add_token(crdscan.out_crd_k())
-                ref_k.add_token(crdscan.out_ref_k())
-                crd_i.add_token(crdscan.out_crd_i())
-                ref_i.add_token(crdscan.out_ref_i())
-                crd_k_out.add_token(crdscan.out_crd_k_outer())
-                ref_k_out.add_token(crdscan.out_ref_k_outer())
-         
-
-                crdscan.update()
-                crd_k.update()
-                ref_k.update()
-                crd_i.update()
-                ref_i.update()
-                crd_k_out.update()
-                ref_k_out.update()
-
-                if crd_k.get_token() != "":
-                    out_crd.append(crd_k.get_token())
-                    out_ref.append(ref_k.get_token())
-                if crd_i.get_token() != "":
-                    out_crd_i.append(crd_i.get_token())
-                if ref_i.get_token() != "":
-                    out_ref_i.append(ref_i.get_token())
-                if crd_k_out.get_token() != "":
-                    out_crd_k_out.append(crd_k_out.get_token())
-                if ref_k_out.get_token() != "":
-                    out_ref_k_out.append(ref_k_out.get_token())
-         
-
-                #print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
-                #print("______________________________________________________________________")
+                gold_crd_i = arrs["out_crd_i"]
+                gold_ref_i = arrs["out_ref_i"]
+                assert (len(gold_crd_i) == len(gold_ref_i))
+                crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=1, debug=debug_sim, statistics=True)
                 
-                done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
-                time += 1
-                if time > 1000000000:
-                    break
-            
-            #print("Done and time: ", done, time, " read time: ", read_num1, read_num2)
-            
-            plot_arr.append(time)
+                crd_k = repeated_token_dopper(name="crdk")
+                ref_k = repeated_token_dopper(name="refk")
+                crd_i = repeated_token_dopper(name="crdi")
+                ref_i = repeated_token_dopper(name="refi")
+                
+                crd_k_out = repeated_token_dopper(name="crdkout")
+                ref_k_out = repeated_token_dopper(name="refkout")
 
-            plot_arr2.append(read_num2)
-            #print("Out Crd val (k): ", out_crd)
+
+                
+                in_ref = copy.deepcopy(arrs["in_ref"])
+                in_crd = copy.deepcopy(arrs["in_crd"])
+                done = False
+                time = 0
+                out_crd = []
+                out_ref = []
+                out_crd_i = []
+                out_ref_i = []
+                out_crd_k_out = []
+                out_ref_k_out = []
+                while not done and time < TIMEOUT:
+                    if len(in_ref) > 0:
+                        crdscan.set_input(in_ref.pop(0), in_crd.pop(0))
+                    crd_k.add_token(crdscan.out_crd_k())
+                    ref_k.add_token(crdscan.out_ref_k())
+                    crd_i.add_token(crdscan.out_crd_i())
+                    ref_i.add_token(crdscan.out_ref_i())
+                    crd_k_out.add_token(crdscan.out_crd_k_outer())
+                    ref_k_out.add_token(crdscan.out_ref_k_outer())
+             
+
+                    crdscan.update()
+                    crd_k.update()
+                    ref_k.update()
+                    crd_i.update()
+                    ref_i.update()
+                    crd_k_out.update()
+                    ref_k_out.update()
+
+                    if crd_k.get_token() != "":
+                        out_crd.append(crd_k.get_token())
+                        out_ref.append(ref_k.get_token())
+                    if crd_i.get_token() != "":
+                        out_crd_i.append(crd_i.get_token())
+                    if ref_i.get_token() != "":
+                        out_ref_i.append(ref_i.get_token())
+                    if crd_k_out.get_token() != "":
+                        out_crd_k_out.append(crd_k_out.get_token())
+                    if ref_k_out.get_token() != "":
+                        out_ref_k_out.append(ref_k_out.get_token())
+             
+
+                    #print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
+                    #print("______________________________________________________________________")
+                    
+                    done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
+                    time += 1
+                    if time > 1000000000:
+                        break
+                #print("Done and time: ", done, time, " read time: ", read_num1, read_num2)
+                plot_arr.append(time)
+                plot_arr2.append(read_num2)
+                #print("Out Crd val (k): ", out_crd)
+                #print("Gold Crd val (k): ", gold_crd)
+                # print(out_ref)
+                ## print(gold_ref)
+                #print("Out Crd Val (i) ", out_crd_i)
+                ##print("Gold Crd Val (i)", gold_crd_i)
+                ## print(out_crd_i)
+                #print(gold_crd_i)
+                ##print(gold_ref_i)
+                #print("outer crd: ", out_crd_k_out)
+                #print(out_ref_k_out)
+                ##print("_______")
+                ## print(crdscan.return_statistics())
+                assert (out_crd_i == gold_crd_i)
+                assert (out_crd_k_out == arrs["out_crd_k_outer"])
+                assert (out_ref_k_out == arrs["out_ref_k_outer"])
+    else:
+        # To be completed later: work with suitesparse matrices actually
+        arrs = create_array(shape=s, sparsity=sp)
+        seg_arr = arrs["seg"]
+        crd_arr = arrs["crd"]
+
+        gold_crd_i = arrs["out_crd_i"]
+        gold_ref_i = arrs["out_ref_i"]
+        assert (len(gold_crd_i) == len(gold_ref_i))
+        crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=1, debug=debug_sim, statistics=True)
+        
+        crd_k = repeated_token_dopper(name="crdk")
+        ref_k = repeated_token_dopper(name="refk")
+        crd_i = repeated_token_dopper(name="crdi")
+        ref_i = repeated_token_dopper(name="refi")
+        crd_k_out = repeated_token_dopper(name="crdkout")
+        ref_k_out = repeated_token_dopper(name="refkout")
+        
+        in_ref = copy.deepcopy(arrs["in_ref"])
+        in_crd = copy.deepcopy(arrs["in_crd"])
+        done = False
+        time = 0
+        out_crd = []
+        out_ref = []
+        out_crd_i = []
+        out_ref_i = []
+        out_crd_k_out = []
+        out_ref_k_out = []
+        while not done and time < TIMEOUT:
+            if len(in_ref) > 0:
+                crdscan.set_input(in_ref.pop(0), in_crd.pop(0))
+            crd_k.add_token(crdscan.out_crd_k())
+            ref_k.add_token(crdscan.out_ref_k())
+            crd_i.add_token(crdscan.out_crd_i())
+            ref_i.add_token(crdscan.out_ref_i())
+            crd_k_out.add_token(crdscan.out_crd_k_outer())
+            ref_k_out.add_token(crdscan.out_ref_k_outer())
+     
+
+            crdscan.update()
+            crd_k.update()
+            ref_k.update()
+            crd_i.update()
+            ref_i.update()
+            crd_k_out.update()
+            ref_k_out.update()
+
+            if crd_k.get_token() != "":
+                out_crd.append(crd_k.get_token())
+                out_ref.append(ref_k.get_token())
+            if crd_i.get_token() != "":
+                out_crd_i.append(crd_i.get_token())
+            if ref_i.get_token() != "":
+                out_ref_i.append(ref_i.get_token())
+            if crd_k_out.get_token() != "":
+                out_crd_k_out.append(crd_k_out.get_token())
+            if ref_k_out.get_token() != "":
+                out_ref_k_out.append(ref_k_out.get_token())
+
+            #print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
+            #print("______________________________________________________________________")
             
-            
-            #print("Gold Crd val (k): ", gold_crd)
-            # print(out_ref)
-            ## print(gold_ref)
-
-            #print("Out Crd Val (i) ", out_crd_i)
-            ##print("Gold Crd Val (i)", gold_crd_i)
-            ## print(out_crd_i)
-            #print(gold_crd_i)
-            ##print(gold_ref_i)
-
-            #print("outer crd: ", out_crd_k_out)
-            #print(out_ref_k_out)
-            ##print("_______")
-            ## print(crdscan.return_statistics())
-            assert (out_crd_i == gold_crd_i)
-            assert (out_crd_k_out == arrs["out_crd_k_outer"])
-            assert (out_ref_k_out == arrs["out_ref_k_outer"])
-            # assert (out_ref_i == arrs["out_ref_i"])
-
+            done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
+            time += 1
+            if time > 1000000000:
+                break
+        
+        plot_arr.append(time)
+        plot_arr2.append(read_num2)
+        assert (out_crd_i == gold_crd_i)
+        assert (out_crd_k_out == arrs["out_crd_k_outer"])
+        assert (out_ref_k_out == arrs["out_ref_k_outer"])
+    
     print(plot_arr)
     print(plot_arr2)

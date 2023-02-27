@@ -31,6 +31,8 @@ def pytest_addoption(parser):
                      help="split factor value for the reorder blk")
     parser.addoption("--nnz-value", action="store", default=5000,
                      help="nnz value for stats")
+    parser.addoption("--test-randomly-sparse", action="store_true", default=False,
+                     help="Whether to test with random sparsity matrices")
     parser.addoption("--cast", action="store_true", default=False,
                      help="Flag that runs all simulations using integer input "
                           "and output data (used for hardware simulation comparison)")
@@ -107,6 +109,11 @@ def nnz_value(request):
 @pytest.fixture
 def split_factor(request):
     return request.config.getoption("--split-factor")
+
+
+@pytest.fixture
+def test_randomly_sparse(request):
+    return request.config.getoption("--test-randomly-sparse")
 
 
 @pytest.fixture
