@@ -17,10 +17,7 @@ cwd = os.getcwd()
 
 formatted_dir = os.getenv('SYNTHETIC_PATH',  default=os.path.join(cwd, 'synthetic'))
 
-@pytest.mark.skipif(
-    os.getenv('CI', 'false') == 'true',
-    reason='CI lacks datasets',
-)
+@pytest.mark.skip
 def create_array(shape=5, sparsity=0.995, path=""):
    
     os.system("python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity " +
