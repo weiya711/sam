@@ -33,7 +33,14 @@ class repeated_token_dopper(Primitive):
         self.output_token = ""
         self.name = name
         self.done = False
-    
+        self.first_stop = True
+        self.in_token = []
+
+    def add_input(self, token):
+        if token != "" and token is not None:
+            self.in_token.append(token)
+
+
     def add_token(self, token):
         # if token != "":
         #     self.last_token = self.new_token
@@ -44,9 +51,20 @@ class repeated_token_dopper(Primitive):
         return self.output_token
 
     def update(self):
+        
+        #if self.debug:
+        #    print("REPEATED_BLK name:", self.name, self.first_stop, self.new_token)
+        if len(self.in_token) > 0:
+            self.new_token = self.in_token.pop(0)
+
         if self.done:
             return
         self.output_token = ""
+        if self.first_stop and self.new_token != "" and not is_stkn(self.new_token):
+            self.first_stop = False
+        elif self.first_stop and is_stkn(self.new_token):
+            return
+                
         if (self.last_token == "D" or self.new_token != "") and (self.last_token != self.new_token or self.last_token == "D") and not(is_stkn(self.new_token) and is_stkn(self.last_token)):
             # print(self.name, "update1")
             self.output_token = self.last_token
@@ -59,11 +77,12 @@ class repeated_token_dopper(Primitive):
             self.new_token = ""
         if self.output_token == "D":
             self.done = True
-        # print("REPEATED_BLK name:", self.name, self.last_token, self.new_token, " returns----", self.output_token)
+        #if self.debug:
+        #    print("REPEATED_BLK name:", self.name, self.last_token, self.new_token, " returns----", self.output_token)
 
 
 class Reorder_and_split(CrdRdScan):
-    def __init__(self, crd_arr=[], seg_arr=[], skip=True, limit=10, sf=1, **kwargs):
+    def __init__(self, crd_arr=[], seg_arr=[], skip=True, counter_mode_dense=False, limit=10, sf=1, **kwargs):
         super().__init__(**kwargs)
 
         self.crd_arr = crd_arr
@@ -100,23 +119,38 @@ class Reorder_and_split(CrdRdScan):
         self.nxt_state_table = {}
         self.seg_tuple = {}
         self.out_ref_k_ = 0
+        self.temp_ref_k_ = 0
         self.out_crd_k_ = ""
         self.old_k_outer_copy = ""
+        self.ref_offset = 0
 
         self.last_state_ = "none"
+        self.counter_dense = counter_mode_dense
+        self.outer_lvl = False
 
         if self.get_stats:
             self.num_min_calls = 0
             self.num_min_values_returned = 0
 
+    def set_ref(self, ref):
+        if ref != "" and ref is not None:
+            self.in_ref.append(ref)
+
+    def set_crd(self, crd):
+        if crd != "" and crd is not None:
+            self.in_crd.append(crd)
+
+
     def set_input(self, ref, crd):
-        if crd != "" and ref != "":
+        # print("INPUT coming in: ", ref, crd)
+        if crd != "" and ref != "" and crd is not None and ref is not None:
             self.in_ref.append(ref)
             self.in_crd.append(crd)
-        elif crd != "" and self.in_ref == "":
+        elif crd != "" and (ref == "" or ref is None) and crd is not None:
             self.in_crd.append(crd)
-        elif ref != "" and self.in_crd == "":
+        elif ref != "" and (crd == "" or crd is not None) and ref is not None:
             self.in_ref.append(ref)
+        # print(self.in_crd, self.in_ref)
 
     def out_crd_i(self):
         #if not self.output:
@@ -134,6 +168,8 @@ class Reorder_and_split(CrdRdScan):
     def out_ref_i(self):
         #if not self.output:
         #    self.output = True
+        if isinstance(self.out_ref_i_, int):
+            return self.out_ref_i_
         return self.out_ref_i_
         #else:
         #    return ""
@@ -144,11 +180,25 @@ class Reorder_and_split(CrdRdScan):
         # else:
         return self.curr_ref
 
+    def reset(self):
+        # print("RESET HARD")
+        self.ref_offset = len(self.nxt_state_table.keys())
+        self.counter = 0
+        self.temp_ref_k_ = 0
+        self.nxt_state_table = {}
+        self.last_state = -1
+        self.out_ref_k_ = 0
+        self.out_crd_k_ = ""
+
     def out_ref_k_outer(self):
-        return self.out_ref_k_
+        if self.outer_lvl: 
+            return self.out_ref_k_
+        return ""
 
     def out_crd_k_outer(self):
-        return self.out_crd_k_
+        if self.outer_lvl:    
+            return self.out_crd_k_
+        return ""
 
     def min_table(self):
         min_val = 10000000000000000000000000
@@ -156,11 +206,14 @@ class Reorder_and_split(CrdRdScan):
             if self.nxt_state_table[a] != -1:
                 if min_val > self.nxt_state_table[a]:
                     min_val = self.nxt_state_table[a]
+        # if min_val == 10000000000000000000000000:
+        #     return
         if self.debug:
             print("MIN VALUE Calc ", min_val)
         if self.get_stats:
             self.num_min_calls += 1
-
+        if self.counter_dense:
+            return self.counter + 1
         return min_val // self.split_factor
 
     def check_len(self, arr):
@@ -191,7 +244,7 @@ class Reorder_and_split(CrdRdScan):
             if self.nxt_state_table[i] != -1:
                 if self.nxt_state_table[i] >= self.counter * self.split_factor and self.nxt_state_table[i] < (self.counter + 1) * self.split_factor:
                     return_crd.append(i)
-                    return_ref.append(k)
+                    return_ref.append(k + self.ref_offset)
             k += 1
         if self.debug:
             print("FLAG printing the min of the table and ge the vals ", return_crd, return_ref)
@@ -200,26 +253,43 @@ class Reorder_and_split(CrdRdScan):
         return return_crd, return_ref, flag
 
     def update(self):
+        self.outer_lvl = True
         if self.state == "resting" and len(self.in_ref) > 0 and len(self.in_crd) > 0:
+            if self.last_state == "S2_out":
+                self.reset()
             self.curr_ref_i = self.in_ref.pop(0)
             self.curr_crd_i = self.in_crd.pop(0)
             if not isinstance(self.curr_ref_i, int) and is_stkn(self.curr_ref_i):
                 self.counter = self.min_table()
                 self.out_crd_k_ = self.counter
-                self.out_ref_k_ += 1
+                self.out_ref_k_ = self.temp_ref_k_
+                # self.temp_ref_k_ += 1
+                # if isinstance(self.out_ref_k_, int):
+                #     self.out_ref_k_ += 1
                 if self.last_state_ == "none":
                     self.state = "repeat_i_rows"
                     self.next_state = "none"
+                    self.stop_lvl = self.curr_ref_i
                 else:
+                    # stkn = self.curr_ref_i #ncrement_stkn(self.curr_ref_i)
+                    #self.curr_crd = increment_stkn(self.curr_ref_i)
+                    #self.curr_ref = increment_stkn(self.curr_ref_i)
+                    #self.out_ref_i_ = stkn
+                    #self.out_crd_i_ = stkn
+                    #self.state = self.next_state 
                     self.state = "S1_out"
                     self.next_state = "repeat_i_rows"
+                    self.stop_lvl = self.curr_ref_i
+                    if self.debug:
+                        print("Reorder_Blk: state", self.state, "in_crd", self.in_crd, "in_ref", self.in_ref, "in_crd", self.curr_crd_i,
+                              "curr_ref", self.curr_ref_i, "out_ref_i", self.out_ref_i_, "out_crd_i", self.out_crd_i_, "crd_arr_check",
+                              self.crd_sub_arr, "limits:", self.counter*self.split_factor, (self.counter+1)*self.split_factor, "ref val", self.ref_val, self.output)
+                    #return
+
             elif not isinstance(self.curr_ref_i, int) and self.curr_ref_i == "D":
                 self.state = "done_state"
             else:
-                # print(self.in_ref, self.in_crd, self.curr_ref_i, self.curr_crd_i)
-                # print("---------------------")
-                # print(self.curr_ref_i)
-                # print(self.seg_arr[self.curr_ref_i], self.seg_arr[self.curr_ref_i + 1])
+                self.nxt_state_table[self.curr_crd_i] = -1
                 self.crd_sub_arr = self.crd_arr[self.seg_arr[self.curr_ref_i] : self.seg_arr[self.curr_ref_i + 1]]
                 self.seg_tuple[self.curr_crd_i] = [self.seg_arr[self.curr_ref_i], self.seg_arr[self.curr_ref_i + 1]]
                 self.state = "reading_row"
@@ -233,7 +303,7 @@ class Reorder_and_split(CrdRdScan):
                       "curr_ref", self.curr_ref_i, "out_ref_i", self.out_ref_i_, "out_crd_i", self.out_crd_i_, "crd_arr_check",
                       self.crd_sub_arr, "limits:", self.counter*self.split_factor, (self.counter+1)*self.split_factor, "ref val", self.ref_val, self.output)
         if self.state == "reading_row":
-            self.temp_ref_k_ = self.out_ref_k_
+            # self.temp_ref_k_ = self.out_ref_k_
             if len(self.crd_sub_arr) > 0:
                 self.state = "process_row"
                 self.last_state = "reading_row"
@@ -243,7 +313,7 @@ class Reorder_and_split(CrdRdScan):
                 print("In case of reading row", self.state, self.temp_ref_k_)
         if self.state == "process_row":
             if self.debug:
-                print("PROCESSING_ROW", self.curr_crd_i, self.crd_sub_arr)
+                print("PROCESSING_ROW", self.curr_crd_i, self.crd_sub_arr, self.counter)
             if len(self.crd_sub_arr) > 0:
                 self.curr_crd = self.crd_sub_arr.pop(0)
                 self.curr_ref = self.ref_val
@@ -285,7 +355,6 @@ class Reorder_and_split(CrdRdScan):
                         self.out_ref_i_ = ""
                         self.out_crd_i_ = ""
                     self.ref_val = self.ref_val + 1
-                    return
                 if self.debug:
                     print("Reorder_Blk: state", self.state, "in_crd", self.in_crd, "in_ref", self.in_ref, "in_crd", self.curr_crd,
                           "curr_ref", self.curr_ref, "out_ref_i", self.out_ref_i_, "out_crd_i", self.out_crd_i_, "crd_arr_check",
@@ -294,11 +363,13 @@ class Reorder_and_split(CrdRdScan):
                     print(self.crd_arr, self.seg_arr, self.crd_sub_arr)
                     print(self.nxt_state_table)
                 self.ref_val = self.ref_val + 1
+                return
             else:
                 if self.last_state == "process_row":
                     if self.split_factor == 1:
                         self.state = "resting"
                     else:
+                        # print("EMIT A STOP TOKEN AND POP NEXT")
                         self.state = "S0_out"
                         self.next_state = "resting"
                 else:
@@ -313,22 +384,29 @@ class Reorder_and_split(CrdRdScan):
             self.curr_crd_i_row, self.curr_ref_i_row, flag = self.get_valid_streams()
             if self.debug:
                 print(self.curr_crd_i_row, self.curr_ref_i_row, flag, self.nxt_state_table)
-            if len(self.curr_crd_i_row) > 0:
+            if not flag: #len(self.curr_crd_i_row) > 0:
                 self.state = "reading_row2"
             elif flag:
-                self.state = "S2_out"
-                self.next_state = "resting"
+                if self.stop_lvl == "S0":
+                    self.state = "S2_out"
+                    self.next_state = "resting"
+                if self.stop_lvl == "S1":
+                    self.state = "S3_out"
+                    self.next_state = "resting"
             if self.debug:
                 print("repeat i rows: ", self.state, self.next_state)
 
         if self.state == "reading_row2":
-            self.temp_ref_k_ = self.out_ref_k_
+            # self.temp_ref_k_ = self.out_ref_k_
             if len(self.curr_crd_i_row) == 0:
                 self.state = "S1_out"
+                self.next_state = "repeat_i_rows"
                 self.counter = self.min_table()
                 self.out_crd_k_ = self.counter
-                self.out_ref_k_ += 1
-                self.next_state = "repeat_i_rows"
+                # self.temp_ref_k_ += 1
+                self.out_ref_k_ = self.temp_ref_k_
+                # if isinstance(self.out_ref_k_, int):
+                #     self.out_ref_k_ += 1
             else:
                 self.curr_crd_i = self.curr_crd_i_row.pop(0)
                 self.curr_ref_i = self.curr_ref_i_row.pop(0)
@@ -425,7 +503,13 @@ class Reorder_and_split(CrdRdScan):
             self.curr_ref = "S1"
             self.out_ref_i_ = "S0"
             self.out_crd_i_ = "S0"
-            self.state = self.next_state 
+            self.outer_lvl = False
+            self.state = self.next_state
+            # print("###############################")
+            # print(self.last_state)
+            # print(self.next_state)
+            self.temp_ref_k_ += 1
+
             if self.debug:
                 print("Reorder_Blk: state", self.state, "in_crd", self.in_crd, "in_ref", self.in_ref, "in_crd", self.curr_crd,
                       "curr_ref", self.curr_ref, "out_ref_i", self.out_ref_i_, "out_crd_i", self.out_crd_i_, "crd_arr_check",
@@ -436,6 +520,8 @@ class Reorder_and_split(CrdRdScan):
             self.curr_ref = "S0"
             self.out_ref_i_ = ""
             self.out_crd_i_ = ""
+            self.out_crd_k_ = ""
+            self.out_ref_k_ = ""
             self.state = self.next_state
             if self.debug:
                 print("Reorder_Blk: state", self.state, "in_crd", self.in_crd, "in_ref", self.in_ref, "in_crd",
@@ -450,11 +536,26 @@ class Reorder_and_split(CrdRdScan):
             self.out_ref_k_ = "S0"
             self.out_crd_k_ = "S0"
             self.state = self.next_state
+            self.last_state = "S2_out"
             if self.debug:
                 print("Reorder_Blk: state", self.state, "in_crd", self.in_crd, "in_ref", self.in_ref, "in_crd",
                       self.curr_crd, "curr_ref", self.curr_ref, "out_ref_i", self.out_ref_i_, "out_crd_i", self.out_crd_i_,
                        "crd_arr_check", self.crd_sub_arr, "limits:", self.counter*self.split_factor, (self.counter+1)*self.split_factor)
             return
+        if self.state == "S3_out":
+            self.curr_crd = "S3"
+            self.curr_ref = "S3"
+            self.out_ref_i_ = "S2"
+            self.out_crd_i_ = "S2"
+            self.out_ref_k_ = "S1"
+            self.out_crd_k_ = "S1"
+            self.state = self.next_state
+            self.last_state = "S2_out"
+            if self.debug:
+                print("Reorder_Blk: state", self.state, "in_crd", self.in_crd, "in_ref", self.in_ref, "in_crd",
+                      self.curr_crd, "curr_ref", self.curr_ref, "out_ref_i", self.out_ref_i_, "out_crd_i", self.out_crd_i_,
+                       "crd_arr_check", self.crd_sub_arr, "limits:", self.counter*self.split_factor, (self.counter+1)*self.split_factor)
+            return 
         if self.state == "done_state":
             self.curr_crd = "D"
             self.curr_ref = "D"

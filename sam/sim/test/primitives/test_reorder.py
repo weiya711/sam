@@ -11,31 +11,39 @@ from sam.sim.src.base import remove_emptystr
 # Compressed Read Scanner Unit Tests #
 ######################################
 
-arr_dict = {"seg": [0, 3, 6, 9, 11], "crd": [1, 3, 4, 0, 1, 2, 0, 4, 5, 3, 5], "in_ref": [0, 1, 2, 3, 'S0', 'D'], "in_crd": [0, 1, 4, 6, 'S0', 'D'],
+arr_dict = {"split_factor": 4, "seg": [0, 3, 6, 9, 11], "crd": [1, 3, 4, 0, 1, 2, 0, 4, 5, 3, 5], "in_ref": [0, 1, 2, 3, 'S0', 'D'], "in_crd": [0, 1, 4, 6, 'S0', 'D'],
             "out_crd_k": [1, 3, 'S0', 0, 1, 2, 'S0', 0, 'S0', 3, 'S1', 0, 'S0', 0, 1, 'S0', 1, 'S2', 'D'],
             "out_ref_k": [0, 1, 'S0', 3, 4, 5, 'S0', 6, 'S0', 9, 'S1', 2, 'S0', 7, 8, 'S0', 10, 'S2', 'D'],
             "out_crd_i": [0, 1, 4, 6, 'S0', 0, 4, 6, 'S1', 'D'],
-            "out_ref_i": [0, 1, 2, 3, 'S0', 0, 2, 3, 'S1', 'D']}
+            "out_ref_i": [0, 1, 2, 3, 'S0', 0, 2, 3, 'S1', 'D'],
+            "out_crd_k_outer": [0, 1, 'S0', 'D'],
+            "out_ref_k_outer": [0, 1, 'S0', 'D']
+            }
 
 
-arr_dict1 = {"seg": [0, 2, 3, 4], "crd": [0, 2, 2, 2], "in_ref": [0, 1, 2, 'S0', 'D'], "in_crd": [0, 2, 3, 'S0', 'D'],
-             "out_crd_k": [0, 'S1', 2, 'S0', 2, 'S0',  2,  'S1', 'D'], "out_ref_k": [0, 'S0', 1, 'S0', 2, 'S0', 3, 'S1', 'D'],
-             "out_crd_i": [0, 'S0',  0, 2, 3, 'S1', 'D'], "out_ref_i": [0, 1, 'S0', 2, 'S0', 3, 'S1', 'D']}
+arr_dict2 = {"split_factor": 2, "seg": [0, 2, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "crd": [1, 2, 0, 1, 0, 2, 1, 1, 0, 2, 0, 2, 4, 2, 0], "in_ref": [0, 1, 2, 3, 4, 5, 6,'S0', 7, 8, 9, 10, 11, 'S1', 'D'], "in_crd": [0, 1, 4, 5, 12, 15, 20, 'S0', 0, 1, 4, 12, 20, 'S1', 'D'],
+            "out_crd_k": [1, 'S0', 0, 1, 'S0', 0, 'S0', 1, 'S0', 1, 'S0', 0, 'S1', 0, 'S0', 0, 'S0', 0, 'S2', 0, 'S0', 0, 'S1', 0, 'S0', 0, 'S1', 0, 'S3', 'D'],
+            "out_ref_k": [0, 'S0', 2, 3, 'S0', 4, 'S0', 6, 'S0', 7, 'S0', 8, 'S1', 1, 'S0', 5, 'S0', 9, 'S2', 10, 'S0', 14, 'S1', 11, 'S0', 13, 'S1', 12, 'S3', 'D'],
+            #"out_ref_k": [0, 'S0', 1, 'S0', 3, 4, 5, 'S0', 6, 'S0', 9, 'S1', 2, 'S0', 7, 8, 'S0', 10, 'S2', 'D'],
+            "out_crd_i": [0,       1,          4,       5,       12,     15, 'S0', 0,       4,      20, 'S1', 0,      20, 'S0', 1,      12, 'S0', 4, 'S2', 'D'],
+            "out_ref_i": [0, 1, 2, 3,  4,  5, 'S0', 0, 2,  6, 'S1', 7, 11, 'S0', 8, 10, 'S0', 9, 'S2', 'D'],
+            "out_crd_k_outer": [0, 1, 'S0', 0, 1, 2, 'S1', 'D'],
+            "out_ref_k_outer": [0, 1, 'S0', 0, 1, 2, 'S1', 'D']
+            }
 
-arr_dict2 = {"seg": [0, 2, 5,  7, 9, 10, 11, 15], "crd": [0, 2, 2, 2], "in_ref": [0, 1, 2, 'S0', 'D'], "in_crd": [0, 2, 5,  7, 9, 10, 11, 15, 'S0', 'D'],
-             "out_crd_k": [0, 'S1', 2, 'S0', 2, 'S0',  2,  'S1', 'D'], "out_ref_k": [0, 'S0', 1, 'S0', 2, 'S0', 3, 'S1', 'D'],
-             "out_crd_i": [0, 'S0',  0, 2, 3, 'S1', 'D'], "out_ref_i": [0, 1, 'S0', 2, 'S0', 3, 'S1', 'D']}
+arr_dict3 = {"split_factor": 1, "seg": [0, 1], "crd": [12], "in_ref": [0, 'S0', 'D'], "in_crd": [19, 'S0', 'D'],
+            "out_crd_k": [0, 'S2', 'D'],
+            "out_ref_k": [0, 'S2', 'D'],
+            #"out_ref_k": [0, 'S0', 1, 'S0', 3, 4, 5, 'S0', 6, 'S0', 9, 'S1', 2, 'S0', 7, 8, 'S0', 10, 'S2', 'D'],
+            "out_crd_i": [19, 'S1', 'D'],
+            "out_ref_i": [0, 'S1', 'D'],
+            "out_crd_k_outer": [12, 'S0', 'D'],
+            "out_ref_k_outer": [0, 'S0', 'D']
+            }
 
 
 
-arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 0, 'S0', 1, 'S0', 2, 'S1', 'D'],
-             "out_crd": [0, 2, 3, 'S0', 0, 2, 3, 'S1', 0, 'S1', 2, 3, 'S2', 'D'],
-             "out_ref": [0, 1, 2, 'S0', 0, 1, 2, 'S1', 3, 'S1', 4, 5, 'S2', 'D']}
-arr_dict3 = {"seg": [0, 4], "crd": [0, 1, 2, 3], "in_ref": [0, 'D'],
-             "out_crd": [0, 1, 2, 3, 'S0', 'D'], "out_ref": [0, 1, 2, 3, 'S0', 'D']}
-
-
-@pytest.mark.parametrize("arrs", [arr_dict]) #, arr_dict2, arr_dict3])
+@pytest.mark.parametrize("arrs", [arr_dict, arr_dict2, arr_dict3]) #, arr_dict2, arr_dict3])
 def test_reorder_direct(arrs, debug_sim):
     seg_arr = arrs["seg"]
     crd_arr = arrs["crd"]
@@ -44,10 +52,12 @@ def test_reorder_direct(arrs, debug_sim):
     gold_ref = arrs["out_ref_k"]
     gold_crd_i = arrs["out_crd_i"]
     gold_ref_i = arrs["out_ref_i"]
+    gold_crd_k_out = arrs["out_crd_k_outer"]
+    gold_ref_k_out = arrs["out_ref_k_outer"]
+    sf = arrs["split_factor"]
 
     assert (len(gold_crd) == len(gold_ref))
-
-    crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=4, debug=debug_sim)
+    crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=sf, debug=debug_sim)
     
     crd_k = repeated_token_dopper(name="crdk")
     ref_k = repeated_token_dopper(name="refk")
@@ -57,7 +67,10 @@ def test_reorder_direct(arrs, debug_sim):
     crd_k_out = repeated_token_dopper(name="crdkout")
     ref_k_out = repeated_token_dopper(name="refkout")
 
-
+    temp_arr = []
+    t_arr_k = []
+    t_arr_i = []
+    t_arr_k_out = []
     
     in_ref = copy.deepcopy(arrs["in_ref"])
     in_crd = copy.deepcopy(arrs["in_crd"])
@@ -96,31 +109,47 @@ def test_reorder_direct(arrs, debug_sim):
             out_ref_i.append(ref_i.get_token())
         if crd_k_out.get_token() != "":
             out_crd_k_out.append(crd_k_out.get_token())
+        if ref_k_out.get_token() != "":
             out_ref_k_out.append(ref_k_out.get_token())
- 
 
-        print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
-        print("______________________________________________________________________")
+
+        t_arr_k.append(crdscan.out_crd_k())
+        
+        t_arr_i.append(crdscan.out_crd_i())
+        
+        t_arr_k_out.append(crdscan.out_crd_k())
+
+        temp_arr.append(crdscan.out_ref_k_outer())
+        #print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
+        # print("______________________________________________________________________")
         
         done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
         time += 1
         if time > 10000:
             break
-    print("Done and time: ", done, time)
-    print("Out Crd val (k): ", out_crd)
-    print("Gold Crd val (k): ", gold_crd)
-    print(out_ref)
-    print(gold_ref)
+    #print("Done and time: ", done, time)
+    #print("Out Crd val (k): ", out_crd)
+    #print("Gold Crd val (k): ", gold_crd)
+    #print(out_ref)
+    #print(gold_ref)
 
-    print("Out Crd Val (i) ", out_crd_i)
-    print("Gold Crd Val (i)", gold_crd_i)
-    print(out_ref_i)
-    print(gold_ref_i)
+    #print("Out Crd Val (i) ", out_crd_i)
+    #print("Gold Crd Val (i)", gold_crd_i)
+    #print(out_ref_i)
+    #print(gold_ref_i)
 
-    print("outer crd: ", out_crd_k_out)
-    print(out_ref_k_out)
+    #print("outer crd: ", out_crd_k_out)
+    #print(out_ref_k_out)
 
-
+    #print("@@@@@@@@", temp_arr)
+    #print("@@@@@@@@", t_arr_k)
+    #print("@@@@@@@@", t_arr_i)
+    #print("@@@@@@@@", t_arr_k_out)
+    
     assert (out_crd == gold_crd)
     assert (out_ref == gold_ref)
+    assert (out_ref_i == gold_ref_i)
+    assert (out_crd_i == gold_crd_i)
+    assert (out_crd_k_out == gold_crd_k_out)
+    assert (out_ref_k_out == gold_ref_k_out)
 

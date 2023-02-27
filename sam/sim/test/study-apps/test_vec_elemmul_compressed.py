@@ -24,8 +24,9 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 # @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
 @pytest.mark.parametrize("vectype", ["random", "runs", "blocks"])
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
-def test_unit_vec_elemmul_c_c_c(samBench, run_length, vectype, sparsity, vecname, debug_sim, max_val=1000, size=2000, fill=0):
-    assert(size > max_val)
+def test_unit_vec_elemmul_c_c_c(samBench, run_length, vectype, sparsity, vecname, debug_sim, backpressure,
+                                depth, max_val=1000, size=2000, fill=0):
+    assert (size > max_val)
 
     if vectype == "random":
         b_dirname = os.path.join(synthetic_dir, vectype, "compressed", "B_" + vectype + "_sp_" + str(sparsity))
@@ -81,14 +82,16 @@ def test_unit_vec_elemmul_c_c_c(samBench, run_length, vectype, sparsity, vecname
     if debug_sim:
         print("Compressed RESULT  :\n", gold_seg, "\n", gold_crd, "\n", gold_vals)
 
-    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
-    inter = Intersect2(debug=debug_sim)
-    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
-    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    oval_wrscan = ValsWrScan(size=size, fill=fill)
-    ocrd_wrscan = CompressWrScan(size=size, seg_size=size, fill=fill)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim,
+                                   back_en=backpressure, depth=int(depth))
+    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim,
+                                   back_en=backpressure, depth=int(depth))
+    inter = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val1 = Array(init_arr=vals_arr1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val2 = Array(init_arr=vals_arr2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    oval_wrscan = ValsWrScan(size=size, fill=fill, back_en=backpressure, depth=int(depth))
+    ocrd_wrscan = CompressWrScan(size=size, seg_size=size, fill=fill, back_en=backpressure, depth=int(depth))
 
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
@@ -96,17 +99,17 @@ def test_unit_vec_elemmul_c_c_c(samBench, run_length, vectype, sparsity, vecname
     time1 = 0
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
-            crdscan1.set_in_ref(in_ref1.pop(0))
+            crdscan1.set_in_ref(in_ref1.pop(0), "")
         if len(in_ref2) > 0:
-            crdscan2.set_in_ref(in_ref2.pop(0))
-        inter.set_in1(crdscan1.out_ref(), crdscan1.out_crd())
-        inter.set_in2(crdscan2.out_ref(), crdscan2.out_crd())
-        val1.set_load(inter.out_ref1())
-        val2.set_load(inter.out_ref2())
-        mul.set_in1(val1.out_load())
-        mul.set_in2(val2.out_load())
-        oval_wrscan.set_input(mul.out_val())
-        ocrd_wrscan.set_input(inter.out_crd())
+            crdscan2.set_in_ref(in_ref2.pop(0), "")
+        inter.set_in1(crdscan1.out_ref(), crdscan1.out_crd(), crdscan1)
+        inter.set_in2(crdscan2.out_ref(), crdscan2.out_crd(), crdscan2)
+        val1.set_load(inter.out_ref1(), inter)
+        val2.set_load(inter.out_ref2(), inter)
+        mul.set_in1(val1.out_load(), val1)
+        mul.set_in2(val2.out_load(), val2)
+        oval_wrscan.set_input(mul.out_val(), mul)
+        ocrd_wrscan.set_input(inter.out_crd(), inter)
 
         crdscan1.update()
         crdscan2.update()

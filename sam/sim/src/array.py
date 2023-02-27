@@ -2,9 +2,9 @@ from .base import *
 
 
 class Array(Primitive):
-    def __init__(self, init_arr=None, size=1024, fill=0, **kwargs):
+    def __init__(self, name="", init_arr=None, size=1024, fill=0, depth=1, fifo=None, **kwargs):
         super().__init__(**kwargs)
-
+        self.name = name
         self.fill = fill
         if init_arr is None:
             self.size = size
@@ -17,6 +17,11 @@ class Array(Primitive):
         self.store_vals = []
         self.load_en = False
         self.store_en = False
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.data_ready = True
+            self.depth = depth
+            self.fifo_avail = True
 
         if self.get_stats:
             self.valid_loads = 0
@@ -25,49 +30,131 @@ class Array(Primitive):
             self.store_vals_size = 0
 
         self.curr_load = ''
+        self.path = None
+        if fifo is not None:
+            self.set_fifo(fifo)
+
+    def print_debug(self, name=""):
+        print(name, self.load_addrs)
+
+    def set_fifo(self, fifo):
+        for a in fifo:
+            self.load_addrs.append(a)
+
+    def get_fifo(self):
+        return self.load_addrs
+
+    def add_child(self, child, branch=""):
+        if self.backpressure_en:
+            if child is not None:
+                self.backpressure.append(child)
+                self.branch.append(branch)
+
+    def set_path(self, path):
+        self.path = path
+
+    def reintilialize_arrs(self, load_vals, fifo):
+        self.arr = load_vals
+        self.set_fifo(fifo)
+        self.done = False
+        self.size = len(path[0])
+
+    def initialize_array(self, path):
+        return
+        # assert (isinstance(path[0], list)
+        # self.arr = path[0]
+        # self.size = len(path[0])
+        # self.done = False
+
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
+        return True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
 
     def update(self):
         self.update_done()
-        if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
-            self.block_start = False
+        self.update_ready()
+        if self.backpressure_en:
+            self.data_ready = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.debug:
+                print("arr", self.name, self.load_addrs, self.done)
+            if self.done and self.path is not None:
+                self.initialize_array(self.path)
+            if self.backpressure_en:
+                self.data_ready = True
+            if (len(self.load_addrs) > 0 or len(self.store_vals) > 0):
+                self.block_start = False
 
-        if self.load_en and len(self.load_addrs) > 0:
-            if self.get_stats:
-                self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
-            self.curr_load = self.load(self.load_addrs.pop(0))
-            self.load_en = False
-        else:
-            self.curr_load = ''
+            if len(self.load_addrs) > 0:
+                if self.load_addrs[0] is not None and self.load_addrs[0] != "":
+                    self.load_en = True
+                else:
+                    self.load_en = False
+                if self.get_stats:
+                    self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
+                self.curr_load = self.load(self.load_addrs.pop(0))
+                self.load_en = False
+            else:
+                self.curr_load = ''
 
-        if self.store_en and len(self.store_vals) > 0:
-            if self.get_stats:
-                self.store_vals_size = max(self.store_vals_size, len(self.store_vals))
-            store_tup = self.store_vals.pop(0)
-            self.store(store_tup[0], store_tup[1])
-            self.store_en = False
+            if self.store_en and len(self.store_vals) > 0:
+                if self.get_stats:
+                    self.store_vals_size = max(self.store_vals_size, len(self.store_vals))
+                store_tup = self.store_vals.pop(0)
+                self.store(store_tup[0], store_tup[1])
+                self.store_en = False
 
-    def set_load(self, addr):
+    def fifo_available(self, br=""):
+        if self.backpressure_en:
+            if len(self.load_addrs) > 1:
+                return False
+        return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.load_addrs) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
+
+    def set_load(self, addr, parent=None):
         if addr != '' and addr is not None:
-            self.load_en = True
+            # self.load_en = True
             self.load_addrs.append(addr)
         else:
-            self.load_en = False
+            pass
+            # self.load_en = False
+        # print("111111111")
+        if self.backpressure_en:
+            # print("0000000000000000")
+            parent.set_backpressure(self.fifo_avail)
 
-    def set_store(self, addr, vals):
+    def set_store(self, addr, vals, parent=None):
         if addr != '' and vals != '' and addr is not None and vals is not None:
             self.store_en = True
             self.store_vals.append((addr, vals))
         else:
             self.store_en = False
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def get_arr(self):
         return self.arr
 
     def out_load(self):
-        return self.curr_load
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+            return self.curr_load
 
     def out_val(self):
-        return self.curr_load
+        if (self.backpressure_en and self.data_ready) or not self.backpressure_en:
+            return self.curr_load
 
     def load(self, addr):
         # Special handling of loads of stop tokens
@@ -91,7 +178,7 @@ class Array(Primitive):
             val = self.arr[addr]
 
         if self.debug:
-            print("DEBUG: ARRAY LD:", "\t Addr:", addr, "\t Val:", val)
+            print("DEBUG: ARRAY LD:", self.name, "\t Addr:", addr, "\t Val:", val)
 
         return val
 
@@ -107,6 +194,8 @@ class Array(Primitive):
             return
         elif addr >= self.size:
             self.resize(addr * 2)
+            print(addr, self.size)
+            print(self.name)
             self.arr[addr] = val
             # raise Exception("Address (" + str(addr) + ") is out of array size (" +
             #                 str(self.size) + ") bounds, please resize")
@@ -114,7 +203,7 @@ class Array(Primitive):
             self.arr[addr] = val
 
         if self.debug:
-            print("DEBUG: ARRAY ST:", "\t Addr:", addr, "\t Val:", val)
+            print("DEBUG: ARRAY ST:", self.name, "\t Addr:", addr, "\t Val:", val)
 
     def reinit(self, init_arr):
         self.arr = init_arr

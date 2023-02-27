@@ -30,7 +30,8 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
 # @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, debug_sim, max_val=999, size=2000, fill=0):
+def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, debug_sim,
+                        backpressure, depth, max_val=999, size=2000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
     if vectype == "random":
@@ -102,23 +103,25 @@ def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, de
         print(full_bv)
         print(gold_bv)
 
-    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim, back_en=backpressure,
+                                   depth=int(depth))
+    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim, back_en=backpressure,
+                                   depth=int(depth))
 
-    bv1 = BV(debug=debug_sim)
-    bv2 = BV(debug=debug_sim)
+    bv1 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bv2 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    bvchunk1 = ChunkBV(width=sf, size=size, debug=debug_sim)
-    bvchunk2 = ChunkBV(width=sf, size=size, debug=debug_sim)
+    bvchunk1 = ChunkBV(width=sf, size=size, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvchunk2 = ChunkBV(width=sf, size=size, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    inter = IntersectBV2(emit_zeros=True, debug=debug_sim)
-    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
-    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
+    inter = IntersectBV2(emit_zeros=True, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val1 = Array(init_arr=vals_arr1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val2 = Array(init_arr=vals_arr2, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    mul = Multiply2(debug=debug_sim)
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    oval_wrscan = ValsWrScan(size=size, fill=fill)
-    wrscan0 = ValsWrScan(size=size, fill=fill)
+    oval_wrscan = ValsWrScan(size=size, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan0 = ValsWrScan(size=size, fill=fill, back_en=backpressure, depth=int(depth))
 
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
@@ -132,32 +135,32 @@ def test_vec_elemmul_bv(samBench, run_length, vecname, vectype, sparsity, sf, de
     temp5 = []
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
-            crdscan1.set_in_ref(in_ref1.pop(0))
+            crdscan1.set_in_ref(in_ref1.pop(0), "")
         if len(in_ref2) > 0:
-            crdscan2.set_in_ref(in_ref2.pop(0))
-        bv1.set_in_crd(crdscan1.out_crd())
-        bv2.set_in_crd(crdscan2.out_crd())
-        bvchunk1.set_in_bv(bv1.out_bv_int())
-        bvchunk2.set_in_bv(bv2.out_bv_int())
+            crdscan2.set_in_ref(in_ref2.pop(0), "")
+        bv1.set_in_crd(crdscan1.out_crd(), crdscan1)
+        bv2.set_in_crd(crdscan2.out_crd(), crdscan2)
+        bvchunk1.set_in_bv(bv1.out_bv_int(), bv1)
+        bvchunk2.set_in_bv(bv2.out_bv_int(), bv2)
 
         temp1.append(bvchunk1.out_bv())
         temp2.append(bvchunk1.out_ref())
         temp3.append(bvchunk2.out_bv())
         temp4.append(bvchunk2.out_ref())
 
-        inter.set_in1(bvchunk1.out_ref(), bvchunk1.out_bv_int())
-        inter.set_in2(bvchunk2.out_ref(), bvchunk2.out_bv_int())
+        inter.set_in1(bvchunk1.out_ref(), bvchunk1.out_bv_int(), bvchunk1)
+        inter.set_in2(bvchunk2.out_ref(), bvchunk2.out_bv_int(), bvchunk2)
 
         temp5.append(inter.out_bv())
 
-        val1.set_load(inter.out_ref1())
-        val2.set_load(inter.out_ref2())
-        mul.set_in1(val1.out_load())
-        mul.set_in2(val2.out_load())
+        val1.set_load(inter.out_ref1(), inter)
+        val2.set_load(inter.out_ref2(), inter)
+        mul.set_in1(val1.out_load(), val1)
+        mul.set_in2(val2.out_load(), val2)
 
-        oval_wrscan.set_input(mul.out_val())
+        oval_wrscan.set_input(mul.out_val(), mul)
 
-        wrscan0.set_input(inter.out_bv())
+        wrscan0.set_input(inter.out_bv(), inter)
 
         crdscan1.update()
         crdscan2.update()

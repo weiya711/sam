@@ -9,7 +9,7 @@ class ComputeNode(HWNode):
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.glb_node import GLBNode
         from sam.onyx.hw_nodes.buffet_node import BuffetNode
@@ -24,6 +24,7 @@ class ComputeNode(HWNode):
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         other_type = type(other)
 
@@ -39,7 +40,7 @@ class ComputeNode(HWNode):
             new_conns = {
                 'pe_to_rd_scan': [
                     # send output to rd scanner
-                    ([(pe, "data_out"), (rd_scan, "us_pos_in")], 17),
+                    ([(pe, "res"), (rd_scan, "us_pos_in")], 17),
                     # ([(pe, "eos_out"), (rd_scan, "us_eos_in")], 1),
                     # ([(rd_scan, "us_ready_out"), (pe, "ready_in")], 1),
                     # ([(pe, "valid_out"), (rd_scan, "us_valid_in")], 1),
@@ -52,7 +53,7 @@ class ComputeNode(HWNode):
             new_conns = {
                 'pe_to_wr_scan': [
                     # send output to rd scanner
-                    ([(pe, "data_out"), (wr_scan, "data_in")], 17),
+                    ([(pe, "res"), (wr_scan, "data_in")], 17),
                     # ([(pe, "eos_out"), (wr_scan, "eos_in_0")], 1),
                     # ([(wr_scan, "ready_out_0"), (pe, "ready_in")], 1),
                     # ([(pe, "valid_out"), (wr_scan, "valid_in_0")], 1),
@@ -68,13 +69,17 @@ class ComputeNode(HWNode):
             isect = other.get_name()
             pe = self.get_name()
             # isect_conn = other.get_num_inputs()
-            isect_conn = 0
-            if edge.get_tensor() == "C":
-                isect_conn = 1
+
+            if 'tensor' not in edge.get_attributes():
+                # Taking some liberties here - but technically this is the combo val
+                isect_conn = other.get_connection_from_tensor('B')
+            else:
+                isect_conn = other.get_connection_from_tensor(edge.get_tensor())
+
             new_conns = {
                 f'pe_to_isect_{in_str}_{isect_conn}': [
                     # send output to rd scanner
-                    ([(pe, "data_out"), (isect, f"{in_str}_{isect_conn}")], 17),
+                    ([(pe, "res"), (isect, f"{in_str}_{isect_conn}")], 17),
                     # ([(pe, "eos_out"), (isect, f"eos_in_{isect_conn * 2 + offset}")], 1),
                     # ([(isect, f"ready_out_{isect_conn * 2 + offset}"), (pe, "ready_in")], 1),
                     # ([(pe, "valid_out"), (isect, f"valid_in_{isect_conn * 2 + offset}")], 1),
@@ -88,7 +93,7 @@ class ComputeNode(HWNode):
             new_conns = {
                 f'pe_to_reduce': [
                     # send output to rd scanner
-                    ([(pe, "data_out"), (other_red, f"data_in")], 17),
+                    ([(pe, "res"), (other_red, f"data_in")], 17),
                     # ([(pe, "eos_out"), (other_red, f"eos_in")], 1),
                     # ([(other_red, f"ready_out"), (pe, "ready_in")], 1),
                     # ([(pe, "valid_out"), (other_red, f"valid_in")], 1),
@@ -111,7 +116,8 @@ class ComputeNode(HWNode):
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
                     # send output to rd scanner
-                    ([(pe, "data_out"), (other_pe, f"data_in_{other_conn}")], 17),
+                    # ([(pe, "res"), (other_pe, f"data_in_{other_conn}")], 17),
+                    ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
                     # ([(pe, "eos_out"), (other_pe, f"eos_in_{other_conn}")], 1),
                     # ([(other_pe, f"ready_out_{other_conn}"), (pe, "ready_in")], 1),
                     # ([(pe, "valid_out"), (other_pe, f"valid_in_{other_conn}")], 1),
@@ -125,6 +131,16 @@ class ComputeNode(HWNode):
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == FiberAccessNode:
+            print("COMPUTE TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
 
@@ -138,12 +154,15 @@ class ComputeNode(HWNode):
         print("PE CONFIGURE")
         print(attributes)
         c_op = attributes['type'].strip('"')
+        comment = attributes['comment'].strip('"')
         print(c_op)
         op_code = 0
         if c_op == 'mul':
             op_code = 1
-        elif c_op == 'add':
+        elif c_op == 'add' and 'sub=1' not in comment:
             op_code = 0
+        elif c_op == 'add' and 'sub=1' in comment:
+            op_code = 2
         cfg_kwargs = {
             'op': op_code
         }

@@ -54,7 +54,7 @@ arr_dict2 = {"vi_seg": [0, 5],
     reason='CI lacks datasets',
 )
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2])
-def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
+def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, backpressure, depth, fill=0):
     C_shape = (16, 16)
 
     C_seg1 = copy.deepcopy(arrs["mi_seg"])
@@ -79,32 +79,38 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
     b_shape = [0]
     b_vals = [2]
 
-    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim)
-    unioni_26 = Union2(debug=debug_sim)
-    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim)
-    repsiggen_i_24 = RepeatSigGen(debug=debug_sim)
-    repeat_bi_20 = Repeat(debug=debug_sim)
-    repeat_di_21 = Repeat(debug=debug_sim)
-    repeat_ei_22 = Repeat(debug=debug_sim)
-    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim)
-    intersectj_17 = Intersect2(debug=debug_sim)
-    repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
-    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
-    arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim)
-    repeat_bj_12 = Repeat(debug=debug_sim, union=True)
-    repeat_ej_13 = Repeat(debug=debug_sim, union=True)
-    repeat_fj_14 = Repeat(debug=debug_sim, union=True)
-    arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim)
-    arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim)
-    arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim)
-    mul_5 = Multiply2(debug=debug_sim)
-    mul_9 = Multiply2(debug=debug_sim)
-    mul_4 = Multiply2(debug=debug_sim)
-    add_3 = Add2(debug=debug_sim)
-    reduce_2 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim)
+    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1,
+                                            debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    unioni_26 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=int(depth))
+    repsiggen_i_24 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_bi_20 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_di_21 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_ei_22 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    intersectj_17 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repsiggen_j_16 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_bj_12 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_ej_13 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_fj_14 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul_5 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul_9 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul_4 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    add_3 = Add2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    reduce_2 = Reduce(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim, back_en=backpressure,
+                                    depth=int(depth))
     in_ref_C = [0, 'D']
     in_ref_f = [0, 'D']
     in_ref_b = [0, 'D']
@@ -128,56 +134,96 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
     temp12 = []
     temp13 = []
     temp14 = []
+    temp_add1 = []
+    temp_add2 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
-            fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
+            fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0), "")
 
         if len(in_ref_f) > 0:
-            fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
+            fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0), "")
 
-        # temp1.append(fiberlookup_fi_28.out_crd())
-        # temp2.append(fiberlookup_Ci_27.out_crd())
+        unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd(), fiberlookup_Ci_27)
+        unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd(), fiberlookup_fi_28)
 
-        unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
-        unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
+        fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1(), unioni_26)
 
-        fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
+        fiberwrite_x0_1.set_input(unioni_26.out_crd(), unioni_26)
 
-        fiberwrite_x0_1.set_input(unioni_26.out_crd())
-
-        repsiggen_i_24.set_istream(unioni_26.out_crd())
+        repsiggen_i_24.set_istream(unioni_26.out_crd(), unioni_26)
 
         if len(in_ref_b) > 0:
-            repeat_bi_20.set_in_ref(in_ref_b.pop(0))
-        repeat_bi_20.set_in_repsig(repsiggen_i_24.out_repsig())
+            repeat_bi_20.set_in_ref(in_ref_b.pop(0), "")
+        repeat_bi_20.set_in_repsig(repsiggen_i_24.out_repsig(), repsiggen_i_24)
 
         if len(in_ref_d) > 0:
-            repeat_di_21.set_in_ref(in_ref_d.pop(0))
-        repeat_di_21.set_in_repsig(repsiggen_i_24.out_repsig())
+            repeat_di_21.set_in_ref(in_ref_d.pop(0), "")
+        repeat_di_21.set_in_repsig(repsiggen_i_24.out_repsig(), repsiggen_i_24)
 
         if len(in_ref_e) > 0:
-            repeat_ei_22.set_in_ref(in_ref_e.pop(0))
-        repeat_ei_22.set_in_repsig(repsiggen_i_24.out_repsig())
+            repeat_ei_22.set_in_ref(in_ref_e.pop(0), "")
+        repeat_ei_22.set_in_repsig(repsiggen_i_24.out_repsig(), repsiggen_i_24)
 
-        fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref())
+        fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref(), repeat_di_21)
 
-        intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
-        intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
+        intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd(), fiberlookup_dj_19)
+        intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd(), fiberlookup_Cj_18)
 
-        repsiggen_j_16.set_istream(intersectj_17.out_crd())
+        repsiggen_j_16.set_istream(intersectj_17.out_crd(), intersectj_17)
 
-        arrayvals_C_7.set_load(intersectj_17.out_ref2())
+        arrayvals_C_7.set_load(intersectj_17.out_ref2(), intersectj_17)
 
-        arrayvals_d_8.set_load(intersectj_17.out_ref1())
+        arrayvals_d_8.set_load(intersectj_17.out_ref1(), intersectj_17)
 
-        repeat_bj_12.set_in_ref(repeat_bi_20.out_ref())
-        repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig())
+        repeat_bj_12.set_in_ref(repeat_bi_20.out_ref(), repeat_bi_20)
+        repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig(), repsiggen_j_16)
 
-        repeat_ej_13.set_in_repsig(repsiggen_j_16.out_repsig())
-        repeat_ej_13.set_in_ref(repeat_ei_22.out_ref())
+        arrayvals_e_10.set_load(repeat_ei_22.out_ref(), repeat_ei_22)
 
-        repeat_fj_14.set_in_ref(unioni_26.out_ref2())
-        repeat_fj_14.set_in_repsig(repsiggen_j_16.out_repsig())
+        arrayvals_f_11.set_load(unioni_26.out_ref2(), unioni_26)
+
+        mul_9.set_in1(arrayvals_e_10.out_val(), arrayvals_e_10)
+        mul_9.set_in2(arrayvals_f_11.out_val(), arrayvals_f_11)
+
+        arrayvals_b_6.set_load(repeat_bj_12.out_ref(), repeat_bj_12)
+
+        mul_5.set_in1(arrayvals_b_6.out_val(), arrayvals_b_6)
+        mul_5.set_in2(arrayvals_C_7.out_val(), arrayvals_C_7)
+
+        mul_4.set_in1(mul_5.out_val(), mul_5)
+        mul_4.set_in2(arrayvals_d_8.out_val(), arrayvals_d_8)
+
+        reduce_2.set_in_val(mul_4.out_val(), mul_4)
+
+        add_3.set_in1(reduce_2.out_val(), reduce_2)
+        add_3.set_in2(mul_9.out_val(), mul_9)
+
+        fiberwrite_xvals_0.set_input(add_3.out_val(), add_3)
+
+        fiberlookup_Ci_27.update()
+        fiberlookup_fi_28.update()
+        unioni_26.update()
+        fiberlookup_Cj_18.update()
+        fiberwrite_x0_1.update()
+        repsiggen_i_24.update()
+        repeat_bi_20.update()
+        repeat_di_21.update()
+        repeat_ei_22.update()
+        fiberlookup_dj_19.update()
+        intersectj_17.update()
+        repsiggen_j_16.update()
+        arrayvals_C_7.update()
+        arrayvals_d_8.update()
+        repeat_bj_12.update()
+        arrayvals_e_10.update()
+        arrayvals_f_11.update()
+        mul_9.update()
+        arrayvals_b_6.update()
+        mul_5.update()
+        mul_4.update()
+        reduce_2.update()
+        add_3.update()
+        fiberwrite_xvals_0.update()
 
         temp7.append(unioni_26.out_crd())
         temp6.append(unioni_26.out_ref1())
@@ -196,55 +242,8 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
         temp11.append(repeat_ej_13.out_ref())
         temp5.append(repeat_fj_14.out_ref())
 
-        arrayvals_e_10.set_load(repeat_ej_13.out_ref())
-
-        arrayvals_f_11.set_load(repeat_fj_14.out_ref())
-
-        mul_9.set_in1(arrayvals_e_10.out_val())
-        mul_9.set_in2(arrayvals_f_11.out_val())
-
-        arrayvals_b_6.set_load(repeat_bj_12.out_ref())
-
-        mul_5.set_in1(arrayvals_b_6.out_val())
-        mul_5.set_in2(arrayvals_C_7.out_val())
-
-        mul_4.set_in1(mul_5.out_val())
-        mul_4.set_in2(arrayvals_d_8.out_val())
-
-        add_3.set_in1(mul_4.out_val())
-        add_3.set_in2(mul_9.out_val())
-
-        reduce_2.set_in_val(add_3.out_val())
-
-        fiberwrite_xvals_0.set_input(reduce_2.out_val())
-
-        fiberlookup_Ci_27.update()
-        fiberlookup_fi_28.update()
-        unioni_26.update()
-        fiberlookup_Cj_18.update()
-        fiberwrite_x0_1.update()
-        repsiggen_i_24.update()
-        repeat_bi_20.update()
-        repeat_di_21.update()
-        repeat_ei_22.update()
-        fiberlookup_dj_19.update()
-        intersectj_17.update()
-        repsiggen_j_16.update()
-        arrayvals_C_7.update()
-        arrayvals_d_8.update()
-        repeat_bj_12.update()
-        repeat_ej_13.update()
-        repeat_fj_14.update()
-        arrayvals_e_10.update()
-        arrayvals_f_11.update()
-        mul_9.update()
-        arrayvals_b_6.update()
-        mul_5.update()
-        mul_4.update()
-        add_3.update()
-        reduce_2.update()
-        fiberwrite_xvals_0.update()
-
+        temp_add1.append(mul_9.out_val())
+        temp_add2.append(mul_4.out_val())
         done = fiberwrite_x0_1.out_done() and fiberwrite_xvals_0.out_done()
         time_cnt += 1
 
@@ -328,7 +327,7 @@ def test_mat_mattransmul_direct(arrs, check_gold, debug_sim, fill=0):
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
 @pytest.mark.parametrize("nnz", [0.2, 0.5, 0.8])
-def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
+def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, backpressure, depth, max_val=10, fill=0):
     C_shape = [dim, dim]
     C_crds, C_segs = gen_n_comp_arrs(2, dim)
     C_vals = gen_val_arr(len(C_crds[-1]), max_val, -max_val)
@@ -364,32 +363,38 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
         print("C1:", C_seg1, C_crd1, C_vals)
         print("d:", d_seg0, d_crd0, d_vals)
 
-    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim)
-    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim)
-    unioni_26 = Union2(debug=debug_sim)
-    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim)
-    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim)
-    repsiggen_i_24 = RepeatSigGen(debug=debug_sim)
-    repeat_bi_20 = Repeat(debug=debug_sim)
-    repeat_di_21 = Repeat(debug=debug_sim)
-    repeat_ei_22 = Repeat(debug=debug_sim)
-    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim)
-    intersectj_17 = Intersect2(debug=debug_sim)
-    repsiggen_j_16 = RepeatSigGen(debug=debug_sim)
-    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim)
-    arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim)
-    repeat_bj_12 = Repeat(debug=debug_sim, union=True)
+    fiberlookup_Ci_27 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberlookup_fi_28 = CompressedCrdRdScan(crd_arr=f_crd0, seg_arr=f_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    unioni_26 = Union2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_Cj_18 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    fiberwrite_x0_1 = CompressWrScan(seg_size=2, size=C_shape[1], fill=fill, debug=debug_sim,
+                                     back_en=backpressure, depth=int(depth))
+    repsiggen_i_24 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_bi_20 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_di_21 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_ei_22 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberlookup_dj_19 = CompressedCrdRdScan(crd_arr=d_crd0, seg_arr=d_seg0, debug=debug_sim,
+                                            back_en=backpressure, depth=int(depth))
+    intersectj_17 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repsiggen_j_16 = RepeatSigGen(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_C_7 = Array(init_arr=C_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_d_8 = Array(init_arr=d_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    repeat_bj_12 = Repeat(debug=debug_sim, back_en=backpressure, depth=int(depth))
     # repeat_ej_13 = Repeat(debug=debug_sim, union=True)
     # repeat_fj_14 = Repeat(debug=debug_sim, union=True)
-    arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim)
-    arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim)
-    arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim)
-    mul_5 = Multiply2(debug=debug_sim)
-    mul_9 = Multiply2(debug=debug_sim)
-    mul_4 = Multiply2(debug=debug_sim)
-    add_3 = Add2(debug=debug_sim)
-    reduce_2 = Reduce(debug=debug_sim)
-    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim)
+    arrayvals_b_6 = Array(init_arr=b_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_e_10 = Array(init_arr=e_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    arrayvals_f_11 = Array(init_arr=f_vals, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul_5 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul_9 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul_4 = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    add_3 = Add2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    reduce_2 = Reduce(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    fiberwrite_xvals_0 = ValsWrScan(size=1 * C_shape[1], fill=fill, debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
     in_ref_C = [0, 'D']
     in_ref_f = [0, 'D']
     in_ref_b = [0, 'D']
@@ -415,45 +420,45 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
     temp14 = []
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_C) > 0:
-            fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0))
+            fiberlookup_Ci_27.set_in_ref(in_ref_C.pop(0), "")
 
         if len(in_ref_f) > 0:
-            fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0))
+            fiberlookup_fi_28.set_in_ref(in_ref_f.pop(0), "")
 
-        unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd())
-        unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd())
+        unioni_26.set_in1(fiberlookup_Ci_27.out_ref(), fiberlookup_Ci_27.out_crd(), fiberlookup_Ci_27)
+        unioni_26.set_in2(fiberlookup_fi_28.out_ref(), fiberlookup_fi_28.out_crd(), fiberlookup_fi_28)
 
-        fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1())
+        fiberlookup_Cj_18.set_in_ref(unioni_26.out_ref1(), unioni_26)
 
-        fiberwrite_x0_1.set_input(unioni_26.out_crd())
+        fiberwrite_x0_1.set_input(unioni_26.out_crd(), unioni_26)
 
-        repsiggen_i_24.set_istream(unioni_26.out_crd())
+        repsiggen_i_24.set_istream(unioni_26.out_crd(), unioni_26)
 
         if len(in_ref_b) > 0:
-            repeat_bi_20.set_in_ref(in_ref_b.pop(0))
-        repeat_bi_20.set_in_repsig(repsiggen_i_24.out_repsig())
+            repeat_bi_20.set_in_ref(in_ref_b.pop(0), "")
+        repeat_bi_20.set_in_repsig(repsiggen_i_24.out_repsig(), repsiggen_i_24)
 
         if len(in_ref_d) > 0:
-            repeat_di_21.set_in_ref(in_ref_d.pop(0))
-        repeat_di_21.set_in_repsig(repsiggen_i_24.out_repsig())
+            repeat_di_21.set_in_ref(in_ref_d.pop(0), "")
+        repeat_di_21.set_in_repsig(repsiggen_i_24.out_repsig(), repsiggen_i_24)
 
         if len(in_ref_e) > 0:
-            repeat_ei_22.set_in_ref(in_ref_e.pop(0))
-        repeat_ei_22.set_in_repsig(repsiggen_i_24.out_repsig())
+            repeat_ei_22.set_in_ref(in_ref_e.pop(0), "")
+        repeat_ei_22.set_in_repsig(repsiggen_i_24.out_repsig(), repsiggen_i_24)
 
-        fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref())
+        fiberlookup_dj_19.set_in_ref(repeat_di_21.out_ref(), repeat_di_21)
 
-        intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd())
-        intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd())
+        intersectj_17.set_in1(fiberlookup_dj_19.out_ref(), fiberlookup_dj_19.out_crd(), fiberlookup_dj_19)
+        intersectj_17.set_in2(fiberlookup_Cj_18.out_ref(), fiberlookup_Cj_18.out_crd(), fiberlookup_Cj_18)
 
-        repsiggen_j_16.set_istream(intersectj_17.out_crd())
+        repsiggen_j_16.set_istream(intersectj_17.out_crd(), intersectj_17)
 
-        arrayvals_C_7.set_load(intersectj_17.out_ref2())
+        arrayvals_C_7.set_load(intersectj_17.out_ref2(), intersectj_17)
 
-        arrayvals_d_8.set_load(intersectj_17.out_ref1())
+        arrayvals_d_8.set_load(intersectj_17.out_ref1(), intersectj_17)
 
-        repeat_bj_12.set_in_ref(repeat_bi_20.out_ref())
-        repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig())
+        repeat_bj_12.set_in_ref(repeat_bi_20.out_ref(), repeat_bi_20)
+        repeat_bj_12.set_in_repsig(repsiggen_j_16.out_repsig(), repsiggen_j_16)
 
         temp7.append(unioni_26.out_crd())
         temp6.append(unioni_26.out_ref1())
@@ -472,27 +477,27 @@ def test_unit_mat_mattransmul_random(dim, nnz, debug_sim, max_val=10, fill=0):
         # temp11.append(repeat_ej_13.out_ref())
         # temp5.append(repeat_fj_14.out_ref())
 
-        arrayvals_e_10.set_load(repeat_ei_22.out_ref())
+        arrayvals_e_10.set_load(repeat_ei_22.out_ref(), repeat_ei_22)
 
-        arrayvals_f_11.set_load(unioni_26.out_ref2())
+        arrayvals_f_11.set_load(unioni_26.out_ref2(), unioni_26)
 
-        mul_9.set_in1(arrayvals_e_10.out_val())
-        mul_9.set_in2(arrayvals_f_11.out_val())
+        mul_9.set_in1(arrayvals_e_10.out_val(), arrayvals_e_10)
+        mul_9.set_in2(arrayvals_f_11.out_val(), arrayvals_f_11)
 
-        arrayvals_b_6.set_load(repeat_bj_12.out_ref())
+        arrayvals_b_6.set_load(repeat_bj_12.out_ref(), repeat_bj_12)
 
-        mul_5.set_in1(arrayvals_b_6.out_val())
-        mul_5.set_in2(arrayvals_C_7.out_val())
+        mul_5.set_in1(arrayvals_b_6.out_val(), arrayvals_b_6)
+        mul_5.set_in2(arrayvals_C_7.out_val(), arrayvals_C_7)
 
-        mul_4.set_in1(mul_5.out_val())
-        mul_4.set_in2(arrayvals_d_8.out_val())
+        mul_4.set_in1(mul_5.out_val(), mul_5)
+        mul_4.set_in2(arrayvals_d_8.out_val(), arrayvals_d_8)
 
-        reduce_2.set_in_val(mul_4.out_val())
+        reduce_2.set_in_val(mul_4.out_val(), mul_4)
 
-        add_3.set_in1(reduce_2.out_val())
-        add_3.set_in2(mul_9.out_val())
+        add_3.set_in1(reduce_2.out_val(), reduce_2)
+        add_3.set_in2(mul_9.out_val(), mul_9)
 
-        fiberwrite_xvals_0.set_input(add_3.out_val())
+        fiberwrite_xvals_0.set_input(add_3.out_val(), add_3)
 
         fiberlookup_Ci_27.update()
         fiberlookup_fi_28.update()
