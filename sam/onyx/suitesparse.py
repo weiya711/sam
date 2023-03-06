@@ -15,6 +15,8 @@ def change_dir(dir_path):
 
 
 def clean_dir(dir_path):
+    if not os.path.isdir(dir_path):
+        return
     for filename in os.listdir(dir_path):
         full_del_path = os.path.join(dir_path, filename)
         if os.path.isfile(full_del_path):
@@ -80,10 +82,17 @@ def generate_suitesparse(log_file, basedir, benchname, mtx, mtx_dir, matrix_tmp_
 
     # Generate subfolder
     final_mat_path = os.path.join(matrix_tmp_dir, f"{mtx}")
-    if not os.path.isdir(matrix_tmp_dir):
-        os.makedirs(matrix_tmp_dir)
-    if not os.path.isdir(final_mat_path):
-        os.makedirs(final_mat_path)
+    # clean it no matter what, since it is based on the bench and is likely to change
+    # if not os.path.isdir(matrix_tmp_dir):
+    #     os.makedirs(matrix_tmp_dir)
+    # else:
+    #     shutil.rmtree(matrix_tmp_dir)
+
+    # if not os.path.isdir(final_mat_path):
+    #     os.makedirs(final_mat_path)
+    # else:
+    #     shutil.rmtree(final_mat_path)
+    clean_dir(final_mat_path)
 
     tensorpath = os.path.join(mtx_dir, mtx + ".mtx")
     os.environ["SUITESPARSE_TENSOR_PATH"] = tensorpath
@@ -95,7 +104,100 @@ def generate_suitesparse(log_file, basedir, benchname, mtx, mtx_dir, matrix_tmp_
     return error
 
 
-def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check=True, gen_verilog=False):
+def print_perf_csv(performance):
+
+    print('TILE NAME, PRIM, APP_PRIM, CYC_START, CYC_END, OPS')
+    for k_ in performance.keys():
+        tile_name = k_
+        for name_, perf_ in performance[k_].items():
+            # Skip the app name that is added
+            if name_ == 'app_name':
+                continue
+            # print(name_)
+            # print(perf_)
+            prim = name_
+            app_prim = performance[k_]['app_name'] if 'app_name' in performance[k_] else 'none'
+            cyc_start = perf_['cycles'][0]
+            cyc_done = perf_['cycles'][1]
+            ops = perf_['ops']
+            print(f"{tile_name}, {prim}, {app_prim}, {cyc_start}, {cyc_done}, {ops}")
+
+
+def get_cycle_count(text):
+
+    cyc_count = 0
+
+    for line in text:
+        if "Cycle" in line:
+            print(line)
+            ls = line.split()
+            cyc_count = int(ls[-1])
+
+    return cyc_count
+
+
+def inject_app_names(performance, app, matrix):
+
+    dir_final = os.path.join(os.environ['BASEDIR'], 'garnet', 'SPARSE_TESTS',
+                             f'{app}_{matrix}', 'COLLAT_DIR', 'design.mapped')
+
+    with open(dir_final, 'r') as fp_:
+        all_lines = fp_.readlines()
+
+    for line in all_lines:
+        lspl = line.split()
+        tile = f'Tile_{lspl[-1]}'
+        # name = lspl[2]
+        name = line.strip()
+        # print(performance)
+        if tile in performance:
+            performance[tile]['app_name'] = name
+
+    return performance
+
+def get_performance(text):
+
+    perf_tiles = {}
+
+    for line in text:
+        if "SparseTBBuilder_tb.dut." in line:
+            spl_line = line.split('.')
+            tile = spl_line[3]
+            start_done_name = [s_ for s_ in spl_line if 'start' in s_ or 'done' in s_ or 'ops' in s_][0]
+            spl_sdn = start_done_name.split()
+            cyc_count = int(spl_sdn[1])
+            sdn = spl_sdn[0]
+            sd = sdn.split('_')[-2]
+            sd_idx = sdn.find(sd)
+            # print(sd_idx)
+            name_ = sdn[0:sd_idx - 1]
+            if tile not in perf_tiles:
+                perf_tiles[tile] = {}
+
+            if name_ not in perf_tiles[tile]:
+                # There can be multiple primitives with the same Tile
+                # in the case of read scanner/write scanner
+                perf_tiles[tile][name_] = {'cycles': [0, 0],
+                                            'ops': 0}
+                # perf_tiles[tile] = {'name': name_,
+                #                     'cycles': [0, 0],
+                #                     'ops': 0}
+            # print(sdn)
+            # print(sd)
+            # print(name_)
+            if sd == 'start':
+                perf_tiles[tile][name_]['cycles'][0] = cyc_count
+            elif sd == 'done':
+                perf_tiles[tile][name_]['cycles'][1] = cyc_count
+            elif sd == 'ops':
+                perf_tiles[tile][name_]['ops'] = cyc_count
+            else:
+                raise NotImplementedError
+
+    return perf_tiles
+
+def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check=True, gen_verilog=False,
+                 debug=False):
     build_tb_command = ["python", os.path.join(basedir,
                                                "garnet/tests/test_memory_core/build_tb.py"), "--ic_fork",
                         "--sam_graph", os.path.join(basedir,
@@ -108,7 +210,7 @@ def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_d
         build_tb_command.append('--gen_verilog')
         build_tb_command.append('--gen_pe')
 
-    error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True)
+    error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True, debug=debug)
 
     cyc_count = 0
 
@@ -117,7 +219,7 @@ def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_d
 
 def run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
                      matrix_tmp_dir, check=True, tname=None, compile_tb=False,
-                     debug=False, trace=False):
+                     debug=False, trace=False, matrix=None):
     assert tname is not None
     build_tb_command = ["python", os.path.join(basedir,
                                                "garnet/tests/test_memory_core/build_tb.py"), "--ic_fork",
@@ -137,13 +239,13 @@ def run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
 
     split_ot = output_txt.split("\n")
 
-    cyc_count = 0
+    cyc_count = get_cycle_count(split_ot)
 
-    for line in split_ot:
-        if "Cycle" in line:
-            print(line)
-            ls = line.split()
-            cyc_count = int(ls[-1])
+    perf = get_performance(split_ot)
+    perf = inject_app_names(perf, benchname, matrix)
+    print_perf_csv(perf)
+    # print(perf)
+    # exit()
 
     return error, cyc_count
 
@@ -217,7 +319,8 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False,
         clean_ = False
 
     if generate:
-        err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check, gen_vlog)
+        err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname,
+                                      matrix_tmp_dir, check, gen_vlog, debug=debug)
         gen_vlog = False
 
     comp_tb_ = compile_tb
@@ -227,7 +330,7 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False,
             tname = f"{benchname}_{mtx}"
             err, cyc_count = run_build_tb_all(log_file, basedir, sparse_test_basedir, benchname,
                                               matrix_tmp_dir, check, tname=tname, compile_tb=comp_tb_,
-                                              debug=debug, trace=trace)
+                                              debug=debug, trace=trace, matrix=mtx)
             comp_tb_ = False
             pstr = f"{benchname}, {mtx}, {cyc_count}\n"
             stats.append(pstr)
