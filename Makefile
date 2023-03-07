@@ -71,7 +71,7 @@ tests: sam
 # ---- Build taco and make sam graphs ----
 .PHONY: sam
 sam: taco/build 
-	 cd compiler && bash -xe ./sam-kernels.sh
+	 cd compiler && bash -xe ./sam-kernels.sh && bash -xe ./transformer-kernels.sh
 
 taco/build: submodules
 	 mkdir -p compiler/taco/build 
