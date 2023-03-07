@@ -43,22 +43,22 @@ def test_matmul_ijk_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
     # THIS IS FOR SIZE INFO
-    Bs_dirname = B_dirname
-    Bs_seg = read_inputs(os.path.join(Bs_dirname, "tensor_B_mode_0_seg"))
+    # Bs_dirname = B_dirname
+    # Bs_seg = read_inputs(os.path.join(Bs_dirname, "tensor_B_mode_0_seg"))
 
     fiberlookup_Bi_17 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim,
                                             back_en=backpressure, depth=int(depth), statistics=report_stats)
@@ -225,11 +225,14 @@ def test_matmul_ijk_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
     for k in sample_dict.keys():
         extra_info["fiberwrite_Xvals_0" + "/" + k] = sample_dict[k]
 
-    # make open csv file, append (don't overwrite!!!)
-    with open('/home/ginasohn/sam-fixed/sam-fixed/small_50_matmul_ijk.csv', 'a', newline='') as file:
+    # write total cycles to csv file
+    with open('small_50_matmul_ijk.csv', 'a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([ssname, time_cnt])
     
+    # code for generating csv, gantt chart, txt file
+    extra_info["backpressure"]=backpressure
+    extra_info["depth"]=depth
     gen_gantt(extra_info, "matmul_ijk")
 
     if check_gold:
