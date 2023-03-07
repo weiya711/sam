@@ -16,9 +16,11 @@ from sam.sim.test.gold import *
 import os
 import csv
 import numpy
+from sam.sim.test.gen_gantt import gen_gantt
+
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+#formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
 
@@ -29,11 +31,10 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
     reason='CI lacks datasets',
 )
 @pytest.mark.synth
-@pytest.mark.parametrize("sparsity", [0.95])
-def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, backpressure, depth, fill=0):
-
-    # DCSR
-    B_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/B_random_sp_{sparsity}/")
+# @pytest.mark.parametrize("sparsity", [0.95])
+def test_reorder_matmul_ikj(samBench, ssname, check_gold, report_stats, debug_sim, cast, backpressure, depth, fill=0):
+    
+    B_dirname = os.path.join(formatted_dir, ssname, "matmul_kij")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -51,7 +52,7 @@ def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, backpress
     B_vals = read_inputs(B_vals_filename, float)
 
     # DCSR
-    C_dirname = os.path.join(synthetic_dir, f"matrix/DCSR/C_random_sp_{sparsity}/")
+    C_dirname = B_dirname
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -67,6 +68,10 @@ def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, backpress
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
+
+    # THIS IS FOR SIZE INFO
+    Bs_dirname = B_dirname
+    Bs_seg = read_inputs(os.path.join(Bs_dirname, "tensor_B_mode_0_seg"))
 
     # B_dirname = os.path.join(formatted_dir, ssname, "orig", "ss01")
     # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
@@ -227,41 +232,43 @@ def test_reorder_matmul_ikj(samBench, sparsity, check_gold, debug_sim, backpress
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
-    # sample_dict = spaccumulator1_3.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["spaccumulator1_3" + "_" + k] = sample_dict[k]
+    sample_dict = spaccumulator1_3.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["spaccumulator1_3" + "_" + k] = sample_dict[k]
 
-    # sample_dict = fiberwrite_Xvals_0.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
+    sample_dict = fiberwrite_Xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
 
-    # sample_dict = fiberwrite_X1_1.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["fiberwrite_X1_1" + "_" + k] = sample_dict[k]
+    sample_dict = fiberwrite_X1_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X1_1" + "_" + k] = sample_dict[k]
 
-    # sample_dict = fiberwrite_X0_2.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["fiberwrite_X0_2" + "_" + k] = sample_dict[k]
+    sample_dict = fiberwrite_X0_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X0_2" + "_" + k] = sample_dict[k]
 
-    # sample_dict = repeat_Ci_16.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["repeat_Ci_16" + "_" + k] = sample_dict[k]
+    sample_dict = repeat_Ci_16.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Ci_16" + "_" + k] = sample_dict[k]
 
-    # sample_dict = intersectk_13.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["intersectk_13" + "_" + k] = sample_dict[k]
+    sample_dict = intersectk_13.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectk_13" + "_" + k] = sample_dict[k]
 
-    # sample_dict = repeat_Bj_9.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["repeat_Bj_9" + "_" + k] = sample_dict[k]
+    sample_dict = repeat_Bj_9.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Bj_9" + "_" + k] = sample_dict[k]
 
-    # sample_dict = arrayvals_B_7.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["arrayvals_B_7" + "_" + k] = sample_dict[k]
+    sample_dict = arrayvals_B_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_B_7" + "_" + k] = sample_dict[k]
 
-    # sample_dict = arrayvals_C_8.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["arrayvals_C_8" + "_" + k] = sample_dict[k]
+    sample_dict = arrayvals_C_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_C_8" + "_" + k] = sample_dict[k]
+    
+    gen_gantt(extra_info, "matmul_ikj")
 
     if check_gold:
         print("Checking gold...")

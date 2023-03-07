@@ -1,4 +1,4 @@
-name: aha
+name: py39
 channels:
   - pytorch
   - anaconda
@@ -201,4 +201,4 @@ dependencies:
     - statsmodels==0.13.2
     - threadpoolctl==3.1.0
     - traitlets==5.3.0
-prefix: /home/oliviahsu/miniconda3/envs/aha
+prefix: /home/ginasohn/Anaconda3/envs/py39

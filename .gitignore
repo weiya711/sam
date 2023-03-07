@@ -17,6 +17,8 @@ cmake-build-*/
 # Generated SAM Graphs
 *.gv
 
+venv/
+
 # Generated images
 *.svg
 *.png
@@ -54,3 +56,10 @@ tensor_*_mode_*
 
 # Tensor files
 tiles/
+
+setenv.sh
+parse_nnz.py
+scripts/small50_script.sh
+scripts/gen_cycle_csv.py
+scripts/data_gen_suitesparse_g.sh
+sam/sim/test/reorder-study-gina/*

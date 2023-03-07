@@ -14,15 +14,15 @@ BENCHMARKS=(
 	matmul_ijk
 	matmul_jik
 	mat_elemadd
-	mat_elemmul
-	mat_identity
-	mat_elemadd3
-	mat_mattransmul
-	mat_residual
-	mat_vecmul_ij
-	mat_vecmul_ji
-	mat_vecmul
-	mat_sddmm
+	# mat_elemmul
+	# mat_identity
+	# mat_elemadd3
+	# mat_mattransmul
+	# mat_residual
+	# mat_vecmul_ij
+	# mat_vecmul_ji
+	# mat_vecmul
+	# mat_sddmm
 )
 
 # Create download_script that downloads ONLY the suitesparse matrices listed in the text file that is passed in as the first argument of this script
@@ -47,6 +47,6 @@ for b in ${!BENCHMARKS[@]}; do
 	while read line; do
 		echo "Generating input format files for $line..."
 		sspath=${SUITESPARSE_PATH}/$line
-		SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $line -hw -b $bench 
+		SUITESPARSE_TENSOR_PATH=$sspath python $basedir/datastructure_suitesparse.py -n $line -hw -b $bench 
 	done <$(realpath $1)
 done

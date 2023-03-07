@@ -14,10 +14,13 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+from sam.sim.test.gen_gantt import gen_gantt
+
 
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
+# csv file path
 
 @pytest.mark.suitesparse
 def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, backpressure, depth, debug_sim, fill=0):
@@ -147,17 +150,33 @@ def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, bac
     extra_info["result/vals_size"] = len(out_vals)
     extra_info["result/nnz"] = len([x for x in out_vals if x != 0])
 
+    sample_dict = fiberlookup_Bi_10.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bi_10" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Ci_11.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Ci_11" + "/" + k] = sample_dict[k]
+
     sample_dict = unioni_9.return_statistics()
     for k in sample_dict.keys():
         extra_info["unioni_9" + "/" + k] = sample_dict[k]
 
-    sample_dict = unionj_6.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["unionj_6" + "/" + k] = sample_dict[k]
-
     sample_dict = fiberwrite_X0_2.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_X0_2" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Bj_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Bj_7" + "/" + k] = sample_dict[k]
+
+    sample_dict = fiberlookup_Cj_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberlookup_Cj_8" + "/" + k] = sample_dict[k]
+
+    sample_dict = unionj_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["unionj_6" + "/" + k] = sample_dict[k]
 
     sample_dict = fiberwrite_X1_1.return_statistics()
     for k in sample_dict.keys():
@@ -167,10 +186,6 @@ def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, bac
     for k in sample_dict.keys():
         extra_info["arrayvals_B_4" + "/" + k] = sample_dict[k]
 
-    sample_dict = fiberwrite_Xvals_0.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberwrite_Xvals_0" + "/" + k] = sample_dict[k]
-
     sample_dict = arrayvals_C_5.return_statistics()
     for k in sample_dict.keys():
         extra_info["arrayvals_C_5" + "/" + k] = sample_dict[k]
@@ -179,21 +194,15 @@ def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, bac
     for k in sample_dict.keys():
         extra_info["add_3" + "/" + k] = sample_dict[k]
 
-    sample_dict = fiberlookup_Bi_10.return_statistics()
+    sample_dict = fiberwrite_Xvals_0.return_statistics()
     for k in sample_dict.keys():
-        extra_info["fiberlookup_Bi_10" + "/" + k] = sample_dict[k]
+        extra_info["fiberwrite_Xvals_0" + "/" + k] = sample_dict[k]
+    
+    # code for generating csv, gantt chart, txt file
+    extra_info["backpressure"]=backpressure
+    extra_info["depth"]=depth
+    gen_gantt(extra_info, "mat_elemadd")
 
-    sample_dict = fiberlookup_Ci_11.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberlookup_Ci_11" + "/" + k] = sample_dict[k]
-
-    sample_dict = fiberlookup_Bj_7.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberlookup_Bj_7" + "/" + k] = sample_dict[k]
-
-    sample_dict = fiberlookup_Cj_8.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberlookup_Cj_8" + "/" + k] = sample_dict[k]
 
     if check_gold:
         print("Checking gold...")
