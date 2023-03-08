@@ -3,7 +3,9 @@ from sam.sim.src.base import remove_emptystr
 from sam.sim.src.compute import Add2, Multiply2
 from sam.sim.src.unary_alu import Max, Exp, ScalarMult
 from sam.sim.src.crd_masker import RandomDropout
+from sam.sim.src.crd_manager import CrdHold
 from sam.sim.src.rd_scanner import CompressedCrdRdScan
+from sam.sim.src.wr_scanner import CompressWrScan, ValsWrScan
 from sam.sim.test.primitives.test_intersect import TIMEOUT
 from sam.sim.test.test import *
 import numpy as np
@@ -89,14 +91,20 @@ def test_dropout_2d(dim, debug_sim, max_val=1000, fill=0):
     rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
     rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
 
+    crd = CrdHold(debug=debug_sim)
     val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
 
-    drop = RandomDropout(dimension=1, drop_probability=drop_prob, debug=debug_sim)
+    vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim)
+    wrscan_X1 = CompressWrScan(seg_size=1000, size=dim, fill=fill, debug=debug_sim)
+    wrscan_X2 = CompressWrScan(seg_size=1000, size=dim*dim, fill=fill, debug=debug_sim)
+
+    drop = RandomDropout(dimension=2, drop_probability=drop_prob, debug=debug_sim)
 
     done = False
     time = 0
     out_val = []
     in_ref_B = [0, 'D']
+    debug_arr = []
     # max1.set_in2(in2)
     while not done and time < TIMEOUT:
         if len(in_ref_B) > 0:
@@ -106,18 +114,37 @@ def test_dropout_2d(dim, debug_sim, max_val=1000, fill=0):
 
         val_B.set_load(rdscan_B2.out_ref())
 
+        # if (len(rdscan_B1.out_crd()) > 0):
+        crd.set_inner_crd(rdscan_B1.out_crd())
+        # if (len(rdscan_B2.out_crd()) > 0):
+        crd.set_outer_crd(rdscan_B2.out_crd())
+
         drop.set_crd(0, rdscan_B1.out_crd())
         drop.set_crd(1, rdscan_B2.out_crd())
 
+        debug_arr.append(drop.out_crd(0))
+
+        print(remove_emptystr(debug_arr))
+
+        vals_X.set_input(val_B.out_val())
+        wrscan_X1.set_input(drop.out_crd(0))
+        wrscan_X2.set_input(drop.out_crd(1))
+
         if time < len(flat_prob):
             drop.set_predicate(flat_prob[time], drop_prob)
-
-        drop.update()
 
         out_val.append(drop.out_crd(0))
 
         # print("Timestep", time, "\t Out:", drop.out_crd(0))
 
+        rdscan_B1.update()
+        rdscan_B2.update()
+        val_B.update()
+        crd.update()
+        drop.update()
+        vals_X.update()
+        wrscan_X1.update()
+        wrscan_X2.update()
         done = drop.out_done()
         time += 1
 
