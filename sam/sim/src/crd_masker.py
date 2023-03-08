@@ -32,18 +32,24 @@ class CrdMask(Primitive):
         print(self.in_crd_array, self.curr_crd_array, self.out_crd_array)
 
         # if len(self.in_crd_array) > 0:
+        start = True
         for i in range(self.dimension):
-            if self.curr_crd_array[i] == None:
-                # initialization: don't skip any
-                self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
+            if self.in_crd_array[i] == []:
+                start = False
 
-            else: 
-                self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
-                if not is_stkn(self.out_crd_array[i]):
-                    # not a stop token: hold higher dimensions
-                    break
-        # else:
-        #     return
+        if start:
+            for i in range(self.dimension):
+                if self.curr_crd_array[i] == None:
+                    # initialization: don't skip any
+                    self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
+
+                else: 
+                    self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
+                    if not is_stkn(self.out_crd_array[i]):
+                        # not a stop token: hold higher dimensions
+                        break
+            # else:
+            #     return
 
         self.out_crd_array = self.curr_crd_array
         
