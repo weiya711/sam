@@ -31,6 +31,7 @@ class CrdMask(Primitive):
 
         print(self.in_crd_array, self.curr_crd_array, self.out_crd_array)
 
+        # if len(self.in_crd_array) > 0:
         for i in range(self.dimension):
             if self.curr_crd_array[i] == None:
                 # initialization: don't skip any
@@ -39,8 +40,10 @@ class CrdMask(Primitive):
             else: 
                 self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
                 if not is_stkn(self.out_crd_array[i]):
-                    # not a stop token: hold higher dimensions      
+                    # not a stop token: hold higher dimensions
                     break
+        # else:
+        #     return
 
         self.out_crd_array = self.curr_crd_array
         
@@ -57,6 +60,9 @@ class CrdMask(Primitive):
     def print_fifos(self):
         for i in range(self.dimension):
             print("CrdMask crd fifo ", i, " size: ", self.crd_fifos[i])
+
+    def set_predicate(self, prob, drop_prob):
+        self.drop_predicate=lambda crds: prob >= drop_prob
 
     def set_crd(self, dimension, crd):
         if crd != '' and crd is not None:
@@ -76,7 +82,7 @@ class CrdMask(Primitive):
 
 class RandomDropout(CrdMask):
     def __init__(self, dimension=2, drop_probability=0.5, **kwargs):
-        super().__init__(dimension, lambda crds: random.random < drop_probability, **kwargs)
+        super().__init__(dimension, lambda crds: random.random >= drop_probability, **kwargs)
 
 class LowerTriangular2D(CrdMask):
     def __init__(self, **kwargs):
