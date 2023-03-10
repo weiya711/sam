@@ -5,10 +5,11 @@ from sam.sim.test.test import TIMEOUT
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.reorder import Reorder_and_split, repeated_token_dopper
 from sam.sim.src.base import remove_emptystr
+from sam.sim.test.sparse_transpose import *
 from sam.onyx.generate_matrices import *
 import os
 import csv
-
+import time
 cwd = os.getcwd()
 ######################################
 # Compressed Read Scanner Unit Tests #
@@ -51,6 +52,9 @@ def create_array(shape=5, sparsity=0.995, path=""):
     C_seg1 = read_inputs(C1_seg_filename)
     C1_crd_filename = os.path.join(C_dirname, "tensor_B_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
+
+    C_vals_filename = os.path.join(C_dirname, "tensor_B_mode_vals")
+    C_vals = read_inputs(C_vals_filename)
 
 
 
@@ -123,26 +127,48 @@ def create_array(shape=5, sparsity=0.995, path=""):
         time_cnt2 += 1
     # print(arr_dict)
     # print(t1, t2)
-    return arr_dict, time_cnt1, time_cnt2
+    software_time = 0
+    for atts in range(5):
+        start_time = time.time()
+        transpose_mat, time_arr = sparse_tranpose_pytorch(B_dirname, shape=shape, shots=5, debug_sim=False, out_format="ss10")
+        software_time += time.time() - start_time
+    software_time = software_time / (5 * 5)
+    # out_crds = [C_crd0, C_crd1]
+    # out_segs = [C_seg0, C_seg1]
+    # out_val = C_vals
+    # out_tup = convert_point_tuple(get_point_list(out_crds, out_segs)) #, out_val))
+    
+    #  out_tup = remove_zeros(out_tup)
+    # tensor = torch.sparse_coo_tensor(list(zip(*out_tup)), out_val, size=(shape, shape))
+    # a = transpose_mat.to_sparse_coo()
+    # bool_answer = np.allclose(a.to_dense(), tensor.to_dense())
+    # assert bool_answer #torch.eq(a, tensor)
+    return arr_dict, time_cnt1, time_cnt2, software_time, time_arr
 
 
-def test_reorder_direct_transpose(debug_sim):
-    
-    
+def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_len):
+    print("BLK_LEN:", reorder_block_len)
+    print(reorder_not_ideal, bool(reorder_not_ideal) == True)
     shape = [1000]
-    sparsity = [0.8, 0.9, 0.95, 0.99, 0.9995]
+    sparsity = [0.5, 0.975, 0.9999] #0.8, 0.9, 0.95, 0.99, 0.9995, 0.9999]
     plot_arr = []
     plot_arr2 = []
+    software_times = []
+    
+    load_times = []
+    format_conv_time1 = []
+    transpose_time = []
+    format_conv_time2 = []
     for sp in sparsity:
         for s in shape:
-            arrs, read_num1, read_num2 = create_array(shape=s, sparsity=sp)
+            arrs, read_num1, read_num2, software_time, received_time_arr = create_array(shape=s, sparsity=sp)
             seg_arr = arrs["seg"]
             crd_arr = arrs["crd"]
 
             gold_crd_i = arrs["out_crd_i"]
             gold_ref_i = arrs["out_ref_i"]
             assert (len(gold_crd_i) == len(gold_ref_i))
-            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=1, debug=debug_sim, statistics=True)
+            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal), block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
             
             crd_k = repeated_token_dopper(name="crdk")
             ref_k = repeated_token_dopper(name="refk")
@@ -204,6 +230,12 @@ def test_reorder_direct_transpose(debug_sim):
             
             plot_arr.append(time)
             plot_arr2.append(read_num2)
+            software_times.append(software_time)
+
+            load_times.append(received_time_arr[0]) 
+            format_conv_time1.append(received_time_arr[1])
+            transpose_time.append(received_time_arr[2])
+            format_conv_time2.append(received_time_arr[3])
             assert (out_crd_i == gold_crd_i)
             assert (out_crd_k_out == arrs["out_crd_k_outer"])
             assert (out_ref_k_out == arrs["out_ref_k_outer"])
@@ -211,3 +243,8 @@ def test_reorder_direct_transpose(debug_sim):
 
     print(plot_arr)
     print(plot_arr2)
+    print(software_times)
+    print("load time: ", load_times)
+    print("conv1 time: ", format_conv_time1)
+    print("tran time: ", transpose_time)
+    print("conv2 time: ", format_conv_time2)

@@ -82,9 +82,9 @@ class repeated_token_dopper(Primitive):
 
 
 class Reorder_and_split(CrdRdScan):
-    def __init__(self, crd_arr=[], seg_arr=[], skip=True, counter_mode_dense=False, limit=10, sf=1, **kwargs):
+    def __init__(self, crd_arr=[], seg_arr=[], skip=True, counter_mode_dense=False, not_idealized=True, block_size_len=8, sf=1, alpha=1, **kwargs):
         super().__init__(**kwargs)
-
+        limit = 100000
         self.crd_arr = crd_arr
         self.seg_arr = seg_arr
         self.start_addr = 0
@@ -127,10 +127,22 @@ class Reorder_and_split(CrdRdScan):
         self.last_state_ = "none"
         self.counter_dense = counter_mode_dense
         self.outer_lvl = False
+        self.block_size_len = block_size_len #4 #8
+        self.time = 0
+        self.alpha = alpha
+        self.update_signal = "high"
+
+        self.not_idealized = not_idealized # False
 
         if self.get_stats:
             self.num_min_calls = 0
             self.num_min_values_returned = 0
+
+    def size_check(self, size, threshold):
+        if size > threshold:
+            self.update_signal = "high"
+        elif size < threshold:
+            self.update_signal = "low"
 
     def set_ref(self, ref):
         if ref != "" and ref is not None:
@@ -182,13 +194,18 @@ class Reorder_and_split(CrdRdScan):
 
     def reset(self):
         # print("RESET HARD")
+        self.last_state_ = "none"
         self.ref_offset = len(self.nxt_state_table.keys())
         self.counter = 0
-        self.temp_ref_k_ = 0
+        self.temp_ref_k_ += 1
         self.nxt_state_table = {}
         self.last_state = -1
-        self.out_ref_k_ = 0
+        # self.out_ref_k_ = 0
         self.out_crd_k_ = ""
+        if self.update_signal == "high":
+            self.split_factor = self.split_factor // self.alpha
+        elif self.update_signal == "low":
+            self.split_factor = int(self.split_factor * self.alpha)
 
     def out_ref_k_outer(self):
         if self.outer_lvl: 
@@ -212,9 +229,16 @@ class Reorder_and_split(CrdRdScan):
             print("MIN VALUE Calc ", min_val)
         if self.get_stats:
             self.num_min_calls += 1
+        flag = True
         if self.counter_dense:
-            return self.counter + 1
-        return min_val // self.split_factor
+            return self.counter + 1, flag
+        
+        time_delay = -1
+        if min_val == 10000000000000000000000000:
+            flag = False
+        elif self.time < 0:
+            time_delay = (len(self.nxt_state_table.keys()) // self.block_size_len) - 1
+        return min_val // self.split_factor, flag, time_delay
 
     def check_len(self, arr):
         i = 0
@@ -246,39 +270,53 @@ class Reorder_and_split(CrdRdScan):
                     return_crd.append(i)
                     return_ref.append(k + self.ref_offset)
             k += 1
+
         if self.debug:
             print("FLAG printing the min of the table and ge the vals ", return_crd, return_ref)
         if self.get_stats:
             self.num_min_values_returned += len(return_crd)
+        if not flag and self.time < 0:
+            self.time = (len(self.nxt_state_table.keys()) // self.block_size_len) - 1
         return return_crd, return_ref, flag
+        #return return_crd, return_ref, flag, time
 
     def update(self):
         self.outer_lvl = True
         if self.state == "resting" and len(self.in_ref) > 0 and len(self.in_crd) > 0:
-            if self.last_state == "S2_out":
+            if self.last_state == "S2_out" or self.last_state == "S3_out":
                 self.reset()
             self.curr_ref_i = self.in_ref.pop(0)
             self.curr_crd_i = self.in_crd.pop(0)
+            #print("RESING: ", self.curr_ref_i, " ", self.curr_crd_i)
             if not isinstance(self.curr_ref_i, int) and is_stkn(self.curr_ref_i):
-                self.counter = self.min_table()
-                self.out_crd_k_ = self.counter
-                self.out_ref_k_ = self.temp_ref_k_
-                # self.temp_ref_k_ += 1
-                # if isinstance(self.out_ref_k_, int):
-                #     self.out_ref_k_ += 1
+                counter, f2, _ = self.min_table()
+                if False and not flag and self.time >= 0: # Can be optimized away
+                    print("DELAY FOR MIN") #, self.nxt_state_table, self.time, len(self.nxt_state_table.keys()) // self.block_size_len)
+                    self.out_crd_k_ = ""
+                    return
+                # print("returns", self.counter, f2)
+                if f2:
+                    self.out_crd_k_ = self.counter
+                    self.out_ref_k_ = self.temp_ref_k_
+                    self.counter = counter
+                else:
+                    self.counter += 1
                 if self.last_state_ == "none":
                     self.state = "repeat_i_rows"
                     self.next_state = "none"
                     self.stop_lvl = self.curr_ref_i
                 else:
-                    # stkn = self.curr_ref_i #ncrement_stkn(self.curr_ref_i)
-                    #self.curr_crd = increment_stkn(self.curr_ref_i)
-                    #self.curr_ref = increment_stkn(self.curr_ref_i)
-                    #self.out_ref_i_ = stkn
-                    #self.out_crd_i_ = stkn
-                    #self.state = self.next_state 
                     self.state = "S1_out"
-                    self.next_state = "repeat_i_rows"
+                    if f2:
+                        self.next_state = "repeat_i_rows"
+                    else:
+                        if self.curr_ref_i == "S1":
+                            self.state = "S3_out"
+
+                        if self.curr_ref_i == "S0":
+                            self.state = "S2_out"
+
+                        self.next_state = "resting"
                     self.stop_lvl = self.curr_ref_i
                     if self.debug:
                         print("Reorder_Blk: state", self.state, "in_crd", self.in_crd, "in_ref", self.in_ref, "in_crd", self.curr_crd_i,
@@ -331,6 +369,7 @@ class Reorder_and_split(CrdRdScan):
                     else:
                         self.out_ref_i_ = ""
                         self.out_crd_i_ = ""
+                        
 
                 else: #if self.split_factor != 1:
                     if self.debug:
@@ -363,7 +402,7 @@ class Reorder_and_split(CrdRdScan):
                     print(self.crd_arr, self.seg_arr, self.crd_sub_arr)
                     print(self.nxt_state_table)
                 self.ref_val = self.ref_val + 1
-                return
+                # return
             else:
                 if self.last_state == "process_row":
                     if self.split_factor == 1:
@@ -379,9 +418,16 @@ class Reorder_and_split(CrdRdScan):
                 # print("in process_row", self.next_state, self.state)
 
         if self.state == "repeat_i_rows":
-            if self.debug:
-                print("State 2, ", self.nxt_state_table)
+            #if self.debug:
             self.curr_crd_i_row, self.curr_ref_i_row, flag = self.get_valid_streams()
+
+            #print("State 2, ", self.nxt_state_table, self.time, len(self.nxt_state_table.keys()) // self.block_size_len, flag, self.curr_crd_i_row, self.curr_ref_i_row)
+            self.time -= 1
+            if self.not_idealized and not flag and self.time >= 0:
+                # print("@@@@", self.nxt_state_table, self.time, len(self.nxt_state_table.keys()) // self.block_size_len)
+                self.out_crd_k_ = ""
+                return
+            #flag = False
             if self.debug:
                 print(self.curr_crd_i_row, self.curr_ref_i_row, flag, self.nxt_state_table)
             if not flag: #len(self.curr_crd_i_row) > 0:
@@ -394,14 +440,21 @@ class Reorder_and_split(CrdRdScan):
                     self.state = "S3_out"
                     self.next_state = "resting"
             if self.debug:
-                print("repeat i rows: ", self.state, self.next_state)
+                pass
+            #print("repeat i rows: ", self.state, self.next_state)
 
         if self.state == "reading_row2":
             # self.temp_ref_k_ = self.out_ref_k_
             if len(self.curr_crd_i_row) == 0:
+                self.counter, f2, self.time = self.min_table()
+                self.time -= 1
+                if self.not_idealized and f2 and self.time >= 0:
+                    #print("@@@@ DELAY") #, self.nxt_state_table, self.time, len(self.nxt_state_table.keys()) // self.block_size_len)
+                    self.out_crd_k_ = ""
+                    return
+ 
                 self.state = "S1_out"
                 self.next_state = "repeat_i_rows"
-                self.counter = self.min_table()
                 self.out_crd_k_ = self.counter
                 # self.temp_ref_k_ += 1
                 self.out_ref_k_ = self.temp_ref_k_
@@ -469,7 +522,6 @@ class Reorder_and_split(CrdRdScan):
                     print(self.crd_arr, self.seg_arr)
                     print("nxt table ------", self.nxt_state_table, self.curr_crd_i_row, self.crd_sub_arr)
                 self.ref_val = self.ref_val + 1
-                return
             elif self.last_state == "process_row2":
                 if self.split_factor != 1:  #self.state = "S0_out"
                     self.state = "S0_out"
@@ -505,6 +557,8 @@ class Reorder_and_split(CrdRdScan):
             self.out_crd_i_ = "S0"
             self.outer_lvl = False
             self.state = self.next_state
+            
+            self.last_state = "S1_out"
             # print("###############################")
             # print(self.last_state)
             # print(self.next_state)

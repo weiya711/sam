@@ -126,7 +126,7 @@ def create_array(shape=5, sparsity=0.995, path=""):
     return arr_dict, time_cnt1, time_cnt2
 
 
-@pytest.mark.skip
+#@pytest.mark.skip
 def test_reorder_direct_transpose(debug_sim, test_random_sparsity=False):
     if True: #test_randomly_sparse:
         shape = [1000]

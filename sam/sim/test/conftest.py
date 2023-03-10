@@ -27,12 +27,20 @@ def pytest_addoption(parser):
                      help="Whether backpressure is enabled")
     parser.addoption("--depth", action="store", default=2,
                      help="fifo depth value")
-    parser.addoption("--split-factor", action="store", default=16,
+    parser.addoption("--reorder-block-len", action="store", default=8,
+                     help="reorder block len")
+    parser.addoption("--reorder-not-ideal", action="store_true", default=False,
+                     help="whether reorder block has been idealized")
+    parser.addoption("--split-factor", action="store", default=12,
                      help="split factor value for the reorder blk")
     parser.addoption("--nnz-value", action="store", default=5000,
                      help="nnz value for stats")
     parser.addoption("--test-randomly-sparse", action="store_true", default=False,
                      help="Whether to test with random sparsity matrices")
+    parser.addoption("--alpha-reorder", action="store", default=1.2,
+                     help="get the alpha for dynamic switch to sf")
+
+
     parser.addoption("--cast", action="store_true", default=False,
                      help="Flag that runs all simulations using integer input "
                           "and output data (used for hardware simulation comparison)")
@@ -89,6 +97,22 @@ def nbuffer(request):
 @pytest.fixture
 def debug_sim(request):
     return request.config.getoption("--debug-sim")
+
+@pytest.fixture
+def alpha_reorder(request):
+    return request.config.getoption("--alpha-reorder")
+
+
+@pytest.fixture
+def reorder_block_len(request):
+    return request.config.getoption("--reorder-block-len")
+
+
+@pytest.fixture
+def reorder_not_ideal(request):
+    return request.config.getoption("--reorder-not-ideal")
+
+
 
 
 @pytest.fixture
