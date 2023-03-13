@@ -197,7 +197,7 @@ def get_performance(text):
     return perf_tiles
 
 def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check=True, gen_verilog=False,
-                 debug=False):
+                 debug=False, perf_debug=False):
     build_tb_command = ["python", os.path.join(basedir,
                                                "garnet/tests/test_memory_core/build_tb.py"), "--ic_fork",
                         "--sam_graph", os.path.join(basedir,
@@ -209,6 +209,8 @@ def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_d
     if gen_verilog:
         build_tb_command.append('--gen_verilog')
         build_tb_command.append('--gen_pe')
+        if perf_debug:
+            build_tb_command.append('--perf_debug')
 
     error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True, debug=debug)
 
@@ -281,7 +283,7 @@ def run_process(command, log_file=None, cwd=None, split=False, check=True, retur
 
 
 def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False,
-              generate=True, run=True, debug=False, trace=False):
+              generate=True, run=True, debug=False, trace=False, perf_debug=False):
     cwd = os.getcwd()
 
     basedir = "/aha" if args.docker else os.getenv('BASEDIR')
@@ -320,7 +322,7 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False,
 
     if generate:
         err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname,
-                                      matrix_tmp_dir, check, gen_vlog, debug=debug)
+                                      matrix_tmp_dir, check, gen_vlog, debug=debug, perf_debug=perf_debug)
         gen_vlog = False
 
     comp_tb_ = compile_tb
@@ -359,6 +361,7 @@ if __name__ == "__main__":
     parser.add_argument('--compile_tb', action="store_true")
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('--trace', action="store_true")
+    parser.add_argument('--perf_debug', action="store_true")
     args = parser.parse_args()
 
     benchmarks = ["matmul_ijk", "mat_elemmul", "mat_elemadd", "mat_elemadd3"]
@@ -369,6 +372,7 @@ if __name__ == "__main__":
     run = args.run
     trace = args.trace
     dbg = args.debug
+    perf_debug = args.perf_debug
 
     # Get matrices
     matrices = None
@@ -394,7 +398,7 @@ if __name__ == "__main__":
     for benchname in use_bmarks:
         print("Running for bench", benchname, "...")
         run_bench(benchname, args, matrices, full_stats, gen_verilog, compile_tb=compile_tb,
-                  generate=generate, run=run, debug=dbg, trace=trace)
+                  generate=generate, run=run, debug=dbg, trace=trace, perf_debug=perf_debug)
         # Don't need to do it more than once.
         gen_verilog = False
 
