@@ -210,6 +210,7 @@ def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_d
         build_tb_command.append('--gen_verilog')
         build_tb_command.append('--gen_pe')
         if perf_debug:
+            print('adding perf_Debug')
             build_tb_command.append('--perf_debug')
 
     error, output_txt = run_process(build_tb_command, log_file, check=check, return_stdout=True, debug=debug)
@@ -320,7 +321,7 @@ def run_bench(benchname, args, matrices, stats, gen_verilog, compile_tb=False,
 
         clean_ = False
 
-    if generate:
+    if generate or gen_vlog:
         err, cyc_count = run_build_tb(log_file, basedir, sparse_test_basedir, benchname,
                                       matrix_tmp_dir, check, gen_vlog, debug=debug, perf_debug=perf_debug)
         gen_vlog = False
