@@ -89,19 +89,20 @@ class Split(Primitive):
                 self.curr_iref = self.prev_iref
                 self.emit_stkn = False
             elif not self.takes_ref and len(self.in_crd) > 0 and is_stkn(self.in_crd[0]):
-                if self.debug:
-                    print("case print no ref and emit stkn")
+                #if self.debug:
+                #print("case print no ref and emit stkn")
                 crd = self.in_crd.pop(0)
                 assert is_stkn(crd)
                 self.curr_ocrd = crd
                 self.curr_icrd = increment_stkn(crd)
+                self.prev_cntr = None
+                #print("===")
                 self.prev_stkn = True
                 self.emit_stkn = False
             elif not self.takes_ref and len(self.in_crd) > 0 and not is_stkn(self.in_crd[0]):
                 crd = self.in_crd.pop(0)
                 if isinstance(crd, int):
                     self.cntr = int(crd / self.split_factor)
-
                     if self.prev_cntr != self.cntr and self.prev_cntr is not None and not self.prev_stkn:
                         self.curr_ocrd = ''
                         self.curr_icrd = 'S0'
@@ -194,7 +195,7 @@ class Split(Primitive):
                       "\n Prev Cntr", self.prev_cntr, "\t Curr Cntr:", self.cntr,
                       "\n Emit Stkn:", self.emit_stkn, "\t Prev Stkn:", self.prev_stkn)
                 if self.takes_ref:
-                    print(self.in_ref)
+                    print("in-ref: ", self.in_ref)
                     print("\n Curr Oref:", self.curr_oref, "\t Crr Iref:", self.curr_iref)
 
     def set_in_crd(self, crd, parent=None):

@@ -1,6 +1,8 @@
 BENCHMARKS=(
 tiling
-unit_reorder
+#tiling_baseline
+#dynamic_tiling
+#unit_reorder
 )
 
 # Vars
@@ -39,6 +41,11 @@ mkdir -p "${SYNTHETIC_PATH}/matrix/DCSC"
 mkdir -p "${SYNTHETIC_PATH}/matrix/DENSE"
 
 
+
+#python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity str(sparsity) --output_dir ${SYNTHETIC_PATH}/matrix/DCSC/ --name B --shape str(shape) str(shape) --output_format CSF --transpose
+
+#python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity str(sparsity) --output_dir ${SYNTHETIC_PATH}/matrix/DCSR/ --name B --shape str(shape) str(shape) --output_format CSF
+ 
 
 for b in ${!BENCHMARKS[@]}; do
 	bench=${BENCHMARKS[$b]}

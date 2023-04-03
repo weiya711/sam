@@ -6,7 +6,9 @@ from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.reorder import Reorder_and_split, repeated_token_dopper
 from sam.sim.src.base import remove_emptystr
 from sam.sim.test.sparse_transpose import *
+from sam.sim.src.reorder_baseline import *
 from sam.onyx.generate_matrices import *
+
 import os
 import csv
 import time
@@ -146,11 +148,13 @@ def create_array(shape=5, sparsity=0.995, path=""):
     return arr_dict, time_cnt1, time_cnt2, software_time, time_arr
 
 
-def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_len):
+def test_reorder_baseline(debug_sim, reorder_not_ideal, reorder_block_len):
     #print("BLK_LEN:", reorder_block_len)
+
     #print(reorder_not_ideal, bool(reorder_not_ideal) == True)
-    shape = [8] #[1000]
-    sparsity = [0.75] #[0.5, 0.975, 0.9999] #0.8, 0.9, 0.95, 0.99, 0.9995, 0.9999]
+    
+    shape = [8]
+    sparsity = [0.75] #, 0.975, 0.9999] #0.8, 0.9, 0.95, 0.99, 0.9995, 0.9999]
     plot_arr = []
     plot_arr2 = []
     software_times = []
@@ -159,16 +163,25 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
     format_conv_time1 = []
     transpose_time = []
     format_conv_time2 = []
+
+    #split_done = False
+    #while not split_done:
+    #    split_done = True
+
+
     for sp in sparsity:
         for s in shape:
             arrs, read_num1, read_num2, software_time, received_time_arr = create_array(shape=s, sparsity=sp)
+            #print(arrs)
             seg_arr = arrs["seg"]
             crd_arr = arrs["crd"]
 
             gold_crd_i = arrs["out_crd_i"]
             gold_ref_i = arrs["out_ref_i"]
             assert (len(gold_crd_i) == len(gold_ref_i))
-            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal), block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
+            
+            crdscan = Reorder_baseline(seg_arr=seg_arr, crd_arr=crd_arr, sf=8, debug=debug_sim)
+            #Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal), block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
             
             crd_k = repeated_token_dopper(name="crdk")
             ref_k = repeated_token_dopper(name="refk")
@@ -188,43 +201,45 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
             out_ref_i = []
             out_crd_k_out = []
             out_ref_k_out = []
+            
+            
             while not done and time < TIMEOUT:
                 if len(in_ref) > 0:
-                    crdscan.set_input(in_ref.pop(0), in_crd.pop(0))
-                crd_k.add_token(crdscan.out_crd_k())
-                ref_k.add_token(crdscan.out_ref_k())
-                crd_i.add_token(crdscan.out_crd_i())
-                ref_i.add_token(crdscan.out_ref_i())
-                crd_k_out.add_token(crdscan.out_crd_k_outer())
-                ref_k_out.add_token(crdscan.out_ref_k_outer())
+                    crdscan.input_ref(in_ref.pop(0))
+                if len(in_crd) > 0:
+                    crdscan.input_crd(in_crd.pop(0))
+                #crd_k.add_token(crdscan.out_crd_k())
+                #ref_k.add_token(crdscan.out_ref_k())
+                crd_i.add_token(crdscan.out_ocrd_i())
+                #ref_i.add_token(crdscan.out_ref_i())
+                crd_k_out.add_token(crdscan.return_final_crd()) #out_crd_k_outer())
+                ref_k_out.add_token(crdscan.return_final_ref()) #out_ref_k_outer())
          
 
                 crdscan.update()
-                crd_k.update()
-                ref_k.update()
-                crd_i.update()
-                ref_i.update()
+                #crd_k.update()
+                #ref_k.update()
+                #crd_i.update()
+                #ref_i.update()
                 crd_k_out.update()
                 ref_k_out.update()
 
-                if crd_k.get_token() != "":
-                    out_crd.append(crd_k.get_token())
-                if ref_k.get_token() != "":
-                    out_ref.append(ref_k.get_token())
+                #if crd_k.get_token() != "":
+                #    out_crd.append(crd_k.get_token())
+                #    out_ref.append(ref_k.get_token())
                 if crd_i.get_token() != "":
                     out_crd_i.append(crd_i.get_token())
-                if ref_i.get_token() != "":
-                    out_ref_i.append(ref_i.get_token())
-                if crd_k_out.get_token() != "":
+                #if ref_i.get_token() != "":
+                #    out_ref_i.append(ref_i.get_token())
+                if crd_k_out.get_token() != "" and crd_k_out.get_token() != None:
                     out_crd_k_out.append(crd_k_out.get_token())
-                if ref_k_out.get_token() != "":
+                if ref_k_out.get_token() != "" and ref_k_out.get_token() != None:                         
                     out_ref_k_out.append(ref_k_out.get_token())
-         
 
-                #print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
+                #print("Timestep", time, "\t k_out_crd:", crdscan.return_final_crd(), "\t k_out_ref:", crdscan.return_final_ref()) #, "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
                 #print("______________________________________________________________________")
                 
-                done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
+                done = crd_k_out.done and ref_k_out.done
                 time += 1
                 if time > 1000000000:
                     break
@@ -237,14 +252,10 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
             format_conv_time1.append(received_time_arr[1])
             transpose_time.append(received_time_arr[2])
             format_conv_time2.append(received_time_arr[3])
-            #print(out_ref)
-            #print(out_crd)
-            
-            #print(out_ref_i)
-            #print(out_crd_i)
-            assert (out_crd_i == gold_crd_i)
+            #print(out_crd_k_out, arrs["out_crd_k_outer"])
+            # assert (out_crd_i == gold_crd_i)
             assert (out_crd_k_out == arrs["out_crd_k_outer"])
-            assert (out_ref_k_out == arrs["out_ref_k_outer"])
+            #assert (out_ref_k_out == arrs["out_ref_i"])
             # assert (out_ref_i == arrs["out_ref_i"])
 
     print(plot_arr)

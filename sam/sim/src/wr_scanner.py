@@ -91,7 +91,6 @@ class ValsWrScan(WrScan):
             return
             if self.debug:
                 print("RESET FOR VALS", self.input)
-            if self.debug:
                 print("post reset: ", self.arr.out_done())
 
         if (len(self.input) > 0):

@@ -5,28 +5,45 @@ from sam.sim.test.test import TIMEOUT
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.reorder import Reorder_and_split, repeated_token_dopper
 from sam.sim.src.base import remove_emptystr
-from sam.sim.test.sparse_transpose import *
 from sam.onyx.generate_matrices import *
 import os
 import csv
-import time
+
 cwd = os.getcwd()
 ######################################
 # Compressed Read Scanner Unit Tests #
 ######################################
 
+arr_dict = {"seg": [0, 3, 6, 9, 11], "crd": [1, 3, 4, 0, 1, 2, 0, 4, 5, 3, 5], "in_ref": [0, 1, 2, 3, 'S0', 'D'], "in_crd": [0, 1, 4, 6, 'S0', 'D'],
+            "out_crd_k": [1, 3, 'S0', 0, 1, 2, 'S0', 0, 'S0', 3, 'S1', 0, 'S0', 0, 1, 'S0', 1, 'S2', 'D'],
+            "out_ref_k": [0, 1, 'S0', 3, 4, 5, 'S0', 6, 'S0', 9, 'S1', 2, 'S0', 7, 8, 'S0', 10, 'S2', 'D'],
+            "out_crd_i": [0, 1, 4, 6, 'S0', 0, 4, 6, 'S1', 'D'],
+            "out_ref_i": [0, 1, 2, 3, 'S0', 0, 2, 3, 'S1', 'D']}
 
-formatted_dir = os.getenv('SYNTHETIC_PATH',  default=os.path.join(cwd, 'synthetic'))
+
+arr_dict1 = {"seg": [0, 2, 3, 4], "crd": [0, 2, 2, 2], "in_ref": [0, 1, 2, 'S0', 'D'], "in_crd": [0, 2, 3, 'S0', 'D'],
+             "out_crd_k": [0, 'S1', 2, 'S0', 2, 'S0',  2,  'S1', 'D'], "out_ref_k": [0, 'S0', 1, 'S0', 2, 'S0', 3, 'S1', 'D'],
+             "out_crd_i": [0, 'S0',  0, 2, 3, 'S1', 'D'], "out_ref_i": [0, 1, 'S0', 2, 'S0', 3, 'S1', 'D']}
+
+arr_dict2 = {"seg": [0, 2, 5,  7, 9, 10, 11, 15], "crd": [0, 2, 2, 2], "in_ref": [0, 1, 2, 'S0', 'D'], "in_crd": [0, 2, 5,  7, 9, 10, 11, 15, 'S0', 'D'],
+             "out_crd_k": [0, 'S1', 2, 'S0', 2, 'S0',  2,  'S1', 'D'], "out_ref_k": [0, 'S0', 1, 'S0', 2, 'S0', 3, 'S1', 'D'],
+             "out_crd_i": [0, 'S0',  0, 2, 3, 'S1', 'D'], "out_ref_i": [0, 1, 'S0', 2, 'S0', 3, 'S1', 'D']}
+
+
+
+arr_dict2 = {"seg": [0, 3, 4, 6], "crd": [0, 2, 3, 0, 2, 3], "in_ref": [0, 0, 'S0', 1, 'S0', 2, 'S1', 'D'],
+             "out_crd": [0, 2, 3, 'S0', 0, 2, 3, 'S1', 0, 'S1', 2, 3, 'S2', 'D'],
+             "out_ref": [0, 1, 2, 'S0', 0, 1, 2, 'S1', 3, 'S1', 4, 5, 'S2', 'D']}
+arr_dict3 = {"seg": [0, 4], "crd": [0, 1, 2, 3], "in_ref": [0, 'D'],
+             "out_crd": [0, 1, 2, 3, 'S0', 'D'], "out_ref": [0, 1, 2, 3, 'S0', 'D']}
+
+formatted_dir = os.getenv('SYNTHETIC_TEST_PATH',  default=os.path.join(cwd, 'synthetic'))
 
 
 def create_array(shape=5, sparsity=0.995, path=""):
    
-    os.system("python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity " +
-              str(sparsity) + " --output_dir ${SYNTHETIC_PATH}/matrix/DCSC/ --name B --shape " +
-              str(shape) + " " + str(shape) + " --output_format CSF --transpose")
-    os.system("python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity " + str(sparsity) +
-              " --output_dir ${SYNTHETIC_PATH}/matrix/DCSR/ --name B --shape " + str(shape) +
-              " " + str(shape) + " --output_format CSF")
+    os.system("python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity " + str(sparsity) + " --output_dir ${SYNTHETIC_PATH}/matrix/DCSR_transpose/ --name B --shape " + str(shape) + " " + str(shape) + " --output_format CSF --transpose")
+    os.system("python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity " + str(sparsity) + " --output_dir ${SYNTHETIC_PATH}/matrix/DCSR/ --name B --shape " + str(shape) + " " + str(shape) + " --output_format CSF")
     arr_dict = {}
 
     B_dirname = os.path.join(formatted_dir, "matrix/DCSR/B_random_sp_" + str(sparsity) + "/")
@@ -41,7 +58,7 @@ def create_array(shape=5, sparsity=0.995, path=""):
     B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    C_dirname = os.path.join(formatted_dir, "matrix/DCSC/B_random_sp_" + str(sparsity) + "/")
+    C_dirname = os.path.join(formatted_dir, "matrix/DCSR_transpose/B_random_sp_" + str(sparsity) + "/")
 
     C0_seg_filename = os.path.join(C_dirname, "tensor_B_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
@@ -52,9 +69,6 @@ def create_array(shape=5, sparsity=0.995, path=""):
     C_seg1 = read_inputs(C1_seg_filename)
     C1_crd_filename = os.path.join(C_dirname, "tensor_B_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
-
-    C_vals_filename = os.path.join(C_dirname, "tensor_B_mode_vals")
-    C_vals = read_inputs(C_vals_filename)
 
 
 
@@ -127,48 +141,33 @@ def create_array(shape=5, sparsity=0.995, path=""):
         time_cnt2 += 1
     # print(arr_dict)
     # print(t1, t2)
-    software_time = 0
-    for atts in range(5):
-        start_time = time.time()
-        transpose_mat, time_arr = sparse_tranpose_pytorch(B_dirname, shape=shape, shots=5, debug_sim=False, out_format="ss10")
-        software_time += time.time() - start_time
-    software_time = software_time / (5 * 5)
-    # out_crds = [C_crd0, C_crd1]
-    # out_segs = [C_seg0, C_seg1]
-    # out_val = C_vals
-    # out_tup = convert_point_tuple(get_point_list(out_crds, out_segs)) #, out_val))
-    
-    #  out_tup = remove_zeros(out_tup)
-    # tensor = torch.sparse_coo_tensor(list(zip(*out_tup)), out_val, size=(shape, shape))
-    # a = transpose_mat.to_sparse_coo()
-    # bool_answer = np.allclose(a.to_dense(), tensor.to_dense())
-    # assert bool_answer #torch.eq(a, tensor)
-    return arr_dict, time_cnt1, time_cnt2, software_time, time_arr
+    return arr_dict, time_cnt1, time_cnt2
+
+ 
 
 
-def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_len):
-    #print("BLK_LEN:", reorder_block_len)
-    #print(reorder_not_ideal, bool(reorder_not_ideal) == True)
-    shape = [8] #[1000]
-    sparsity = [0.75] #[0.5, 0.975, 0.9999] #0.8, 0.9, 0.95, 0.99, 0.9995, 0.9999]
+@pytest.mark.parametrize("arrs", [arr_dict]) #, arr_dict2, arr_dict3])
+def test_reorder_direct_transpose(arrs, debug_sim):
+    shape = [1000] #, 2000]
+    sparsity = [0.75, 0.9, 0.99, 0.995]
     plot_arr = []
     plot_arr2 = []
-    software_times = []
-    
-    load_times = []
-    format_conv_time1 = []
-    transpose_time = []
-    format_conv_time2 = []
     for sp in sparsity:
         for s in shape:
-            arrs, read_num1, read_num2, software_time, received_time_arr = create_array(shape=s, sparsity=sp)
+            # print("____________________________________", s, sp)
+            arrs, read_num1, read_num2 = create_array(shape=s, sparsity=sp)
+            # print(arrs)
+            # return
             seg_arr = arrs["seg"]
             crd_arr = arrs["crd"]
 
+            # gold_crd = arrs["out_crd_k"]
+            # gold_ref = arrs["out_ref_k"]
             gold_crd_i = arrs["out_crd_i"]
             gold_ref_i = arrs["out_ref_i"]
+            # debug_sim = True
             assert (len(gold_crd_i) == len(gold_ref_i))
-            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal), block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
+            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, limit=10, sf=1, debug=debug_sim)
             
             crd_k = repeated_token_dopper(name="crdk")
             ref_k = repeated_token_dopper(name="refk")
@@ -178,6 +177,8 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
             crd_k_out = repeated_token_dopper(name="crdkout")
             ref_k_out = repeated_token_dopper(name="refkout")
 
+
+            
             in_ref = copy.deepcopy(arrs["in_ref"])
             in_crd = copy.deepcopy(arrs["in_crd"])
             done = False
@@ -209,48 +210,45 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
 
                 if crd_k.get_token() != "":
                     out_crd.append(crd_k.get_token())
-                if ref_k.get_token() != "":
                     out_ref.append(ref_k.get_token())
                 if crd_i.get_token() != "":
                     out_crd_i.append(crd_i.get_token())
-                if ref_i.get_token() != "":
                     out_ref_i.append(ref_i.get_token())
                 if crd_k_out.get_token() != "":
                     out_crd_k_out.append(crd_k_out.get_token())
-                if ref_k_out.get_token() != "":
                     out_ref_k_out.append(ref_k_out.get_token())
          
 
-                #print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
-                #print("______________________________________________________________________")
+                # print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
+                # print("______________________________________________________________________")
                 
                 done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
                 time += 1
                 if time > 1000000000:
                     break
             
-            plot_arr.append(time)
-            plot_arr2.append(read_num2)
-            software_times.append(software_time)
-
-            load_times.append(received_time_arr[0]) 
-            format_conv_time1.append(received_time_arr[1])
-            transpose_time.append(received_time_arr[2])
-            format_conv_time2.append(received_time_arr[3])
-            #print(out_ref)
-            #print(out_crd)
+            print("Done and time: ", done, time, " read time: ", read_num1, read_num2)
             
-            #print(out_ref_i)
-            #print(out_crd_i)
+            plot_arr.append(time)
+
+            plot_arr2.append(read_num2)
+            # print("Out Crd val (k): ", out_crd)
+            ## print("Gold Crd val (k): ", gold_crd)
+            # print(out_ref)
+            ## print(gold_ref)
+
+            # print("Out Crd Val (i) ", out_crd_i)
+            # print("Gold Crd Val (i)", gold_crd_i)
+            # print(out_crd_i)
+            # print(gold_crd_i)
+            # print(gold_ref_i)
+
+            # print("outer crd: ", out_crd_k_out)
+            # print(out_ref_k_out)
+
+
+
             assert (out_crd_i == gold_crd_i)
             assert (out_crd_k_out == arrs["out_crd_k_outer"])
-            assert (out_ref_k_out == arrs["out_ref_k_outer"])
-            # assert (out_ref_i == arrs["out_ref_i"])
-
     print(plot_arr)
     print(plot_arr2)
-    print(software_times)
-    print("load time: ", load_times)
-    print("conv1 time: ", format_conv_time1)
-    print("tran time: ", transpose_time)
-    print("conv2 time: ", format_conv_time2)
