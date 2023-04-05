@@ -37,15 +37,10 @@ GEN_KERNEL_NAMES=(
   mat_residual
   mat_elemadd3
   tensor3_mttkrp
-<<<<<<< HEAD
-  #tensor3_lin
-  tensor4_multiply
-=======
   vec_spacc_simple
   mat_spacc_simple
   vec_sd_compression_WRONG
   vec_ds_compression_WRONG
->>>>>>> 3b505dc4d3dcd0f9d1dd6b369deab9f81f136ab6
 )
 
 HAND_KERNEL_NAMES=(
@@ -109,4 +104,3 @@ for i in ${!HAND_KERNEL_NAMES[@]}; do
     dot -Tpng $dot_dir/$name.gv -o $png_dir/$name.png
     echo "Generating sam for $name to $dir"
 done
-
