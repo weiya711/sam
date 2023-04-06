@@ -226,9 +226,9 @@ def test_matmul_ijk_FINAL(samBench, ssname, check_gold, report_stats, debug_sim,
         extra_info["fiberwrite_Xvals_0" + "/" + k] = sample_dict[k]
 
     # write total cycles to csv file
-    with open('small_50_matmul_ijk.csv', 'a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([ssname, time_cnt])
+    # with open('small_50_matmul_ijk.csv', 'a', newline='') as file:
+    #     writer = csv.writer(file)
+    #     writer.writerow([ssname, time_cnt])
     
     # code for generating csv, gantt chart, txt file
     extra_info["backpressure"]=backpressure
