@@ -38,12 +38,12 @@ def gen_gantt(extra_info, testname):
                 duration_list.insert(0, finish_c - start_c)
 
 
-    back_depth = '0'
+    back_depth = 'N' # assume there is no back pressure for default
     if extra_info["backpressure"]:
         back_depth = extra_info["depth"]
     
     # Writing cycle info to csv file
-    with open(testname + '_' + extra_info["dataset"] + '_back'+back_depth+'.csv', 'w', newline='') as file:
+    with open(testname + '_' + extra_info["dataset"] + '_back_'+back_depth+'.csv', 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(["block","start","finish","duration","valid_ops"])
         for idx, block in reversed(list(enumerate(block_list))):
