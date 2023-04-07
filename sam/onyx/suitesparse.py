@@ -155,6 +155,7 @@ def inject_app_names(performance, app, matrix):
 
     return performance
 
+
 def get_performance(text):
 
     perf_tiles = {}
@@ -178,7 +179,7 @@ def get_performance(text):
                 # There can be multiple primitives with the same Tile
                 # in the case of read scanner/write scanner
                 perf_tiles[tile][name_] = {'cycles': [0, 0],
-                                            'ops': 0}
+                                           'ops': 0}
                 # perf_tiles[tile] = {'name': name_,
                 #                     'cycles': [0, 0],
                 #                     'ops': 0}
@@ -195,6 +196,7 @@ def get_performance(text):
                 raise NotImplementedError
 
     return perf_tiles
+
 
 def run_build_tb(log_file, basedir, sparse_test_basedir, benchname, matrix_tmp_dir, check=True, gen_verilog=False,
                  debug=False, perf_debug=False):
