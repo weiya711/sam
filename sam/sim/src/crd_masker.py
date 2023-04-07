@@ -1,5 +1,7 @@
 from .base import *
 from .repeater import RepeatSigGen, Repeat
+from .token import EmptyFiberStknDrop, StknDrop
+from .crd_manager import CrdDrop
 import numpy as np
 
 # From Ritvik's reorder branch
@@ -75,6 +77,15 @@ class CrdMask(Primitive):
         self.out_dropper = repeated_token_dropper(name="out_crd")
         self.prob = []
         self.drop_prob = 0
+        self.curr_i = 0
+        self.outer = []
+        self.inner = []
+        self.outer_after = []
+        self.inner_after = []
+        self.inner_stkn_dropper = EmptyFiberStknDrop()
+        self.outer_stkn_dropper = EmptyFiberStknDrop()
+        self.dropper = CrdDrop()
+        self.actual_done = False
 
         self.drop_predicate = drop_predicate
 
@@ -93,6 +104,9 @@ class CrdMask(Primitive):
     def set_backpressure(self, backpressure):
         if not backpressure:
             self.ready_backpressure = False
+
+    def set_curr_i(self, i):
+        self.curr_i = i
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -149,20 +163,70 @@ class CrdMask(Primitive):
             self.done = True
             return
 
-        if not is_stkn(self.out_crd_array[0]) and self.out_crd_array[0] != "":
+        print(self.out_crd_array)
+        # print(self.drop_prob)
+        # print(self.prob)
+        #
+
+        if not is_stkn(self.out_crd_array[0]) and self.out_crd_array[0] != 'D' and self.out_crd_array[0] != "":
             # TODO: Added for debugging
             if self.name == "random":
                 if len(self.prob) != 0:
-                    self.set_predicate(self.prob[self.out_crd_array[1], self.out_crd_array[0]], self.drop_prob)
+                    # print("Dropping", self.prob[self.curr_i, self.out_crd_array[1], self.out_crd_array[0]])
+                    self.set_predicate(self.prob[self.curr_i, self.out_crd_array[1], self.out_crd_array[0]], self.drop_prob)
+                    # self.set_predicate(self.prob[self.out_crd_array[1], self.out_crd_array[0]], self.drop_prob)
             if self.drop_predicate(self.out_crd_array):
+                print("Dropping: ", self.curr_i, *self.out_crd_array)
                 # drop (may need to follow up with crd dropper?)
                 self.out_crd_array = ['' for i in range(self.dimension)]
                 self.inner_ref = ''
+
+        self.inner.append(self.out_crd_array[0])
+        self.outer.append(self.out_crd_array[1])
+
+        print("j: ", remove_emptystr(self.outer))
+        print("k: ", remove_emptystr(self.inner))
+
+        print()
+        # if is_stkn(old_token) and old_token == self.out_dropper.get_token():
+        #     self.out_crd_array[0] = ''
+        #     self.out_crd_array[1] = ''
+        # else:
+        # self.out_crd_array[1] = self.out_dropper.get_token()
+        # dedup_outer_crd = self.out_dropper.get_token()
+        # self.outer_stkn_dropper.set_in_stream(dedup_outer_crd)
 
         # undo coord hold for outer level crd
         self.out_dropper.add_token(self.out_crd_array[1])
         self.out_dropper.update()
         self.out_crd_array[1] = self.out_dropper.get_token()
+
+        self.inner_stkn_dropper.set_in_stream(self.out_crd_array[0])
+        self.outer_stkn_dropper.set_in_stream(self.out_crd_array[1])
+
+        self.inner_stkn_dropper.update()
+        self.outer_stkn_dropper.update()
+
+        self.out_crd_array[0] = self.inner_stkn_dropper.out_val()
+        self.out_crd_array[1] = self.outer_stkn_dropper.out_val()
+
+        if self.out_crd_array[0] == 'D':
+            self.done = True
+        # self.dropper.set_outer_crd(self.out_crd_array[1])
+        # self.dropper.set_inner_crd(self.out_crd_array[0])
+
+        # self.dropper.update()
+
+        # self.out_crd_array[0] = self.dropper.out_crd_inner()
+        # self.out_crd_array[1] = self.dropper.out_crd_outer()
+
+        self.inner_after.append(self.out_crd_array[0])
+        self.outer_after.append(self.out_crd_array[1])
+        print("j after: ", remove_emptystr(self.outer_after))
+        print("k after: ", remove_emptystr(self.inner_after))
+
+        print()
+
 
     def print_fifos(self):
         for i in range(self.dimension):
