@@ -159,9 +159,9 @@ class CrdMask(Primitive):
         if self.curr_crd_array[0] is not None:
             self.out_crd_array = self.curr_crd_array
 
-        if self.out_crd_array[0] == 'D':
-            self.done = True
-            return
+        # if self.out_crd_array[0] == 'D':
+        #     self.done = True
+        #     return
 
         print(self.out_crd_array)
         # print(self.drop_prob)
@@ -210,7 +210,7 @@ class CrdMask(Primitive):
         self.out_crd_array[0] = self.inner_stkn_dropper.out_val()
         self.out_crd_array[1] = self.outer_stkn_dropper.out_val()
 
-        if self.out_crd_array[0] == 'D':
+        if self.out_crd_array[0] == 'D' and self.out_crd_array[1] == 'D':
             self.done = True
         # self.dropper.set_outer_crd(self.out_crd_array[1])
         # self.dropper.set_inner_crd(self.out_crd_array[0])
