@@ -50,7 +50,7 @@ def gen_gantt(extra_info, testname):
             writer.writerow([block, start_list[idx], finish_list[idx], duration_list[idx],'-'])
     
     # Print all the statistics to a text file
-    text_file = open(testname + '_' + extra_info["dataset"] + '_back'+back_depth+".txt","w")
+    text_file = open(testname + '_' + extra_info["dataset"] + '_back_'+back_depth+".txt","w")
     for k in extra_info.keys():
         if "/" in k:
             text_file.write(k+": "+str(extra_info[k])+"\n")
@@ -58,5 +58,5 @@ def gen_gantt(extra_info, testname):
 
     # Creating gantt chart
     plt.barh(y=block_list, width=duration_list, left=start_list)
-    file_name = testname + '_' + extra_info["dataset"] + "_back"+back_depth+".png"
+    file_name = testname + '_' + extra_info["dataset"] + "_back_"+back_depth+".png"
     plt.savefig(file_name, bbox_inches="tight")
