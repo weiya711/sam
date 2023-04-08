@@ -23,12 +23,21 @@ def write_datastructure_tiles(args, tensor, out_path, tile_name):
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
     dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
-
-    print(tile_name)
-    tensorname = tile_name.split("_")[1]
-
-    coo = inputCache.load(tensor, False)
-    formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=False)
+    
+    if "matmul_ijk" in args.benchname:
+        if "C" in tile_name:
+            tensorname = tile_name.split("_")[1]
+            coo = inputCache.load(tensor, False)
+            formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10", hw=False)
+        else:
+            tensorname = tile_name.split("_")[1]
+            coo = inputCache.load(tensor, False)
+            formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=False)
+    else:
+        print(tile_name)
+        tensorname = tile_name.split("_")[1]
+        coo = inputCache.load(tensor, False)
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=False)
 
 
 def write_datastructure_bench(args, tensor, out_path, tiles=None):
