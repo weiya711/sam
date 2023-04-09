@@ -31,7 +31,7 @@ mkdir -p $path
 mkdir -p $basedir/tiles/
 rm -rf $basedir/tiles/*
 
-./scripts/prepare_files.sh $fname 
+./scripts/prepare_files.sh $fname $bench 
 
 cd $basedir/sam/sim
 pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$yaml_fname --nnz-value=$nnz --benchmark-json=$path/${line}_${nnz}_${dim}.json 

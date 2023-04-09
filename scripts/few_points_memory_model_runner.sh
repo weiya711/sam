@@ -9,18 +9,19 @@ set -u
 
 BENCHMARKS=(
 	matmul_ikj_tile_pipeline_final
+	matmul_ijk_tile_pipeline_final
 )
 
 
 NNZ=(
   5000
 #  10000
-  25000
+#  25000
 #  50000
 )
 
 DIMENSIONS=(
- 1024
+# 1024
 # 2360
  3696
 # 6368
@@ -31,6 +32,7 @@ DIMENSIONS=(
 )
 
 
+
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
@@ -38,22 +40,23 @@ NC='\033[0m' # No Color
 basedir=$(pwd)
 
 export SAM_HOME=$basedir
-export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
-export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 
 benchout=memory_model_out
 
 mkdir -p "$benchout"
 
-for b in ${!BENCHMARKS[@]}; do
-	for nnz in ${!NNZ[@]}; do
-		for dim in ${!DIMENSIONS[@]}; do
-			if [ $2 -eq 0 ]; then
-				./scripts/prepare_files_no_gold.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
-			elif [ $2 -eq 1 ]; then
-				./scripts/prepare_files.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
-			fi
+for nnz in ${!NNZ[@]}; do
+	for dim in ${!DIMENSIONS[@]}; do			
+		if [ $2 -eq 0 ]; then
+			./scripts/prepare_files_no_gold.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
+		elif [ $2 -eq 1 ]; then
+			./scripts/prepare_files.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx $bench 	
+		fi                                        	
+		for b in ${!BENCHMARKS[@]}; do
 			bench=${BENCHMARKS[$b]}
+			export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/${bench:0:10}/formatted
+			export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/${bench:0:10}/output/
+			
 			path=$basedir/$benchout
 			mkdir -p $path
 			echo "Testing $bench..."

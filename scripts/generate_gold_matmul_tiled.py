@@ -23,9 +23,10 @@ def round_sparse(x):
         return math.ceil(x - 0.5)
 
 
-def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01"):
+def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, bench, out_format="ss01"):
     # CSR
-    formatted_dir = "./tiles/matmul_ikj/mtx"
+    bench = bench[0:10]
+    formatted_dir = "./tiles/" + bench + "/mtx"
     B_dir = "tensor_B_tile_"
     for a in tile_crd_b:
         B_dir += str(a) + "_"
@@ -79,8 +80,9 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate tiled output gold")
     parser.add_argument("--yaml_name", type=str, default="memory_config_real.yaml")
+    parser.add_argument("--bench", type=str, default="matmul_ikj")
     args = parser.parse_args()
-    outdir = "./tiles/matmul_ikj/output/"
+    outdir = "./tiles/" + args.bench[0:10]  + "/output/"
     outpath = Path(outdir)
     outpath.mkdir(parents=True, exist_ok=True)
 
@@ -89,7 +91,7 @@ if __name__ == "__main__":
     # generate_gold_matmul_tiled([0, 1, 0, 7], [1, 0, 7, 0], outdir)
     # quit()    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
 
-    with open("./tiles/matmul_ikj/tensor_sizes", "rb") as ff:
+    with open("./tiles/" + args.bench[0:10] + "/tensor_sizes", "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
 
     with open("./sam/sim/src/tiling/" + args.yaml_name, "r") as stream:
@@ -108,4 +110,4 @@ if __name__ == "__main__":
                 for i0 in range(struct["i0"]):
                     for k0 in range(struct["k0"]):
                         for j0 in range(struct["j0"]):
-                            generate_gold_matmul_tiled([i00, k00, i0, k0], [k00, j00, k0, j0], outdir)
+                            generate_gold_matmul_tiled([i00, k00, i0, k0], [k00, j00, k0, j0], outdir, args.bench)

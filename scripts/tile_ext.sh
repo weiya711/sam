@@ -2,6 +2,7 @@
 
 BENCHMARKS=(
   matmul_ikj
+  matmul_ijk
 )
 
 # THIS FILE MUST BE RUN FROM sam/ location
@@ -13,13 +14,14 @@ ext_path=$basedir/extensor_mtx/$1
 
 echo "$ext_path"
 
+rm -rf $basedir/tiles/*
+
 for b in ${!BENCHMARKS[@]}; do
 	bench=${BENCHMARKS[$b]}
 	path=$basedir/$benchout/$bench
 	mkdir -p $basedir/$benchout/$bench
 	echo "Testing $bench..."
 
-	rm -rf $basedir/tiles/*
 
 	echo "Tiling mtx file"
 	python $basedir/sam/sim/src/tiling/tile.py --extensor --input_path $ext_path --cotile $bench --multilevel --hw_config $basedir/sam/sim/src/tiling/$2 

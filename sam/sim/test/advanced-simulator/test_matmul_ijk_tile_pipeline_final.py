@@ -30,31 +30,29 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report_stats,
+def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report_stats,
                                  skip_empty, yaml_name, nbuffer, backpressure, depth, nnz_value, fill=0):
     depth = int(depth)
-    stats_dict = {"mul_6_ops": 0, "spacc1_3_rmw_ops": [], "out_arr_size": 0, "repsiggen_i_17_total_rep": 0,
-                  "repsiggen_j_10_total_rep": 0, "repsiggen_i_17_max_rep": 0, "repsiggen_j_10_max_rep": 0,
-                  "fiberlookup_Bi_19_done": 0, "fiberlookup_Bk_14_done": 0, "fiberlookup_Bi_19_ttl": 0,
-                  "fiberlookup_Bk_14_ttl": 0, "repsiggen_i_17_done": 0,
-                  "repeat_Ci_16_done": 0, "repeat_Bj_9_done": 0, "fiberlookup_Ck_15_done": 0,
-                  "fiberlookup_Ck_15_ttl": 0, "intersectk_13_done": 0, "crdhold_5_done": 0,
-                  "fiberlookup_Cj_12_done": 0, "fiberlookup_Cj_12_ttl": 0, "arrayvals_C_8_done": 0,
-                  "crdhold_4_done": 0, "repsiggen_j_10_done": 0,
-                  "arrayvals_B_7_done": 0, "mul_6_done": 0, "spaccumulator1_3_done": 0,
-                  "spaccumulator1_3_inner_done": 0,
-                  "spaccumulator1_3_outer_done": 0, "spaccumulator1_3_vals_done": 0}
+    stats_dict = {"mul_4_ops": 0, "out_arr_size": 0, "repsiggen_i_15_total_rep": 0,
+                  "repsiggen_j_11_total_rep": 0, "repsiggen_j_11_max_rep": 0, "repsiggen_i_15_max_rep": 0,
+                  "fiberlookup_Bi_17_done": 0, "fiberlookup_Bk_8_done": 0, "fiberlookup_Bi_17_ttl": 0,
+                  "fiberlookup_Bk_8_ttl": 0, "repsiggen_i_15_done": 0,
+                  "repeat_Ci_14_done": 0, "repeat_Bj_10_done": 0, "fiberlookup_Ck_9_done": 0,
+                  "fiberlookup_Ck_9_ttl": 0, "intersectk_7_done": 0,
+                  "fiberlookup_Cj_13_done": 0, "fiberlookup_Cj_13_ttl": 0, "arrayvals_C_6_done": 0,
+                  "repsiggen_j_11_done": 0,
+                  "arrayvals_B_5_done": 0, "mul_4_done": 0}
     # Helper Datastructures
     # Sizes for the full matrix (to get software loop sizes)
-    with open(os.path.join(sam_home, "tiles/matmul_ikj/tensor_sizes"), "rb") as ff:
+    with open(os.path.join(sam_home, "tiles/matmul_ijk/tensor_sizes"), "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
     # Make sure the tiles were correctly done
     assert sizes_dict_level_full["B"][0] == sizes_dict_level_full["C"][1]
     # GLB tile's sizes in a dict
-    with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_0_sizes"), "rb") as ff:
+    with open(os.path.join(sam_home, "tiles/matmul_ijk/hw_level_0_sizes"), "rb") as ff:
         sizes_dict_level0 = pickle.load(ff)
     # Mem tile's sizes in a dict
-    with open(os.path.join(sam_home, "tiles/matmul_ikj/hw_level_1_sizes"), "rb") as ff:
+    with open(os.path.join(sam_home, "tiles/matmul_ijk/hw_level_1_sizes"), "rb") as ff:
         sizes_dict_level1 = pickle.load(ff)
     cnt = 0
     for sizes in sizes_dict_level_full:
@@ -72,13 +70,11 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
               "i0": int(loop_config["Glb_tile_size"]), "k0": int(loop_config["Glb_tile_size"]),
               "j0": int(loop_config["Glb_tile_size"])}
 
-
     cnt_i = 0
     # Get an array that allows us to get the cordinates from the reference values
     # Called ref_glb_convertor to be able to use the sizes_dict_level0
     # Get seg and crd arrays of mem tiles and glb tiles in glb_arr
     ref_glb_convertor, glb_arr = generate_tile_crd_glb_matmul(struct, sizes_dict_level0)
-    # print(ref_glb_convertor, glb_arr)
     ref_to_crd_convertor = dict()
 
     # Intitialize software loops
@@ -98,6 +94,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     in_ref_B0 = []
     in_ref_C0 = []
     done = False
+
     time_cnt = 0
     last_time_cnt = 0
     overall_time = []
@@ -218,7 +215,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             ref_to_crd_convertor, mem_arr = generate_tile_crd_mem_matmul(struct, sizes_dict_level1, keys,
                                                                          ref_glb_convertor, ref_to_crd_convertor)
             
-            # print(ref_to_crd_convertor, mem_arr)
+            #########print("two_dictionary_mem:: ", ref_to_crd_convertor, mem_arr)
             # New GLB tile: Reintialize controllers at the glb level
             flag_glb = True
             in_ref_B0 = [0, 'D']
@@ -327,7 +324,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     mem_model_cj.add_tile(fiberlookup_Cj0.out_ref(), 8, glb_model_c.token())
                     mem_model_cvals.add_tile(fiberlookup_Cj0.out_ref(), 8, glb_model_c.token())
 
-        if mem_blocks_decl_flag and fiberlookup_Bi_19.out_done() and mem_model_bi.valid_tile() and not nxt_tile_present[0]:
+        if mem_blocks_decl_flag and fiberlookup_Bi_17_.out_done() and mem_model_bi.valid_tile() and not nxt_tile_present[0]:
             B_glb_nxt = ref_glb_convertor["B"][mem_model_bi.token() // 1000000].split("_")
             B_k00_nxt = int(B_glb_nxt[1])
             B_i00_nxt = int(B_glb_nxt[0])
@@ -342,15 +339,15 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             B0_crd_filename = os.path.join(B_dirname, "B0_crd.txt")
             B_seg0 = read_inputs(B0_seg_filename)
             B_crd0 = read_inputs(B0_crd_filename)
-            in_fifo = fiberlookup_Bi_19.get_fifo()
+            in_fifo = fiberlookup_Bi_17_.get_fifo()
             in_fifo.append(0)
             in_fifo.append("D")
-            fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
+            fiberlookup_Bi_17_ = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
                                                     debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
                                                     back_en=backpressure, depth=depth)
             mem_model_bi.valid_tile_received()
             nxt_tile_present[0] = True
-        if mem_blocks_decl_flag and fiberlookup_Bk_14.out_done() and mem_model_bk.valid_tile() and not nxt_tile_present[1]:
+        if mem_blocks_decl_flag and fiberlookup_Bk_8_.out_done() and mem_model_bk.valid_tile() and not nxt_tile_present[1]:
             B_glb_nxt = ref_glb_convertor["B"][mem_model_bk.token() // 1000000].split("_")
             B_k00_nxt = int(B_glb_nxt[1])
             B_i00_nxt = int(B_glb_nxt[0])
@@ -365,13 +362,13 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             B1_crd_filename = os.path.join(B_dirname, "B1_crd.txt")
             B_seg1 = read_inputs(B1_seg_filename)
             B_crd1 = read_inputs(B1_crd_filename)
-            in_fifo = fiberlookup_Bk_14.get_fifo()
-            fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1,
+            in_fifo = fiberlookup_Bk_8_.get_fifo()
+            fiberlookup_Bk_8_ = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1,
                                                     debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
                                                     back_en=backpressure, depth=depth)
             mem_model_bk.valid_tile_received()
             nxt_tile_present[1] = True
-        if mem_blocks_decl_flag and fiberlookup_Ck_15.out_done() and mem_model_ck.valid_tile() and not nxt_tile_present[2]:
+        if mem_blocks_decl_flag and fiberlookup_Ck_9_.out_done() and mem_model_ck.valid_tile() and not nxt_tile_present[2]:
             C_glb_nxt = ref_glb_convertor["C"][mem_model_ck.token() // 1000000].split("_")
             C_j00_nxt = int(C_glb_nxt[1])
             C_k00_nxt = int(C_glb_nxt[0])
@@ -386,15 +383,15 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C0_crd_filename = os.path.join(C_dirname, "C0_crd.txt")
             C_seg0 = read_inputs(C0_seg_filename)
             C_crd0 = read_inputs(C0_crd_filename)
-            in_fifo = fiberlookup_Ck_15.get_fifo()
-            fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0,
+            in_fifo = fiberlookup_Ck_9_.get_fifo()
+            fiberlookup_Ck_9_ = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0,
                                                     debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
                                                     back_en=backpressure, depth=depth)
             mem_model_ck.valid_tile_received()
-            repeat_Ci_16.set_in_ref(0, "")
-            repeat_Ci_16.set_in_ref("D", "")
+            repeat_Ci_14_.set_in_ref(0, "")
+            repeat_Ci_14_.set_in_ref("D", "")
             nxt_tile_present[2] = True
-        if mem_blocks_decl_flag and fiberlookup_Cj_12.out_done() and mem_model_cj.valid_tile() and not nxt_tile_present[3]:
+        if mem_blocks_decl_flag and fiberlookup_Cj_13_.out_done() and mem_model_cj.valid_tile() and not nxt_tile_present[3]:
             C_glb_nxt = ref_glb_convertor["C"][mem_model_cj.token() // 1000000].split("_")
             C_j00_nxt = int(C_glb_nxt[1])
             C_k00_nxt = int(C_glb_nxt[0])
@@ -408,13 +405,13 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
             C_seg1 = read_inputs(C1_seg_filename)
             C_crd1 = read_inputs(C1_crd_filename)
-            in_fifo = fiberlookup_Cj_12.get_fifo()
-            fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2,
+            in_fifo = fiberlookup_Cj_13_.get_fifo()
+            fiberlookup_Cj_13_ = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2,
                                                     statistics=report_stats, fifo=in_fifo,
                                                     back_en=backpressure, depth=depth)
             mem_model_cj.valid_tile_received()
             nxt_tile_present[3] = True
-        if mem_blocks_decl_flag and arrayvals_B_7.out_done() and mem_model_bvals.valid_tile() and not nxt_tile_present[4]:
+        if mem_blocks_decl_flag and arrayvals_B_5_.out_done() and mem_model_bvals.valid_tile() and not nxt_tile_present[4]:
             B_glb_nxt = ref_glb_convertor["B"][mem_model_bvals.token() // 1000000].split("_")
             B_k00_nxt = int(B_glb_nxt[1])
             B_i00_nxt = int(B_glb_nxt[0])
@@ -427,12 +424,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             B_dirname = os.path.join(formatted_dir, B_dir)
             B_vals_filename = os.path.join(B_dirname, "B_vals.txt")
             B_vals = read_inputs(B_vals_filename, float)
-            in_fifo = arrayvals_B_7.get_fifo()
-            arrayvals_B_7 = Array(name="Bvals", init_arr=B_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
+            in_fifo = arrayvals_B_5_.get_fifo()
+            arrayvals_B_5_ = Array(name="Bvals", init_arr=B_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
                                   back_en=backpressure, depth=depth)
             mem_model_bvals.valid_tile_received()
             nxt_tile_present[4] = True
-        if mem_blocks_decl_flag and arrayvals_C_8.out_done() and mem_model_cvals.valid_tile() and not nxt_tile_present[5]:
+        if mem_blocks_decl_flag and arrayvals_C_6_.out_done() and mem_model_cvals.valid_tile() and not nxt_tile_present[5]:
             C_glb_nxt = ref_glb_convertor["C"][mem_model_cvals.token() // 1000000].split("_")
             C_j00_nxt = int(C_glb_nxt[1])
             C_k00_nxt = int(C_glb_nxt[0])
@@ -445,38 +442,38 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_dirname = os.path.join(formatted_dir, C_dir)
             C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
             C_vals = read_inputs(C_vals_filename, float)
-            in_fifo = arrayvals_C_8.get_fifo()
-            arrayvals_C_8 = Array(name="Cvals", init_arr=C_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
+            in_fifo = arrayvals_C_6_.get_fifo()
+            arrayvals_C_6_ = Array(name="Cvals", init_arr=C_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
                                   back_en=backpressure, depth=depth)
             mem_model_cvals.valid_tile_received()
             nxt_tile_present[5] = True
 
-        if mem_blocks_decl_flag and fiberlookup_Bi_19.out_done() and nxt_tile_present[0]:
+        if mem_blocks_decl_flag and fiberlookup_Bi_17_.out_done() and nxt_tile_present[0]:
             mem_model_bi.check_if_done(True)
             nxt_tile_present[0] = False
         else:
             mem_model_bi.check_if_done(False)
-        if mem_blocks_decl_flag and fiberlookup_Bk_14.out_done() and nxt_tile_present[1]:
+        if mem_blocks_decl_flag and fiberlookup_Bk_8_.out_done() and nxt_tile_present[1]:
             mem_model_bk.check_if_done(True)
             nxt_tile_present[1] = False
         else:
             mem_model_bk.check_if_done(False)
-        if mem_blocks_decl_flag and fiberlookup_Cj_12.out_done() and nxt_tile_present[3]:
+        if mem_blocks_decl_flag and fiberlookup_Cj_13_.out_done() and nxt_tile_present[3]:
             mem_model_cj.check_if_done(True)
             nxt_tile_present[3] = False
         else:
             mem_model_cj.check_if_done(False)
-        if mem_blocks_decl_flag and fiberlookup_Ck_15.out_done() and nxt_tile_present[2]:
+        if mem_blocks_decl_flag and fiberlookup_Ck_9_.out_done() and nxt_tile_present[2]:
             mem_model_ck.check_if_done(True)
             nxt_tile_present[2] = False
         else:
             mem_model_ck.check_if_done(False)
-        if mem_blocks_decl_flag and arrayvals_C_8.out_done() and nxt_tile_present[5]:
+        if mem_blocks_decl_flag and arrayvals_C_6_.out_done() and nxt_tile_present[5]:
             mem_model_cvals.check_if_done(True)
             nxt_tile_present[5] = False
         else:
             mem_model_cvals.check_if_done(False)
-        if mem_blocks_decl_flag and arrayvals_B_7.out_done() and nxt_tile_present[4]:
+        if mem_blocks_decl_flag and arrayvals_B_5_.out_done() and nxt_tile_present[4]:
             mem_model_bvals.check_if_done(True)
             nxt_tile_present[4] = False
         else:
@@ -559,9 +556,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C1_seg_filename = os.path.join(C_dirname, "C1_seg.txt")
             C1_crd_filename = os.path.join(C_dirname, "C1_crd.txt")
             C_vals_filename = os.path.join(C_dirname, "C_vals.txt")
-
-            # print("TILE FILE NAME B ", B_shape_filename)
-            # print("TILE FILE NAME C ", C_shape_filename)
             if os.path.exists(B_shape_filename):
                 B_shape = read_inputs(B_shape_filename)
                 B_seg0 = read_inputs(B0_seg_filename)
@@ -619,54 +613,41 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             if report_stats and c_tile_id not in tile_id_c:
                 c_vals_size += len(C_vals)
                 tile_id_c.append(c_tile_id)
-            debug_sim2 = False  # True  # False
-
-            fiberlookup_Bi_19 = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
-                                                    debug=debug_sim2, statistics=report_stats,
+            debug_sim2 = False #True #False
+            #print("ARRAYS BELOW:")
+            #print(B_seg0, B_crd0)
+            #print(B_seg1, B_crd1)
+            #print(C_seg0, C_crd0)
+            #print(C_seg1, C_crd1)
+            #print("---------------")
+            fiberlookup_Bi_17_ = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim2, statistics=report_stats,
+                                                     back_en=backpressure, deph=depth)
+            fiberwrite_X0_2_ = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim2, statistics=report_stats,
+                                              back_en=backpressure, depth=depth)
+            repsiggen_i_15_ = RepeatSigGen(debug=debug_sim2, statistics=report_stats,
+                                           back_en=backpressure, depth=depth)
+            repeat_Ci_14_ = Repeat(debug=debug_sim2, statistics=report_stats,
+                                   back_en=backpressure, depth=depth)
+            fiberlookup_Cj_13_ = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2, statistics=report_stats,
+                                                     back_en=backpressure, depth=depth)
+            fiberlookup_Ck_9_ = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim2, statistics=report_stats,
                                                     back_en=backpressure, depth=depth)
-            fiberlookup_Bk_14 = CompressedCrdRdScan(name="Bk", crd_arr=B_crd1, seg_arr=B_seg1,
-                                                    debug=debug_sim2, statistics=report_stats,
-                                                    back_en=backpressure, depth=depth)
-            repsiggen_i_17 = RepeatSigGen(debug=debug_sim2, statistics=report_stats,
-                                          back_en=backpressure, depth=depth)
-            repeat_Ci_16 = Repeat(debug=debug_sim2, statistics=report_stats,
-                                  back_en=backpressure, depth=depth)
-            fiberlookup_Ck_15 = CompressedCrdRdScan(name="Ck", crd_arr=C_crd0, seg_arr=C_seg0,
-                                                    debug=debug_sim2, statistics=report_stats,
-                                                    back_en=backpressure, depth=depth)
-            intersectk_13 = Intersect2(debug=debug_sim2, statistics=report_stats,
-                                       back_en=backpressure, depth=depth)
-            crdhold_5 = CrdHold(debug=debug_sim2, statistics=report_stats, back_en=backpressure,
-                                depth=depth)
-            fiberlookup_Cj_12 = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1,
-                                                    debug=debug_sim2, statistics=report_stats,
-                                                    back_en=backpressure, depth=depth)
-            arrayvals_C_8 = Array(name="C", init_arr=C_vals, debug=debug_sim2, statistics=report_stats,
-                                  back_en=backpressure, depth=depth)
-            crdhold_4 = CrdHold(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
-            repsiggen_j_10 = RepeatSigGen(debug=debug_sim2, statistics=report_stats, back_en=backpressure,
-                                          depth=depth)
-            repeat_Bj_9 = Repeat(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
-            arrayvals_B_7 = Array(name="B", init_arr=B_vals, debug=debug_sim2, statistics=report_stats,
-                                  back_en=backpressure, depth=depth)
-            mul_6 = Multiply2(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
-            spaccumulator1_3 = SparseAccumulator1(debug=debug_sim2, statistics=report_stats,
-                                                  back_en=backpressure, depth=depth)
-            spaccumulator1_3_drop_crd_inner = StknDrop(debug=debug_sim2, statistics=report_stats,
-                                                       back_en=backpressure, depth=depth)
-            spaccumulator1_3_drop_crd_outer = StknDrop(debug=debug_sim2, statistics=report_stats,
-                                                       back_en=backpressure, depth=depth)
-            spaccumulator1_3_drop_val = StknDrop(debug=debug_sim2, statistics=report_stats,
-                                                 back_en=backpressure, depth=depth)
-            fiberwrite_Xvals_0 = ValsWrScan(name="vals", size=1 * B_shape[0] * C_shape[1], fill=fill,
-                                            debug=debug_sim2, statistics=report_stats,
-                                            back_en=backpressure, depth=depth)
-            fiberwrite_X1_1 = CompressWrScan(name="X1", seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1],
-                                             fill=fill, debug=debug_sim2, statistics=report_stats,
-                                             back_en=backpressure, depth=depth)
-            fiberwrite_X0_2 = CompressWrScan(name="X0", seg_size=2, size=B_shape[0],
-                                             fill=fill, debug=debug_sim2, statistics=report_stats,
-                                             back_en=backpressure, depth=depth)
+            fiberwrite_X1_1_ = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim2,
+                                              statistics=report_stats, back_en=backpressure, depth=depth)
+            repsiggen_j_11_ = RepeatSigGen(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
+            repeat_Bj_10_ = Repeat(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
+            fiberlookup_Bk_8_ = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim2,
+                                                    statistics=report_stats, back_en=backpressure, depth=depth)
+            intersectk_7_ = Intersect2(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
+            arrayvals_B_5_ = Array(init_arr=B_vals, debug=debug_sim2, statistics=report_stats,
+                                   back_en=backpressure, depth=depth)
+            arrayvals_C_6_ = Array(init_arr=C_vals, debug=debug_sim2, statistics=report_stats,
+                                   back_en=backpressure, depth=depth)
+            mul_4_ = Multiply2(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
+            reduce_3_ = Reduce(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
+            fiberwrite_Xvals_0_ = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim2,
+                                             statistics=report_stats, back_en=backpressure, depth=depth)
+            
             # print("INITIALIZE compute loop at ", time_cnt)
             initialize_cntr = time_cnt
             mem_model_b.valid_tile_received()
@@ -681,37 +662,27 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
 
         if flag:
             if len(in_ref_B) > 0:
-                fiberlookup_Bi_19.set_in_ref(in_ref_B.pop(0), "")
-            fiberlookup_Bk_14.set_in_ref(fiberlookup_Bi_19.out_ref(), fiberlookup_Bi_19)
-            repsiggen_i_17.set_istream(fiberlookup_Bi_19.out_crd(), fiberlookup_Bi_19)
+                fiberlookup_Bi_17_.set_in_ref(in_ref_B.pop(0), "")
+            fiberwrite_X0_2_.set_input(fiberlookup_Bi_17_.out_crd(), fiberlookup_Bi_17_)
+            repsiggen_i_15_.set_istream(fiberlookup_Bi_17_.out_crd(), fiberlookup_Bi_17_)
             if len(in_ref_C) > 0:
-                repeat_Ci_16.set_in_ref(in_ref_C.pop(0), "")
-            repeat_Ci_16.set_in_repsig(repsiggen_i_17.out_repsig(), repsiggen_i_17)
-            fiberlookup_Ck_15.set_in_ref(repeat_Ci_16.out_ref(), repeat_Ci_16)
-            intersectk_13.set_in1(fiberlookup_Ck_15.out_ref(), fiberlookup_Ck_15.out_crd(), fiberlookup_Ck_15)
-            intersectk_13.set_in2(fiberlookup_Bk_14.out_ref(), fiberlookup_Bk_14.out_crd(), fiberlookup_Bk_14)
-            crdhold_5.set_outer_crd(fiberlookup_Bi_19.out_crd(), fiberlookup_Bi_19)
-            crdhold_5.set_inner_crd(intersectk_13.out_crd(), intersectk_13)
-            fiberlookup_Cj_12.set_in_ref(intersectk_13.out_ref1(), intersectk_13)
-            arrayvals_C_8.set_load(fiberlookup_Cj_12.out_ref(), fiberlookup_Cj_12)
-            crdhold_4.set_outer_crd(crdhold_5.out_crd_outer(), crdhold_5)
-            crdhold_4.set_inner_crd(fiberlookup_Cj_12.out_crd(), fiberlookup_Cj_12)
-            repsiggen_j_10.set_istream(fiberlookup_Cj_12.out_crd(), fiberlookup_Cj_12)
-            repeat_Bj_9.set_in_ref(intersectk_13.out_ref2(), intersectk_13)
-            repeat_Bj_9.set_in_repsig(repsiggen_j_10.out_repsig(), repsiggen_j_10)
-            arrayvals_B_7.set_load(repeat_Bj_9.out_ref(), repeat_Bj_9)
-            mul_6.set_in1(arrayvals_B_7.out_val(), arrayvals_B_7)
-            mul_6.set_in2(arrayvals_C_8.out_val(), arrayvals_C_8)
-            spaccumulator1_3_drop_crd_outer.set_in_stream(crdhold_4.out_crd_outer(), crdhold_4)
-            spaccumulator1_3_drop_crd_inner.set_in_stream(crdhold_4.out_crd_inner(), crdhold_4)
-            spaccumulator1_3_drop_val.set_in_stream(mul_6.out_val(), mul_6)
-            spaccumulator1_3.set_crd_outer(spaccumulator1_3_drop_crd_outer.out_val(), spaccumulator1_3_drop_crd_outer)
-            spaccumulator1_3.set_crd_inner(spaccumulator1_3_drop_crd_inner.out_val(), spaccumulator1_3_drop_crd_inner)
-            spaccumulator1_3.set_val(spaccumulator1_3_drop_val.out_val(), spaccumulator1_3_drop_val)
-            # print("Write: ", spaccumulator1_3.out_val(), spaccumulator1_3.out_crd_inner(), spaccumulator1_3.out_crd_outer())
-            fiberwrite_Xvals_0.set_input(spaccumulator1_3.out_val(), spaccumulator1_3)
-            fiberwrite_X1_1.set_input(spaccumulator1_3.out_crd_inner(), spaccumulator1_3)
-            fiberwrite_X0_2.set_input(spaccumulator1_3.out_crd_outer(), spaccumulator1_3)
+                repeat_Ci_14_.set_in_ref(in_ref_C.pop(0), "")
+            repeat_Ci_14_.set_in_repsig(repsiggen_i_15_.out_repsig(), repsiggen_i_15_)
+            fiberlookup_Cj_13_.set_in_ref(repeat_Ci_14_.out_ref(), repeat_Ci_14_)
+            fiberlookup_Ck_9_.set_in_ref(fiberlookup_Cj_13_.out_ref(), fiberlookup_Cj_13_)
+            fiberwrite_X1_1_.set_input(fiberlookup_Cj_13_.out_crd(), fiberlookup_Cj_13_)
+            repsiggen_j_11_.set_istream(fiberlookup_Cj_13_.out_crd(), fiberlookup_Cj_13_)
+            repeat_Bj_10_.set_in_ref(fiberlookup_Bi_17_.out_ref(), fiberlookup_Bi_17_)
+            repeat_Bj_10_.set_in_repsig(repsiggen_j_11_.out_repsig(), repsiggen_j_11_)
+            fiberlookup_Bk_8_.set_in_ref(repeat_Bj_10_.out_ref(), repeat_Bj_10_)
+            intersectk_7_.set_in1(fiberlookup_Bk_8_.out_ref(), fiberlookup_Bk_8_.out_crd(), fiberlookup_Bk_8_)
+            intersectk_7_.set_in2(fiberlookup_Ck_9_.out_ref(), fiberlookup_Ck_9_.out_crd(), fiberlookup_Bk_8_)
+            arrayvals_B_5_.set_load(intersectk_7_.out_ref1(), intersectk_7_)
+            arrayvals_C_6_.set_load(intersectk_7_.out_ref2(), intersectk_7_)
+            mul_4_.set_in1(arrayvals_B_5_.out_val(), arrayvals_B_5_)
+            mul_4_.set_in2(arrayvals_C_6_.out_val(), arrayvals_C_6_)
+            reduce_3_.set_in_val(mul_4_.out_val(), mul_4_)
+            fiberwrite_Xvals_0_.set_input(reduce_3_.out_val(), reduce_3_)
             if debug_sim2:
                 print("____________________________________", time_cnt, tiled_done, tile_signalled)
             # If tile computed on move ahead
@@ -755,34 +726,28 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
 
         tiled_done = False
         if flag:
-            fiberlookup_Bi_19.update()
-            fiberlookup_Bk_14.update()
-            repsiggen_i_17.update()
-            repeat_Ci_16.update()
-            fiberlookup_Ck_15.update()
-            intersectk_13.update()
-            crdhold_5.update()
-            fiberlookup_Cj_12.update()
-            arrayvals_C_8.update()
-            crdhold_4.update()
-            repsiggen_j_10.update()
-            repeat_Bj_9.update()
-            arrayvals_B_7.update()
-            mul_6.update()
-            spaccumulator1_3_drop_crd_outer.update()
-            spaccumulator1_3_drop_crd_inner.update()
-            spaccumulator1_3_drop_val.update()
-            spaccumulator1_3.update()
-            fiberwrite_Xvals_0.update()
-            fiberwrite_X1_1.update()
-            fiberwrite_X0_2.update()
-            tiled_done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
+            fiberlookup_Bi_17_.update()
+            fiberwrite_X0_2_.update()
+            repsiggen_i_15_.update()
+            repeat_Ci_14_.update()
+            fiberlookup_Cj_13_.update()
+            fiberlookup_Ck_9_.update()
+            fiberwrite_X1_1_.update()
+            repsiggen_j_11_.update()
+            repeat_Bj_10_.update()
+            fiberlookup_Bk_8_.update()
+            intersectk_7_.update()
+            arrayvals_B_5_.update()
+            arrayvals_C_6_.update()
+            mul_4_.update()
+            reduce_3_.update()
+            fiberwrite_Xvals_0_.update()
+            tiled_done = fiberwrite_X0_2_.out_done() and fiberwrite_X1_1_.out_done() and fiberwrite_Xvals_0_.out_done()
             if tiled_skip:
                 tiled_done = True
             if tiled_done:
                 overall_time.append(time_cnt - last_time_cnt)
                 last_time_cnt = time_cnt
-
                 B_glb = ref_glb_convertor["B"][mem_model_b.token() // 1000000].split("_")
                 B_k00 = int(B_glb[1])
                 B_i00 = int(B_glb[0])
@@ -813,12 +778,12 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
 
                 check_flag = False
                 if not tiled_skip:
-                    fiberwrite_X0_2.autosize()
-                    fiberwrite_X1_1.autosize()
-                    fiberwrite_Xvals_0.autosize()
-                    out_crds = [fiberwrite_X0_2.get_arr(), fiberwrite_X1_1.get_arr()]
-                    out_segs = [fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
-                    out_vals = fiberwrite_Xvals_0.get_arr()
+                    fiberwrite_X0_2_.autosize()
+                    fiberwrite_X1_1_.autosize()
+                    fiberwrite_Xvals_0_.autosize()
+                    out_crds = [fiberwrite_X0_2_.get_arr(), fiberwrite_X1_1_.get_arr()]
+                    out_segs = [fiberwrite_X0_2_.get_seg_arr(), fiberwrite_X1_1_.get_seg_arr()]
+                    out_vals = fiberwrite_Xvals_0_.get_arr()
                     array4.append(len(out_vals))
                 if debug_sim:
                     pass
@@ -857,47 +822,35 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                             None, debug_sim, out_crds=out_crds, out_segs=out_segs,
                                             out_val=out_vals, out_format="ss01")
                 if report_stats:
-                    stats_dict["mul_6_ops"] = mul_6.return_statistics()["cycle_operation"]
-                    stats_dict["spacc1_3_rmw_ops"].append(spaccumulator1_3.return_statistics()["rmw_ops"])
-                    stats_dict["out_arr_size"] += fiberwrite_Xvals_0.return_statistics()["size"]
-
-                    stats_dict["repsiggen_i_17_total_rep"] += repsiggen_i_17.cycles_curr_total
-                    stats_dict["repsiggen_j_10_total_rep"] += repsiggen_j_10.cycles_curr_total
-                    stats_dict["repsiggen_i_17_max_rep"] += repsiggen_i_17.cycles_curr_max
-                    stats_dict["repsiggen_j_10_max_rep"] += repsiggen_j_10.cycles_curr_max
+                    stats_dict["mul_4_ops"] = mul_4_.return_statistics()["cycle_operation"]
+                    stats_dict["out_arr_size"] += fiberwrite_Xvals_0_.return_statistics()["size"]
+                    stats_dict["repsiggen_i_15_total_rep"] += repsiggen_i_15.cycles_curr_total
+                    stats_dict["repsiggen_j_11_total_rep"] += repsiggen_j_11.cycles_curr_total
+                    stats_dict["repsiggen_i_15_max_rep"] += repsiggen_i_15.cycles_curr_max
+                    stats_dict["repsiggen_j_11_max_rep"] += repsiggen_j_11.cycles_curr_max
                     # stats_dict["fiberlookup_Bi_19_done"] += fiberlookup_Bi_19.return_statistics_base()["done_cycles"] -\
                     #                                         fiberlookup_Bi_19.return_statistics_base()["start_cycle"]
                     # stats_dict["fiberlookup_Bk_14_done"] += fiberlookup_Bk_14.return_statistics_base()["done_cycles"] -\
                     #                                         fiberlookup_Bk_14.return_statistics_base()["start_cycle"]
-                    stats_dict["repsiggen_i_17_done"] += repsiggen_i_17.return_statistics_base()["done_cycles"]
-                    stats_dict["repeat_Ci_16_done"] += repeat_Ci_16.return_statistics_base()["done_cycles"]
+                    stats_dict["repsiggen_i_15_done"] += repsiggen_i_15.return_statistics_base()["done_cycles"]
+                    stats_dict["repeat_Ci_14_done"] += repeat_Ci_14.return_statistics_base()["done_cycles"]
                     # stats_dict["fiberlookup_Ck_15_done"] += fiberlookup_Ck_15.return_statistics_base()["done_cycles"] -\
                     #                                         fiberlookup_Ck_15.return_statistics_base()["start_cycle"]
-                    stats_dict["intersectk_13_done"] += intersectk_13.return_statistics_base()["done_cycles"]
-                    stats_dict["crdhold_5_done"] += crdhold_5.return_statistics_base()["done_cycles"]
+                    stats_dict["intersectk_7_done"] += intersectk_7.return_statistics_base()["done_cycles"]
                     # stats_dict["fiberlookup_Cj_12_done"] += fiberlookup_Cj_12.return_statistics_base()["done_cycles"] -\
                     #                                         fiberlookup_Cj_12.return_statistics_base()["start_cycle"]
-                    stats_dict["fiberlookup_Bi_19_ttl"] += fiberlookup_Bi_19.return_statistics_base()["done_cycles"]
-                    stats_dict["fiberlookup_Bk_14_ttl"] += fiberlookup_Bk_14.return_statistics_base()["done_cycles"]
-                    stats_dict["fiberlookup_Ck_15_ttl"] += fiberlookup_Ck_15.return_statistics_base()["done_cycles"]
-                    stats_dict["fiberlookup_Cj_12_ttl"] += fiberlookup_Cj_12.return_statistics_base()["done_cycles"]
-
-                    stats_dict["arrayvals_C_8_done"] += arrayvals_C_8.return_statistics_base()["done_cycles"]
-                    stats_dict["crdhold_4_done"] += crdhold_4.return_statistics_base()["done_cycles"]
-                    stats_dict["repsiggen_j_10_done"] += repsiggen_j_10.return_statistics_base()["done_cycles"]
-                    stats_dict["repeat_Bj_9_done"] += repeat_Bj_9.return_statistics_base()["done_cycles"]
-                    stats_dict["arrayvals_B_7_done"] += arrayvals_B_7.return_statistics_base()["done_cycles"]
-                    stats_dict["mul_6_done"] += mul_6.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_done"] += spaccumulator1_3.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_inner_done"] += \
-                        spaccumulator1_3_drop_crd_inner.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_outer_done"] += \
-                        spaccumulator1_3_drop_crd_outer.return_statistics_base()["done_cycles"]
-                    stats_dict["spaccumulator1_3_vals_done"] += \
-                        spaccumulator1_3_drop_val.return_statistics_base()["done_cycles"]
-                fiberwrite_X0_2.reset()
-                fiberwrite_X1_1.reset()
-                fiberwrite_Xvals_0.reset()
+                    stats_dict["fiberlookup_Bi_17_ttl"] += fiberlookup_Bi_17_.return_statistics_base()["done_cycles"]
+                    stats_dict["fiberlookup_Bk_8_ttl"] += fiberlookup_Bk_8_.return_statistics_base()["done_cycles"]
+                    stats_dict["fiberlookup_Ck_9_ttl"] += fiberlookup_Ck_9_.return_statistics_base()["done_cycles"]
+                    stats_dict["fiberlookup_Cj_13_ttl"] += fiberlookup_Cj_13_.return_statistics_base()["done_cycles"]
+                    stats_dict["arrayvals_C_6_done"] += arrayvals_C_6_.return_statistics_base()["done_cycles"]
+                    stats_dict["repsiggen_j_11_done"] += repsiggen_j_11_.return_statistics_base()["done_cycles"]
+                    stats_dict["repeat_Bj_10_done"] += repeat_Bj_10_.return_statistics_base()["done_cycles"]
+                    stats_dict["arrayvals_B_5_done"] += arrayvals_B_5_.return_statistics_base()["done_cycles"]
+                    stats_dict["mul_4_done"] += mul_4_.return_statistics_base()["done_cycles"]
+                fiberwrite_X0_2_.reset()
+                fiberwrite_X1_1_.reset()
+                fiberwrite_Xvals_0_.reset()
                 cnt = 0
 
             if mem_model_c.out_done():
@@ -937,7 +890,4 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     extra_info["nnz"] = str(nnz_value)
     extra_info["cycles"] = time_cnt
     samBench(bench, extra_info)
-
-    plt.title("ikj")
-    plt.plot(overall_time)
-    plt.savefig("tile_ikj" + str(nnz_value) + ".png")
+    print("TIME COUNT: ", time_cnt)

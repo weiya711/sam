@@ -1,7 +1,8 @@
 #!/bin/bash
 
 BENCHMARKS=(
-  matmul_ikj
+  matmul_ikj,
+  matmul_ijk
 )
 
 # THIS FILE MUST BE RUN FROM sam/ location
