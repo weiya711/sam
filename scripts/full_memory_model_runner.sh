@@ -7,7 +7,8 @@ SECONDS=0
 set -u
 
 BENCHMARKS=(
-matmul_ikj_tile_pipeline_final
+matmul_ikj
+matmul_ijk
 )
 
 
@@ -38,32 +39,32 @@ NC='\033[0m' # No Color
 basedir=$(pwd)
 
 export SAM_HOME=$basedir
-export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
-export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
 benchout=memory_model_out
-
+path=$basedir/$benchout
 pushd .
 mkdir -p "$benchout"
 
-for b in ${!BENCHMARKS[@]}; do
-	for nnz in ${!NNZ[@]}; do
-		for dim in ${!DIMENSIONS[@]}; do
-			if [ $2 -eq 1 ]; then
-				./scripts/prepare_files.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx 	
-			elif [ $2 -eq 0 ]; then
-				./scripts/prepare_files_no_gold.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
-			fi
+for nnz in ${!NNZ[@]}; do
+	for dim in ${!DIMENSIONS[@]}; do
+		if [ $2 -eq 1 ]; then
+			./scripts/prepare_files.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx 	
+		elif [ $2 -eq 0 ]; then
+			./scripts/prepare_files_no_gold.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
+		fi
+		for b in ${!BENCHMARKS[@]}; do
 			bench=${BENCHMARKS[$b]}
-			path=$basedir/$benchout
+			
+			export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/$bench/formatted
+			export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/$bench/output/
 			mkdir -p $path
 			echo "Testing $bench..."
 
 			line=random_sparsity
 			cd $basedir/sam/sim
 			if [ $2 -eq 1 ]; then
-				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
+				pytest test/advanced-simulator/test_$bench"_tile_pipeline_final".py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
 			else
-				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
+				pytest test/advanced-simulator/test_$bench"_tile_pipeline_final".py --ssname $line -s --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
 			fi
 			python $basedir/scripts/converter.py --json_name $path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json	
 			    
@@ -75,7 +76,6 @@ for b in ${!BENCHMARKS[@]}; do
 			cd $basedir
 		done
 	done
-	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
 	
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do
@@ -85,6 +85,12 @@ for b in ${!BENCHMARKS[@]}; do
 	echo -e "${NC}"
 done
 
+
+for b in ${!BENCHMARKS[@]}; do
+	bench=${BENCHMARKS[$b]}
+	bench_name=$bench"_tile_pipeline_final"
+	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/$bench_name.csv
+done
 popd
 
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"

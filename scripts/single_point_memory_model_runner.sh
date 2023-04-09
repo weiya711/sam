@@ -7,7 +7,7 @@
 benchout=memory_model_out
 
 basedir=$(pwd)
-bench=matmul_ikj_tile_pipeline_final
+bench=$2"_tile_pipeline_final"
 yaml_fname=memory_config_extensor_17M_llb.yaml
 line=random_sparsity
 path=$basedir/$benchout
@@ -21,8 +21,8 @@ dim=${temp_fname#*_}
 echo "Running for point NNZ=$nnz and DIMSIZE=$dim"
 
 export SAM_HOME=$basedir
-export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
-export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
+export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/$2/formatted
+export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/$2/output/
 
 pushd .
 

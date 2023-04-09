@@ -23,7 +23,6 @@ def write_datastructure_tiles(args, tensor, out_path, tile_name):
     if os.path.exists(dirpath):
         shutil.rmtree(dirpath)
     dirpath.mkdir(parents=True, exist_ok=True, mode=0o777)
-    
     if "matmul_ijk" in args.benchname:
         if "C" in tile_name:
             tensorname = tile_name.split("_")[1]

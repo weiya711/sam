@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--yaml_name", type=str, default="memory_config_real.yaml")
     parser.add_argument("--bench", type=str, default="matmul_ikj")
     args = parser.parse_args()
-    outdir = "./tiles/" + args.bench[0:10]  + "/output/"
+    outdir = "./tiles/" + args.bench[0:10] + "/output/"
     outpath = Path(outdir)
     outpath.mkdir(parents=True, exist_ok=True)
 

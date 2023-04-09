@@ -12,7 +12,7 @@ from pathlib import Path
 from sam.util import SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 from sam.sim.src.tiling.process_expr import parse_all, update_dict
 
-SAM_STRS = {"matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"}
+SAM_STRS = {"matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)", "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0 -s=reorder(i,j,k)"}
 
 
 def print_dict(dd):
@@ -331,7 +331,7 @@ if __name__ == "__main__":
                 [str(item) for item in tile_id]
                 filename = "tensor_" + name + "_tile_" + "_".join([str(item) for item in tile_id]) + ".mtx"
                 mtx_path_name = os.path.join(output_mtx_name, filename)
-                print(tile)
+                print("@@@", tile)
                 print(mtx_path_name, cwd)
                 scipy.io.mmwrite(mtx_path_name, tile)
                 print(os.path.exists(mtx_path_name))

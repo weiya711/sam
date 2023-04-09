@@ -71,8 +71,6 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
               "j00": 1 + int(sizes_dict_level_full["C"][1]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
               "i0": int(loop_config["Glb_tile_size"]), "k0": int(loop_config["Glb_tile_size"]),
               "j0": int(loop_config["Glb_tile_size"])}
-
-
     cnt_i = 0
     # Get an array that allows us to get the cordinates from the reference values
     # Called ref_glb_convertor to be able to use the sizes_dict_level0
@@ -217,7 +215,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             # Get seg and crd arrays of mem tiles in mem_arr
             ref_to_crd_convertor, mem_arr = generate_tile_crd_mem_matmul(struct, sizes_dict_level1, keys,
                                                                          ref_glb_convertor, ref_to_crd_convertor)
-            
+
             # print(ref_to_crd_convertor, mem_arr)
             # New GLB tile: Reintialize controllers at the glb level
             flag_glb = True
@@ -850,7 +848,7 @@ def test_matmul_ikj_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     C_seg1_t = read_inputs(C1_seg_filename_t)
                     C_crd1_t = read_inputs(C1_crd_filename_t)
                     C_vals_t = read_inputs(C_vals_filename_t, float)
-                    if C_j0 == 0 and B_k0 == 0:  # and B_i00 == 0:
+                    if debug_sim2:  # C_j0 == 0 and B_k0 == 0:  # and B_i00 == 0:
                         print("Checking gold... ", B_i00, B_k00, B_i0,
                               B_k0, C_k00, C_j00, C_k0, C_j0, " tiled_skip:", tiled_skip)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
