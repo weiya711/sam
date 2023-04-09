@@ -214,8 +214,6 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             # Get seg and crd arrays of mem tiles in mem_arr
             ref_to_crd_convertor, mem_arr = generate_tile_crd_mem_matmul(struct, sizes_dict_level1, keys,
                                                                          ref_glb_convertor, ref_to_crd_convertor)
-            
-            #########print("two_dictionary_mem:: ", ref_to_crd_convertor, mem_arr)
             # New GLB tile: Reintialize controllers at the glb level
             flag_glb = True
             in_ref_B0 = [0, 'D']
@@ -343,8 +341,8 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             in_fifo.append(0)
             in_fifo.append("D")
             fiberlookup_Bi_17_ = CompressedCrdRdScan(name="Bi", crd_arr=B_crd0, seg_arr=B_seg0,
-                                                    debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                                    back_en=backpressure, depth=depth)
+                                                     debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
+                                                     back_en=backpressure, depth=depth)
             mem_model_bi.valid_tile_received()
             nxt_tile_present[0] = True
         if mem_blocks_decl_flag and fiberlookup_Bk_8_.out_done() and mem_model_bk.valid_tile() and not nxt_tile_present[1]:
@@ -407,8 +405,8 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_crd1 = read_inputs(C1_crd_filename)
             in_fifo = fiberlookup_Cj_13_.get_fifo()
             fiberlookup_Cj_13_ = CompressedCrdRdScan(name="Cj", crd_arr=C_crd1, seg_arr=C_seg1, debug=debug_sim2,
-                                                    statistics=report_stats, fifo=in_fifo,
-                                                    back_en=backpressure, depth=depth)
+                                                     statistics=report_stats, fifo=in_fifo,
+                                                     back_en=backpressure, depth=depth)
             mem_model_cj.valid_tile_received()
             nxt_tile_present[3] = True
         if mem_blocks_decl_flag and arrayvals_B_5_.out_done() and mem_model_bvals.valid_tile() and not nxt_tile_present[4]:
@@ -426,7 +424,7 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             B_vals = read_inputs(B_vals_filename, float)
             in_fifo = arrayvals_B_5_.get_fifo()
             arrayvals_B_5_ = Array(name="Bvals", init_arr=B_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                  back_en=backpressure, depth=depth)
+                                   back_en=backpressure, depth=depth)
             mem_model_bvals.valid_tile_received()
             nxt_tile_present[4] = True
         if mem_blocks_decl_flag and arrayvals_C_6_.out_done() and mem_model_cvals.valid_tile() and not nxt_tile_present[5]:
@@ -444,7 +442,7 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             C_vals = read_inputs(C_vals_filename, float)
             in_fifo = arrayvals_C_6_.get_fifo()
             arrayvals_C_6_ = Array(name="Cvals", init_arr=C_vals, debug=debug_sim2, statistics=report_stats, fifo=in_fifo,
-                                  back_en=backpressure, depth=depth)
+                                   back_en=backpressure, depth=depth)
             mem_model_cvals.valid_tile_received()
             nxt_tile_present[5] = True
 
@@ -613,16 +611,11 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             if report_stats and c_tile_id not in tile_id_c:
                 c_vals_size += len(C_vals)
                 tile_id_c.append(c_tile_id)
-            debug_sim2 = False #True #False
-            #print("ARRAYS BELOW:")
-            #print(B_seg0, B_crd0)
-            #print(B_seg1, B_crd1)
-            #print(C_seg0, C_crd0)
-            #print(C_seg1, C_crd1)
-            #print("---------------")
+            debug_sim2 = False
             fiberlookup_Bi_17_ = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim2, statistics=report_stats,
                                                      back_en=backpressure, deph=depth)
-            fiberwrite_X0_2_ = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim2, statistics=report_stats,
+            fiberwrite_X0_2_ = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill,
+                                              debug=debug_sim2, statistics=report_stats,
                                               back_en=backpressure, depth=depth)
             repsiggen_i_15_ = RepeatSigGen(debug=debug_sim2, statistics=report_stats,
                                            back_en=backpressure, depth=depth)
@@ -632,7 +625,8 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                                                      back_en=backpressure, depth=depth)
             fiberlookup_Ck_9_ = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim2, statistics=report_stats,
                                                     back_en=backpressure, depth=depth)
-            fiberwrite_X1_1_ = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim2,
+            fiberwrite_X1_1_ = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1],
+                                              fill=fill, debug=debug_sim2,
                                               statistics=report_stats, back_en=backpressure, depth=depth)
             repsiggen_j_11_ = RepeatSigGen(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
             repeat_Bj_10_ = Repeat(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
@@ -647,7 +641,7 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
             reduce_3_ = Reduce(debug=debug_sim2, statistics=report_stats, back_en=backpressure, depth=depth)
             fiberwrite_Xvals_0_ = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim2,
                                              statistics=report_stats, back_en=backpressure, depth=depth)
-            
+
             # print("INITIALIZE compute loop at ", time_cnt)
             initialize_cntr = time_cnt
             mem_model_b.valid_tile_received()
