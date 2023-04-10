@@ -18,8 +18,6 @@ other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp"
               "mat_vecmul_ji"]
 
 MEM_LEVELS = 2 
-if len(sys.argv) == 2:
-    MEM_LEVELS = int(sys.argv[1])
 
 class TensorFormat:
     def __init__(self):
@@ -147,9 +145,24 @@ def generate_tiling_graph(graph):
     rem_list = []
     last_a = None
     print(g)
+    memory_nodes = defaultdict(dict)
+    # node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_"
     while (last_a is None) or (last_a not in rem_list):
         for a in list(nx.topological_sort(g)):
             node_i = breakup_node_info(g.nodes[a]["comment"])
+            if node_i["type"] == "arrayvals" or node_i["type"] == "fiberlookup":
+                print(g.nodes[a]["comment"])
+                print(node_i)
+                if not node_i["type"] == "arrayvals":
+                    memory_nodes[node_i["type"] + "_" +\
+                                 node_i["tensor"] + node_i["index"] +\
+                                 "_" + str(u) + "_"] = {"node_type" : node_i["type"],
+                                                        "tensor" : node_i["tensor"],
+                                                        "index" : node_i["index"],
+                                                        "mode": node_i["mode"]}
+                else:
+                    memory_nodes[node_i["type"] + "_" + node_i["tensor"] + "_" + str(u) + "_"] =\
+                            {"node_type" : node_i["type"], "tensor" : node_i["tensor"]}
             if node_i["type"] == "arrayvals":
                 if a not in rem_list:
                     rem_list.append(a)
@@ -159,20 +172,26 @@ def generate_tiling_graph(graph):
                         if a not in rem_list:
                             rem_list.append(a)
         last_a = a
-    print(rem_list)
     for a in rem_list:
-        print(a)
-        print(g.nodes[a])
         node_i = breakup_node_info(g.nodes[a]["comment"])
         if node_i["type"] == "arrayvals":
-            print(rem_list)
-            print(a)
-            print(g.nodes[a])
-            g.nodes[a].update({'comment': '"type=memory_block,tensor=' + node_i["tensor"] + '"', 'label': '"memory_block"', 'type': '"memory_block"'})
-            print(g.nodes[a])
+            g.nodes[a].update({'comment': '"type=memory_block,tensor=' + node_i["tensor"] + '"',
+                               'label': '"memory_block"',
+                               'type': '"memory_block"'})
         else:
             g.remove_node(a)
-    return g
+
+    any_nodes_exist = True
+    while any_nodes_exist:
+        any_nodes_exist = False
+        for a in list(nx.topological_sort(g)):
+            node_i = breakup_node_info(g.nodes[a]["comment"])
+            if sum(1 for _ in g.successors(a)) == 0 and node_i["type"] != "memory_block":
+                any_nodes_exist = True
+                print("node is :: ", a, g.nodes[a])
+                g.remove_node(a)
+        print(any_nodes_exist)
+    return g, memory_nodes
 
 def generate_tiling_end(f, mem_blks):
     f.write(tab(2) + "done = ")
@@ -256,8 +275,11 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-    f.write("def test_" + out_name + "(samBench, " + get_dataset_name(out_name) + ", cast, check_gold, debug_sim, "
-                                                                                  "report_stats, fill=0):\n")
+
+    #f.write("def test_" + out_name + "(samBench, " + get_dataset_name(out_name) + ", cast, check_gold, debug_sim, "
+    
+    f.write("def test_" + out_name + "(samBench, " + get_dataset_name(out_name) + ", check_gold, debug_sim, "
+            "report_stats, fill=0):\n")
 
 
 def get_dataset_name(test_name):
@@ -308,7 +330,8 @@ def generate_tiling_output_crds(f, scope_lvl, parents=[], tensors=[]):
         f.write("\n")        
     return
 
-def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name, tiling=False, parents=[], tensors=[]):
+def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse,
+                           test_name, tiling=False, parents=[], tensors=[], selected_tensor=None):
     # Assuming the format is csr and csc:
     f.write("\n")
     scope_lvl += 1
@@ -319,16 +342,26 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
         if MEM_LEVELS == 2:
             for i in range(len(parents)):
                 tensor = tensors[i]
+                if selected_tensor is not None and tensor != selected_tensor:
+                    continue
                 par = parents[i]
                 f.write(tab(scope_lvl) + tensor + "_glb = " + par + ".token() // 1000000\n")
-            for i in range(len(parents)):
+            for i in range(len(parents)): 
                 tensor = tensors[i]
+                if selected_tensor is not None and tensor != selected_tensor:
+                    continue
                 par = parents[i]
                 f.write(tab(scope_lvl) + tensor + "_mem = " + par + ".token() % 1000000\n")
             for i in range(len(tensors)):
+                tensor = tensors[i]
+                if selected_tensor is not None and tensor != selected_tensor:
+                    continue
                 f.write(tab(scope_lvl) + tensors[i] + "_dir = \"tensor_" + tensors[i] + "_tile_\" + str(" + tensors[i] + "_glb) + str(" + tensors[i] + "_mem)\n")
 
     for ten in tensor_format_parse.return_all_tensors():
+        if selected_tensor is not None and ten != selected_tensor:
+            continue
+
         if tensor_format_parse.get_location(ten) == 0:
             continue
         if not tiling:
@@ -558,6 +591,7 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
             f.write(tab(1) + "for k in sample_dict.keys():\n")
             f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] = sample_dict[k]\n\n")
 
+
 def generate_check_against_gold_code(f, tensor_format_parse, test_name):
     f.write(tab(1) + "if check_gold:\n")
     f.write(tab(2) + "print(\"Checking gold...\")\n")
@@ -690,7 +724,8 @@ class Parent_Child_graph:
 
 
 class Graph_Realization:
-    def __init__(self, graph, mem_lvl, scope_lvl, f, parent=None, mem_blks_connect=None, mem_blks=[], pipelined_tiles=False):
+    def __init__(self, graph, mem_lvl, scope_lvl, f, parent=None, mem_blks_connect=None,
+                 mem_blks=[], pipelined_tiles=False, pipelined_memory_nodes=defaultdict(dict)):
         self.mem_lvl = mem_lvl
         self.d = {} 
         self.f = f
@@ -707,6 +742,7 @@ class Graph_Realization:
         # self.memory_blocks 
         self.nxt_parent = None
         self.pipelined_tiles = pipelined_tiles
+        self.pipelined_memory_nodes = pipelined_memory_nodes
 
     def get_tensor_list(self):
         return self.tensor_list
@@ -720,7 +756,9 @@ class Graph_Realization:
             self.blks_to_realize.append(tab(self.scope_lvl + 1) + "in_ref_" + str(r) + self.mem_lvl + " = [0, 'D']\n")
 
 
-    def node_instantiations1(self, output_nodes, tens_fmt={}, tensor_information={}, tensor_format_parse=None, out_name=None, pipelined_tiles=False, parent=[]):
+    def node_instantiations1(self, output_nodes, tens_fmt={}, tensor_information={},
+                             tensor_format_parse=None, out_name=None, pipelined_tiles=False,
+                             parent=[], whether_pipelined=False):
         invalid_flag = 0
         temp_string = ""
         temp_string += tab(self.scope_lvl)
@@ -751,7 +789,7 @@ class Graph_Realization:
                     self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
 
                 if node_info["format"] == "compressed":
-                    self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
+                    self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + 
                                                 "_" + str(u) + "_" + self.mem_lvl + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
                                                 "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
                                                 "_seg" + node_info["mode"] + ", debug=debug_sim, statistics=report_stats)\n")
@@ -785,12 +823,15 @@ class Graph_Realization:
                 # invalid_flag = 1
             elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
                 self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
-                                            u) + "_" + self.mem_lvl + " = SparseAccumulator1(debug=debug_sim, statistics=report_stats)\n")
+                                            u) + "_" + self.mem_lvl +\
+                                            " = SparseAccumulator1(debug=debug_sim, statistics=report_stats)\n")
                 self.d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u) + "_" + self.mem_lvl
                 self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
-                                            u) + "_drop_crd_inner" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                                            u) + "_drop_crd_inner" + "_" + self.mem_lvl +\
+                                            " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
                 self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
-                                            u) + "_drop_crd_outer" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
+                                            u) + "_drop_crd_outer" + "_" + self.mem_lvl +\
+                                                    " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
                 self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + node_info["order"] + "_" + str(
                                             u) + "_drop_val" + "_" + self.mem_lvl + " = StknDrop(debug=debug_sim, statistics=report_stats)\n")
             elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
@@ -841,7 +882,7 @@ class Graph_Realization:
                 if node_info["sink"] == "true":
                     output_nodes[self.d[u]["object"]] = node_info["mode"]
             elif node_info["type"] == "memory_block":
-                if not pipelined_tiles:
+                if True: #not pipelined_tiles:
                     self.memory_blks.append(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl)
                     if self.mem_lvl == "00":
                         self.f.write(tab(1) + node_info["type"] + "_" + str(u) + "_" + self.mem_lvl + " = memory_block(" + "name= \"" + self.mem_lvl + node_info["tensor"] +
@@ -858,7 +899,6 @@ class Graph_Realization:
                                      "\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
                                      "size=memory_config[\"" + self.mem_lvl + "_memory\"], bandwidth=memory_config[\"" + self.mem_lvl + "_tile_bandwidth\"] // " +
                                      "memory_config[\"" + self.mem_lvl + "_tiles\"], latency=memory_config[\"" + self.mem_lvl + "_latency\"], debug=debug_sim)\n")
-
                 else:
                     pass
                 self.d[u]["object"] = node_info["type"] + "_" + str(u) + "_" + self.mem_lvl
@@ -867,19 +907,25 @@ class Graph_Realization:
                 if len(self.mem_lvl) == 2:
                     self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, node_info["type"] + "_" + str(u) + "_" + self.mem_lvl[:-1], ".out_done_in()")
                 else:
-                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, "tiled_done and not tile_signalled", "")
+                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, "tiled_done", "") # and not tile_signalled", "")
             else:
-                print(node_info)
                 invalid_flag = 1
-                print("Error invalid node detected", node_info["type"], "\n")
         for par in parent:
-            self.blks_to_realize.append(tab(self.scope_lvl + 1) + par + ".valid_tile_received()\n")
-        if len(self.mem_lvl) == 0:
-            self.blks_to_realize.append(tab(self.scope_lvl + 1) + "tile_signalled = False\n")
+            self.blks_to_realize.append(tab(self.scope_lvl + 1) + par + ".valid_tile_received()\n") 
+        if pipelined_tiles:
+            for mem_nodes in self.pipelined_memory_nodes.keys():
+                if self.mem_lvl == "00":
+                    self.f.write(tab(1) + "memory_block_" + mem_nodes + self.mem_lvl[:-1] +\
+                                 "= memory_block(name = \"\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                                 "size=memory_config[\"Glb_memory\"], bandwidth=memory_config[\"Glb_tile_bandwidth\"], latency=memory_config[\"Global_Glb_latency\"], debug=debug_sim)\n")
+                elif self.mem_lvl == "0":
+                    self.f.write(tab(1) + "memory_block_" + mem_nodes + self.mem_lvl[:-1] +\
+                             "= memory_block(name = \"\", skip_blocks=skip_empty, nbuffer=nbuffer, element_size=memory_config[\"Bytes_per_element\"]," +
+                             "size=memory_config[\"Mem_memory\"], bandwidth=memory_config[\"Mem_tile_bandwidth\"], latency=memory_config[\"Glb_Mem_latency\"], debug=debug_sim)\n")
         self.output_check_nodes()
         self.f.write("\n")
         self.nxt_parent = nxt_parents
-        return self.d, invalid_flag, output_nodes, nxt_parents
+        return self.d, invalid_flag, output_nodes, nxt_parents, pipelined_tiles
 
     
     def write_nodes(self):
@@ -887,23 +933,47 @@ class Graph_Realization:
             f.write(node)
 
 
-    def node_instantiations(self, output_nodes, tens_fmt={}, tensor_information={}, tensor_format_parse=None, out_name=None, pipelined_tiles=False, parent=[], tensor_list=[]):
+    def node_instantiations(self, output_nodes, tens_fmt={}, tensor_information={},
+                            tensor_format_parse=None, out_name=None, pipelined_tiles=False,
+                            parent=[], tensor_list=[], whether_pipelined=False):
         invalid_flag = 0
         f.write(tab(self.scope_lvl))
         temp_flag = False
         nxt_parents = []
+        self.f.write("\n") 
+        if whether_pipelined:
+            for node in self.pipelined_memory_nodes.keys():
+                
+                self.f.write(tab(self.scope_lvl + 1) + "if check_flag" + self.mem_lvl + " and " + node + ".out_done():\n")
+                self.f.write(tab(self.scope_lvl + 2) + "memory_node_" + node + ".check_if_done(True)\n")
+                self.f.write(tab(self.scope_lvl + 1) + "elif check_flag" + self.mem_lvl + " and "+ node + ".out_done() and memory_node_" + node + self.mem_lvl + ".valid_tile():\n")
+                generate_datasets_code(self.f, tens_fmt, self.scope_lvl+1, tensor_information, tensor_format_parse,
+                                       out_name, tiling=True, parents=parent, tensors=tensor_list,
+                                       selected_tensor=self.pipelined_memory_nodes[node]["tensor"])
+                if self.pipelined_memory_nodes[node]["node_type"] == "arrayvals":
+                    self.f.write(tab(self.scope_lvl + 2) + node + " = Array(init_array=" + self.pipelined_memory_nodes[node]["tensor"] + "_vals, debug=debug_sim, statistics=report_stats, " +\
+                                 "fifo=in_fifo, back_en=backpressure, depth=depth)\n")
+                elif self.pipelined_memory_nodes[node]["node_type"] == "fiberlookup":
+                    self.f.write(tab(self.scope_lvl + 2) + node + " = CompressedCrdRdScan(crd_arr=" + self.pipelined_memory_nodes[node]["tensor"] + "_crd" +\
+                                 self.pipelined_memory_nodes[node]["mode"] + ", seg_arr=" + self.pipelined_memory_nodes[node]["tensor"] + "_seg" +\
+                                 self.pipelined_memory_nodes[node]["mode"] + ", debug=debug_sim, statsitics=report_stats, fifo=in_fifo, back_en=backpressure, depth=depth)\n")
+                self.f.write(tab(self.scope_lvl + 2) + "memory_node_" + node + ".valid_tile_received()\n")
+        
         for par in parent:
             if not temp_flag:
                 temp_flag = True
-                self.f.write(tab(self.scope_lvl) + "if " + par + ".valid_tile()")
+                self.f.write(tab(self.scope_lvl + 1) + "if " + par + ".valid_tile()")
             else:
                 self.f.write(" and " + par + ".valid_tile()")
         if len(parent) != 0:
             self.scope_lvl += 1
             self.f.write(":\n")
-        if len(self.mem_lvl) == 0:
+        if MEM_LEVELS > 0 and len(self.mem_lvl) == 0:
             assert(len(parent) == len(tensor_list))
             generate_datasets_code(self.f, tens_fmt, self.scope_lvl, tensor_information, tensor_format_parse, out_name, tiling=True, parents=parent, tensors=tensor_list)
+        else:
+            generate_datasets_code(self.f, tens_fmt, self.scope_lvl, tensor_information, tensor_format_parse, out_name, tiling=False, parents=parent, tensors=tensor_list)
+        
         self.f.write(tab(self.scope_lvl + 1) + "check_flag" + self.mem_lvl + " = True\n")
         for u in list(nx.topological_sort(self.networkx_graph)):
             node_info = breakup_node_info(self.networkx_graph.nodes[u]["comment"])
@@ -1045,15 +1115,15 @@ class Graph_Realization:
                 if len(self.mem_lvl) == 2:
                     self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, node_info["type"] + "_" + str(u) + "_" + self.mem_lvl[:-1] + ".out_done_in()")
                 else:
-                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, "tiled_done and not tile_signalled")
+                    self.mem_blks_connect.add_parent_child(node_info["type"] + "_" + str(u) + "_" + self.mem_lvl, "tiled_done") # and not tile_signalled")
             else:
                 print(node_info)
                 invalid_flag = 1
                 print("Error invalid node detected", node_info["type"], "\n")
         for par in parent:
             self.f.write(tab(self.scope_lvl + 1) + par + ".valid_tile_received()\n")
-        if len(self.mem_lvl) == 0:
-            self.f.write(tab(self.scope_lvl + 1) + "tile_signalled = False\n")
+        #if len(self.mem_lvl) == 0:
+        #    self.f.write(tab(self.scope_lvl + 1) + "tile_signalled = False\n")
         self.output_check_nodes()
         self.f.write("\n")
         return self.d, invalid_flag, output_nodes, nxt_parents
@@ -1174,7 +1244,6 @@ class Graph_Realization:
                     else:
                        ## Need to make this run for all possible memory nodes
                        # Also need to make initialization of each blocks
-
                         for u_ in data.get_parents()[v]:
                             self.f.write(tab(2 + self.scope_lvl) + "if isinstance(" + self.d[u_]["object"] + ".out_ref(), int):\n")
                             if "intersect" in self.d[u_]["object"] or "union" in self.d[u_]["object"]:
@@ -1193,7 +1262,7 @@ class Graph_Realization:
                             else:
                                 self.f.write(tab(3 + self.scope_lvl) + self.d[v]["object"] + ".add_tile(" + self.d[u_]["object"] + ".out_ref" + "(), 8)\n")
  
-                    self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".check_done(" + self.mem_blks_connect.get_child(self.d[v]["object"]) + ")\n")
+                    self.f.write(tab(2 + self.scope_lvl) + self.d[v]["object"] + ".check_if_done(" + self.mem_blks_connect.get_child(self.d[v]["object"]) + ")\n")
                     # if len(self.mem_lvl) < MEM_LEVELS:
                     #     if len(self.mem_lvl) 
                     #     par = self.mem_blks_connect.get_parent(self.d[v]["object"])
@@ -1392,8 +1461,8 @@ class Graph_Realization:
         # TIme counter update
         # self.f.write(tab(2) + "time_cnt += 1\n\n")
         # Autosize all blocks
-        self.f.write(tab(self.scope_lvl) + "if tiled_done and not tile_signalled:\n")
-        self.f.write(tab(self.scope_lvl + 1) + "tile_signalled = True\n")
+        self.f.write(tab(self.scope_lvl) + "if tiled_done:\n") #and not tile_signalled:\n")
+        #self.f.write(tab(self.scope_lvl + 1) + "tile_signalled = True\n")
         for elem in elements.keys():
             self.f.write(tab(self.scope_lvl + 1) + elem + ".autosize()\n")
         self.f.write("\n")
@@ -1463,8 +1532,10 @@ class Graph_Realization:
 ### START OF THE CODE GENERATION FOR THE TESTS
 parser = argparse.ArgumentParser("Generate sam apps/")
 parser.add_argument("--input_dir", type=str, default="./compiler/sam-outputs/dot")
+parser.add_argument("--memory_level", type=str, default=2)
 args = parser.parse_args()
 
+MEM_LEVELS = int(args.memory_level)
 file_paths, out_name = get_all_files(args.input_dir)
 num = 0
 for apath in file_paths:
@@ -1478,9 +1549,6 @@ for apath in file_paths:
     tensor_format_parse.set_all_tensors(apath)
     f = open(out_name[num] + ".py", "w")
     generate_header(f, out_name[num])
-    # nx.draw(networkx_graph, with_labels=True)
-    # plt.savefig("Graph.png", format="PNG")
-    # plt.show()
     networkx_graph = remove_broadcast_nodes(networkx_graph)
     # Node Dataset present
     d = {}
@@ -1489,8 +1557,7 @@ for apath in file_paths:
     output_nodes = {}
     tensor_information = {}
     nodes_updating_list = []
-
-
+    
     for u in list(nx.topological_sort(networkx_graph)):
         node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
         if node_info["type"] == "fiberlookup":
@@ -1502,37 +1569,32 @@ for apath in file_paths:
     # generate_tiling_header()
     if MEM_LEVELS == 2: 
         generate_tiling_header(f, out_name[num])
-        
-        tiling_graph = generate_tiling_graph(networkx_graph)
+        tiling_graph, pipelined_memory_nodes = generate_tiling_graph(networkx_graph)
         d = {}
         mem_blks = []
-        glb_lvl = Graph_Realization(tiling_graph, mem_lvl="00", scope_lvl=0, f=f, mem_blks=mem_blks)
-        
-        d, invalid_flag, output_nodes, parents = glb_lvl.node_instantiations1(output_nodes)
-        # d, invalid_flag, output_nodes, parents = node_instantiations(tiling_graph, d, f, output_nodes, scope_lvl = 0, mem_lvl="00")
+        glb_lvl = Graph_Realization(tiling_graph, mem_lvl="00", scope_lvl=0, f=f, mem_blks=mem_blks, pipelined_memory_nodes=pipelined_memory_nodes)
+        d, invalid_flag, output_nodes, parents, whether_pipelined = glb_lvl.node_instantiations1(output_nodes)
         data = CodeGenerationdatasets(tiling_graph)
         data.build_datasets(tiling_graph)
         output_check_nodes(f, root_nodes)
-        f.write("\n")
-        # glb_lvl.connect_nodes(nodes_updating_list, data)
-        ######################################################################################################################
+        f.write("\n\n")
         d = {}
-        mem_lvl = Graph_Realization(tiling_graph, mem_lvl="0", scope_lvl=1, f=f, parent=glb_lvl, mem_blks=glb_lvl.get_memory_blocks())
-        d, invalid_flag, output_nodes, parents = mem_lvl.node_instantiations1(output_nodes, pipelined_tiles=False, parent=parents)
-        
+        mem_lvl = Graph_Realization(tiling_graph, mem_lvl="0", scope_lvl=1, f=f, parent=glb_lvl, mem_blks=glb_lvl.get_memory_blocks(), pipelined_memory_nodes=pipelined_memory_nodes)
+        d, invalid_flag, output_nodes, parents, whether_pipelined = mem_lvl.node_instantiations1(output_nodes, pipelined_tiles=True,
+                                                                                                 parent=parents, whether_pipelined=whether_pipelined)
+
         glb_lvl.loop_start()
-        
         glb_lvl.write_nodes()
-        
         glb_lvl.connect_nodes(nodes_updating_list, data)
+        
         data = CodeGenerationdatasets(tiling_graph)
         data.build_datasets(tiling_graph) 
+        
         mem_lvl.write_nodes() 
         mem_lvl.connect_nodes(nodes_updating_list, data)
-        ######################################################################################################################
         tens_fmt = {}
         count = 0
-        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=1, f=f)
+        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=1, f=f, pipelined_memory_nodes=pipelined_memory_nodes)
         data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
         ct = 0
         for k in tensor_format_parse.return_all_tensors():
@@ -1541,11 +1603,10 @@ for apath in file_paths:
                 tens_fmt[k]["information"] = data_formats[ct - 1]
             ct += 1
         f.write("\n")
-        # self.f, tens_fmt, 2, tensor_information, tensor_format_parse, out_name[num]
-        print(parents)
-        print(mem_lvl.get_tensor_list())
-        assert len(parents) == len(mem_lvl.get_tensor_list())
-        d, invalid_flag, output_nodes, parents = comp_lvl.node_instantiations(output_nodes, tens_fmt, tensor_information, tensor_format_parse, out_name[num], parent=parents, tensor_list=mem_lvl.get_tensor_list())
+        d, invalid_flag, output_nodes, parents = comp_lvl.node_instantiations(output_nodes, tens_fmt, tensor_information,
+                                                                              tensor_format_parse, out_name[num], parent=parents,
+                                                                              tensor_list=mem_lvl.get_tensor_list(), whether_pipelined=whether_pipelined)
+        
         if invalid_flag == 1:
             os.system("rm " + out_name[num] + ".py")
             print(out_name[num] + " failed\n")
@@ -1563,18 +1624,79 @@ for apath in file_paths:
             ct += 1
         sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
         output_list = comp_lvl.finish_outputs_tiled(sorted_nodes, nodes_updating_list)
-        # output_list = finish_outputs(f, sorted_nodes, nodes_updating_list)
-        # generate_benchmarking_code(f, tensor_format_parse, out_name[num])
         comp_lvl.generate_check_against_gold_code(tensor_format_parse, out_name[num], parents=mem_lvl.return_next_parent(), tensors=mem_lvl.get_tensor_list())
-        # generate_tiling_end(f)
         mem_blks = mem_lvl.get_memory_blocks()
         generate_tiling_end(f, mem_blks)
- 
+
+    elif MEM_LEVELS != 0: 
+        # NOT FULLY IMPLEMENTED YET
+        generate_tiling_header(f, out_name[num])
+        
+        tiling_graph = generate_tiling_graph(networkx_graph)
+        mem_blks = []
+        parents = []
+        for mem_loop in reverse(range(MEM_LEVELS)):
+            mem_string = "0" * mem_loop
+            d = {}
+            mem_lvl = Graph_Realization(tiling_graph, mem_lvl=mem_string, scope_lvl=MEM_LEVELS - mem_loop, f=f, mem_blks=mem_blks)
+            d, invalid_flag, output_nodes, parents, whether_pipelined = mem_lvl.node_instantiations1(output_nodes, parent=parents, whether_pipelined=whether_pipelined)
+        data = CodeGenerationdatasets(tiling_graph)
+        data.build_datasets(tiling_graph)
+        output_check_nodes(f, root_nodes)
+        f.write("\n")
+        d = {}
+        
+        glb_lvl.loop_start()
+        glb_lvl.write_nodes()
+        glb_lvl.connect_nodes(nodes_updating_list, data)
+        data = CodeGenerationdatasets(tiling_graph)
+        data.build_datasets(tiling_graph) 
+        mem_lvl.write_nodes() 
+        mem_lvl.connect_nodes(nodes_updating_list, data)
+        tens_fmt = {}
+        count = 0
+        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=1, f=f)
+        data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
+        ct = 0
+        for k in tensor_format_parse.return_all_tensors():
+            if ct != 0:
+                tens_fmt[k] = {}
+                tens_fmt[k]["information"] = data_formats[ct - 1]
+            ct += 1
+        f.write("\n")
+        print(parents)
+        print(mem_lvl.get_tensor_list())
+        assert len(parents) == len(mem_lvl.get_tensor_list())
+        d, invalid_flag, output_nodes, parents = comp_lvl.node_instantiations(output_nodes, tens_fmt, tensor_information, tensor_format_parse, out_name[num], parent=parents, tensor_list=mem_lvl.get_tensor_list(), whether_pipelined=whether_pipelined)
+        if invalid_flag == 1:
+            os.system("rm " + out_name[num] + ".py")
+            print(out_name[num] + " failed\n")
+            num += 1
+            continue
+        f.write("\n")
+        data = CodeGenerationdatasets(networkx_graph)
+        data.build_datasets(networkx_graph)
+        comp_lvl.connect_nodes(nodes_updating_list, data)
+        output_tensor = ""
+        ct = 0
+        for k in tensor_format_parse.return_all_tensors():
+            if ct == 0:
+                output_tensor = k
+            ct += 1
+        sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
+        output_list = comp_lvl.finish_outputs_tiled(sorted_nodes, nodes_updating_list)
+        comp_lvl.generate_check_against_gold_code(tensor_format_parse, out_name[num],
+                                                  parents=mem_lvl.return_next_parent(),
+                                                  tensors=mem_lvl.get_tensor_list())
+        mem_blks = mem_lvl.get_memory_blocks()
+        generate_tiling_end(f, mem_blks)
+
     else:
         tens_fmt = {}
         count = 0
         comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=0, f=f)
-        data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
+        data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()),
+                                        out_name[num], apath)
         ct = 0
         for k in tensor_format_parse.return_all_tensors():
             if ct != 0:
@@ -1583,7 +1705,11 @@ for apath in file_paths:
             ct += 1
         # generate_datasets_code(f, tens_fmt, 1, tensor_information, tensor_format_parse, out_name[num])
         f.write("\n")
-        d, invalid_flag, output_nodes, parents = comp_lvl.node_instantiations(output_nodes, tens_fmt, tensor_information, tensor_format_parse, out_name[num], parent=[])
+        d, invalid_flag, output_nodes, parents = comp_lvl.node_instantiations(output_nodes, tens_fmt,
+                                                                              tensor_information,
+                                                                              tensor_format_parse,
+                                                                              out_name[num],
+                                                                              parent=[])
         if invalid_flag == 1:
             os.system("rm " + out_name[num] + ".py")
             print(out_name[num] + " failed\n")
