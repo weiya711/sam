@@ -107,18 +107,13 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         fiberwrite_X2_1.set_input(fiberlookup_Bk_5.out_crd())
         fiberwrite_X3_0.set_input(fiberlookup_Bl_6.out_crd())
         arrayvals_B_4.set_load(fiberlookup_Bl_6.out_ref())
+
         exp_1.set_in1(arrayvals_B_4.out_load())
         reduce_5.set_in_val(exp_1.out_val())
-        # drop_9.set_outer_crd(reduce_6.out_val())
-        # drop_9.set_inner_crd(fiberlookup_Bl_6.out_crd())
         repsiggen_l_13.set_istream(fiberlookup_Bl_6.out_ref())
         repeat_Bl_12.set_in_ref(reduce_5.out_val())
-        # repsiggen_l_13.set_istream(fiberlookup_Bl_6.out_crd())
-        # repeat_Bl_12.set_in_ref(reduce_5.out_val())
         repeat_Bl_12.set_in_repsig(repsiggen_l_13.out_repsig())
         div_6.set_in1(exp_1.out_val())
-
-        # arrayvals_B_10.set_load(fiberlookup_Bl_6.out_ref())
         div_6.set_in2(repeat_Bl_12.out_ref())
 
         # fiber_crd.append(fiberlookup_Bl_6.out_crd())

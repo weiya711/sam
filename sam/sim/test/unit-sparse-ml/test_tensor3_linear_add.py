@@ -26,38 +26,38 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor3_linear_add(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "tensor3_linear_add")
-    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_dirname = os.path.join(formatted_dir, frosttname, "tensor3_linear_")
+    B_shape_filename = os.path.join(B_dirname, "tensor_C_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
-    B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
+    B0_seg_filename = os.path.join(B_dirname, "tensor_C_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
-    B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
+    B0_crd_filename = os.path.join(B_dirname, "tensor_C_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
 
-    B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
+    B1_seg_filename = os.path.join(B_dirname, "tensor_C_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
-    B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
+    B1_crd_filename = os.path.join(B_dirname, "tensor_C_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
 
-    B2_seg_filename = os.path.join(B_dirname, "tensor_B_mode_2_seg")
+    B2_seg_filename = os.path.join(B_dirname, "tensor_C_mode_2_seg")
     B_seg2 = read_inputs(B2_seg_filename)
-    B2_crd_filename = os.path.join(B_dirname, "tensor_B_mode_2_crd")
+    B2_crd_filename = os.path.join(B_dirname, "tensor_C_mode_2_crd")
     B_crd2 = read_inputs(B2_crd_filename)
 
-    B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
+    B_vals_filename = os.path.join(B_dirname, "tensor_C_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname, "tensor3_linear_add")
-    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
+    C_dirname = os.path.join(formatted_dir, frosttname, "tensor3_linear_")
+    C_shape_filename = os.path.join(C_dirname, "tensor_d_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_d_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_d_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
+    C_vals_filename = os.path.join(C_dirname, "tensor_d_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
 
@@ -82,6 +82,9 @@ def test_tensor3_linear_add(samBench, frosttname, cast, check_gold, debug_sim, r
     done = False
     time_cnt = 0
 
+    arr_b = []
+    arr_c = []
+
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_17.set_in_ref(in_ref_B.pop(0))
@@ -104,6 +107,11 @@ def test_tensor3_linear_add(samBench, frosttname, cast, check_gold, debug_sim, r
         arrayvals_C_6.set_load(repeat_Ck_7.out_ref())
         add_4.set_in1(arrayvals_C_6.out_val())
         add_4.set_in2(arrayvals_B_5.out_val())
+        arr_b.append(arrayvals_B_5.out_val())
+        arr_c.append(arrayvals_C_6.out_val())
+
+        print("C: " , remove_emptystr(arr_b))
+        print("d: " , remove_emptystr(arr_c))
         fiberwrite_Xvals_0.set_input(add_4.out_val())
         fiberlookup_Bi_17.update()
 
@@ -123,7 +131,7 @@ def test_tensor3_linear_add(samBench, frosttname, cast, check_gold, debug_sim, r
         add_4.update()
         fiberwrite_Xvals_0.update()
 
-        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()
+        done = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done() and add_4.out_done()
         time_cnt += 1
 
     fiberwrite_X0_3.autosize()

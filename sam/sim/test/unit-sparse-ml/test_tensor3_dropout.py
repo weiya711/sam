@@ -68,7 +68,7 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
     crd = CrdHold(debug=debug_sim)
     # trilower = LowerTriangular(debug_sim=debug_sim)
-    drop_prob = 0.9
+    drop_prob = 0.4
     dropout = RandomDropout(dimension=2, drop_probability=drop_prob, debug=debug_sim)
     prob = np.random.rand(*B_shape)
     dropout.set_prob(prob, drop_prob)
@@ -96,6 +96,7 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
     dropin1 = []
     drop_arr = []
     drop1_arr = []
+    out_drop = []
     last_i = 0
     # max_1.set_in2(0)
     while not done and time_cnt < TIMEOUT:
@@ -111,20 +112,23 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
         crd.set_inner_crd(fiberlookup_Bk_8.out_crd())
 
         val_arr.append(crd.out_crd_outer())
-        out_arr.append(fiberlookup_Bj_11.out_crd())
+        # out_arr.append(fiberlookup_Bj_11.out_crd())
 
-        print("input j:", remove_emptystr(out_arr))
-        print("input j crdhold:", remove_emptystr(val_arr))
+        # print("input j:", remove_emptystr(out_arr))
+        # print("input j crdhold:", remove_emptystr(val_arr))
 
         i = fiberlookup_Bi_14.out_crd()
         if i != "" and not is_stkn(i) and i != 'D':
             last_i = int(i)
 
-        dropout.set_curr_i(last_i)
-
         dropout.set_inner_crd(crd.out_crd_inner())
         dropout.set_outer_crd(crd.out_crd_outer())
         dropout.set_inner_ref(fiberlookup_Bk_8.out_ref())
+
+        # out_drop.append(dropout.out_crd(1))
+        # out_arr.append(dropout.out_crd(0))
+        # print("out j:", remove_emptystr(out_drop))
+        # print("out k:", remove_emptystr(out_arr))
 
         arrayvals_B_5.set_load(dropout.out_ref())
 
@@ -133,7 +137,7 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
         fiberwrite_Xvals_0.set_input(arrayvals_B_5.out_val())
 
         drop_1.set_outer_crd(fiberlookup_Bi_14.out_crd())
-        drop_1.set_inner_crd(fiberlookup_Bj_11.out_crd())
+        drop_1.set_inner_crd(dropout.out_crd(1))
 
 
         fiberwrite_X0_3.set_input(drop_1.out_crd_outer())
@@ -143,10 +147,10 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
 
         # input_arr.append(fiberlookup_Bj_11.out_crd())
         # arr_vals.append(fiberlookup_Bk_8.out_crd())
-        input_arr.append(dropout.out_crd(1))
-        arr_vals.append(dropout.out_crd(0))
-        print("random outer", remove_emptystr(input_arr))
-        print("random inner", remove_emptystr(arr_vals))
+        # input_arr.append(dropout.out_crd(1))
+        # arr_vals.append(dropout.out_crd(0))
+        # print("random outer", remove_emptystr(input_arr))
+        # print("random inner", remove_emptystr(arr_vals))
 
         # fiberwrite_Xvals_0.set_input(max_1.out_val())
         # fiberwrite_Xvals_0.set_input(drop_1.out_crd_inner())
@@ -273,5 +277,5 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
         print("Checking gold...")
         cast = 0
         scalar = 0
-        check_gold_tensor3_dropout(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, prob, drop_prob, scalar, "sss012")
+        check_gold_tensor3_dropout(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, prob, drop_prob, dropout.random_dropped, scalar, "sss012")
     samBench(bench, extra_info)
