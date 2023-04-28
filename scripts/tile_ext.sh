@@ -29,5 +29,6 @@ for b in ${!BENCHMARKS[@]}; do
 	echo "Generating input format files for $ext_path..."
 	python $basedir/scripts/datastructure_suitesparse.py -n temp -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
 
+	mkdir $basedir/tiles/$bench/temporary_output
 done
 

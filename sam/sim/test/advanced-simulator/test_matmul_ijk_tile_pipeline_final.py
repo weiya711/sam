@@ -14,11 +14,13 @@ from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
 from sam.sim.src.tiling.generate_tile_crd import *
+from scipy.io import mmwrite
 import matplotlib.pyplot as plt
 import os
 import csv
 import pickle
 import yaml
+import scipy.sparse as sp
 cwd = os.getcwd()
 formatted_dir = os.getenv('TILED_SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
@@ -33,6 +35,7 @@ sam_home = os.getenv('SAM_HOME', default=os.path.join(cwd, 'mode-formats'))
 def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report_stats,
                                  skip_empty, yaml_name, nbuffer, backpressure, depth, nnz_value, fill=0):
     depth = int(depth)
+    num_tiles_computed = 0
     stats_dict = {"mul_4_ops": 0, "out_arr_size": 0, "repsiggen_i_15_total_rep": 0,
                   "repsiggen_j_11_total_rep": 0, "repsiggen_j_11_max_rep": 0, "repsiggen_i_15_max_rep": 0,
                   "fiberlookup_Bi_17_done": 0, "fiberlookup_Bk_8_done": 0, "fiberlookup_Bi_17_ttl": 0,
@@ -778,7 +781,15 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     out_crds = [fiberwrite_X0_2_.get_arr(), fiberwrite_X1_1_.get_arr()]
                     out_segs = [fiberwrite_X0_2_.get_seg_arr(), fiberwrite_X1_1_.get_seg_arr()]
                     out_vals = fiberwrite_Xvals_0_.get_arr()
-                    array4.append(len(out_vals))
+                    # array4.append(len(out_vals))
+                    out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+                    out_tup = remove_zeros(out_tup)
+                    coo_matrix = sp.coo_matrix(out_tup)
+                    out_dir_t = os.path.join(formatted_dir, "../temporary_output/")
+                    mmwrite(out_dir_t + "coo_matrix" + "_" + str(B_i00) + "_" + str(B_k00) +
+                            "_" + str(C_j00) +
+                            "_" + str(B_i0) + "_" + str(B_k0) + "_" + str(C_j0) + ".mtx", coo_matrix)
+                    num_tiles_computed += 1
                 if debug_sim:
                     pass
                 if check_gold:
@@ -809,7 +820,7 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     C_seg1_t = read_inputs(C1_seg_filename_t)
                     C_crd1_t = read_inputs(C1_crd_filename_t)
                     C_vals_t = read_inputs(C_vals_filename_t, float)
-                    if False:  # C_j0 == 0 and B_k0 == 0:  # and B_i00 == 0:
+                    if False: #True:   # C_j0 == 0 and B_k0 == 0:  # and B_i00 == 0:
                         print("Checking gold... ", B_i00, B_k00, B_i0,
                               B_k0, C_k00, C_j00, C_k0, C_j0, " tiled_skip:", tiled_skip)
                     check_gold_matmul_tiled([B_i00, B_k00, B_i0, B_k0], [C_k00, C_j00, C_k0, C_j0],
@@ -885,3 +896,4 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
     extra_info["cycles"] = time_cnt
     samBench(bench, extra_info)
     print("TIME COUNT: ", time_cnt)
+    print("total number of tiles computed ", num_tiles_computed)
