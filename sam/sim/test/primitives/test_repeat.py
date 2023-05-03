@@ -29,9 +29,13 @@ def test_repeat_gen_direct(arrs, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_stream) > 0:
             repsig.set_istream(in_stream.pop(0))
+
         repsig.update()
-        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+
         out.append(repsig.out_repeat())
+
+        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+
         done = repsig.out_done()
         time += 1
 
@@ -58,9 +62,13 @@ def test_repeat_gen_random_nd(max_val, nd, debug_sim):
     while not done and time < TIMEOUT:
         if len(in_stream) > 0:
             repsig.set_istream(in_stream.pop(0))
+
         repsig.update()
-        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+
         out.append(repsig.out_repeat())
+
+        print("Timestep", time, "\t Done:", repsig.out_done(), "\t Repeat Sig:", repsig.out_repeat())
+
         done = repsig.out_done()
         time += 1
 
@@ -86,9 +94,19 @@ arr_dict4 = {'in_ref': [0, 'D'],
 arr_dict5 = {'in_ref': [0, 1, 'S0', 'D'],
              'repeat': ['R', 'R', 'R', 'S'] * 2 + ['D'],
              'gold': [0, 0, 0, 'S0', 1, 1, 1, 'S1', 'D']}
+arr_dict6 = {'in_ref': [0, 'S0', 'S0', 'S0', 'S0', 'S0', 'S0', 'S0', 'S1', 'D'],
+             'repeat': ['R', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'D'],
+             'gold': [0, 'S1', 'S1', 'S1', 'S1', 'S1', 'S1', 'S1', 'S2', 'D']}
+arr_dict7 = {'in_ref': [0, 'S0', 1, 'S1', 'D'],
+             'repeat': ['S', 'R', 'S', 'D'],
+             'gold': ['S1', 1, 'S2', 'D']}
+arr_dict8 = {'in_ref': ['N', 0, 1, 'S0', 'D'],
+             'repeat': ['R', 'S', 'R', 'S', 'R', 'S', 'D'],
+             'gold': ['N', 'S0', 0, 'S0', 1, 'S1', 'D']}
 
 
-@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
+@pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5, arr_dict6, arr_dict7,
+                                  arr_dict8])
 def test_repeat_direct(arrs, debug_sim):
     in_ref = copy.deepcopy(arrs['in_ref'])
     in_repeat = copy.deepcopy(arrs['repeat'])
@@ -104,9 +122,13 @@ def test_repeat_direct(arrs, debug_sim):
             rep.set_in_ref(in_ref.pop(0))
         if len(in_repeat) > 0:
             rep.set_in_repeat(in_repeat.pop(0))
+
         rep.update()
-        print("Timestep", time, "\t Done:", rep.out_done(), "\t Repeat Sig:", rep.out_ref())
+
         out.append(rep.out_ref())
+
+        print("Timestep", time, "\t Done:", rep.out_done(), "\t Repeat Sig:", rep.out_ref())
+
         done = rep.out_done()
         time += 1
 

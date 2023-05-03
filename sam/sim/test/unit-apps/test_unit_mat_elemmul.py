@@ -12,7 +12,7 @@ from sam.sim.test.test import *
 
 @pytest.mark.parametrize("dim1", [4, 16, 32, 64])
 @pytest.mark.parametrize("dim2", [4, 16, 32, 64])
-def test_unit_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, backpressure, depth, max_val=1000, fill=0):
     size = dim1 * dim2 + 1
     in_mat1 = [random.randint(0, max_val) for _ in range(dim1 * dim2)]
     in_mat2 = [random.randint(0, max_val) for _ in range(dim1 * dim2)]
@@ -26,41 +26,44 @@ def test_unit_mat_elemmul_uu_uu_uu(dim1, dim2, debug_sim, max_val=1000, fill=0):
 
     gold_vec = [in_mat1[i] * in_mat2[i] for i in range(len(in_mat1))]
 
-    rdscan_d1 = UncompressCrdRdScan(dim=dim1, debug=debug_sim)
-    rdscan_d2 = UncompressCrdRdScan(dim=dim2, debug=debug_sim)
+    rdscan_d1 = UncompressCrdRdScan(dim=dim1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    rdscan_d2 = UncompressCrdRdScan(dim=dim2, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    val1 = Array(init_arr=in_mat1, debug=debug_sim)
-    val2 = Array(init_arr=in_mat2, debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    wrscan = ValsWrScan(size=size, fill=fill, debug=debug_sim)
+    val1 = Array(init_arr=in_mat1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val2 = Array(init_arr=in_mat2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    wrscan = ValsWrScan(size=size, fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
     in_ref = [0, 'D']
     done = False
     time = 0
     while not done and time < TIMEOUT:
         if len(in_ref) > 0:
-            rdscan_d1.set_in_ref(in_ref.pop(0))
+            rdscan_d1.set_in_ref(in_ref.pop(0), "")
+
+        rdscan_d2.set_in_ref(rdscan_d1.out_ref(), rdscan_d1)
+
+        val1.set_load(rdscan_d2.out_ref(), rdscan_d2)
+        val2.set_load(rdscan_d2.out_ref(), rdscan_d2)
+
+        mul.set_in1(val1.out_load(), val1)
+        mul.set_in2(val2.out_load(), val2)
+
+        wrscan.set_input(mul.out_val(), mul)
+
         rdscan_d1.update()
-
-        rdscan_d2.set_in_ref(rdscan_d1.out_ref())
         rdscan_d2.update()
-
-        val1.set_load(rdscan_d2.out_ref())
-        val2.set_load(rdscan_d2.out_ref())
         val1.update()
         val2.update()
-
-        mul.set_in1(val1.out_load())
-        mul.set_in2(val2.out_load())
         mul.update()
-
-        wrscan.set_input(mul.out_val())
         wrscan.update()
+
         print("Timestep", time, "\t Done --",
               "\tRdScan D1:", rdscan_d1.out_done(),
               "\tRdScan D2:", rdscan_d2.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())
+
         done = wrscan.out_done()
         time += 1
 
@@ -111,7 +114,7 @@ arrs_dict3 = {
 
 
 @pytest.mark.parametrize("arrs", [arrs_dict0, arrs_dict1, arrs_dict2, arrs_dict3])
-def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
+def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, backpressure, depth, dim=4, fill=0):
     in_mat_crds1 = copy.deepcopy(arrs['crd_arrs1'])
     in_mat_segs1 = copy.deepcopy(arrs['seg_arrs1'])
     in_mat_vals1 = copy.deepcopy(arrs['val_arr1'])
@@ -135,21 +138,25 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
-    rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
+    rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
+    rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
 
-    rdscan_C1 = CompressedCrdRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
-    rdscan_C2 = CompressedCrdRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
+    rdscan_C1 = CompressedCrdRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
+    rdscan_C2 = CompressedCrdRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
 
-    val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
-    val_C = Array(init_arr=in_mat_vals2, debug=debug_sim)
-    inter1 = Intersect2(debug=debug_sim)
-    inter2 = Intersect2(debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    drop = CrdDrop(debug=debug_sim)
-    vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim)
-    wrscan_X1 = CompressWrScan(seg_size=2, size=dim, fill=fill)
-    wrscan_X2 = CompressWrScan(seg_size=dim + 1, size=dim * dim, fill=fill)
+    val_B = Array(init_arr=in_mat_vals1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val_C = Array(init_arr=in_mat_vals2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    inter1 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    inter2 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    drop = CrdDrop(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    wrscan_X1 = CompressWrScan(seg_size=2, size=dim, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan_X2 = CompressWrScan(seg_size=dim + 1, size=dim * dim, fill=fill, back_en=backpressure, depth=int(depth))
 
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
@@ -160,53 +167,55 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
     time = 0
     while not done and time < TIMEOUT:
         if len(in_ref_B) > 0:
-            rdscan_B1.set_in_ref(in_ref_B.pop(0))
-        rdscan_B1.update()
+            rdscan_B1.set_in_ref(in_ref_B.pop(0), "")
 
         if len(in_ref_C) > 0:
-            rdscan_C1.set_in_ref(in_ref_C.pop(0))
+            rdscan_C1.set_in_ref(in_ref_C.pop(0), "")
+
+        inter1.set_in1(rdscan_B1.out_ref(), rdscan_B1.out_crd(), rdscan_B1)
+        inter1.set_in2(rdscan_C1.out_ref(), rdscan_C1.out_crd(), rdscan_C1)
+
+        rdscan_B2.set_in_ref(inter1.out_ref1(), inter1)
+
+        rdscan_C2.set_in_ref(inter1.out_ref2(), inter1)
+
+        inter2.set_in1(rdscan_B2.out_ref(), rdscan_B2.out_crd(), rdscan_B2)
+        inter2.set_in2(rdscan_C2.out_ref(), rdscan_C2.out_crd(), rdscan_C2)
+
+        val_B.set_load(inter2.out_ref1(), inter2)
+        val_C.set_load(inter2.out_ref2(), inter2)
+
+        mul.set_in1(val_B.out_load(), val_B)
+        mul.set_in2(val_C.out_load(), val_C)
+
+        drop.set_outer_crd(inter1.out_crd(), inter1)
+        drop.set_inner_crd(inter2.out_crd(), inter2)
+
+        vals_X.set_input(mul.out_val(), mul)
+
+        # wrscan_X1.set_input(inter1.out_crd())
+        wrscan_X1.set_input(drop.out_crd_outer(), drop)
+
+        wrscan_X2.set_input(inter2.out_crd(), inter2)
+
+        rdscan_B1.update()
         rdscan_C1.update()
-
-        inter1.set_in1(rdscan_B1.out_ref(), rdscan_B1.out_crd())
-        inter1.set_in2(rdscan_C1.out_ref(), rdscan_C1.out_crd())
         inter1.update()
-
-        rdscan_B2.set_in_ref(inter1.out_ref1())
         rdscan_B2.update()
-
-        rdscan_C2.set_in_ref(inter1.out_ref2())
         rdscan_C2.update()
-
-        inter2.set_in1(rdscan_B2.out_ref(), rdscan_B2.out_crd())
-        inter2.set_in2(rdscan_C2.out_ref(), rdscan_C2.out_crd())
         inter2.update()
-
-        val_B.set_load(inter2.out_ref1())
         val_B.update()
-        val_C.set_load(inter2.out_ref2())
         val_C.update()
-
-        mul.set_in1(val_B.out_load())
-        mul.set_in2(val_C.out_load())
         mul.update()
-
-        drop.set_outer_crd(inter1.out_crd())
-        drop.set_inner_crd(inter2.out_crd())
         drop.update()
-
-        vals_X.set_input(mul.out_val())
         vals_X.update()
+        wrscan_X1.update()
+        wrscan_X2.update()
 
         out_drop.append(drop.out_crd_outer())
         out_inter1.append(inter1.out_crd())
         in_drop.append(inter2.out_crd())
 
-        # wrscan_X1.set_input(inter1.out_crd())
-        wrscan_X1.set_input(drop.out_crd_outer())
-        wrscan_X1.update()
-
-        wrscan_X2.set_input(inter2.out_crd())
-        wrscan_X2.update()
         print("Timestep", time, "\t Done --",
               "\tRdScan B1:", rdscan_B1.out_done(), "\tRdScan B2:", rdscan_B2.out_done(),
               "\tInter1:", inter1.out_done(),
@@ -218,6 +227,7 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
               "\tWrScan:", vals_X.out_done(),
               "\tWrScan X1:", wrscan_X1.out_done(), "\tWrScan X2:", wrscan_X2.out_done(),
               )
+
         done = wrscan_X2.out_done()
         time += 1
 
@@ -249,7 +259,7 @@ def test_unit_mat_elemmul_direct_cc_cc_cc(arrs, debug_sim, dim=4, fill=0):
 
 
 @pytest.mark.parametrize("dim", [4, 16, 32, 64])
-def test_unit_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
+def test_unit_mat_elemmul_cc_cc_cc(dim, debug_sim, backpressure, depth, max_val=1000, fill=0):
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
     in_mat_vals1 = gen_val_arr(len(in_mat_crds1[-1]), max_val, -max_val)
     in_mat_crds2, in_mat_segs2 = gen_n_comp_arrs(2, dim)
@@ -275,21 +285,25 @@ def test_unit_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
         print("Dense Gold:", gold_nd)
         print("Gold:", gold_tup)
 
-    rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
-    rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
+    rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
+    rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
 
-    rdscan_C1 = CompressedCrdRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim)
-    rdscan_C2 = CompressedCrdRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim)
+    rdscan_C1 = CompressedCrdRdScan(crd_arr=in_mat_crds2[0], seg_arr=in_mat_segs2[0], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
+    rdscan_C2 = CompressedCrdRdScan(crd_arr=in_mat_crds2[1], seg_arr=in_mat_segs2[1], debug=debug_sim,
+                                    back_en=backpressure, depth=int(depth))
 
-    val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
-    val_C = Array(init_arr=in_mat_vals2, debug=debug_sim)
-    inter1 = Intersect2(debug=debug_sim)
-    inter2 = Intersect2(debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    drop = CrdDrop(debug=debug_sim)
-    vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim)
-    wrscan_X1 = CompressWrScan(seg_size=2, size=dim, fill=fill)
-    wrscan_X2 = CompressWrScan(seg_size=dim + 1, size=dim * dim, fill=fill)
+    val_B = Array(init_arr=in_mat_vals1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val_C = Array(init_arr=in_mat_vals2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    inter1 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    inter2 = Intersect2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    drop = CrdDrop(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    wrscan_X1 = CompressWrScan(seg_size=2, size=dim, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan_X2 = CompressWrScan(seg_size=dim + 1, size=dim * dim, fill=fill, back_en=backpressure, depth=int(depth))
 
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
@@ -297,48 +311,50 @@ def test_unit_mat_elemmul_cc_cc_cc(dim, debug_sim, max_val=1000, fill=0):
     time = 0
     while not done and time < TIMEOUT:
         if len(in_ref_B) > 0:
-            rdscan_B1.set_in_ref(in_ref_B.pop(0))
-        rdscan_B1.update()
+            rdscan_B1.set_in_ref(in_ref_B.pop(0), "")
 
         if len(in_ref_C) > 0:
-            rdscan_C1.set_in_ref(in_ref_C.pop(0))
+            rdscan_C1.set_in_ref(in_ref_C.pop(0), "")
+
+        inter1.set_in1(rdscan_B1.out_ref(), rdscan_B1.out_crd(), rdscan_B1)
+        inter1.set_in2(rdscan_C1.out_ref(), rdscan_C1.out_crd(), rdscan_C1)
+
+        rdscan_B2.set_in_ref(inter1.out_ref1(), inter1)
+
+        rdscan_C2.set_in_ref(inter1.out_ref2(), inter1)
+
+        inter2.set_in1(rdscan_B2.out_ref(), rdscan_B2.out_crd(), rdscan_B2)
+        inter2.set_in2(rdscan_C2.out_ref(), rdscan_C2.out_crd(), rdscan_C2)
+
+        val_B.set_load(inter2.out_ref1(), inter2)
+        val_C.set_load(inter2.out_ref2(), inter2)
+
+        mul.set_in1(val_B.out_load(), val_B)
+        mul.set_in2(val_C.out_load(), val_C)
+
+        drop.set_outer_crd(inter1.out_crd(), inter1)
+        drop.set_inner_crd(inter2.out_crd(), inter2)
+
+        vals_X.set_input(mul.out_val(), mul)
+
+        wrscan_X1.set_input(drop.out_crd_outer(), drop)
+
+        wrscan_X2.set_input(inter2.out_crd(), inter2)
+
+        rdscan_B1.update()
         rdscan_C1.update()
-
-        inter1.set_in1(rdscan_B1.out_ref(), rdscan_B1.out_crd())
-        inter1.set_in2(rdscan_C1.out_ref(), rdscan_C1.out_crd())
         inter1.update()
-
-        rdscan_B2.set_in_ref(inter1.out_ref1())
         rdscan_B2.update()
-
-        rdscan_C2.set_in_ref(inter1.out_ref2())
         rdscan_C2.update()
-
-        inter2.set_in1(rdscan_B2.out_ref(), rdscan_B2.out_crd())
-        inter2.set_in2(rdscan_C2.out_ref(), rdscan_C2.out_crd())
         inter2.update()
-
-        val_B.set_load(inter2.out_ref1())
         val_B.update()
-        val_C.set_load(inter2.out_ref2())
         val_C.update()
-
-        mul.set_in1(val_B.out_load())
-        mul.set_in2(val_C.out_load())
         mul.update()
-
-        drop.set_outer_crd(inter1.out_crd())
-        drop.set_inner_crd(inter2.out_crd())
         drop.update()
-
-        vals_X.set_input(mul.out_val())
         vals_X.update()
-
-        wrscan_X1.set_input(drop.out_crd_outer())
         wrscan_X1.update()
-
-        wrscan_X2.set_input(inter2.out_crd())
         wrscan_X2.update()
+
         print("Timestep", time, "\t Done --",
               "\tRdScan B1:", rdscan_B1.out_done(), "\tRdScan B2:", rdscan_B2.out_done(),
               "\tInter1:", inter1.out_done(),

@@ -1,5 +1,8 @@
 # The Sparse Abstract Machine (SAM) IR, Compiler, and Simulator 
 
+![Master Makefile CI](https://github.com/weiya711/sam/actions/workflows/makefile.yml/badge.svg?branch=master)
+![Master Python CI](https://github.com/weiya711/sam/actions/workflows/python-package-conda.yml/badge.svg?branch=master)
+
 ## SAM Front-end Compiler
 
 Overview:
@@ -126,7 +129,6 @@ reorder_block | ritvik | | New SAM Reorder block primitive | |
 compiler_fix | weiya711 | | Compiler fixes to get pytest passing | | 
 
 TODO: remove all stale branches/finish assigning all other active branches 
-
 
 ## License
 All files in this project (code, scripts, documentaiton) are released under the [MIT License](LICENSE) 
