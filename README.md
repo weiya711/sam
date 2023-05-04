@@ -115,20 +115,6 @@ sim
 ## SAM Binding to Onyx
 See the `README` in `sam/sam/onyx`
 
-## 
-| Branch Name | Owner | Users | Description | CI | Needs Merging | 
-| --- | --- | --- | ---- | --- | ---- |
-| master 	 | weiya711 | everyone | master | | N/A   |
-| ijk_handcoded | ritvik | kalhankoul96 | Onyx tiling tests for matmul ijk | |  |
-| cpu_fix       | weiya711 | kalhankoul96 | Onyx baseline CPU numbers | |  |
-| mapping_to_cgra | mstrange | kalhankoul96 | AHA flow, master merged in | | yes |
-| sparse_ml | rubensl | | Sparse ML Applications | |  |
-| tiling_loop_generation | ritvik | | Autogeneration of tiling simulator | |  |
-| gen_gantt_merged | Gina | kalhankoul96, weiya711 | Gantt Chart Visualization | | yes |
-| reorder_block | ritvik | | New SAM Reorder block primitive | |  |
-| compiler_fix | weiya711 | | Compiler fixes to get pytest passing | |  |
-
-TODO: remove all stale branches/finish assigning all other active branches 
 
 ## License
 All files in this project (code, scripts, documentaiton) are released under the [MIT License](LICENSE) 
