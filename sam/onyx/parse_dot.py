@@ -24,6 +24,12 @@ class SAMDotGraph():
         self.use_fa = use_fa
         self.fa_color = 0
 
+        self.duplicate_graph('b')
+        # self.unroll_graph('b', 2)
+        self.graph.write_png('mek.png')
+        # exit()
+        # print(self.graph)
+
         # Rewrite each 3-input joiners to 3 2-input joiners
         self.rewrite_tri_to_binary()
         self.rewrite_spacc_1()
@@ -261,17 +267,17 @@ class SAMDotGraph():
             rsg_to_repeat = pydot.Edge(src=rsg, dst=repeat)
             repeat_to_crd_rd_scan = pydot.Edge(src=repeat, dst=crd_rd_scanner)
             crd_rd_scan_to_val_rd_scan = pydot.Edge(src=crd_rd_scanner, dst=vals_rd_scanner)
-            # output_to_union_edge = pydot.Edge(src=in_output_node, dst=union,
-            #                                   **in_edge_attrs[in_output_node], comment=f"in-B")
-            output_to_union_edge = pydot.Edge(src=in_output_node, dst=union, **in_edge_attrs[in_output_node], comment=f"in-C")
+            output_to_union_edge = pydot.Edge(src=in_output_node, dst=union,
+                                              **in_edge_attrs[in_output_node], comment=f"in-B")
+            # output_to_union_edge = pydot.Edge(src=in_output_node, dst=union, **in_edge_attrs[in_output_node], comment=f"in-C")
             val_to_union = pydot.Edge(src=in_val_node, dst=union, **in_edge_attrs[in_val_node],
-                                      #   type="ref", comment=f"in-B", val="true")
-                                      type="ref", comment=f"in-C", val="true")
+                                        type="ref", comment=f"in-B", val="true")
+                                    #   type="ref", comment=f"in-C", val="true")
             crd_rd_scan_to_union = pydot.Edge(src=crd_rd_scanner, dst=union, type="crd", comment="in-x")
             val_rd_scan_to_union = pydot.Edge(src=vals_rd_scanner, dst=union, type="ref", comment="in-x", val="true")
             union_crd_to_crd_wr_scan = pydot.Edge(src=union, dst=crd_wr_scanner, type="crd")
-            # union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-B')
-            union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-C')
+            union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-B')
+            # union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-C')
             union_val1_to_alu = pydot.Edge(src=union, dst=add, comment='out-x')
             add_to_val_wr_scan = pydot.Edge(src=add, dst=vals_wr_scanner)
             crd_wr_scan_to_buffet = pydot.Edge(src=crd_wr_scanner, dst=crd_buffet)
@@ -577,6 +583,7 @@ class SAMDotGraph():
             if 'fiberlookup' in node.get_comment():
                 print("PRINTING NODES")
                 print(node.get_attributes())
+                print(node.get_name())
                 # Rewrite this node to a read
                 root = bool(node.get_root())
                 root = False
@@ -643,21 +650,20 @@ class SAMDotGraph():
 
                 self.fa_color += 1
 
-                glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
+                # Only instantiate the glb_write if it doesn't exist
+                tensor = attrs['tensor'].strip('"')
+                if self.shared_writes[f'{tensor}_fiberlookup'][1] is not None:
+                    glb_write = self.shared_writes[f'{tensor}_fiberlookup'][1]
+                else:
+                    glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
                                        **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+                    self.shared_writes[f'{tensor}_fiberlookup'][1] = glb_write
                 if self.local_mems is False:
                     memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs,
                                         label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
 
-                crd_out_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
-                                "crd" in edge.get_label()][0]
-                ref_out_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
-                                "ref" in edge.get_label()][0]
-                ref_in_edge = None
-                if not root:
-                    # Then we have ref in edge...
-                    ref_in_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == node.get_name() and
-                                   "ref" in edge.get_label()][0]
+                # Entertain multiple edges
+
                 # Now add the nodes and move the edges...
                 self.graph.add_node(rd_scan)
                 self.graph.add_node(wr_scan)
@@ -679,20 +685,36 @@ class SAMDotGraph():
                     mem_to_buff = pydot.Edge(src=buffet, dst=memory, label=f'mem_to_buff_{self.get_next_seq()}')
                     self.graph.add_edge(mem_to_buff)
                 # Now inject the read scanner to other nodes...
-                rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(),
-                                            **crd_out_edge.get_attributes())
-                rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(),
+                crd_out_edges = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
+                                "crd" in edge.get_label()]
+                ref_out_edges = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
+                                "ref" in edge.get_label()]
+                ref_in_edge = None
+                if not root:
+                    # Then we have ref in edge...
+                    ref_in_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == node.get_name() and
+                                   "ref" in edge.get_label()][0]
+                for crd_out_edge in crd_out_edges:        
+            
+                    rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(),
+                                                **crd_out_edge.get_attributes())
+                    self.graph.add_edge(rd_to_down_crd)
+
+                    ret = self.graph.del_edge(crd_out_edge.get_source(), crd_out_edge.get_destination())
+
+                for ref_out_edge in ref_out_edges:        
+                    rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(),
                                             **ref_out_edge.get_attributes())
-                self.graph.add_edge(rd_to_down_crd)
-                self.graph.add_edge(rd_to_down_ref)
+                    self.graph.add_edge(rd_to_down_ref)
+
+                    ret = self.graph.del_edge(ref_out_edge.get_source(), ref_out_edge.get_destination())
                 if ref_in_edge is not None:
                     up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, **ref_in_edge.get_attributes())
                     self.graph.add_edge(up_to_ref)
 
                 # Delte old stuff...
                 ret = self.graph.del_node(node)
-                ret = self.graph.del_edge(crd_out_edge.get_source(), crd_out_edge.get_destination())
-                self.graph.del_edge(ref_out_edge.get_source(), ref_out_edge.get_destination())
+
                 if ref_in_edge is not None:
                     self.graph.del_edge(ref_in_edge.get_source(), ref_in_edge.get_destination())
 
@@ -780,13 +802,22 @@ class SAMDotGraph():
 
             self.fa_color += 1
 
-            glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
-                                   **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+            # Only instantiate the glb_write if it doesn't exist
+            tensor = attrs['tensor'].strip('"')
+            if self.shared_writes[f'{tensor}_arrayvals'][1] is not None:
+                glb_write = self.shared_writes[f'{tensor}_arrayvals'][1]
+            else:
+                glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
+                                    **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+                self.shared_writes[f'{tensor}_arrayvals'][1] = glb_write
+
+            # glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
+            #                        **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+
             if self.local_mems is False:
                 memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs,
                                     label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
-            val_out_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
-                            "val" in edge.get_label()][0]
+
             # Then we have ref in edge...
             ref_in_edge = [edge for edge in self.graph.get_edges() if edge.get_destination() == node.get_name() and
                            "ref" in edge.get_label()][0]
@@ -811,19 +842,92 @@ class SAMDotGraph():
                 self.graph.add_edge(mem_to_buff)
             # Now inject the read scanner to other nodes...
             # rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(), **crd_out_edge.get_attributes())
-            rd_to_down_val = pydot.Edge(src=rd_scan, dst=val_out_edge.get_destination(),
+            val_out_edges = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
+                            "val" in edge.get_label()]
+
+            for val_out_edge in val_out_edges:
+                rd_to_down_val = pydot.Edge(src=rd_scan, dst=val_out_edge.get_destination(),
                                         **val_out_edge.get_attributes())
-            self.graph.add_edge(rd_to_down_val)
+                self.graph.add_edge(rd_to_down_val)
+                ret = self.graph.del_edge(val_out_edge.get_source(), val_out_edge.get_destination())
             up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, **ref_in_edge.get_attributes())
             self.graph.add_edge(up_to_ref)
 
             # Delte old stuff...
             ret = self.graph.del_node(node)
-            ret = self.graph.del_edge(val_out_edge.get_source(), val_out_edge.get_destination())
             self.graph.del_edge(ref_in_edge.get_source(), ref_in_edge.get_destination())
 
     def get_graph(self):
         return self.graph
+
+    def unroll_graph(self, tensor, unroll_factor):
+        dupe_map = {}
+        # Duplicate every node that isn't the tensor of interest
+        for node in self.graph.get_nodes():
+            node_attrs = node.get_attributes()
+            og_label = node_attrs['label'].strip('"')
+            node_type = node_attrs['type'].strip('"')
+            # del node_attrs['label']
+            attrs_copy = node_attrs.copy()
+            del attrs_copy['label']
+            if node_type == "fiberlookup" or node_type == "arrayvals":
+                node_tensor = node_attrs['tensor'].strip('"')
+                if node_tensor == tensor:
+                    continue
+            node_name = node.get_name().strip('"')
+            new_node = pydot.Node(f"{node_name}_dup", **attrs_copy, label=f"{og_label}_dup")
+            dupe_map[node_name] = new_node.get_name().strip('"')
+            self.graph.add_node(new_node)
+        # Duplicate every edge and map it to the duped versions
+        for edge in self.graph.get_edges():
+            src = edge.get_source()
+            dst = edge.get_destination()
+            if src not in dupe_map and dst not in dupe_map:
+                continue
+            rmp_src = src if src not in dupe_map else dupe_map[src]
+            rmp_dst = dst if dst not in dupe_map else dupe_map[dst]
+            new_edge = pydot.Edge(src=rmp_src, dst=rmp_dst, **edge.get_attributes())
+            self.graph.add_edge(new_edge)
+
+        print(self.graph)
+
+    def duplicate_graph(self, tensor):
+        dupe_map = {}
+        self.shared_writes = {}
+        # Duplicate every node that isn't the tensor of interest
+        for node in self.graph.get_nodes():
+            node_attrs = node.get_attributes()
+            og_label = node_attrs['label'].strip('"')
+            node_type = node_attrs['type'].strip('"')
+            # del node_attrs['label']
+            attrs_copy = node_attrs.copy()
+            del attrs_copy['label']
+
+            node_name = node.get_name().strip('"')
+            new_node = pydot.Node(f"{node_name}_dup", **attrs_copy, label=f"{og_label}_dup")
+
+            if node_type == "fiberlookup" or node_type == "arrayvals":
+                node_tensor = node_attrs['tensor'].strip('"')
+                if node_tensor == tensor:
+                    # continue
+                    # Mark this as a shared
+                    # mode_ = attrs_copy['mode'].strip('"')
+                    self.shared_writes[f'{node_tensor}_{node_type}'] = [[node, new_node], None]
+            dupe_map[node_name] = new_node.get_name().strip('"')
+            self.graph.add_node(new_node)
+        # Duplicate every edge and map it to the duped versions
+        for edge in self.graph.get_edges():
+            src = edge.get_source()
+            dst = edge.get_destination()
+            if src not in dupe_map and dst not in dupe_map:
+                continue
+            rmp_src = src if src not in dupe_map else dupe_map[src]
+            rmp_dst = dst if dst not in dupe_map else dupe_map[dst]
+            new_edge = pydot.Edge(src=rmp_src, dst=rmp_dst, **edge.get_attributes())
+            self.graph.add_edge(new_edge)
+
+        print(self.graph)
+        print(self.shared_writes)
 
 
 def parse_graph(graph):
