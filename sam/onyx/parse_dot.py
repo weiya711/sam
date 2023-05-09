@@ -11,7 +11,8 @@ class SAMDotGraphLoweringError(Exception):
 
 class SAMDotGraph():
 
-    def __init__(self, filename=None, local_mems=True, use_fork=False, use_fa=False) -> None:
+    def __init__(self, filename=None, local_mems=True, use_fork=False,
+                 use_fa=False, unroll=1) -> None:
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]
@@ -26,7 +27,9 @@ class SAMDotGraph():
 
         self.shared_writes = {}
 
-        self.duplicate_graph('B', 4)
+        if unroll > 1:
+            self.duplicate_graph('B', unroll)
+            self.annotate_IO_nodes()
         # self.unroll_graph('b', 2)
         self.graph.write_png('mek.png')
         # exit()
@@ -898,7 +901,7 @@ class SAMDotGraph():
 
         print(self.graph)
 
-    def duplicate_graph(self, tensor, factor):
+    def duplicate_graph(self, tensor, factor, output='x'):
         original_nodes = self.graph.get_nodes()
         # Do it over the whole graph multiple times
         for fac_ in range(factor - 1):
@@ -946,6 +949,27 @@ class SAMDotGraph():
         print(self.graph)
         print(self.shared_writes)
 
+    def annotate_IO_nodes(self):
+        original_nodes = self.graph.get_nodes()
+        output_nodes = ['x', 'X']
+        input_nodes = ['c', 'C', 'b', 'B', 'd', 'D', 'e', 'E']
+        exclude_nodes = ['b', 'B']
+        for node in original_nodes:
+            node_attrs = node.get_attributes()
+            if 'tensor' in node_attrs:
+                node_tensor = node_attrs['tensor'].strip('"')
+                # Tensor matches, we should assign it a unique file ID
+                if node_tensor in output_nodes or node_tensor in input_nodes:
+                    node_label = node_attrs['label'].strip('"')
+                    # If it has no _dup_ in it, we assign it file_id 0, otherwise match the number
+                    if '_dup_' not in node_label:
+                        node_attrs['file_id'] = 0
+                    elif node_tensor not in exclude_nodes:
+                        node_fac = int(node_label.split('_')[-1])
+                        node_attrs['file_id'] = node_fac + 1
+                    else:
+                        node_attrs['file_id'] = 0
+
 
 def parse_graph(graph):
     type_cnt = {}
@@ -982,12 +1006,17 @@ if __name__ == "__main__":
     parser.add_argument('--output_graph',
                         type=str,
                         default="/home/max/Documents/SPARSE/sam/mek.gv")
+    parser.add_argument('--unroll',
+                        type=int,
+                        default=1)
     args = parser.parse_args()
 
     sam_graph = args.sam_graph
     output_png = args.output_png
     output_graph = args.output_graph
-    sdg = SAMDotGraph(filename=sam_graph, use_fork=True)
+    unroll = args.unroll
+    sdg = SAMDotGraph(filename=sam_graph, use_fork=True,
+                      unroll=unroll)
     graph = sdg.get_graph()
     print(graph)
     # parse_graph(graph)
