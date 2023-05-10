@@ -784,7 +784,8 @@ def test_matmul_ijk_tiled_sparse(samBench, ssname, check_gold, debug_sim, report
                     # array4.append(len(out_vals))
                     out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
                     out_tup = remove_zeros(out_tup)
-                    coo_matrix = sp.coo_matrix(out_tup)
+                    rows1, cols1, vals1 = zip(*out_tup)
+                    coo_matrix = sp.coo_matrix((vals1, (rows1, cols1)))
                     out_dir_t = os.path.join(formatted_dir, "../temporary_output/")
                     mmwrite(out_dir_t + "coo_matrix" + "_" + str(B_i00) + "_" + str(B_k00) +
                             "_" + str(C_j00) +
