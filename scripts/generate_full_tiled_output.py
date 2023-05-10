@@ -79,7 +79,6 @@ A = result.sort_indices()
 B = output_matrix.sort_indices()
 # sort the row, column, and data arrays of each matrix
 
-assert (result.data == output_matrix.data).all() and (result.indices == output_matrix.indices).all() and (result.indptr == output_matrix.indptr).all():
-
+assert (result.data == output_matrix.data).all() and (result.indices == output_matrix.indices).all() and (result.indptr == output_matrix.indptr).all()
 # Write output matrix to MTX file
 mmwrite(os.path.join(sam_home + "/tiles/" + kernel + "/", "output.mtx"), output_matrix)
