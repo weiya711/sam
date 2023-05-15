@@ -4,6 +4,8 @@ import argparse
 import networkx as nx
 import sys
 from collections import defaultdict
+import realize_sam_node
+
 
 frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_elemadd",
                "tensor3_innerprod", "tensor3_mttkrp", "tensor3_ttv", "tensor3_identity_dense"]
@@ -781,6 +783,7 @@ class Graph_Realization:
             u_val = u
             if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
                 self.root_nodes.append(node_info["tensor"])
+            # realize_sam_node(node_info)
             if node_info["type"] == "fiberlookup":
                 if node_info["format"] == "dense":
                     self.blks_to_realize.append(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] +
@@ -942,8 +945,7 @@ class Graph_Realization:
         nxt_parents = []
         self.f.write("\n") 
         if whether_pipelined:
-            for node in self.pipelined_memory_nodes.keys():
-                
+            for node in self.pipelined_memory_nodes.keys(): 
                 self.f.write(tab(self.scope_lvl + 1) + "if check_flag" + self.mem_lvl + " and " + node + ".out_done():\n")
                 self.f.write(tab(self.scope_lvl + 2) + "memory_node_" + node + ".check_if_done(True)\n")
                 self.f.write(tab(self.scope_lvl + 1) + "elif check_flag" + self.mem_lvl + " and "+ node + ".out_done() and memory_node_" + node + self.mem_lvl + ".valid_tile():\n")
