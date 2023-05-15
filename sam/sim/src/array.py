@@ -8,6 +8,7 @@ class Array(Primitive):
         self.fill = fill
         if init_arr is None:
             self.size = size
+            print("SIZE ::: ", self.size)
             self.arr = [self.fill] * self.size
         else:
             assert (isinstance(init_arr, list))

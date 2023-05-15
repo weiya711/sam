@@ -46,10 +46,10 @@ def test_tiling(samBench, ssname, check_gold, report_stats, debug_sim, reorder_n
 
 
     rdB_0 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0)
-    split_block_0 = Split(split_factor=split_factor, takes_ref=False, debug=debug_sim) #debug_sim)
+    split_block_0 = Split_ref(split_factor=split_factor, takes_ref=False, debug=debug_sim) #debug_sim)
     rdB_1 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1)
     #crdscan = Reorder_and_split(seg_arr=B_seg1, crd_arr=B_crd1, not_idealized=reorder_not_ideal, block_size_len=reorder_block_len, sf=split_factor, debug=debug_sim, alpha=1, statistics=True)
-    split_block_1 = Split(split_factor=split_factor, takes_ref=False, debug=debug_sim) #debug_sim)
+    split_block_1 = Split_ref(split_factor=split_factor, takes_ref=False, debug=debug_sim) #debug_sim)
     
     
     

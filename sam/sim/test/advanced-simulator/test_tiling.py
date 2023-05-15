@@ -45,7 +45,7 @@ def test_tiling(samBench, ssname, check_gold, report_stats, debug_sim, reorder_n
 
 
     rdB_0 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0)
-    split_block = Split(split_factor=split_factor, takes_ref=True, debug=debug_sim)
+    split_block = Split_ref(split_factor=split_factor, takes_ref=True, debug=debug_sim)
     crdscan = Reorder_and_split(seg_arr=B_seg1, crd_arr=B_crd1, not_idealized=bool(reorder_not_ideal), block_size_len=int(reorder_block_len), sf=split_factor, debug=debug_sim, alpha=1, statistics=True)
     crd_k = repeated_token_dopper(name="crdk")
     ref_k = repeated_token_dopper(name="refk")
@@ -127,7 +127,7 @@ def test_tiling(samBench, ssname, check_gold, report_stats, debug_sim, reorder_n
         if crd_k.get_token() != "":
             full_arr3.append(crd_k.get_token())
 
-        if crd_k.get_token() != "":
+        if ref_k.get_token() != "":
             
             out_crd.append(crd_k.get_token())
             if True: #not is_stkn(crd_k.get_token()):
@@ -136,7 +136,7 @@ def test_tiling(samBench, ssname, check_gold, report_stats, debug_sim, reorder_n
                     temp_count += 1
 
             if crd_k.get_token() == "S1" or crd_k.get_token() == "S2" or crd_k.get_token() == "S3" or crd_k.get_token() == "S4":
-                #print("cutter here ", a_crd)
+                # print("cutter here ", a_crd)
                 #if average_len == 0:
                 #    print(split_factor)
                     
@@ -148,7 +148,8 @@ def test_tiling(samBench, ssname, check_gold, report_stats, debug_sim, reorder_n
                 max_cnt = max(max_cnt, temp_count)
                 average += temp_count
                 average_len += 1
-                #print("TEMP PRINT", temp_count, len(a_crd), average / average_len)
+                # print("TEMP PRINT", " nnz ",  temp_count, " nnz + stkns ",  len(a_crd), " avg: ",  average / average_len)
+                # print(a_crd)
                 temp_count = 0
                 a_crd = []
 
