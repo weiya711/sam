@@ -130,7 +130,7 @@ def create_array(shape=5, sparsity=0.995, path=""):
 
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.5])
-def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_len):
+def test_reorder_direct_transpose(debug_sim, sparsity, reorder_not_ideal, reorder_block_len):
     #print("BLK_LEN:", reorder_block_len)
     #print(reorder_not_ideal, bool(reorder_not_ideal) == True)
     shape = [128]
