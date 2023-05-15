@@ -135,6 +135,11 @@ def create_array(shape=5, sparsity=0.995, path=""):
     software_time = software_time / (5 * 5)
     return arr_dict, time_cnt1, time_cnt2, software_time, time_arr
 
+#FIXME: Figureout formats
+@pytest.mark.skipif(
+    os.getenv('CI', 'false') == 'true',
+    reason='CI lacks datasets',
+)
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
 def test_reorder_baseline(debug_sim, sparsity, reorder_not_ideal, reorder_block_len):
