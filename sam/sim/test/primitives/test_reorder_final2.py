@@ -146,7 +146,7 @@ def create_array(shape=5, sparsity=0.995, path=""):
  
 
 
-@pytest.mark.parametrize("arrs", [arr_dict]) #, arr_dict2, arr_dict3])
+@pytest.mark.synth
 def test_reorder_direct_transpose(arrs, debug_sim):
     shape = [1000] #, 2000]
     sparsity = [0.75, 0.9, 0.99, 0.995]

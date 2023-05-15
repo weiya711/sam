@@ -155,7 +155,8 @@ def test_reorder_direct(arrs, debug_sim):
     #print("@@@@@@@@", t_arr_k)
     #print("@@@@@@@@", t_arr_i)
     #print("@@@@@@@@", t_arr_k_out)
-    
+    print("crd1 ", out_crd)
+    print("crd2 ", gold_crd)
     assert (out_crd == gold_crd)
     assert (out_ref == gold_ref)
     assert (out_ref_i == gold_ref_i)
