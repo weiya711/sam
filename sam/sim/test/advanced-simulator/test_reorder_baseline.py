@@ -127,28 +127,17 @@ def create_array(shape=5, sparsity=0.995, path=""):
 
         done = rdC_1.out_done()
         time_cnt2 += 1
-    # print(arr_dict)
-    # print(t1, t2)
     software_time = 0
     for atts in range(5):
         start_time = time.time()
         transpose_mat, time_arr = sparse_tranpose_pytorch(B_dirname, shape=shape, shots=5, debug_sim=False, out_format="ss10")
         software_time += time.time() - start_time
     software_time = software_time / (5 * 5)
-    # out_crds = [C_crd0, C_crd1]
-    # out_segs = [C_seg0, C_seg1]
-    # out_val = C_vals
-    # out_tup = convert_point_tuple(get_point_list(out_crds, out_segs)) #, out_val))
-    
-    #  out_tup = remove_zeros(out_tup)
-    # tensor = torch.sparse_coo_tensor(list(zip(*out_tup)), out_val, size=(shape, shape))
-    # a = transpose_mat.to_sparse_coo()
-    # bool_answer = np.allclose(a.to_dense(), tensor.to_dense())
-    # assert bool_answer #torch.eq(a, tensor)
     return arr_dict, time_cnt1, time_cnt2, software_time, time_arr
 
-
-def test_reorder_baseline(debug_sim, reorder_not_ideal, reorder_block_len):
+@pytest.mark.synth
+@pytest.mark.parametrize("sparsity", [0.95])
+def test_reorder_baseline(debug_sim, sparsity, reorder_not_ideal, reorder_block_len):
     #print("BLK_LEN:", reorder_block_len)
 
     #print(reorder_not_ideal, bool(reorder_not_ideal) == True)
@@ -181,8 +170,6 @@ def test_reorder_baseline(debug_sim, reorder_not_ideal, reorder_block_len):
             assert (len(gold_crd_i) == len(gold_ref_i))
             
             crdscan = Reorder_baseline(seg_arr=seg_arr, crd_arr=crd_arr, sf=8, debug=debug_sim)
-            #Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal), block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
-            
             crd_k = repeated_token_dopper(name="crdk")
             ref_k = repeated_token_dopper(name="refk")
             crd_i = repeated_token_dopper(name="crdi")

@@ -105,14 +105,14 @@ class Split(Primitive):
                         self.curr_ocrd = ''
                         self.curr_icrd = 'S0'
                         self.prev_ocrd = self.cntr
-                        self.prev_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.prev_icrd = crd if self.orig_crd else crd % self.split_factor
                         self.emit_stkn = True
                     elif self.prev_cntr != self.cntr:
                         self.curr_ocrd = self.cntr
-                        self.curr_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.curr_icrd = crd if self.orig_crd else crd % self.split_factor
                     else:
                         self.curr_ocrd = ''
-                        self.curr_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.curr_icrd = crd if self.orig_crd else crd % self.split_factor
 
                     self.prev_stkn = False
                     self.prev_cntr = self.cntr

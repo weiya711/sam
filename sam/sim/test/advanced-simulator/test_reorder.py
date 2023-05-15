@@ -30,37 +30,28 @@ def create_array(shape=5, sparsity=0.995, path=""):
     arr_dict = {}
 
     B_dirname = os.path.join(formatted_dir, "matrix/DCSR/B_random_sp_" + str(sparsity) + "/")
-
     B0_seg_filename = os.path.join(B_dirname, "tensor_B_mode_0_seg")
     B_seg0 = read_inputs(B0_seg_filename)
     B0_crd_filename = os.path.join(B_dirname, "tensor_B_mode_0_crd")
     B_crd0 = read_inputs(B0_crd_filename)
-
     B1_seg_filename = os.path.join(B_dirname, "tensor_B_mode_1_seg")
     B_seg1 = read_inputs(B1_seg_filename)
     B1_crd_filename = os.path.join(B_dirname, "tensor_B_mode_1_crd")
     B_crd1 = read_inputs(B1_crd_filename)
-
     C_dirname = os.path.join(formatted_dir, "matrix/DCSC/B_random_sp_" + str(sparsity) + "/")
-
     C0_seg_filename = os.path.join(C_dirname, "tensor_B_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
     C0_crd_filename = os.path.join(C_dirname, "tensor_B_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
-
     C1_seg_filename = os.path.join(C_dirname, "tensor_B_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
     C1_crd_filename = os.path.join(C_dirname, "tensor_B_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
-
     C_vals_filename = os.path.join(C_dirname, "tensor_B_mode_vals")
     C_vals = read_inputs(C_vals_filename)
 
-
-
     rdB_0 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0)
     rdB_1 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1)
-
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
@@ -89,16 +80,10 @@ def create_array(shape=5, sparsity=0.995, path=""):
         done = rdB_1.out_done()
         time_cnt1 += 1
 
-
-    
     rdC_0 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0)
     rdC_1 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1)
-
-
     arr_dict["seg"] = B_seg1 # read level 0 and put in rd scanner
     arr_dict["crd"] = B_crd1 # read level 0 and put in rd scanner 
-
-
     arr_dict["out_crd_k_outer"] = []  # reading transpose
     arr_dict["out_ref_k_outer"] = []
     arr_dict["out_crd_i"] = []
@@ -110,7 +95,6 @@ def create_array(shape=5, sparsity=0.995, path=""):
         if len(in_ref_C) > 0:
             rdC_0.set_in_ref(in_ref_C.pop(0))
         rdC_1.set_in_ref(rdC_0.out_ref())
-        
         rdC_0.update()
         rdC_1.update()
         # print(rdC_0.out_crd(), rdC_0.out_ref(), rdC_1.out_crd(), rdC_1.out_ref())
@@ -137,7 +121,6 @@ def create_array(shape=5, sparsity=0.995, path=""):
     # out_segs = [C_seg0, C_seg1]
     # out_val = C_vals
     # out_tup = convert_point_tuple(get_point_list(out_crds, out_segs)) #, out_val))
-    
     #  out_tup = remove_zeros(out_tup)
     # tensor = torch.sparse_coo_tensor(list(zip(*out_tup)), out_val, size=(shape, shape))
     # a = transpose_mat.to_sparse_coo()
@@ -145,17 +128,19 @@ def create_array(shape=5, sparsity=0.995, path=""):
     # assert bool_answer #torch.eq(a, tensor)
     return arr_dict, time_cnt1, time_cnt2, software_time, time_arr
 
-
+@pytest.mark.synth
+@pytest.mark.parametrize("sparsity", [0.5])
 def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_len):
     #print("BLK_LEN:", reorder_block_len)
     #print(reorder_not_ideal, bool(reorder_not_ideal) == True)
-    shape = [8] #[1000]
-    sparsity = [0.75] #[0.5, 0.975, 0.9999] #0.8, 0.9, 0.95, 0.99, 0.9995, 0.9999]
+    shape = [128]
+    sparsity = [0.5, 0.75, 0.8, 0.85, 0.9, 0.925, 0.95, 0.99, 0.995, 0.9975]
     plot_arr = []
     plot_arr2 = []
     software_times = []
     
     load_times = []
+    pt_tuple_times = []
     format_conv_time1 = []
     transpose_time = []
     format_conv_time2 = []
@@ -168,7 +153,8 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
             gold_crd_i = arrs["out_crd_i"]
             gold_ref_i = arrs["out_ref_i"]
             assert (len(gold_crd_i) == len(gold_ref_i))
-            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal), block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
+            crdscan = Reorder_and_split(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal),
+                                        block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
             
             crd_k = repeated_token_dopper(name="crdk")
             ref_k = repeated_token_dopper(name="refk")
@@ -220,10 +206,6 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
                 if ref_k_out.get_token() != "":
                     out_ref_k_out.append(ref_k_out.get_token())
          
-
-                #print("Timestep", time, "\t k_out_crd:", crdscan.out_crd_k_outer(), "\t k_out_ref:", crdscan.out_ref_k_outer(), "\t Crd:", crdscan.out_crd_i(), "\t Ref:", crdscan.out_ref_i(), "\t Crd:", crdscan.out_crd_k(), "\t Ref:", crdscan.out_ref_k())
-                #print("______________________________________________________________________")
-                
                 done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
                 time += 1
                 if time > 1000000000:
@@ -232,25 +214,20 @@ def test_reorder_direct_transpose(debug_sim, reorder_not_ideal, reorder_block_le
             plot_arr.append(time)
             plot_arr2.append(read_num2)
             software_times.append(software_time)
-
-            load_times.append(received_time_arr[0]) 
-            format_conv_time1.append(received_time_arr[1])
-            transpose_time.append(received_time_arr[2])
-            format_conv_time2.append(received_time_arr[3])
-            #print(out_ref)
-            #print(out_crd)
-            
-            #print(out_ref_i)
-            #print(out_crd_i)
+            load_times.append(received_time_arr[0])
+            pt_tuple_times.append(received_time_arr[1]) 
+            format_conv_time1.append(received_time_arr[2])
+            transpose_time.append(received_time_arr[3])
+            format_conv_time2.append(received_time_arr[4])
             assert (out_crd_i == gold_crd_i)
             assert (out_crd_k_out == arrs["out_crd_k_outer"])
             assert (out_ref_k_out == arrs["out_ref_k_outer"])
-            # assert (out_ref_i == arrs["out_ref_i"])
 
     print(plot_arr)
     print(plot_arr2)
     print(software_times)
     print("load time: ", load_times)
+    print("conv1 time: ", pt_tuple_times)
     print("conv1 time: ", format_conv_time1)
     print("tran time: ", transpose_time)
     print("conv2 time: ", format_conv_time2)
