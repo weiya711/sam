@@ -4,7 +4,7 @@ import pytest
 import time
 from sam.sim.test.test import TIMEOUT
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
-from sam.sim.src.reorder import Reorder_and_split, repeated_token_dopper
+from sam.sim.src.reorder import ReorderAndSplit, RepeatedTokenDropper
 from sam.sim.src.split import *
 from sam.sim.src.wr_scanner import *
 from sam.sim.src.base import remove_emptystr
@@ -43,15 +43,15 @@ def test_tiling(samBench, ssname, check_gold, report_stats, debug_sim,
     B_vals = read_inputs(B_vals_filename, float)
     rdB_0 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0)
     split_block = Split_ref(split_factor=split_factor, takes_ref=True, debug=debug_sim)
-    crdscan = Reorder_and_split(seg_arr=B_seg1, crd_arr=B_crd1, not_idealized=bool(reorder_not_ideal),
+    crdscan = ReorderAndSplit(seg_arr=B_seg1, crd_arr=B_crd1, not_idealized=bool(reorder_not_ideal),
                                 block_size_len=int(reorder_block_len), sf=split_factor,
                                 debug=debug_sim, alpha=1, statistics=True)
-    crd_k = repeated_token_dopper(name="crdk")
-    ref_k = repeated_token_dopper(name="refk")
-    crd_i = repeated_token_dopper(name="crdi")
-    ref_i = repeated_token_dopper(name="refi")
-    crd_k_out = repeated_token_dopper(name="crdkout")
-    ref_k_out = repeated_token_dopper(name="refkout")
+    crd_k = RepeatedTokenDropper(name="crdk")
+    ref_k = RepeatedTokenDropper(name="refk")
+    crd_i = RepeatedTokenDropper(name="crdi")
+    ref_i = RepeatedTokenDropper(name="refi")
+    crd_k_out = RepeatedTokenDropper(name="crdkout")
+    ref_k_out = RepeatedTokenDropper(name="refkout")
 
     # THIS IS FOR SIZE INFO
     Bs_dirname = B_dirname

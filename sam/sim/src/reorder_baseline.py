@@ -5,7 +5,7 @@ from .parellelize import *
 from .rd_scanner import *
 
 
-class Reorder_baseline(Primitive):
+class ReorderBaseline(Primitive):
     def __init__(self, crd_arr=[], seg_arr=[],  sf=8, depth=4, **kwargs):
         super().__init__(**kwargs)
 

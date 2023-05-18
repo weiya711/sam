@@ -18,7 +18,7 @@ from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
 from sam.sim.src.tiling.generate_tile_crd import *
-from sam.sim.src.reorder import Reorder_and_split, repeated_token_dopper
+from sam.sim.src.reorder import ReorderAndSplit, RepeatedTokenDropper
 from sam.sim.src.split import *
 from sam.sim.src.wr_scanner import *
 from sam.sim.src.base import remove_emptystr
@@ -66,6 +66,7 @@ def test_tiling(samBench, ssname, check_gold, report_stats, yaml_name, debug_sim
     B_crd1 = read_inputs(B1_crd_filename)
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
+    nnz = len(B_vals)
 
     C_dirname = os.path.join(formatted_dir, ssname, "matmul_ikj") # "orig", "ss01")
     C_shape_filename = os.path.join(B_dirname, "tensor_C_mode_shape")
@@ -83,30 +84,30 @@ def test_tiling(samBench, ssname, check_gold, report_stats, yaml_name, debug_sim
 
 
     rdB_0 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0)
-    split_block1 = Split_ref(split_factor=split_factor, takes_ref=True, debug=debug_sim)
-    crdscan = Reorder_and_split(seg_arr=B_seg1, crd_arr=B_crd1, not_idealized=bool(reorder_not_ideal),
+    split_block1 = SplitRef(split_factor=split_factor, takes_ref=True, debug=debug_sim)
+    crdscan = ReorderAndSplit(seg_arr=B_seg1, crd_arr=B_crd1, not_idealized=bool(reorder_not_ideal),
                                 block_size_len=int(reorder_block_len), sf=split_factor,
                                 debug=debug_sim, alpha=1, statistics=True)
     
     rdC_0 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0)
-    split_block2 = Split_ref(split_factor=split_factor, takes_ref=True, debug=debug_sim)
-    crdscanC = Reorder_and_split(seg_arr=C_seg1, crd_arr=C_crd1, not_idealized=bool(reorder_not_ideal),
+    split_block2 = SplitRef(split_factor=split_factor, takes_ref=True, debug=debug_sim)
+    crdscanC = ReorderAndSplit(seg_arr=C_seg1, crd_arr=C_crd1, not_idealized=bool(reorder_not_ideal),
                                 block_size_len=int(reorder_block_len), sf=split_factor,
                                 debug=debug_sim, alpha=1, statistics=True)
 
-    crd_k = repeated_token_dopper(name="crdk")
-    ref_k = repeated_token_dopper(name="refk")
-    crd_i = repeated_token_dopper(name="crdi")
-    ref_i = repeated_token_dopper(name="refi")
-    crd_k_out = repeated_token_dopper(name="crdkout")
-    ref_k_out = repeated_token_dopper(name="refkout")
+    crd_k = RepeatedTokenDropper(name="crdk")
+    ref_k = RepeatedTokenDropper(name="refk")
+    crd_i = RepeatedTokenDropper(name="crdi")
+    ref_i = RepeatedTokenDropper(name="refi")
+    crd_k_out = RepeatedTokenDropper(name="crdkout")
+    ref_k_out = RepeatedTokenDropper(name="refkout")
 
-    crd_j_C = repeated_token_dopper(name="crdj")
-    ref_j_C = repeated_token_dopper(name="refj")
-    crd_k_C = repeated_token_dopper(name="crdk")
-    ref_k_C = repeated_token_dopper(name="refk")
-    crd_j_out_C = repeated_token_dopper(name="crdjout")
-    ref_j_out_C = repeated_token_dopper(name="refjout")
+    crd_j_C = RepeatedTokenDropper(name="crdj")
+    ref_j_C = RepeatedTokenDropper(name="refj")
+    crd_k_C = RepeatedTokenDropper(name="crdk")
+    ref_k_C = RepeatedTokenDropper(name="refk")
+    crd_j_out_C = RepeatedTokenDropper(name="crdjout")
+    ref_j_out_C = RepeatedTokenDropper(name="refjout")
 
     
     # THIS IS FOR SIZE INFO
@@ -813,6 +814,7 @@ def test_tiling(samBench, ssname, check_gold, report_stats, yaml_name, debug_sim
 
     extra_info = dict()
     extra_info["dataset"] = ssname
+    extra_info["nnz"] = nnz
     extra_info["cycles"] = time_cnt + time_cnt2
     extra_info["cycles_tiling"] = time_cnt
     extra_info["cycles_matmul"] = time_cnt2

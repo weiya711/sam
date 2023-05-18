@@ -26,7 +26,7 @@ class CrdRdScan(Primitive, ABC):
         return self.curr_crd
 
 
-class repeated_token_dopper(Primitive):
+class RepeatedTokenDropper(Primitive):
     def __init__(self, name="val"):
         self.last_token = ""
         self.new_token = ""
@@ -80,7 +80,7 @@ class repeated_token_dopper(Primitive):
         #     print("REPEATED_BLK name:", self.name, self.last_token, self.new_token, " returns----", self.output_token)
 
 
-class Reorder_and_split(CrdRdScan):
+class ReorderAndSplit(CrdRdScan):
     def __init__(self, crd_arr=[], seg_arr=[], skip=True, counter_mode_dense=False,
                  not_idealized=True, block_size_len=8, sf=1, alpha=1, **kwargs):
         super().__init__(**kwargs)
