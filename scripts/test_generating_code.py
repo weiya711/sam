@@ -4,7 +4,7 @@ import argparse
 import networkx as nx
 import sys
 from collections import defaultdict
-import realize_sam_node
+# import realize_sam_node
 
 
 frostt_list = ["tensor3_elemmul", "tensor3_identity", "tensor3_ttm", "tensor3_elemadd",
@@ -697,7 +697,7 @@ def get_all_files(directory_path):
     return file_paths, out_name
 
 
-class Parent_Child_graph:
+class ParentChildGraph:
     def __init__(self):
         self.parent = defaultdict(dict)
         self.operation = defaultdict(dict)
@@ -725,7 +725,7 @@ class Parent_Child_graph:
         return self.parent[parent][0] + self.operation[parent][0]
 
 
-class Graph_Realization:
+class GraphRealization:
     def __init__(self, graph, mem_lvl, scope_lvl, f, parent=None, mem_blks_connect=None,
                  mem_blks=[], pipelined_tiles=False, pipelined_memory_nodes=defaultdict(dict)):
         self.mem_lvl = mem_lvl
@@ -736,7 +736,7 @@ class Graph_Realization:
         self.intersect_dataset = defaultdict(dict)
         self.root_nodes = []
         self.memory_blks = mem_blks
-        self.mem_blks_connect = Parent_Child_graph()  # mem_blks_connect
+        self.mem_blks_connect = ParentChildGraph()  # mem_blks_connect
 
         self.blks_to_realize = []
         self.parent_block = parent
@@ -1574,14 +1574,14 @@ for apath in file_paths:
         tiling_graph, pipelined_memory_nodes = generate_tiling_graph(networkx_graph)
         d = {}
         mem_blks = []
-        glb_lvl = Graph_Realization(tiling_graph, mem_lvl="00", scope_lvl=0, f=f, mem_blks=mem_blks, pipelined_memory_nodes=pipelined_memory_nodes)
+        glb_lvl = GraphRealization(tiling_graph, mem_lvl="00", scope_lvl=0, f=f, mem_blks=mem_blks, pipelined_memory_nodes=pipelined_memory_nodes)
         d, invalid_flag, output_nodes, parents, whether_pipelined = glb_lvl.node_instantiations1(output_nodes)
         data = CodeGenerationdatasets(tiling_graph)
         data.build_datasets(tiling_graph)
         output_check_nodes(f, root_nodes)
         f.write("\n\n")
         d = {}
-        mem_lvl = Graph_Realization(tiling_graph, mem_lvl="0", scope_lvl=1, f=f, parent=glb_lvl, mem_blks=glb_lvl.get_memory_blocks(), pipelined_memory_nodes=pipelined_memory_nodes)
+        mem_lvl = GraphRealization(tiling_graph, mem_lvl="0", scope_lvl=1, f=f, parent=glb_lvl, mem_blks=glb_lvl.get_memory_blocks(), pipelined_memory_nodes=pipelined_memory_nodes)
         d, invalid_flag, output_nodes, parents, whether_pipelined = mem_lvl.node_instantiations1(output_nodes, pipelined_tiles=True,
                                                                                                  parent=parents, whether_pipelined=whether_pipelined)
 
@@ -1596,7 +1596,7 @@ for apath in file_paths:
         mem_lvl.connect_nodes(nodes_updating_list, data)
         tens_fmt = {}
         count = 0
-        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=1, f=f, pipelined_memory_nodes=pipelined_memory_nodes)
+        comp_lvl = GraphRealization(networkx_graph, mem_lvl="", scope_lvl=1, f=f, pipelined_memory_nodes=pipelined_memory_nodes)
         data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
         ct = 0
         for k in tensor_format_parse.return_all_tensors():
@@ -1640,7 +1640,7 @@ for apath in file_paths:
         for mem_loop in reverse(range(MEM_LEVELS)):
             mem_string = "0" * mem_loop
             d = {}
-            mem_lvl = Graph_Realization(tiling_graph, mem_lvl=mem_string, scope_lvl=MEM_LEVELS - mem_loop, f=f, mem_blks=mem_blks)
+            mem_lvl = GraphRealization(tiling_graph, mem_lvl=mem_string, scope_lvl=MEM_LEVELS - mem_loop, f=f, mem_blks=mem_blks)
             d, invalid_flag, output_nodes, parents, whether_pipelined = mem_lvl.node_instantiations1(output_nodes, parent=parents, whether_pipelined=whether_pipelined)
         data = CodeGenerationdatasets(tiling_graph)
         data.build_datasets(tiling_graph)
@@ -1657,7 +1657,7 @@ for apath in file_paths:
         mem_lvl.connect_nodes(nodes_updating_list, data)
         tens_fmt = {}
         count = 0
-        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=1, f=f)
+        comp_lvl = GraphRealization(networkx_graph, mem_lvl="", scope_lvl=1, f=f)
         data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()), out_name[num], apath)
         ct = 0
         for k in tensor_format_parse.return_all_tensors():
@@ -1696,7 +1696,7 @@ for apath in file_paths:
     else:
         tens_fmt = {}
         count = 0
-        comp_lvl = Graph_Realization(networkx_graph, mem_lvl="", scope_lvl=0, f=f)
+        comp_lvl = GraphRealization(networkx_graph, mem_lvl="", scope_lvl=0, f=f)
         data_formats = gen_data_formats(len(tensor_format_parse.return_all_tensors()),
                                         out_name[num], apath)
         ct = 0
