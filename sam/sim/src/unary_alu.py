@@ -1,5 +1,9 @@
 from .base import *
 import math
+from .compute import Divide2, Add2
+from .crd_manager import CrdDrop
+from .repeater import Repeat, RepeatSigGen
+from .accumulator import Reduce, MaxReduce
 
 
 class UnaryALU(Primitive, ABC):
@@ -238,6 +242,9 @@ class Max(UnaryALU):
             elif isinstance(self.curr_in1, float):
                 # Input is value stream
                 self.curr_out = max(self.curr_in1, self.curr_in2)
+                if self.debug:
+                    if self.curr_out != self.curr_in1:
+                        print("Dropping: ", self.curr_in1)
                 if self.get_stats:
                     self.cycles_operated += 1
                 self.get1 = True
@@ -400,6 +407,90 @@ class ScalarMult(UnaryALU):
                       "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1)
         else:
             self.curr_out = ''
+
+
+class Softmax(Primitive):
+    def __init__(self, debug_sim=False, **kwargs):
+        super().__init__(**kwargs)
+        self.repeat_siggen = RepeatSigGen(debug=debug_sim)
+        self.repeat = Repeat(debug=debug_sim)
+        self.repeat1 = Repeat(debug=debug_sim)
+        self.exp_1 = Exp(in2=0, debug=debug_sim)
+        self.reduce_5 = Reduce(debug=debug_sim)
+        self.max_reduce_5 = MaxReduce(debug=debug_sim)
+        self.div_6 = Divide2(debug=debug_sim)
+        self.add_10 = Add2(debug=debug_sim, neg2=True)
+        self.in_val = []
+        self.inner_ref = []
+        self.curr_val = ''
+        self.curr_inner_ref = ''
+
+        self.div_0 = []
+        self.div_1 = []
+        self.done = False
+
+    def update(self):
+        self.update_done()
+
+        if self.done:
+            self.curr_inner_ref = ''
+            self.curr_val = ''
+            return
+        if len(self.inner_ref) > 0 and len(self.in_val) > 0:
+            self.curr_inner_ref = self.inner_ref.pop(0)
+            self.curr_val = self.in_val.pop(0)
+
+        print("Val:", self.curr_val)
+        print("curr inner ref:", self.curr_inner_ref)
+
+        # if self.curr_val == 'D' and self.curr_inner_ref == 'D':
+        #     self.done = True
+        self.max_reduce_5.set_in_val(self.curr_val)
+        self.repeat_siggen.set_istream(self.curr_inner_ref)
+        self.repeat.set_in_ref(self.max_reduce_5.out_val())
+        self.repeat.set_in_repsig(self.repeat_siggen.out_repsig())
+        self.add_10.set_in1(self.curr_val)
+        self.add_10.set_in2(self.repeat.out_ref())
+        self.exp_1.set_in1(self.add_10.out_val())
+        self.reduce_5.set_in_val(self.exp_1.out_val())
+        self.repeat1.set_in_ref(self.reduce_5.out_val())
+        self.repeat1.set_in_repsig(self.repeat_siggen.out_repsig())
+        self.div_6.set_in1(self.exp_1.out_val())
+        self.div_6.set_in2(self.repeat1.out_ref())
+        if self.div_6.out_val() == 'D':
+            self.done = True
+
+        self.div_0.append(self.exp_1.out_val())
+        self.div_1.append(self.repeat1.out_ref())
+
+        # print("div 0:", remove_emptystr(self.div_0))
+        # print("div 1:", remove_emptystr(self.div_1))
+
+        self.max_reduce_5.update()
+        self.repeat_siggen.update()
+        self.repeat.update()
+        self.add_10.update()
+        self.exp_1.update()
+        self.reduce_5.update()
+        self.repeat1.update()
+        self.div_6.update()
+
+    def set_inner_ref(self, ref, parent=None):
+        if ref != '' and ref is not None:
+            self.inner_ref.append(ref)
+        # print("inner ref:", self.inner_ref)
+        # if self.backpressure_en:
+        #     parent.set_backpressure(self.fifo_avail_outer)
+
+    def set_val(self, val, parent=None):
+        if val != '' and val is not None:
+            self.in_val.append(val)
+        # print("in val", self.in_val)
+
+    def out_val(self):
+        if self.done:
+            return ''
+        return self.div_6.out_val()
 
 
 
