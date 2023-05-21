@@ -63,7 +63,7 @@ class RepeatedTokenDropper(Primitive):
             return
         if (self.last_token == "D" or self.new_token != "") and\
                 (self.last_token != self.new_token or self.last_token == "D") and\
-                not(is_stkn(self.new_token) and is_stkn(self.last_token)):
+                not (is_stkn(self.new_token) and is_stkn(self.last_token)):
             # print(self.name, "update1")
             self.output_token = self.last_token
             self.last_token = self.new_token
