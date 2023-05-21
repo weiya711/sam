@@ -173,7 +173,7 @@ class Split(Primitive):
         print("FIFOs size in the crd for split blocks: ", self.in_crd_size)
 
 
-class Split_ref(Primitive):
+class SplitRef(Primitive):
     def __init__(self, split_factor=4, depth=4, takes_ref=False, orig_crd=True, **kwargs):
         super().__init__(**kwargs)
 
