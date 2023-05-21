@@ -94,7 +94,7 @@ class Split(Primitive):
                 self.curr_ocrd = crd
                 self.curr_icrd = increment_stkn(crd)
                 self.prev_cntr = None
-                #print("===")
+                # print("===")
                 self.prev_stkn = True
                 self.emit_stkn = False
             elif not self.takes_ref and len(self.in_crd) > 0 and not is_stkn(self.in_crd[0]):
@@ -135,21 +135,18 @@ class Split(Primitive):
                       "\n Prev Cntr", self.prev_cntr, "\t Curr Cntr:", self.cntr,
                       "\n Emit Stkn:", self.emit_stkn, "\t Prev Stkn:", self.prev_stkn)
 
-
     def set_in_crd(self, crd, parent=None):
         if crd != '' and crd is not None:
             self.in_crd.append(crd)
         if self.backpressure_en:
             parent.set_backpressure(self.fifo_avail)
 
-
     def set_in_ref(self, ref, parent=None):
         if self.takes_ref:
-            if ref != ''  and ref is not None:
+            if ref != '' and ref is not None:
                 self.in_ref.append(ref)
             if self.backpressure_en:
                 parent.set_backpressure(self.fifo_avail_ref)
-
 
     def out_outer_crd(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
@@ -164,20 +161,16 @@ class Split(Primitive):
             if self.takes_ref:
                 return self.curr_oref
 
-
     def out_inner_ref(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             if self.takes_ref:
                 return self.curr_iref
 
-
     def compute_fifos(self):
         self.in_crd_size = max(self.in_crd_size, len(self.in_crd))
 
-
     def print_fifos(self):
         print("FIFOs size in the crd for split blocks: ", self.in_crd_size)
-
 
 
 class Split_ref(Primitive):
@@ -185,9 +178,7 @@ class Split_ref(Primitive):
         super().__init__(**kwargs)
 
         self.in_crd = []
-        
         self.in_crd_size = 0
-
         self.curr_ocrd = None
         self.curr_icrd = None
 
@@ -248,7 +239,6 @@ class Split_ref(Primitive):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
-            
             if self.done:
                 self.curr_ocrd = ''
                 self.curr_icrd = ''
@@ -268,14 +258,14 @@ class Split_ref(Primitive):
                 self.curr_iref = self.prev_iref
                 self.emit_stkn = False
             elif not self.takes_ref and len(self.in_crd) > 0 and is_stkn(self.in_crd[0]):
-                #if self.debug:
-                #print("case print no ref and emit stkn")
+                # if self.debug:
+                # print("case print no ref and emit stkn")
                 crd = self.in_crd.pop(0)
                 assert is_stkn(crd)
                 self.curr_ocrd = crd
                 self.curr_icrd = increment_stkn(crd)
                 self.prev_cntr = None
-                #print("===")
+                # print("===")
                 self.prev_stkn = True
                 self.emit_stkn = False
             elif not self.takes_ref and len(self.in_crd) > 0 and not is_stkn(self.in_crd[0]):
@@ -286,14 +276,14 @@ class Split_ref(Primitive):
                         self.curr_ocrd = ''
                         self.curr_icrd = 'S0'
                         self.prev_ocrd = self.cntr
-                        self.prev_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.prev_icrd = crd if self.orig_crd else crd  # % self.split_factor
                         self.emit_stkn = True
                     elif self.prev_cntr != self.cntr:
                         self.curr_ocrd = self.cntr
-                        self.curr_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.curr_icrd = crd if self.orig_crd else crd  # % self.split_factor
                     else:
                         self.curr_ocrd = ''
-                        self.curr_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.curr_icrd = crd if self.orig_crd else crd  # % self.split_factor
 
                     self.prev_stkn = False
                     self.prev_cntr = self.cntr
@@ -306,7 +296,8 @@ class Split_ref(Primitive):
                         self.curr_ocrd = 'S0'
                         self.curr_icrd = 'S1'
                         self.emit_done = True
-            elif self.takes_ref and len(self.in_ref) > 0 and len(self.in_crd) > 0 and is_stkn(self.in_crd[0]) and is_stkn(self.in_ref[0]):
+            elif self.takes_ref and len(self.in_ref) > 0 and len(self.in_crd) > 0 and\
+                    is_stkn(self.in_crd[0]) and is_stkn(self.in_ref[0]):
                 crd = self.in_crd.pop(0)
                 ref = self.in_ref.pop(0)
                 assert is_stkn(crd)
@@ -318,7 +309,8 @@ class Split_ref(Primitive):
                 self.curr_oref = ref
                 self.curr_iref = increment_stkn(ref)
 
-            elif self.takes_ref and len(self.in_ref) > 0 and len(self.in_crd) > 0 and not is_stkn(self.in_crd[0]) and not is_stkn(self.in_ref[0]):
+            elif self.takes_ref and len(self.in_ref) > 0 and len(self.in_crd) > 0 and\
+                    not is_stkn(self.in_crd[0]) and not is_stkn(self.in_ref[0]):
                 crd = self.in_crd.pop(0)
                 ref = self.in_ref.pop(0)
                 if isinstance(crd, int):
@@ -327,24 +319,21 @@ class Split_ref(Primitive):
                         self.curr_ocrd = ''
                         self.curr_icrd = 'S0'
                         self.prev_ocrd = self.cntr
-                        self.prev_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.prev_icrd = crd if self.orig_crd else crd  # % self.split_factor
                         self.emit_stkn = True
-                        
-                        
                         self.prev_iref = ref
                         self.prev_oref = self.cntr
                         self.curr_oref = ''
                         self.curr_iref = 'S0'
-
                     elif self.prev_cntr != self.cntr:
                         self.curr_ocrd = self.cntr
-                        self.curr_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.curr_icrd = crd if self.orig_crd else crd  # % self.split_factor
                         self.curr_oref = ''
                         self.curr_iref = ref
 
                     else:
                         self.curr_ocrd = ''
-                        self.curr_icrd = crd if self.orig_crd else crd # % self.split_factor
+                        self.curr_icrd = crd if self.orig_crd else crd  # % self.split_factor
                         self.curr_oref = ''
                         self.curr_iref = ref
 
@@ -363,7 +352,6 @@ class Split_ref(Primitive):
                         self.emit_done = True
                         self.curr_iref = 'S1'
                         self.curr_oref = 'S0'
- 
             else:
                 self.curr_ocrd = ''
                 self.curr_icrd = ''
@@ -385,11 +373,10 @@ class Split_ref(Primitive):
 
     def set_in_ref(self, ref, parent=None):
         if self.takes_ref:
-            if ref != ''  and ref is not None:
+            if ref != '' and ref is not None:
                 self.in_ref.append(ref)
             if self.backpressure_en:
                 parent.set_backpressure(self.fifo_avail_ref)
-
 
     def out_outer_crd(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
@@ -408,7 +395,6 @@ class Split_ref(Primitive):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             if self.takes_ref:
                 return self.curr_iref
-
 
     def compute_fifos(self):
         self.in_crd_size = max(self.in_crd_size, len(self.in_crd))

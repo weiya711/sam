@@ -16,11 +16,10 @@ cwd = os.getcwd()
 ######################################
 
 
-formatted_dir = os.getenv('SYNTHETIC_PATH',  default=os.path.join(cwd, 'synthetic'))
+formatted_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
 
 
 def create_array(shape=5, sparsity=0.995, path=""):
-   
     os.system("python ${SRC_PATH}/generate_random_mats.py --seed 0 --sparsity " +
               str(sparsity) + " --output_dir ${SYNTHETIC_PATH}/matrix/DCSC/ --name B --shape " +
               str(shape) + " " + str(shape) + " --output_format CSF --transpose")
@@ -56,18 +55,16 @@ def create_array(shape=5, sparsity=0.995, path=""):
     in_ref_C = [0, 'D']
     done = False
     time_cnt1 = 0
-    arr_dict["in_ref"] =  [] # read level 0 and put in rd scanner
-    arr_dict["in_crd"] =  [] # read level 0 and put in rd scanner 
+    arr_dict["in_ref"] = []  # read level 0 and put in rd scanner
+    arr_dict["in_crd"] = []  # read level 0 and put in rd scanner
     t1 = []
     t2 = []
     while not done and time_cnt1 < TIMEOUT:
         if len(in_ref_B) > 0:
             rdB_0.set_in_ref(in_ref_B.pop(0))
         rdB_1.set_in_ref(rdB_0.out_ref())
-        
         rdB_0.update()
         rdB_1.update()
-
         if rdB_0.out_crd() != "":
             arr_dict["in_crd"].append(rdB_0.out_crd())
         if rdB_0.out_ref() != "":
@@ -76,19 +73,17 @@ def create_array(shape=5, sparsity=0.995, path=""):
             t1.append(rdB_1.out_crd())
         if rdB_1.out_ref() != "":
             t2.append(rdB_1.out_ref())
- 
         done = rdB_1.out_done()
         time_cnt1 += 1
 
     rdC_0 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0)
     rdC_1 = CompressedCrdRdScan(crd_arr=C_crd1, seg_arr=C_seg1)
-    arr_dict["seg"] = B_seg1 # read level 0 and put in rd scanner
-    arr_dict["crd"] = B_crd1 # read level 0 and put in rd scanner 
+    arr_dict["seg"] = B_seg1  # read level 0 and put in rd scanner
+    arr_dict["crd"] = B_crd1  # read level 0 and put in rd scanner
     arr_dict["out_crd_k_outer"] = []  # reading transpose
     arr_dict["out_ref_k_outer"] = []
     arr_dict["out_crd_i"] = []
     arr_dict["out_ref_i"] = []
-
     time_cnt2 = 0
     done = False
     while not done and time_cnt2 < TIMEOUT:
@@ -119,22 +114,22 @@ def create_array(shape=5, sparsity=0.995, path=""):
     software_time = software_time / (5 * 5)
     return arr_dict, time_cnt1, time_cnt2, software_time, time_arr
 
-#FIXME: Figureout formats
+
+# FIXME: Figureout formats
 @pytest.mark.skipif(
-        os.getenv('CI', 'false') == 'true',
-        reason='CI lacks datasets',
+    os.getenv('CI', 'false') == 'true',
+    reason='CI lacks datasets',
 )
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.5])
 def test_reorder_direct_transpose(debug_sim, sparsity, reorder_not_ideal, reorder_block_len):
-    #print("BLK_LEN:", reorder_block_len)
-    #print(reorder_not_ideal, bool(reorder_not_ideal) == True)
+    # print("BLK_LEN:", reorder_block_len)
+    # print(reorder_not_ideal, bool(reorder_not_ideal) == True)
     shape = [128]
     sparsity = [0.5, 0.75, 0.8, 0.85, 0.9, 0.925, 0.95, 0.99, 0.995, 0.9975]
     plot_arr = []
     plot_arr2 = []
     software_times = []
-    
     load_times = []
     pt_tuple_times = []
     format_conv_time1 = []
@@ -145,21 +140,18 @@ def test_reorder_direct_transpose(debug_sim, sparsity, reorder_not_ideal, reorde
             arrs, read_num1, read_num2, software_time, received_time_arr = create_array(shape=s, sparsity=sp)
             seg_arr = arrs["seg"]
             crd_arr = arrs["crd"]
-
             gold_crd_i = arrs["out_crd_i"]
             gold_ref_i = arrs["out_ref_i"]
             assert (len(gold_crd_i) == len(gold_ref_i))
             crdscan = ReorderAndSplit(seg_arr=seg_arr, crd_arr=crd_arr, not_idealized=bool(reorder_not_ideal),
-                                        block_size_len=int(reorder_block_len), sf=1, debug=debug_sim, statistics=True)
-            
+                                      block_size_len=int(reorder_block_len), sf=1,
+                                      debug=debug_sim, statistics=True)
             crd_k = RepeatedTokenDropper(name="crdk")
             ref_k = RepeatedTokenDropper(name="refk")
             crd_i = RepeatedTokenDropper(name="crdi")
             ref_i = RepeatedTokenDropper(name="refi")
-            
             crd_k_out = RepeatedTokenDropper(name="crdkout")
             ref_k_out = RepeatedTokenDropper(name="refkout")
-
             in_ref = copy.deepcopy(arrs["in_ref"])
             in_crd = copy.deepcopy(arrs["in_crd"])
             done = False
@@ -179,7 +171,6 @@ def test_reorder_direct_transpose(debug_sim, sparsity, reorder_not_ideal, reorde
                 ref_i.add_token(crdscan.out_ref_i())
                 crd_k_out.add_token(crdscan.out_crd_k_outer())
                 ref_k_out.add_token(crdscan.out_ref_k_outer())
-         
 
                 crdscan.update()
                 crd_k.update()
@@ -201,17 +192,16 @@ def test_reorder_direct_transpose(debug_sim, sparsity, reorder_not_ideal, reorde
                     out_crd_k_out.append(crd_k_out.get_token())
                 if ref_k_out.get_token() != "":
                     out_ref_k_out.append(ref_k_out.get_token())
-         
                 done = crd_k.done and ref_k.done and crd_i.done and ref_i.done and crd_k_out.done and ref_k_out.done
                 time += 1
                 if time > 1000000000:
                     break
-            
+
             plot_arr.append(time)
             plot_arr2.append(read_num2)
             software_times.append(software_time)
             load_times.append(received_time_arr[0])
-            pt_tuple_times.append(received_time_arr[1]) 
+            pt_tuple_times.append(received_time_arr[1])
             format_conv_time1.append(received_time_arr[2])
             transpose_time.append(received_time_arr[3])
             format_conv_time2.append(received_time_arr[4])

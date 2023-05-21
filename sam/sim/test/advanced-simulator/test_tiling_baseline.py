@@ -138,7 +138,7 @@ def test_tiling(samBench, ssname, check_gold, report_stats, debug_sim,
     rd_scan_0 = CompressedCrdRdScan(crd_arr=fiberwrite_X0.get_arr(), seg_arr=fiberwrite_X0.get_seg_arr())
     rd_scan_1 = CompressedCrdRdScan(crd_arr=fiberwrite_X1.get_arr(), seg_arr=fiberwrite_X1.get_seg_arr())
     crdscan = ReorderBaseline(crd_arr=fiberwrite_X2.get_arr(), seg_arr=fiberwrite_X2.get_seg_arr(),
-                               sf=split_factor, debug=debug_sim)
+                              sf=split_factor, debug=debug_sim)
     # rd_scan_2 = CompressedCrdRdScan(crd_arr=fiberwrite_X2.get_arr(), seg_arr=fiberwrite_X2.get_seg_arr())
     rd_scan_3 = CompressedCrdRdScan(crd_arr=fiberwrite_X3.get_arr(), seg_arr=fiberwrite_X3.get_seg_arr())
     # out_crds = [fiberwrite_X0.get_arr(), fiberwrite_X1_1.get_arr()]

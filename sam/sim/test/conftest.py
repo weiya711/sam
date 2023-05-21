@@ -39,8 +39,6 @@ def pytest_addoption(parser):
                      help="Whether to test with random sparsity matrices")
     parser.addoption("--alpha-reorder", action="store", default=1.2,
                      help="get the alpha for dynamic switch to sf")
-
-
     parser.addoption("--cast", action="store_true", default=False,
                      help="Flag that runs all simulations using integer input "
                           "and output data (used for hardware simulation comparison)")
@@ -98,6 +96,7 @@ def nbuffer(request):
 def debug_sim(request):
     return request.config.getoption("--debug-sim")
 
+
 @pytest.fixture
 def alpha_reorder(request):
     return request.config.getoption("--alpha-reorder")
@@ -111,8 +110,6 @@ def reorder_block_len(request):
 @pytest.fixture
 def reorder_not_ideal(request):
     return request.config.getoption("--reorder-not-ideal")
-
-
 
 
 @pytest.fixture
