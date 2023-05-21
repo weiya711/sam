@@ -453,16 +453,24 @@ def size_comp_write(a):
     return ans
 
 
-def breakup_node_info(node_name):
+def breakup_node_info(node_info_object):
+    node_name = node_info_object["comment"]
+    d2 = {}
+    for k in node_info_object.keys():
+        if k != "comment":
+            d2[k] = node_info_object[k]
     d = dict(x.split("=") for x in node_name[1: -1].split(","))
-    return d
+    # print(d)
+    # print(d2)
+    # print("________________")
+    return d2
 
 
 def remove_broadcast_nodes(G):
     g = G.copy()
     for a in g:
         g0 = g.copy()
-        node_i = breakup_node_info(g.nodes[a]["comment"])
+        node_i = breakup_node_info(g.nodes[a])
         if node_i["type"] == "broadcast":
             for preds in g0.predecessors(a):
                 for succs in g0.neighbors(a):
@@ -566,7 +574,9 @@ for apath in file_paths:
     nodes_updating_list = []
 
     for u in list(nx.topological_sort(networkx_graph)):
-        node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
+        node_info = breakup_node_info(networkx_graph.nodes[u])
+        # print("node_info: ", node_info)
+        # print("nopde info otherwise: ", networkx_graph.nodes[u])
         if node_info["type"] == "fiberlookup":
             if node_info["tensor"] not in tensor_information:
                 tensor_information[node_info["tensor"]] = 0
@@ -585,7 +595,7 @@ for apath in file_paths:
     f.write("\n")
 
     for u in list(nx.topological_sort(networkx_graph)):
-        node_info = breakup_node_info(networkx_graph.nodes[u]["comment"])
+        node_info = breakup_node_info(networkx_graph.nodes[u])
         d[u] = node_info
         if (node_info["type"] == "fiberlookup" or node_info["type"] == "repeat") and node_info["root"] == "true":
             root_nodes.append(node_info["tensor"])
