@@ -35,7 +35,6 @@ class CrdJoiner2(Joiner2, ABC):
         if self.backpressure_en:
             copy_backpressure = self.ready_backpressure
             self.ready_backpressure = True
-            # print(copy_backpressure, "intersect***********")
             return copy_backpressure
         return True
 
@@ -347,6 +346,429 @@ class Intersect2(CrdJoiner2):
         return stat_dict
 
 
+class Merge_block(CrdJoiner2):
+    def __init__(self, depth=4, **kwargs):
+        super().__init__(**kwargs)
+        self.curr_crd1 = None
+        self.curr_crd2 = None
+        self.curr_ref1 = None
+        self.curr_ref2 = None
+
+        self.in_crd_i1 = []
+        self.in_crd_i2 = []
+
+        self.curr_crd_i1 = ""
+        self.curr_crd_i2 = ""
+        self.ref_min = ""
+
+        if self.get_stats:
+            self.size_in_ref1 = 0
+            self.size_in_ref2 = 0
+            self.size_in_crd1 = 0
+            self.size_in_crd2 = 0
+            self.total_count = 0
+            self.count = 0
+            self.one_only_count = 0
+            self.two_only_count = 0
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.data_valid = True
+            self.depth = depth
+            self.fifo_avail_in1 = True
+            self.fifo_avail_in2 = True
+
+    def update_old_impml(self):
+        self.update_done()
+        self.update_ready()
+        if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
+            self.block_start = False
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+
+            if self.get_stats:
+                self.total_count += 1
+
+            if self.curr_crd1 == 'D' and self.curr_crd2 == 'D':
+                assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
+                self.done = True
+                self.ocrd = 'D'
+                self.oref1 = 'D'
+                self.oref2 = 'D'
+                self.ref_min = 'D'
+                self.ocrd_i = 'D'
+            elif self.curr_crd1 is None or self.curr_crd2 is None:
+                self.ocrd = ""
+                self.oref1 = ""
+                self.oref2 = ""
+                self.ref_min = ""
+                self.ocrd_i = ""
+            elif self.curr_crd2 == 'D':  # and len(self.in_crd1) > 0: # and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd1
+                self.oref1 = "N"
+                self.oref2 = self.curr_ref1
+                self.ref_min = self.curr_ref1
+                self.ocrd_i = self.curr_crd_i1
+                self.curr_crd1 = None  # "_"
+            elif self.curr_crd1 == 'D':  # and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd2
+                self.oref2 = self.curr_ref2
+                self.oref1 = "N"
+                self.ref_min = self.curr_ref2
+                self.ocrd_i = self.curr_crd_i2
+
+                self.curr_crd2 = None  # "_"
+            elif self.curr_crd2 == self.curr_crd1 and self.curr_crd1 != "_":
+                self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
+                self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
+                self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
+                self.ref_min = '' if self.curr_ref1 is None else self.curr_ref1
+                self.ocrd_i = '' if self.curr_crd_i1 is None else self.curr_crd_i1
+                self.curr_crd1 = None  # "_"
+
+            elif is_stkn(self.curr_crd1):  # and len(self.in_crd2) > 0: # and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd2
+                self.oref1 = 'N'
+                self.oref2 = self.curr_ref2
+                self.ref_min = self.curr_ref2
+                self.ocrd_i = self.curr_crd_i2
+                # if (is_stkn(self.curr_crd2) and is_stkn(self.curr_crd1)):
+                self.curr_crd2 = None
+
+            elif is_stkn(self.curr_crd2):  # and len(self.in_crd1) > 0: # and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd1
+                self.oref1 = self.curr_ref1
+                self.oref2 = 'N'
+                self.ref_min = self.curr_ref1
+                self.ocrd_i = self.curr_crd_i1
+                # if (is_stkn(self.curr_crd1) and is_stkn(self.curr_crd1)):
+                self.curr_crd1 = None
+                # self.curr_crd2 = "_"
+
+            elif is_0tkn(self.curr_crd2):  # and len(self.in_crd1) > 0: # and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd1
+                self.oref1 = self.curr_ref1
+                self.oref2 = 'N'
+                self.ref_min = self.curr_ref1
+                self.ocrd_i = self.curr_crd_i1
+                self.curr_crd1 = None
+
+            elif is_0tkn(self.curr_crd1):  # and len(self.in_crd2) > 0: # and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd2
+                self.oref1 = 'N'
+                self.oref2 = self.curr_ref2
+                self.ref_min = self.curr_ref2
+                self.ocrd_i = self.curr_crd_i2
+
+                self.curr_crd2 = None
+                # self.curr_crd2 = self.in_crd2.pop(0)
+                # self.curr_ref2 = self.in_ref2.pop(0)
+                # self.curr_crd_i2 = self.in_crd_i2.pop(0)
+                # if self.get_stats:
+                #     self.two_only_count += 1
+                # self.done = False
+            elif isinstance(self.curr_crd1, int) and isinstance(self.curr_crd2, int) and\
+                    self.curr_crd1 < self.curr_crd2:  # and len(self.in_crd1) > 0: # and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd1
+                self.oref1 = self.curr_ref1
+                self.oref2 = 'N'
+                self.ref_min = self.curr_ref1
+                self.ocrd_i = self.curr_crd_i1
+                self.curr_crd1 = None
+                self.done = False
+            elif isinstance(self.curr_crd1, int) and isinstance(self.curr_crd2, int) and\
+                    self.curr_crd1 > self.curr_crd2:  # and len(self.in_crd2) > 0: #and len(self.in_crd2) > 0:
+                self.ocrd = self.curr_crd2
+                self.oref1 = 'N'
+                self.oref2 = self.curr_ref2
+                self.ref_min = self.curr_ref2
+                self.ocrd_i = self.curr_crd_i2
+                self.curr_crd2 = None
+                self.done = False
+            else:
+                raise Exception('Intersect2: should not enter this case')
+                self.done = False
+
+            if len(self.in_crd1) > 0 and len(self.in_ref1) > 0 and len(self.in_crd_i1) > 0 and self.curr_crd1 is None:
+                self.curr_crd1 = self.in_crd1.pop(0)
+                self.curr_ref1 = self.in_ref1.pop(0)
+                self.curr_crd_i1 = self.in_crd_i1.pop(0)
+
+            if len(self.in_crd2) > 0 and len(self.in_ref2) > 0 and len(self.in_crd_i2) > 0 and self.curr_crd2 is None:
+                self.curr_crd2 = self.in_crd2.pop(0)
+                self.curr_ref2 = self.in_ref2.pop(0)
+                self.curr_crd_i2 = self.in_crd_i2.pop(0)
+
+        if self.debug:
+            print("DEBUG: UNION_name:", self.name, "\n\t OutCrd:", self.ocrd, "\t Out Ref1:", self.ref_min,
+                  "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
+                  "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
+                  "\n \t In array", self.in_crd1, self.in_crd2)
+
+    def update(self):
+        self.update_done()
+        self.update_ready()
+        if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
+            self.block_start = False
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+
+            if self.get_stats:
+                self.total_count += 1
+
+            if len(self.in_crd1) > 0 or len(self.in_crd2) > 0:
+                # print(self.name, self.in_crd1, self.in_crd2, self.curr_crd1, self.curr_crd2)
+                if self.curr_crd1 == 'D' and self.curr_crd2 == 'D':
+                    assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
+                    self.done = True
+                    self.ocrd = 'D'
+                    self.oref1 = 'D'
+                    self.oref2 = 'D'
+                    self.ref_min = 'D'
+                    self.ocrd_i = 'D'
+                elif self.curr_crd2 == 'D' and len(self.in_crd1) > 0:  # and len(self.in_crd2) > 0:
+                    self.ocrd = self.curr_crd1
+                    self.oref1 = "N"
+                    self.oref2 = self.curr_ref1
+                    self.ref_min = self.curr_ref1
+                    self.ocrd_i = self.curr_crd_i1
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    self.done = False
+                elif self.curr_crd1 == 'D' and len(self.in_crd2) > 0:
+                    self.ocrd = self.curr_crd2
+                    self.oref2 = self.curr_ref2
+                    self.oref1 = "N"
+                    self.ref_min = self.curr_ref2
+                    self.ocrd_i = self.curr_crd_i2
+
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                    self.done = False
+                elif self.curr_crd2 == self.curr_crd1 and (is_stkn(self.curr_crd2) or
+                                                           self.curr_crd2 is None) and\
+                        len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
+                    self.ocrd = '' if self.curr_crd1 is None else self.curr_crd1
+                    self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
+                    self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
+                    self.ref_min = '' if self.curr_ref1 is None else self.curr_ref1
+                    self.ocrd_i = '' if self.curr_crd_i1 is None else self.curr_crd_i1
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+
+                    self.curr_crd_i1 = self.in_crd_i1.pop(0)
+                    self.curr_crd_i2 = self.in_crd_i2.pop(0)
+                    self.done = False
+                # elif self.curr_crd2 == self.curr_crd1 and len(self.in_crd1) > 0 and len(self.in_crd2) > 0:
+                #     self.ocrd = '' if self.curr_crd2 is None else self.curr_crd1
+                #     self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
+                #     self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
+                #     self.ref_min = '' if self.curr_ref1 is None else self.curr_ref1
+                #     self.ocrd_i = '' if self.curr_crd_i1 is None else self.curr_crd_i1
+                #     self.curr_crd1 = self.in_crd1.pop(0)
+                #     self.curr_ref1 = self.in_ref1.pop(0)
+                #     self.curr_crd_i1 = self.in_crd_i1.pop(0)
+                #     self.done = False
+                elif self.curr_crd2 == self.curr_crd1 and len(self.in_crd1) > 0:
+                    self.ocrd = '' if self.curr_crd1 is None else self.curr_crd1
+                    self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
+                    self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
+                    self.ref_min = '' if self.curr_ref1 is None else self.curr_ref1
+                    self.ocrd_i = '' if self.curr_crd_i1 is None else self.curr_crd_i1
+
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    self.curr_crd_i1 = self.in_crd_i1.pop(0)
+                    self.done = False
+                # elif self.curr_crd2 == self.curr_crd1 and len(self.in_crd2) > 0: # and
+                #     self.ocrd = '' if self.curr_crd2 is None else self.curr_crd2
+                #     self.oref1 = '' if self.curr_ref1 is None else self.curr_ref1
+                #     self.oref2 = '' if self.curr_ref2 is None else self.curr_ref2
+                #     self.ref_min = '' if self.curr_ref2 is None else self.curr_ref2
+                #     self.ocrd_i = '' if self.curr_crd_i2 is None else self.curr_crd_i2
+                #     self.curr_crd2 = self.in_crd2.pop(0)
+                #     self.curr_ref2 = self.in_ref2.pop(0)
+                #     self.curr_crd_i2 = self.in_crd_i2.pop(0)
+                #     self.done = False
+
+                elif is_stkn(self.curr_crd1) and len(self.in_crd2) > 0:  # and len(self.in_crd2) > 0:
+                    # print("WHY NOT", is_stkn(self.curr_crd1))
+                    self.ocrd = self.curr_crd2
+                    self.oref1 = 'N'
+                    self.oref2 = self.curr_ref2
+                    self.ref_min = self.curr_ref2
+                    self.ocrd_i = self.curr_crd_i2
+
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                    self.curr_crd_i2 = self.in_crd_i2.pop(0)
+                    if self.get_stats:
+                        self.two_only_count += 1
+                    self.done = False
+                elif is_stkn(self.curr_crd2) and len(self.in_crd1) > 0:  # and len(self.in_crd2) > 0:
+                    self.ocrd = self.curr_crd1
+                    self.oref1 = self.curr_ref1
+                    self.oref2 = 'N'
+                    self.ref_min = self.curr_ref1
+                    self.ocrd_i = self.curr_crd_i1
+
+                    self.curr_crd_i1 = self.in_crd_i1.pop(0)
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+
+                    if self.get_stats:
+                        self.one_only_count += 1
+                    self.done = False
+                elif is_0tkn(self.curr_crd2) and len(self.in_crd1) > 0:  # and len(self.in_crd2) > 0:
+                    self.ocrd = self.curr_crd1
+                    self.oref1 = self.curr_ref1
+                    self.oref2 = 'N'
+                    self.ref_min = self.curr_ref1
+                    self.ocrd_i = self.curr_crd_i1
+
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    self.curr_crd_i1 = self.in_crd_i1.pop(0)
+
+                    if self.get_stats:
+                        self.one_only_count += 1
+                    self.done = False
+                elif is_0tkn(self.curr_crd1) and len(self.in_crd2) > 0:  # and len(self.in_crd2) > 0:
+                    self.ocrd = self.curr_crd2
+                    self.oref1 = 'N'
+                    self.oref2 = self.curr_ref2
+                    self.ref_min = self.curr_ref2
+                    self.ocrd_i = self.curr_crd_i2
+
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                    self.curr_crd_i2 = self.in_crd_i2.pop(0)
+                    if self.get_stats:
+                        self.two_only_count += 1
+                    self.done = False
+
+                elif isinstance(self.curr_crd1, int) and isinstance(self.curr_crd2, int) and\
+                        self.curr_crd1 < self.curr_crd2 and len(self.in_crd1) > 0:  # and len(self.in_crd2) > 0:
+                    self.ocrd = self.curr_crd1
+                    self.oref1 = self.curr_ref1
+                    self.oref2 = 'N'
+                    self.ref_min = self.curr_ref1
+                    self.ocrd_i = self.curr_crd_i1
+
+                    self.curr_crd1 = self.in_crd1.pop(0)
+                    self.curr_ref1 = self.in_ref1.pop(0)
+                    self.curr_crd_i2 = self.in_crd_i1.pop(0)
+                    if self.get_stats:
+                        self.one_only_count += 1
+                    self.done = False
+                elif isinstance(self.curr_crd1, int) and isinstance(self.curr_crd2, int) and\
+                        self.curr_crd1 > self.curr_crd2 and len(self.in_crd2) > 0:  # and len(self.in_crd2) > 0:
+                    self.ocrd = self.curr_crd2
+                    self.oref1 = 'N'
+                    self.oref2 = self.curr_ref2
+                    self.ref_min = self.curr_ref2
+                    self.ocrd_i = self.curr_crd_i2
+
+                    self.curr_crd2 = self.in_crd2.pop(0)
+                    self.curr_ref2 = self.in_ref2.pop(0)
+                    self.curr_crd_i2 = self.in_crd_i2.pop(0)
+                    if self.get_stats:
+                        self.two_only_count += 1
+                    self.done = False
+                else:
+                    # raise Exception('Intersect2: should not enter this case')
+                    self.ocrd = ""
+                    self.oref1 = ""
+                    self.oref2 = ""
+                    self.ocrd_i = ""
+                    self.ref_min = ""
+                    self.done = False
+            else:
+                # Do Nothing if no inputs are detected
+                if self.curr_crd1 == 'D' and self.curr_crd2 == 'D':
+                    assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
+                    self.done = True
+                    self.ocrd = 'D'
+                    self.oref1 = 'D'
+                    self.oref2 = 'D'
+                    self.curr_crd1 = ''
+                    self.curr_crd2 = ''
+                    self.curr_ref1 = ''
+                    self.curr_ref2 = ''
+
+                    self.ref_min = 'D'
+                    self.ocrd_i = 'D'
+                    self.curr_crd_i2 = ''
+                    self.curr_crd_i1 = ''
+                # elif self.curr_crd1 == 'D':
+                #     self.ocrd = self.curr_crd2
+                #     self.oref1 = 'N'
+                #     self.oref2 = self.curr_crd2
+                #     self.ref_min = self.curr_crd2
+                # elif self.curr_crd2 == 'D':
+                else:
+                    # Do Nothing if no inputs are detected
+                    if self.curr_crd1 == 'D' or self.curr_crd2 == 'D':
+                        assert self.curr_crd1 == self.curr_ref1 == self.curr_crd2 == self.curr_ref2
+                        self.done = True
+                        self.ocrd = 'D'
+                        self.oref1 = 'D'
+                        self.oref2 = 'D'
+                        self.curr_crd1 = ''
+                        self.curr_crd2 = ''
+                        self.curr_ref1 = ''
+                        self.curr_ref2 = ''
+                        self.ref_min = 'D'
+                        self.ocrd_i = 'D'
+                    else:
+                        self.ocrd = ''
+                        self.oref1 = ''
+                        self.oref2 = ''
+                        self.ref_min = ''
+                        self.ocrd_i = ''
+                if self.get_stats:
+                    self.compute_fifos()
+        if self.debug:
+            print("DEBUG: UNION_name:", self.name, "\n\t OutCrd:", self.ocrd,
+                  "\t Out Ref1:", self.ref_min, "icrd", self.ocrd_i,
+                  "\n Crd1:", self.curr_crd1, "\t Ref1:", self.curr_ref1,
+                  "\t Crd2:", self.curr_crd2, "\t Ref2", self.curr_ref2,
+                  "\n \t In array", self.in_crd1, self.in_crd2)
+
+    def set_in1(self, in_ref1, in_crd1, in_crd_i, parent=None):
+        if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
+            self.in_ref1.append(in_ref1)
+            self.in_crd1.append(in_crd1)
+            self.in_crd_i1.append(in_crd_i)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in1)
+
+    def set_in2(self, in_ref2, in_crd2, in_crd_i, parent=None):
+        if in_ref2 != '' and in_crd2 != '' and in_ref2 is not None and in_crd2 is not None:
+            self.in_ref2.append(in_ref2)
+            self.in_crd2.append(in_crd2)
+            self.in_crd_i2.append(in_crd_i)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail_in2)
+
+    def compute_fifos(self):
+        if self.get_stats:
+            self.size_in_ref1 = max(self.size_in_ref1, len(self.in_ref1))
+
+    def out_ref_min(self):
+        return self.ref_min
+
+    def out_ocrd_i(self):
+        return self.ocrd_i
+
+
 class Union2(CrdJoiner2):
     def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
@@ -559,12 +981,10 @@ class Union2(CrdJoiner2):
 class IntersectBV2(BVJoiner2):
     def __init__(self, emit_zeros=False, depth=4, **kwargs):
         super().__init__(**kwargs)
-
         self.in_ref1 = []
         self.in_ref2 = []
         self.in_bv1 = []
         self.in_bv2 = []
-
         if self.get_stats:
             self.size_in_ref1 = 0
             self.size_in_ref2 = 0

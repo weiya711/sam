@@ -8,6 +8,7 @@ class Array(Primitive):
         self.fill = fill
         if init_arr is None:
             self.size = size
+            print("SIZE ::: ", self.size)
             self.arr = [self.fill] * self.size
         else:
             assert (isinstance(init_arr, list))
@@ -194,8 +195,7 @@ class Array(Primitive):
             return
         elif addr >= self.size:
             self.resize(addr * 2)
-            print(addr, self.size)
-            print("0000000000000")
+            print(self.name, addr, self.size)
             self.arr[addr] = val
             # raise Exception("Address (" + str(addr) + ") is out of array size (" +
             #                 str(self.size) + ") bounds, please resize")

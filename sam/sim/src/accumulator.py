@@ -509,7 +509,6 @@ class SparseAccumulator1(Primitive):
                 self.crdpt_spacc.set_val(self.in_val.pop(0))
 
             self.crdpt_spacc.update()
-            print(">>>>>>>>>>>>SPACC:", self.crdpt_spacc.out_outer_crdpt(), self.crdpt_spacc.out_inner_crdpt())
             self.crdpt_converter.set_outer_crdpt(self.crdpt_spacc.out_outer_crdpt())
             self.crdpt_converter.set_inner_crdpt(self.crdpt_spacc.out_inner_crdpt())
 

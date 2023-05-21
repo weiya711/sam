@@ -14,7 +14,7 @@ class WrScan(Primitive, ABC):
         self.fill_init = fill
 
         self.input = []
-        self.arr = Array(size=size, fill=self.fill, debug=self.debug)
+        self.arr = Array(size=size, fill=self.fill, debug=self.debug, name=self.name)
         self.blk_start_ = False
         self.backpressure_en = False
         if self.backpressure_en:
@@ -91,7 +91,6 @@ class ValsWrScan(WrScan):
             return
             if self.debug:
                 print("RESET FOR VALS", self.input)
-            if self.debug:
                 print("post reset: ", self.arr.out_done())
 
         if (len(self.input) > 0):

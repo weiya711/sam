@@ -671,6 +671,14 @@ class memory_block():
                 self.valid = False
             if self.done_processed and not self.done_received:
                 self.done_processed = False
+        # print(self.name, "   =========      ", self.nbuffer)
+        # print("MEMORY BLOCK: ", self.name, self.curr_size, self.size, self.old_tile, " done in ", self.done_in,
+        #       " valid: ", self.valid, " ready: ", self.ready, " loading: ", self.loading,
+        #       " done: ", self.done, " downstream token: ", self.downstream_token,
+        #       " Done received and processed ", self.done_received, " ", self.done_processed,
+        #       " : current tile: ", self.curr_tile, " ", self.tile_ptrs, " ", self.loading_tile, " ",
+        #       self.tile_ptrs_fifo, "----------")
+
         if self.debug:
             if self.nbuffer:
                 print(self.name, self.curr_size, self.size, self.old_tile, " done in ", self.done_in,

@@ -7,8 +7,8 @@
 set -u
 
 BENCHMARKS=(
-#  mat_vecmul_FINAL
-  matmul_FINAL
+mat_vecmul_FINAL
+#  matmul_FINAL
 #  mat_elemadd_FINAL
 #  mat_elemadd3_FINAL
 #  mat_residual_FINAL
@@ -36,6 +36,10 @@ if [ $2 -eq 1 ]; then
 	lanka=ON
 	neva=OFF
 elif [ $2 -eq 2 ]; then
+	export SUITESPARSE_PATH=/nobackup/rsharma3/Sparsity/simulator/sweep_synthetics_25000/old_backpressure/sam/data/suitesparse
+	export SUITESPARSE_FORMATTED_PATH=/nobackup/rsharma3/Sparsity/simulator/sweep_synthetics_25000/old_backpressure/sam/data/suitesparse-formatted
+	mkdir -p $SUITESPARSE_FORMATTED_PATH
+
 	lanka=OFF
 	neva=ON
 else
@@ -59,11 +63,9 @@ else
     fi
 fi
 unset __conda_setup
-conda activate aha
 
 mkdir -p "$benchout"
 mkdir -p $format_outdir
-mkdir -p $TACO_TENSOR_PATH/other-formatted-taco
 
 make -j8 taco/build NEVA=$neva LANKA=$lanka GEN=ON
 

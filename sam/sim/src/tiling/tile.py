@@ -301,18 +301,17 @@ if __name__ == "__main__":
     split_map = {"i": 16, "j": 16, "k": 16}
 
     if args.cotile is None:
-        print("ORIG:", tensor)
-        print("SPLIT MAP", split_map)
+        # print("ORIG:", tensor)
+        # print("SPLIT MAP", split_map)
         tiles, tile_sizes = tile_coo(tensor, {0: "i", 1: "j"}, split_map)
-
-        print("TILES:")
-        print_dict(tiles)
+        # print("TILES:")
+        # print_dict(tiles)
     else:
 
         output_mtx_name = os.path.join(args.output_dir_path, args.cotile, "mtx")
         output_mtx_path = Path(output_mtx_name)
         output_mtx_path.mkdir(parents=True, exist_ok=True)
-        print(os.path.exists(output_mtx_path))
+        # print(os.path.exists(output_mtx_path))
 
         if args.multilevel:
             assert args.cotile is not None
