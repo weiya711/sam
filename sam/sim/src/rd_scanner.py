@@ -264,11 +264,8 @@ class CompressedCrdRdScan(CrdRdScan):
         # self.begin = True
         self.seg_arr = seg_arr
         self.crd_arr = crd_arr
-        #print(fifo)
         for a_ in fifo:
-            #print(self.in_ref)
             self.in_ref.append(a_)
-
         # if fifo is not None:
         #     self.set_fifo(fifo)
         # assert False
@@ -325,7 +322,7 @@ class CompressedCrdRdScan(CrdRdScan):
             next_in = self.in_ref[0]
             if is_stkn(next_in):
                 self.in_ref.pop(0)
-                if len(self.in_crd) > 0: #.pop(0))
+                if len(self.in_crd) > 0:  # .pop(0))
                     self.in_crd.pop(0)
                 stkn = increment_stkn(next_in)
             else:
@@ -434,14 +431,13 @@ class CompressedCrdRdScan(CrdRdScan):
             elif len(self.in_ref) > 0 and (self.end_fiber or self.begin):
                 self.begin = False
                 self.end_fiber = False
-                #print("CHECK THIS VAL ONCE", self.in_ref, self.in_crd)
+                # print("CHECK THIS VAL ONCE", self.in_ref, self.in_crd)
                 curr_in_ref = self.in_ref.pop(0)
                 if len(self.in_crd) > 0:
                     self.curr_up_crd = self.in_crd.pop(0)
-
                 # Input reference is out of bounds
                 if isinstance(curr_in_ref, int) and curr_in_ref + 1 > self.meta_slen:
-                    #print(curr_in_ref, self.meta_slen, self.in_ref)
+                    # print(curr_in_ref, self.meta_slen, self.in_ref)
                     raise Exception('Not enough elements in seg array')
 
                 # Input reference is a done token, so forward that token (and set done if done token)

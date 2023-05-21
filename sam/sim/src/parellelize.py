@@ -33,17 +33,15 @@ class Parellelize(Primitive):
                 self.fifo_avail = False
             else:
                 self.fifo_avail = True
-    
-    def add_tokens(self, token):
-        if token != None and token != "":
-            self.in_token.append(token)
 
+    def add_tokens(self, token):
+        if token is not None and token != "":
+            self.in_token.append(token)
 
     def return_tokens(self):
         if self.output_ready:
             return self.output_tokens
-        return [""]*self.parellelize_factor
-
+        return [""] * self.parellelize_factor
 
     def update(self):
         self.update_done()
@@ -55,11 +53,9 @@ class Parellelize(Primitive):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
-            
             if self.done:
                 self.output_ready = False
                 return
-            
             if len(self.output_tokens) == self.parellelize_factor:
                 self.output_tokens = []
                 if self.done_received:
@@ -67,7 +63,7 @@ class Parellelize(Primitive):
 
             if len(self.in_token) > 0:
                 token = self.in_token.pop(0)
-                #if not is_stkn(token):
+                # if not is_stkn(token):
                 self.output_tokens.append(token)
                 if token == "D":
                     self.done_received = True
@@ -82,4 +78,6 @@ class Parellelize(Primitive):
             else:
                 self.output_ready = False
         if self.debug:
-            print("DEBUG: Parellize Block input_stream", self.in_token, " current token ", token, "output_tokens", self.output_tokens, "length", self.parellelize_factor)
+            print("DEBUG: Parellize Block input_stream", self.in_token,
+                  " current token ", token, "output_tokens", self.output_tokens,
+                  "length", self.parellelize_factor)
