@@ -94,16 +94,22 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     intersectj_16 = Intersect2(debug=debug_sim, statistics=report_stats)
     fiberwrite_X2_2 = CompressWrScan(seg_size=B_shape[0] * B_shape[2] + 1, size=B_shape[0] * B_shape[2] * B_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
     fiberlookup_Cm_15 = CompressedCrdRdScan(crd_arr=C_crd2, seg_arr=C_seg2, debug=debug_sim, statistics=report_stats)
-    fiberlookup_Cl_11 = CompressedCrdRdScan(crd_arr=C_crd3, seg_arr=C_seg3, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Cl_11 = CompressedCrdRdScan(crd_arr=C_crd3, seg_arr=C_seg3, block_size=4, debug=debug_sim, statistics=report_stats)
     fiberwrite_X3_1 = CompressWrScan(seg_size=B_shape[0] * B_shape[2] * B_shape[1] + 1, size=B_shape[0] * B_shape[2] * B_shape[1] * C_shape[3], fill=fill, debug=debug_sim, statistics=report_stats)
     repsiggen_m_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
     repeat_Bm_12 = Repeat(debug=debug_sim, statistics=report_stats)
-    fiberlookup_Bl_10 = CompressedCrdRdScan(crd_arr=B_crd3, seg_arr=B_seg3, debug=debug_sim, statistics=report_stats)
+    fiberlookup_Bl_10 = CompressedCrdRdScan(crd_arr=B_crd3, seg_arr=B_seg3, block_size=4, debug=debug_sim, statistics=report_stats)
     intersectl_9 = Intersect2(debug=debug_sim, statistics=report_stats)
     arrayvals_B_7 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
     arrayvals_C_8 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats)
     mul_6 = Multiply2(debug=debug_sim, statistics=report_stats)
     reduce_5 = Reduce(debug=debug_sim, statistics=report_stats)
+    repsiggen_l_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_Bl_12 = Repeat(debug=debug_sim, statistics=report_stats)
+    exp_1 = Exp(in2=0, debug=debug_sim, statistics=report_stats)
+    reduce_6 = Reduce(debug=debug_sim, statistics=report_stats)
+    drop_9 = CrdDrop(debug=debug_sim)
+    div_6 = Divide2(debug=debug_sim, statistics=report_stats)
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[2] * B_shape[1] * C_shape[3], fill=fill, debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
@@ -139,6 +145,7 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
         intersectl_9.set_in2(fiberlookup_Cl_11.out_ref(), fiberlookup_Cl_11.out_crd())
         arrayvals_B_7.set_load(intersectl_9.out_ref1())
         arrayvals_C_8.set_load(intersectl_9.out_ref2())
+        
         mul_6.set_in1(arrayvals_B_7.out_val())
         mul_6.set_in2(arrayvals_C_8.out_val())
         reduce_5.set_in_val(mul_6.out_val())
@@ -182,6 +189,8 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     out_crds = [fiberwrite_X0_4.get_arr(), fiberwrite_X1_3.get_arr(), fiberwrite_X2_2.get_arr(), fiberwrite_X3_1.get_arr()]
     out_segs = [fiberwrite_X0_4.get_seg_arr(), fiberwrite_X1_3.get_seg_arr(), fiberwrite_X2_2.get_seg_arr(), fiberwrite_X3_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
+
+    print(out_vals)
 
     def bench():
         time.sleep(0.01)

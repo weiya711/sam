@@ -1,7 +1,7 @@
 import pytest
 import time
 import scipy.sparse
-from sam.sim.src.compression import Compression
+from sam.sim.src.compression import ValDropper
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
@@ -65,7 +65,7 @@ def test_tensor3_relu(samBench, frosttname, check_gold, report_stats, debug_sim,
                                      debug=debug_sim, statistics=report_stats)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats)
     max_1 = Max(in2=0, debug=debug_sim, statistics=report_stats)
-    drop_1 = Compression(debug=debug_sim, statistics=report_stats)
+    drop_1 = ValDropper(debug=debug_sim, statistics=report_stats)
     drop_2 = CrdDrop(debug=debug_sim, statistics=report_stats)
     drop_3 = CrdDrop(debug=debug_sim, statistics=report_stats)
     fiberwrite_Xvals_0 = ValsWrScan(size=5804660 * 2, fill=fill, debug=debug_sim, statistics=report_stats)

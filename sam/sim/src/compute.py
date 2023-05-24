@@ -1,4 +1,5 @@
 from .base import *
+import numpy as np
 
 
 class Compute2(Primitive, ABC):
@@ -78,7 +79,7 @@ class Compute2(Primitive, ABC):
 
 
 class Add2(Compute2):
-    def __init__(self, neg1=False, neg2=False, **kwargs):
+    def __init__(self, neg1=False, neg2=False, block_size=1, **kwargs):
         super().__init__(**kwargs)
         self.fill_value = 0
         self.neg1 = neg1
@@ -89,6 +90,11 @@ class Add2(Compute2):
 
         self.curr_in1 = ''
         self.curr_in2 = ''
+        self.block_size = block_size
+
+    # def add(self, a, b):
+    #     if self.block_size == 1:
+    #         return self.neg1 *
 
     def update(self):
         self.update_done()
@@ -141,7 +147,7 @@ class Add2(Compute2):
 
 
 class Multiply2(Compute2):
-    def __init__(self, **kwargs):
+    def __init__(self, block_size=1, **kwargs):
         super().__init__(**kwargs)
         self.fill_value = 0
 
@@ -150,6 +156,13 @@ class Multiply2(Compute2):
 
         self.curr_in1 = ''
         self.curr_in2 = ''
+        self.block_size = block_size
+
+    def mult(self, a, b):
+        if self.block_size == 1:
+            return a * b
+        else:
+            return np.multiply(a, b)
 
     def update(self):
         self.update_done()
@@ -161,7 +174,7 @@ class Multiply2(Compute2):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
-            if (len(self.in1) > 0 or len(self.in2) > 0):
+            if len(self.in1) > 0 or len(self.in2) > 0:
                 self.block_start = False
 
             if len(self.in1) > 0 and len(self.in2) > 0:
@@ -200,7 +213,9 @@ class Multiply2(Compute2):
                     # Both inputs are values
                     if self.debug:
                         print(self.curr_in1, self.curr_in2)
-                    self.curr_out = self.curr_in1 * self.curr_in2
+                    print(self.curr_in1, self.curr_in2)
+
+                    self.curr_out = self.mult(self.curr_in1, self.curr_in2)
                     if self.get_stats:
                         self.cycles_operated += 1
                     self.get1 = True

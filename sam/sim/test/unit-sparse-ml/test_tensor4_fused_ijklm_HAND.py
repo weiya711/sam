@@ -27,7 +27,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_fused_ijklm_HAND(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
-    Q_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused")
+    Q_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
     Q_shape_filename = os.path.join(Q_dirname, "tensor_Q_mode_shape")
     Q_shape = read_inputs(Q_shape_filename)
 
@@ -54,7 +54,7 @@ def test_tensor4_fused_ijklm_HAND(samBench, frosttname, cast, check_gold, debug_
     Q_vals_filename = os.path.join(Q_dirname, "tensor_Q_mode_vals")
     Q_vals = read_inputs(Q_vals_filename, float)
 
-    K_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused")
+    K_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
     K_shape_filename = os.path.join(K_dirname, "tensor_K_mode_shape")
     K_shape = read_inputs(K_shape_filename)
 
@@ -81,7 +81,7 @@ def test_tensor4_fused_ijklm_HAND(samBench, frosttname, cast, check_gold, debug_
     K_vals_filename = os.path.join(K_dirname, "tensor_K_mode_vals")
     K_vals = read_inputs(K_vals_filename, float)
 
-    V_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused")
+    V_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
     V_shape_filename = os.path.join(V_dirname, "tensor_V_mode_shape")
     V_shape = read_inputs(V_shape_filename)
 
@@ -107,6 +107,22 @@ def test_tensor4_fused_ijklm_HAND(samBench, frosttname, cast, check_gold, debug_
 
     V_vals_filename = os.path.join(V_dirname, "tensor_V_mode_vals")
     V_vals = read_inputs(V_vals_filename, float)
+
+    print(Q_seg0)
+    print(Q_seg1)
+    print(Q_seg2)
+    print(Q_seg3)
+
+    print(K_seg0)
+    print(K_seg1)
+    print(K_seg2)
+    print(K_seg3)
+
+    print(V_seg0)
+    print(V_seg1)
+    print(V_seg2)
+    print(V_seg3)
+    # pytest.set_trace()
 
     fiberlookup_Vi_35 = CompressedCrdRdScan(crd_arr=V_crd0, seg_arr=V_seg0, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberlookup_Qi_425 = CompressedCrdRdScan(crd_arr=Q_crd0, seg_arr=Q_seg0, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
@@ -155,7 +171,7 @@ def test_tensor4_fused_ijklm_HAND(samBench, frosttname, cast, check_gold, debug_
     reduce_45 = Reduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     maxreduce_434 = MaxReduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_QKl_437 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    add_433 = Add2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    add_433 = Add2(debug=debug_sim, neg2=True, statistics=report_stats, back_en=backpressure, depth=int(depth))
     exp_427 = Exp(in2=0, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     reduce_428 = Reduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_QKl_431 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
@@ -252,9 +268,6 @@ def test_tensor4_fused_ijklm_HAND(samBench, frosttname, cast, check_gold, debug_
         arrayvals_K_48.set_load(intersectm3_410.out_ref1())
         arrayvals_V_17.set_load(intersectm2_410.out_ref2())
 
-        out_debug.append(intersecti3_424.out_ref2())
-        print("V: ", remove_emptystr(out_debug))
-
         repsiggen_m_20.set_istream(intersectm_410.out_crd())
         mul_46.set_in1(arrayvals_Q_47.out_val())
         mul_46.set_in2(arrayvals_K_48.out_val())
@@ -290,6 +303,10 @@ def test_tensor4_fused_ijklm_HAND(samBench, frosttname, cast, check_gold, debug_
         spaccumulator1_5_drop_crd_outer.set_in_stream(crdhold_6.out_crd_outer())
         spaccumulator1_5_drop_crd_inner.set_in_stream(crdhold_6.out_crd_inner())
         spaccumulator1_5_drop_val.set_in_stream(mul_15.out_val())
+
+        out_debug.append(maxreduce_434.out_val())
+        print("val: ", remove_emptystr(out_debug))
+
         spaccumulator1_5.set_crd_outer(spaccumulator1_5_drop_crd_outer.out_val())
         # spaccumulator1_5.set_crd_outer(spaccumulator1_5_drop_crd_outer.out_val())
         # spaccumulator1_5.set_crd_outer(spaccumulator1_5_drop_crd_outer.out_val())

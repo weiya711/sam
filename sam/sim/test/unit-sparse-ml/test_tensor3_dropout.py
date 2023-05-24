@@ -2,7 +2,7 @@ import pytest
 import time
 import scipy.sparse
 import numpy as np
-from sam.sim.src.compression import Compression
+from sam.sim.src.compression import ValDropper
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
@@ -30,7 +30,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_sim, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "tensor3_dropout1")
+    B_dirname = os.path.join(formatted_dir, frosttname, "tensor3_dropout")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 

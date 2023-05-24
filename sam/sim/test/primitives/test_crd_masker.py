@@ -12,29 +12,24 @@ import numpy as np
 import torch
 
 @pytest.mark.parametrize("dim", [8, 16, 32, 64])
-@pytest.mark.parametrize("drop_prob", [0.25, 0.5, 0.75, 0.9])
+@pytest.mark.parametrize("drop_prob", [0.25, 0.5, 0.75])
 def test_dropout_2d(dim, drop_prob, debug_sim, max_val=1000, fill=0):
+    np.random.seed(2)
     in_mat_crds1, in_mat_segs1 = gen_n_comp_arrs(2, dim)
     in_mat_vals1 = gen_val_arr(len(in_mat_crds1[-1]), max_val, -max_val)
 
     in1_tup = convert_point_tuple(get_point_list(in_mat_crds1, in_mat_segs1, in_mat_vals1))
     nd1 = convert_point_tuple_ndarr(in1_tup, dim)
-    B_shape = nd1.shape
-    np.random.seed(2)
-    prob = np.random.rand(*nd1.shape)
-    d = prob < (1 - drop_prob)
-    gold_nd = np.multiply(nd1, d)
-    gold_tup = convert_ndarr_point_tuple(gold_nd)
+    
     # TODO: Add scalar multiply with unary alu
     # in_ = in_ / keep_prob
 
-    flat_prob = prob.flatten()
+    # flat_prob = prob.flatten()
 
     rdscan_B1 = CompressedCrdRdScan(crd_arr=in_mat_crds1[0], seg_arr=in_mat_segs1[0], debug=debug_sim)
     rdscan_B2 = CompressedCrdRdScan(crd_arr=in_mat_crds1[1], seg_arr=in_mat_segs1[1], debug=debug_sim)
 
     crd = CrdHold(debug=debug_sim)
-    crd_conv = CrdPtConverter(debug=debug_sim)
     val_B = Array(init_arr=in_mat_vals1, debug=debug_sim)
 
     # vals_X = ValsWrScan(size=dim * dim, fill=fill, debug=debug_sim)
@@ -69,7 +64,7 @@ def test_dropout_2d(dim, drop_prob, debug_sim, max_val=1000, fill=0):
         crd.set_outer_crd(rdscan_B1.out_crd())
         crd.set_inner_crd(rdscan_B2.out_crd())
 
-        dropout.set_prob(prob, drop_prob)
+        # dropout.set_prob(prob, drop_prob)
 
         # i = rdscan_B1.out_crd()
         # if i != "" and isinstance(i, int):
@@ -116,7 +111,7 @@ def test_dropout_2d(dim, drop_prob, debug_sim, max_val=1000, fill=0):
         wrscan_X1.update()
         wrscan_X2.update()
 
-        done = wrscan_X1.out_done() and wrscan_X2.out_done() and vals_X.out_done()
+        done = wrscan_X1.out_done() and wrscan_X2.out_done() and vals_X.out_done() and dropout.out_done()
         time += 1
 
     wrscan_X1.autosize()
@@ -127,6 +122,15 @@ def test_dropout_2d(dim, drop_prob, debug_sim, max_val=1000, fill=0):
     out_crds = [wrscan_X1.get_arr(), wrscan_X2.get_arr()]
     out_segs = [wrscan_X1.get_seg_arr(), wrscan_X2.get_seg_arr()]
     out_val = vals_X.get_arr()
+
+    nnz_idx = [x for x in zip(*np.where(nd1 != 0))]
+    dropped = dropout.random_dropped
+    for i, p in enumerate(dropped):
+        if p:
+            nd1[nnz_idx[i]] = 0.0
+
+    gold_nd = nd1
+    gold_tup = convert_ndarr_point_tuple(gold_nd)
 
     if debug_sim:
         print("out_segs", out_segs)

@@ -158,7 +158,7 @@ class EmptyFiberStknDrop(Primitive):
                     self.curr_out = 'D'
                     self.prev_stkn = False
                     self.leading_stkn = False
-                elif isinstance(ival, int):
+                elif is_valid_num(ival):
                     self.leading_stkn = False
                     self.curr_out = ival
                     self.done = False

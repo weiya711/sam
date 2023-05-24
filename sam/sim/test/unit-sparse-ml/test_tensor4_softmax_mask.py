@@ -5,14 +5,15 @@ from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2, Add2, Divide2
-from sam.sim.src.unary_alu import Max, Exp, ScalarMult, Softmax
+from sam.sim.src.unary_alu import Max, Exp, ScalarMult
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
-from sam.sim.src.accumulator import Reduce, MaxReduce
+from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
+from sam.sim.src.crd_masker import RandomDropout, LowerTriangular, UpperTriangular, Diagonal
 from sam.sim.src.token import *
 from sam.sim.test.test import *
-#from sam.sim.test.gold import *
+from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
@@ -67,22 +68,21 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[1] * B_shape[2] * B_shape[3], fill=fill, debug=debug_sim, statistics=report_stats)
     repsiggen_l_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
     repeat_Bl_12 = Repeat(debug=debug_sim, statistics=report_stats)
-    repsiggen_l1_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
-    repeat_Bl1_12 = Repeat(debug=debug_sim, statistics=report_stats)
-    exp_1 = Exp(in2=0, debug=debug_sim, statistics=report_stats)
+    exp_1 = Exp(in2=0, debug=debug_sim, statistics=report_stats, fill=1)
     reduce_5 = Reduce(debug=debug_sim, statistics=report_stats)
-    max_reduce_5 = MaxReduce(debug=debug_sim, statistics=report_stats)
     drop_9 = CrdDrop(debug=debug_sim)
     div_6 = Divide2(debug=debug_sim, statistics=report_stats)
-    add_10 = Add2(debug=debug_sim, neg2=True, statistics=report_stats)
-    softmax = Softmax(debug=debug_sim)
+    mask = LowerTriangular(dimension=2, debug=debug_sim)
+    crd = CrdHold(debug=debug_sim)
+    drop_1 = CrdDrop(debug=debug_sim, statistics=report_stats)
+    drop_2 = CrdDrop(debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     done = False
     time_cnt = 0
 
-    # print("B seg1", B_seg1)
-    # print("B seg2", B_seg2)
-    # print("B seg3", B_seg3)
+    print("B seg1", B_seg1)
+    print("B seg2", B_seg2)
+    print("B seg3", B_seg3)
 
     # pytest.set_trace()
 
@@ -104,70 +104,70 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_7.set_in_ref(in_ref_B.pop(0))
-        fiberwrite_X0_3.set_input(fiberlookup_Bi_7.out_crd())
         fiberlookup_Bj_6.set_in_ref(fiberlookup_Bi_7.out_ref())
-        fiberwrite_X1_2.set_input(fiberlookup_Bj_6.out_crd())
         fiberlookup_Bk_5.set_in_ref(fiberlookup_Bj_6.out_ref())
         fiberlookup_Bl_6.set_in_ref(fiberlookup_Bk_5.out_ref())
-        fiberwrite_X2_1.set_input(fiberlookup_Bk_5.out_crd())
-        fiberwrite_X3_0.set_input(fiberlookup_Bl_6.out_crd())
         arrayvals_B_4.set_load(fiberlookup_Bl_6.out_ref())
 
-        # max_reduce_5.set_in_val(arrayvals_B_4.out_load())
-        # repsiggen_l1_13.set_istream(fiberlookup_Bl_6.out_ref())
-        # repeat_Bl1_12.set_in_ref(max_reduce_5.out_val())
-        # repeat_Bl1_12.set_in_repsig(repsiggen_l1_13.out_repsig())
-        # add_10.set_in1(arrayvals_B_4.out_load())
-        # add_10.set_in2(repeat_Bl1_12.out_ref())
-        # exp_1.set_in1(add_10.out_val())
-        # reduce_5.set_in_val(exp_1.out_val())
+        crd.set_outer_crd(fiberlookup_Bk_5.out_crd())
+        crd.set_inner_crd(fiberlookup_Bl_6.out_crd())
+
+        mask.set_inner_crd(crd.out_crd_inner())
+        mask.set_outer_crd(crd.out_crd_outer())
+        mask.set_inner_ref(arrayvals_B_4.out_val())
+
+        drop_1.set_inner_crd(mask.out_crd(1))
+        drop_1.set_outer_crd(fiberlookup_Bj_6.out_crd())
+
+        drop_2.set_inner_crd(drop_1.out_crd_outer())
+        drop_2.set_outer_crd(fiberlookup_Bi_7.out_crd())
+
+        fiberwrite_X0_3.set_input(drop_2.out_crd_outer())
+        fiberwrite_X1_2.set_input(drop_1.out_crd_outer())
+        fiberwrite_X2_1.set_input(mask.out_crd(1))
+        fiberwrite_X3_0.set_input(mask.out_crd(0))
+
+        exp_1.set_in1(mask.out_ref())
+        reduce_5.set_in_val(exp_1.out_val())
         # repsiggen_l_13.set_istream(fiberlookup_Bl_6.out_ref())
-        # repeat_Bl_12.set_in_ref(reduce_5.out_val())
-        # repeat_Bl_12.set_in_repsig(repsiggen_l_13.out_repsig())
-        # div_6.set_in1(exp_1.out_val())
-        # div_6.set_in2(repeat_Bl_12.out_ref())
-
-        softmax.set_val(arrayvals_B_4.out_load())
-        softmax.set_inner_ref(fiberlookup_Bl_6.out_ref())
-
-        out_debug.append(softmax.out_val())
-
-        print("Val: ", remove_emptystr(out_debug))
+        repsiggen_l_13.set_istream(mask.out_ref())
+        repeat_Bl_12.set_in_ref(reduce_5.out_val())
+        repeat_Bl_12.set_in_repsig(repsiggen_l_13.out_repsig())
+        div_6.set_in1(exp_1.out_val())
+        div_6.set_in2(repeat_Bl_12.out_ref())
 
         # fiber_crd.append(fiberlookup_Bl_6.out_crd())
-        reducer.append(max_reduce_5.out_val())
-        # repeater.append(repeat_Bl1_12.out_ref())
-        repsig.append(add_10.out_val())
+        reducer.append(reduce_5.out_val())
+        repeater.append(repeat_Bl_12.out_ref())
+        repsig.append(repsiggen_l_13.out_repsig())
 
         # print("crd:", remove_emptystr(fiber_crd))
         # print('=' * 100)
         # print("Reduce:", remove_emptystr(reducer))
         # print("Repeater:", remove_emptystr(repeater))
         # print()
-        #print("Repsig:", remove_emptystr(repsig))
+        # print("Repsig:", remove_emptystr(repsig))
 
         div_in.append(exp_1.out_val())
         div1_in.append(repeat_Bl_12.out_ref())
-        # out_debug.append(softmax.out_val())
+        out_debug.append(div_6.out_val())
         # print("div0 in", remove_emptystr(div_in))
         # print()
         # print("div1 in", remove_emptystr(div1_in))
         # print()
         # print("div out", remove_emptystr(out_debug))
-        fiberwrite_Xvals_0.set_input(softmax.out_val())
+        fiberwrite_Xvals_0.set_input(div_6.out_val())
 
         fiberlookup_Bi_7.update()
         fiberlookup_Bj_6.update()
         fiberlookup_Bk_5.update()
         fiberlookup_Bl_6.update()
         arrayvals_B_4.update()
+        crd.update()
+        mask.update()
+        drop_1.update()
+        drop_2.update()
 
-        softmax.update()
-
-        max_reduce_5.update()
-        repsiggen_l1_13.update()
-        repeat_Bl1_12.update()
-        add_10.update()
         exp_1.update()
         reduce_5.update()
         # arrayvals_B_10.update()
@@ -199,9 +199,11 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr(), fiberwrite_X2_1.get_seg_arr(), fiberwrite_X3_0.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
 
-    print("out_segs:", out_segs)
-    print("out_crds:", out_crds)
-    print("out_vals:", out_vals)
+    print(out_segs)
+    print(out_crds)
+    print(out_vals)
+
+    pytest.set_trace()
 
     def bench():
         time.sleep(0.01)
@@ -244,5 +246,5 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
 
     if check_gold:
         print("Checking gold...")
-        # check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, "sss012")
+        check_gold_tensor4_softmax_mask(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, "sss012")
     samBench(bench, extra_info)

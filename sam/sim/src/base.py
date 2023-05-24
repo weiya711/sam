@@ -1,4 +1,8 @@
 from abc import ABC, abstractmethod
+import numpy as np
+import warnings
+
+# warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def gen_stkns(dim=10):
@@ -22,6 +26,10 @@ def is_valid_ref(elem, dim=10):
 def is_valid_crdpt(elem):
     valid_tkns = ['', 'D']
     return isinstance(elem, int) or elem in valid_tkns
+
+
+def is_valid_num(elem, dim=10):
+    return isinstance(elem, int) or isinstance(elem, float)
 
 
 def is_valid_val(elem, dim=10):

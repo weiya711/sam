@@ -105,11 +105,12 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     mul_6 = Multiply2(debug=debug_sim, statistics=report_stats)
     reduce_5 = Reduce(debug=debug_sim, statistics=report_stats)
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[2] * B_shape[1] * C_shape[3], fill=fill, debug=debug_sim, statistics=report_stats)
+    repsiggen_l_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
+    repeat_Bl_12 = Repeat(debug=debug_sim, statistics=report_stats)
     exp_1 = Exp(in2=0, debug=debug_sim, statistics=report_stats)
     reduce_5 = Reduce(debug=debug_sim, statistics=report_stats)
     drop_9 = CrdDrop(debug=debug_sim)
     div_6 = Divide2(debug=debug_sim, statistics=report_stats)
-    repsiggen_l_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
@@ -143,17 +144,8 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
         intersectl_9.set_in1(fiberlookup_Bl_10.out_ref(), fiberlookup_Bl_10.out_crd())
         intersectl_9.set_in2(fiberlookup_Cl_11.out_ref(), fiberlookup_Cl_11.out_crd())
         arrayvals_B_7.set_load(intersectl_9.out_ref1())
-
-        exp_1.set_in1(arrayvals_B_7.out_load())
-        reduce_5.set_in_val(exp_1.out_val())
-        repsiggen_l_13.set_istream(fiberlookup_Bl_6.out_ref())
-        repeat_Bl_12.set_in_ref(reduce_5.out_val())
-        repeat_Bl_12.set_in_repsig(repsiggen_l_13.out_repsig())
-        div_6.set_in1(exp_1.out_val())
-        div_6.set_in2(repeat_Bl_12.out_ref())
-
         arrayvals_C_8.set_load(intersectl_9.out_ref2())
-        mul_6.set_in1(div_6.out_val())
+        mul_6.set_in1(arrayvals_B_7.out_val())
         mul_6.set_in2(arrayvals_C_8.out_val())
         reduce_5.set_in_val(mul_6.out_val())
         fiberwrite_Xvals_0.set_input(reduce_5.out_val())
@@ -196,10 +188,6 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     out_crds = [fiberwrite_X0_4.get_arr(), fiberwrite_X1_3.get_arr(), fiberwrite_X2_2.get_arr(), fiberwrite_X3_1.get_arr()]
     out_segs = [fiberwrite_X0_4.get_seg_arr(), fiberwrite_X1_3.get_seg_arr(), fiberwrite_X2_2.get_seg_arr(), fiberwrite_X3_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
-
-    print("segs:", out_segs)
-    print("crds:", out_crds)
-    print("vals:", out_vals)
 
     def bench():
         time.sleep(0.01)

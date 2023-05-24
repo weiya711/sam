@@ -5,13 +5,14 @@ from sam.sim.src.array import Array
 
 
 class WrScan(Primitive, ABC):
-    def __init__(self, size=1024, fill=0, backpressure_en=False, depth=1, **kwargs):
+    def __init__(self, size=1024, fill=0, backpressure_en=False, depth=1, block_size=1, **kwargs):
         super().__init__(**kwargs)
         self.size = size
         self.fill = fill
 
         self.size_init = size
         self.fill_init = fill
+        self.block_size = block_size
 
         self.input = []
         self.arr = Array(size=size, fill=self.fill, debug=self.debug)
@@ -45,7 +46,12 @@ class WrScan(Primitive, ABC):
 
     def set_input(self, val, parent=None):
         # Make sure streams have correct token type
-        assert (isinstance(val, int) or isinstance(val, float) or val in valid_tkns or val is None)
+        if self.block_size > 1:
+            assert(isinstance(val, np.ndarray) or val in valid_tkns)
+            if isinstance(val, np.ndarray):
+                val = val.tolist()
+        else:
+            assert (isinstance(val, int) or isinstance(val, float) or val in valid_tkns or val is None)
 
         if val != '' and val is not None:
             # print("Add input:", self.name, val)
@@ -79,10 +85,11 @@ class WrScan(Primitive, ABC):
 
 
 class ValsWrScan(WrScan):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, block_size=1, **kwargs):
+        super().__init__(block_size=block_size, **kwargs)
 
         self.curr_addr = 0
+        self.block_size = block_size
 
     def update(self):
         self.update_done()

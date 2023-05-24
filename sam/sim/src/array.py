@@ -2,7 +2,7 @@ from .base import *
 
 
 class Array(Primitive):
-    def __init__(self, name="", init_arr=None, size=1024, fill=0, depth=1, fifo=None, **kwargs):
+    def __init__(self, name="", init_arr=None, size=1024, fill=0, block_size=1, depth=1, fifo=None, **kwargs):
         super().__init__(**kwargs)
         self.name = name
         self.fill = fill
@@ -17,6 +17,7 @@ class Array(Primitive):
         self.store_vals = []
         self.load_en = False
         self.store_en = False
+        self.block_size = block_size
         if self.backpressure_en:
             self.ready_backpressure = True
             self.data_ready = True
@@ -100,6 +101,8 @@ class Array(Primitive):
                 if self.get_stats:
                     self.load_addr_size = max(self.load_addr_size, len(self.load_addrs))
                 self.curr_load = self.load(self.load_addrs.pop(0))
+                # if self.block_size > 1 and not isinstance(self.curr_load, str):
+                #     self.curr_load = self.curr_load * (self.block_size ** 2)
                 self.load_en = False
             else:
                 self.curr_load = ''
@@ -127,7 +130,11 @@ class Array(Primitive):
     def set_load(self, addr, parent=None):
         if addr != '' and addr is not None:
             # self.load_en = True
-            self.load_addrs.append(addr)
+
+            if not is_stkn(addr) and addr != 'D':
+                addr = addr * (self.block_size ** 2)
+            self.load_addrs.append(addr if self.block_size == 1 or is_stkn(addr) or addr == 'D'
+                                   else [*range(addr, addr + (self.block_size ** 2))])
         else:
             pass
             # self.load_en = False
@@ -166,7 +173,11 @@ class Array(Primitive):
         elif addr == 'D':
             self.done = True
             val = 'D'
-        elif addr >= self.size:
+        # elif self.block_size > 1 and addr[self.block_size * self.block_size - 1] >= self.size:
+        elif self.block_size == 1 and addr >= self.size:
+            raise Exception("Address (" + str(addr) + ") is out of array size (" +
+                            str(self.size) + ") bounds, please resize")
+        elif self.block_size > 1 and addr[self.block_size ** 2 - 1] >= self.size:
             raise Exception("Address (" + str(addr) + ") is out of array size (" +
                             str(self.size) + ") bounds, please resize")
         else:
@@ -175,7 +186,9 @@ class Array(Primitive):
                     self.address_seen.append(addr)
                 self.valid_loads += 1
 
-            val = self.arr[addr]
+            val = self.arr[addr] if self.block_size == 1 else [self.arr[addr[i]] for i in range(0, self.block_size ** 2)]
+
+            print(val)
 
         if self.debug:
             print("DEBUG: ARRAY LD:", self.name, "\t Addr:", addr, "\t Val:", val)

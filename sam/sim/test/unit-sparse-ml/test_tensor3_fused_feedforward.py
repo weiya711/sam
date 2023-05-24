@@ -1,15 +1,17 @@
 import pytest
 import time
 import scipy.sparse
+from sam.sim.src.compression import ValDropper
 from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
-from sam.sim.src.compute import Multiply2, Add2, Divide2
-from sam.sim.src.unary_alu import Max, Exp, ScalarMult
+from sam.sim.src.compute import Multiply2, Add2
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
 from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
+from sam.sim.src.crd_masker import RandomDropout, LowerTriangular, UpperTriangular, Diagonal
+from sam.sim.src.unary_alu import Max
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
@@ -25,7 +27,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
+def test_tensor3_fused_feedforward(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
     B_dirname = os.path.join(formatted_dir, frosttname, "tensor3_linear_")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
@@ -106,157 +108,15 @@ def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, 
     add_5 = Add2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     reduce_4 = Reduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[2] * C_shape[0], fill=fill, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    exp_1 = Exp(in2=0, debug=debug_sim, statistics=report_stats)
-    reduce_5 = Reduce(debug=debug_sim, statistics=report_stats)
-    drop_9 = CrdDrop(debug=debug_sim)
-    div_6 = Divide2(debug=debug_sim, statistics=report_stats)
-    in_ref_B = [0, 'D']
-    done = False
-    time_cnt = 0
-
-    print("B seg1", B_seg1)
-    print("B seg2", B_seg2)
-    print("B seg3", B_seg3)
-
-    # pytest.set_trace()
-
-    out_debug = []
-
-    div_in = []
-    div1_in = []
-    div_out = []
-    div1_out = []
-
-    repeater = []
-    reducer = []
-    fiber_crd = []
-    repsig = []
-
-    out_l_crd = []
-
-    count = 0
-    while not done and time_cnt < TIMEOUT:
-        if len(in_ref_B) > 0:
-            fiberlookup_Bi_7.set_in_ref(in_ref_B.pop(0))
-        fiberwrite_X0_3.set_input(fiberlookup_Bi_7.out_crd())
-        fiberlookup_Bj_6.set_in_ref(fiberlookup_Bi_7.out_ref())
-        fiberwrite_X1_2.set_input(fiberlookup_Bj_6.out_crd())
-        fiberlookup_Bk_5.set_in_ref(fiberlookup_Bj_6.out_ref())
-        fiberlookup_Bl_6.set_in_ref(fiberlookup_Bk_5.out_ref())
-        fiberwrite_X2_1.set_input(fiberlookup_Bk_5.out_crd())
-        fiberwrite_X3_0.set_input(fiberlookup_Bl_6.out_crd())
-        arrayvals_B_4.set_load(fiberlookup_Bl_6.out_ref())
-
-        exp_1.set_in1(arrayvals_B_4.out_load())
-        reduce_5.set_in_val(exp_1.out_val())
-        repsiggen_l_13.set_istream(fiberlookup_Bl_6.out_ref())
-        repeat_Bl_12.set_in_ref(reduce_5.out_val())
-        repeat_Bl_12.set_in_repsig(repsiggen_l_13.out_repsig())
-        div_6.set_in1(exp_1.out_val())
-        div_6.set_in2(repeat_Bl_12.out_ref())
-
-        # fiber_crd.append(fiberlookup_Bl_6.out_crd())
-        reducer.append(reduce_5.out_val())
-        repeater.append(repeat_Bl_12.out_ref())
-        repsig.append(repsiggen_l_13.out_repsig())
-
-        # print("crd:", remove_emptystr(fiber_crd))
-        # print('=' * 100)
-        # print("Reduce:", remove_emptystr(reducer))
-        # print("Repeater:", remove_emptystr(repeater))
-        # print()
-        # print("Repsig:", remove_emptystr(repsig))
-
-        div_in.append(exp_1.out_val())
-        div1_in.append(repeat_Bl_12.out_ref())
-        out_debug.append(div_6.out_val())
-        # print("div0 in", remove_emptystr(div_in))
-        # print()
-        # print("div1 in", remove_emptystr(div1_in))
-        # print()
-        # print("div out", remove_emptystr(out_debug))
-        fiberwrite_Xvals_0.set_input(div_6.out_val())
-
-        fiberlookup_Bi_7.update()
-        fiberlookup_Bj_6.update()
-        fiberlookup_Bk_5.update()
-        fiberlookup_Bl_6.update()
-        arrayvals_B_4.update()
-        exp_1.update()
-        reduce_5.update()
-        # arrayvals_B_10.update()
-        repsiggen_l_13.update()
-        repeat_Bl_12.update()
-        div_6.update()
-        fiberwrite_X0_3.update()
-        fiberwrite_X1_2.update()
-        fiberwrite_X2_1.update()
-        fiberwrite_X3_0.update()
-        fiberwrite_Xvals_0.update()
-
-        done_ = fiberwrite_X0_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X2_1.out_done() and fiberwrite_Xvals_0.out_done()
-        if done_:
-            count += 1
-        done = False
-        if count == 4:
-            done = True
-        # done = exp_1.out_done()
-        time_cnt += 1
-
-    fiberwrite_X0_3.autosize()
-    fiberwrite_X1_2.autosize()
-    fiberwrite_X2_1.autosize()
-    fiberwrite_X3_0.autosize()
-    fiberwrite_Xvals_0.autosize()
-
-    out_crds = [fiberwrite_X0_3.get_arr(), fiberwrite_X1_2.get_arr(), fiberwrite_X2_1.get_arr(), fiberwrite_X3_0.get_arr()]
-    out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X1_2.get_seg_arr(), fiberwrite_X2_1.get_seg_arr(), fiberwrite_X3_0.get_seg_arr()]
-    out_vals = fiberwrite_Xvals_0.get_arr()
-
-    def bench():
-        time.sleep(0.01)
-
-    extra_info = dict()
-    # extra_info["dataset"] = 
-    extra_info["cycles"] = time_cnt
-    extra_info["tensor_B_shape"] = B_shape
-    sample_dict = fiberlookup_Bi_7.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberlookup_Bi_7" + "_" + k] = sample_dict[k]
-
-    sample_dict = fiberwrite_X0_3.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberwrite_X0_3" + "_" + k] = sample_dict[k]
-
-    sample_dict = fiberlookup_Bj_6.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberlookup_Bj_6" + "_" + k] = sample_dict[k]
-
-    sample_dict = fiberwrite_X1_2.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberwrite_X1_2" + "_" + k] = sample_dict[k]
-
-    sample_dict = fiberlookup_Bk_5.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberlookup_Bk_5" + "_" + k] = sample_dict[k]
-
-    sample_dict = fiberwrite_X2_1.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberwrite_X2_1" + "_" + k] = sample_dict[k]
-
-    sample_dict = arrayvals_B_4.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["arrayvals_B_4" + "_" + k] = sample_dict[k]
-
-    sample_dict = fiberwrite_Xvals_0.return_statistics()
-    for k in sample_dict.keys():
-        extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
-
-    if check_gold:
-        print("Checking gold...")
-        check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, "sss012")
-    samBench(bench, extra_info)
-
+    crd = CrdHold(debug=debug_sim)
+    max_1 = Max(in2=0.0, debug=debug_sim, statistics=report_stats)
+    comp_drop_1 = ValDropper(debug=debug_sim, statistics=report_stats)
+    drop_2 = CrdDrop(debug=debug_sim, statistics=report_stats)
+    drop_3 = CrdDrop(debug=debug_sim, statistics=report_stats)
+    drop_prob = 0.4
+    dropout = RandomDropout(dimension=2, drop_probability=drop_prob, debug=debug_sim)
+    val_stkn_dropper = EmptyFiberStknDrop()
+    crd_stkn_dropper = EmptyFiberStknDrop()
     in_ref_B = [0, 'D']
     in_ref_d = [0, 'D']
     in_ref_C = [0, 'D']
@@ -274,9 +134,9 @@ def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, 
             fiberlookup_Bj_31.set_in_ref(in_ref_B.pop(0))
         if len(in_ref_d) > 0:
             fiberlookup_dj_32.set_in_ref(in_ref_d.pop(0))
+
         unionj_30.set_in1(fiberlookup_Bj_31.out_ref(), fiberlookup_Bj_31.out_crd())
         unionj_30.set_in2(fiberlookup_dj_32.out_ref(), fiberlookup_dj_32.out_crd())
-        fiberwrite_X1_3.set_input(unionj_30.out_crd())
         repsiggen_j_28.set_istream(unionj_30.out_crd())
         if len(in_ref_C) > 0:
             repeat_Cj_27.set_in_ref(in_ref_C.pop(0))
@@ -287,14 +147,12 @@ def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, 
         # print("Ref: ", remove_emptystr(ref_arr))
         # print("Crd: ", remove_emptystr(crd_arr))
         fiberlookup_Ci_20.set_in_ref(fiberlookup_Ck_26.out_ref())
-        fiberwrite_X2_2.set_input(fiberlookup_Ck_26.out_crd())
         repsiggen_k_24.set_istream(fiberlookup_Ck_26.out_crd())
         repeat_Bk_21.set_in_ref(unionj_30.out_ref1())
         repeat_Bk_21.set_in_repsig(repsiggen_k_24.out_repsig())
         repeat_dk_22.set_in_ref(unionj_30.out_ref2())
         repeat_dk_22.set_in_repsig(repsiggen_k_24.out_repsig())
         fiberlookup_Cl_14.set_in_ref(fiberlookup_Ci_20.out_ref())
-        fiberwrite_X0_1.set_input(fiberlookup_Ci_20.out_crd())
         repsiggen_i_18.set_istream(fiberlookup_Ci_20.out_crd())
         repeat_Bi_15.set_in_ref(repeat_Bk_21.out_ref())
         repeat_Bi_15.set_in_repsig(repsiggen_i_18.out_repsig())
@@ -307,44 +165,55 @@ def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, 
         repsiggen_l_11.set_istream(fiberlookup_Ck_26.out_crd())
         arrayvals_B_7.set_load(intersectl_12.out_ref1())
         arrayvals_C_8.set_load(intersectl_12.out_ref2())
-        # repeat_dl_10.set_in_repsig(repsiggen_l_11.out_repsig())
-        # repeat_dl_10.set_in_ref(repeat_di_16.out_ref())
-        # arrayvals_d_9.set_load(repeat_dl_10.out_ref())
         arrayvals_d_9.set_load(repeat_di_16.out_ref())
         mul_6.set_in1(arrayvals_B_7.out_val())
         mul_6.set_in2(arrayvals_C_8.out_val())
-        # add_5.set_in1(arrayvals_d_9.out_val())
-        # add_5.set_in2(mul_6.out_val())
-        # reduce_4.set_in_val(add_5.out_val())
+
         reduce_4.set_in_val(mul_6.out_val())
         add_5.set_in1(reduce_4.out_val())
         add_5.set_in2(arrayvals_d_9.out_val())
-        # reduce_4.set_in_val(mul_6.out_val())
-        # mul_arr.append(arrayvals_d_9.out_val())
-        mul_arr.append(reduce_4.out_val())
-        add_arr.append(arrayvals_d_9.out_val())
-        ref_arr.append(fiberlookup_Ck_26.out_ref())
-        print("Ref: ", remove_emptystr(ref_arr))
-        print("Mul res:", remove_emptystr(mul_arr))
-        print("d:", remove_emptystr(add_arr))
-        # fiberwrite_Xvals_0.set_input(reduce_4.out_val())
-        fiberwrite_Xvals_0.set_input(add_5.out_val())
+
+        max_1.set_in1(add_5.out_val())
+
+        comp_drop_1.set_val(max_1.out_val())
+        comp_drop_1.set_crd(fiberlookup_Ci_20.out_crd())
+
+        # TODO: Should these droppers be inside the ValDropper block? Relu can generate empty fibers
+        val_stkn_dropper.set_in_stream(comp_drop_1.out_val())
+        crd_stkn_dropper.set_in_stream(comp_drop_1.out_crd())
+        drop_2.set_outer_crd(fiberlookup_Ck_26.out_crd())
+        drop_2.set_inner_crd(comp_drop_1.out_crd())
+        crd.set_outer_crd(drop_2.out_crd_outer())
+        crd.set_inner_crd(crd_stkn_dropper.out_val())
+
+        dropout.set_inner_crd(crd.out_crd_inner())
+        dropout.set_outer_crd(crd.out_crd_outer())
+        dropout.set_inner_ref(val_stkn_dropper.out_val())
+
+        drop_3.set_outer_crd(unionj_30.out_crd())
+        drop_3.set_inner_crd(dropout.out_crd(1))
+
+        fiberwrite_Xvals_0.set_input(dropout.out_ref())
+        fiberwrite_X1_3.set_input(drop_3.out_crd_outer())
+        fiberwrite_X2_2.set_input(dropout.out_crd(1))
+        fiberwrite_X0_1.set_input(dropout.out_crd(0))
+
         fiberlookup_Bj_31.update()
 
         fiberlookup_dj_32.update()
 
         unionj_30.update()
-        fiberwrite_X1_3.update()
+        
         repsiggen_j_28.update()
         repeat_Cj_27.update()
         fiberlookup_Ck_26.update()
         fiberlookup_Ci_20.update()
-        fiberwrite_X2_2.update()
+        
         repsiggen_k_24.update()
         repeat_Bk_21.update()
         repeat_dk_22.update()
         fiberlookup_Cl_14.update()
-        fiberwrite_X0_1.update()
+
         repsiggen_i_18.update()
         repeat_Bi_15.update()
         repeat_di_16.update()
@@ -360,6 +229,19 @@ def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, 
         # reduce_4.update()
         reduce_4.update()
         add_5.update()
+
+        max_1.update()
+        comp_drop_1.update()
+        val_stkn_dropper.update()
+        crd_stkn_dropper.update()
+        drop_2.update()
+        crd.update()
+        dropout.update()
+        drop_3.update()
+
+        fiberwrite_X1_3.update()
+        fiberwrite_X2_2.update()
+        fiberwrite_X0_1.update()
         fiberwrite_Xvals_0.update()
 
         done = fiberwrite_X1_3.out_done() and fiberwrite_X2_2.out_done() and fiberwrite_X0_1.out_done() and fiberwrite_Xvals_0.out_done()
@@ -377,6 +259,8 @@ def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, 
     print("segs:", out_segs)
     print("crds:", out_crds)
     print("vals:", out_vals)
+
+    pytest.set_trace()
 
     def bench():
         time.sleep(0.01)
@@ -473,5 +357,5 @@ def test_tensor3_fusedlinear(samBench, frosttname, cast, check_gold, debug_sim, 
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor3_fusedlinear(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, "sss120")
+        check_gold_tensor3_fused_feedforward(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, dropout.random_dropped, "sss120")
     samBench(bench, extra_info)

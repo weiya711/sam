@@ -4,9 +4,11 @@ from .token import EmptyFiberStknDrop, StknDrop
 from .crd_manager import CrdDrop
 import numpy as np
 
+
 # From Ritvik's reorder branch
 class CrdPtCompressor(Primitive):
-    def __init__(self, name="val"):
+    def __init__(self, name="val", **kwargs):
+        super().__init__(**kwargs)
         self.last_token = ""
         self.new_token = ""
         self.output_token = ""
@@ -19,7 +21,6 @@ class CrdPtCompressor(Primitive):
         if token != "" and token is not None:
             self.in_token.append(token)
 
-
     def add_token(self, token):
         # if token != "":
         #     self.last_token = self.new_token
@@ -30,8 +31,8 @@ class CrdPtCompressor(Primitive):
         return self.output_token
 
     def update(self):
-        
-        #if self.debug:
+
+        # if self.debug:
         #    print("REPEATED_BLK name:", self.name, self.first_stop, self.new_token)
         if len(self.in_token) > 0:
             self.new_token = self.in_token.pop(0)
@@ -46,13 +47,16 @@ class CrdPtCompressor(Primitive):
             self.first_stop = False
         elif self.first_stop and is_stkn(self.new_token):
             return
-                
-        if (self.last_token == "D" or self.new_token != "") and (self.last_token != self.new_token or self.last_token == "D") and not(is_stkn(self.new_token) and is_stkn(self.last_token)):
+
+        if (self.last_token == "D" or self.new_token != "") and (
+                self.last_token != self.new_token or self.last_token == "D") and not (
+                is_stkn(self.new_token) and is_stkn(self.last_token)):
             # print(self.name, "update1")
             self.output_token = self.last_token
             self.last_token = self.new_token
-        elif self.new_token != "" and is_stkn(self.last_token) and is_stkn(self.new_token) and self.new_token != self.last_token:
-            #print(self.name, "update2")
+        elif self.new_token != "" and is_stkn(self.last_token) and is_stkn(
+                self.new_token) and self.new_token != self.last_token:
+            # print(self.name, "update2")
             self.last_token = self.new_token
             self.output_token = self.last_token
             self.last_token = ""
@@ -92,12 +96,17 @@ class CrdMask(Primitive):
         self.get_inner = True
         self.get_outer = True
         self.random_dropped = []
+        self.debug_arr = []
+        self.crd_outer = []
+        self.crd_inner = []
+        self.crd_outer1 = []
+        self.crd_inner1 = []
 
         self.drop_predicate = drop_predicate
 
         if self.backpressure_en:
             self.ready_backpressure = True
-            self.dimension = dimension 
+            self.dimension = dimension
             self.data_valid = True
             self.fifo_avail_inner = True
             self.fifo_avail_outer = True
@@ -139,15 +148,15 @@ class CrdMask(Primitive):
             self.crd_fifos = [max(self.crd_fifos[i], len[self.in_crd_array[i]]) for i in range(self.dimension)]
 
         if self.done:
-            self.out_crd_array[0] == ''
-            self.out_crd_array[1] == ''
+            self.out_crd_array[0] = ''
+            self.out_crd_array[1] = ''
             self.inner_ref = ''
             return
 
         self.start = True
 
         for i in range(self.dimension):
-            if self.in_crd_array[i] == []:
+            if not self.in_crd_array[i]:
                 self.start = False
 
         # if self.out_crd_array[0] == 'D' and self.out_crd_array[1] == 'D':
@@ -165,19 +174,19 @@ class CrdMask(Primitive):
             for i in range(self.dimension):
                 self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
                 # if self.curr_crd_array[i] == None:
-                    # initialization: don't skip any
-                    # print("Inside first pop")
-                    # self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
+                # initialization: don't skip any
+                # print("Inside first pop")
+                # self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
 
                 # else: 
-                    # self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
-                    # if not is_stkn(self.out_crd_array[i]):
-                        # not a stop token: hold higher dimensions
-                        # break
-
+                # self.curr_crd_array[i] = self.in_crd_array[i].pop(0)
+                # if not is_stkn(self.out_crd_array[i]):
+                # not a stop token: hold higher dimensions
+                # break
 
         if self.curr_crd_array[0] is not None and self.done != True:
             self.out_crd_array = self.curr_crd_array
+        self.curr_crd_array = ['' for i in range(self.dimension)]
 
         #     self.done = True
         #     return
@@ -186,6 +195,12 @@ class CrdMask(Primitive):
 
         # print("j: ", remove_emptystr(self.outer))
         # print("ref: ", remove_emptystr(self.inner))
+        self.inner.append(self.inner_ref)
+
+        self.crd_inner1.append(self.out_crd_array[0])
+        self.crd_outer1.append(self.out_crd_array[1])
+        # print("crd outer before: ", remove_emptystr(self.crd_outer1))
+        # print("crd inner before: ", remove_emptystr(self.crd_inner1))
 
         if not is_stkn(self.out_crd_array[0]) and self.out_crd_array[0] != 'D' and self.out_crd_array[0] != "":
             # TODO: Added for debugging
@@ -195,12 +210,16 @@ class CrdMask(Primitive):
                 # drop (may need to follow up with crd dropper?)
                 self.out_crd_array = ['' for i in range(self.dimension)]
                 self.inner_ref = ''
+        self.debug_arr.append(self.inner_ref)
+        self.crd_inner.append(self.out_crd_array[0])
+        self.crd_outer.append(self.out_crd_array[1])
+        # print("crd outer: ", remove_emptystr(self.crd_outer))
+        # print("crd inner: ", remove_emptystr(self.crd_inner))
 
-        # self.inner.append(self.out_crd_array[0])
         # self.outer.append(self.out_crd_array[1])
 
         # print("j: ", remove_emptystr(self.outer))
-        # print("k: ", remove_emptystr(self.inner))
+        # print("inner ref: ", remove_emptystr(self.inner))
 
         # if is_stkn(old_token) and old_token == self.out_dropper.get_token():
         #     self.out_crd_array[0] = ''
@@ -226,20 +245,23 @@ class CrdMask(Primitive):
         self.out_crd_array[0] = self.inner_stkn_dropper.out_val()
         self.out_crd_array[1] = self.outer_stkn_dropper.out_val()
         self.inner_ref = self.inner_ref_stkn_dropper.out_val()
+        self.inner_after.append(self.inner_ref)
 
         # if self.out_crd_array[0] == 'D' and self.out_crd_array[1] == 'D':
-        if self.out_crd_array[0] == 'D' and self.out_crd_array[1] != 'D':
+        if self.out_crd_array[0] == 'D' and self.inner_ref == 'D' and self.out_crd_array[1] != 'D':
             self.get_inner = False
-        elif self.out_crd_array[0] == 'D' and self.out_crd_array[1] == 'D':
+        elif self.out_crd_array[0] == 'D' and self.inner_ref == 'D' and self.out_crd_array[1] == 'D':
             self.get_inner = False
             self.get_outer = False
             self.done = True
         elif self.out_crd_array[1] == 'D' and self.get_inner == False:
-            self.out_crd_array[0] == ''
+            self.out_crd_array[0] = ''
+            self.inner_ref = ''
             self.done = True
             self.get_outer = False
         elif self.get_inner == False:
             self.out_crd_array[0] = ''
+            self.inner_ref = ''
         elif self.get_outer == False:
             self.out_crd_array[1] = ''
         # self.dropper.set_outer_crd(self.out_crd_array[1])
@@ -250,15 +272,14 @@ class CrdMask(Primitive):
         # self.out_crd_array[0] = self.dropper.out_crd_inner()
         # self.out_crd_array[1] = self.dropper.out_crd_outer()
 
-        # self.inner_after.append(self.inner_ref)
         # self.inner_after.append(self.out_crd_array[0])
         # self.outer_after.append(self.out_crd_array[1])
         # print("j after: ", remove_emptystr(self.outer_after))
+        # print("inner ref before stkndrop: ", remove_emptystr(self.debug_arr))
         # print("inner ref after: ", remove_emptystr(self.inner_after))
         # print(self.inner_ref)
 
         # print()
-
 
     def print_fifos(self):
         for i in range(self.dimension):
@@ -270,7 +291,7 @@ class CrdMask(Primitive):
 
     # For debug purposes
     def set_predicate(self, prob, drop_prob):
-        self.drop_predicate=lambda crds: ~(prob < (1 - drop_prob))
+        self.drop_predicate = lambda crds: ~(prob < (1 - drop_prob))
         # self.drop_predicate=lambda crds: False
 
     def set_inner_crd(self, crd):
@@ -300,34 +321,33 @@ class CrdMask(Primitive):
         # else:
         #     self.out_dropper.add_token(self.out_crd_array[dimension])
         #     self.out_dropper.update()
-            # return self.out_dropper.get_token()
+        # return self.out_dropper.get_token()
 
-
-            # # if self.out_crd_array[dimension] == "":
-            #     # return ''
-            # self.new_token = self.out_crd_array[dimension]
-            # if self.first_stop and self.new_token != "" and not is_stkn(self.new_token):
-            #     self.first_stop = False
-            # # elif self.first_stop and is_stkn(self.new_token) or (is_stkn(self.last_token) and is_stkn(self.new_token)) or self.last_token == "D":
-            # elif self.first_stop and is_stkn(self.new_token):
-            #     return ""
-            # if (self.last_token == "D" or self.new_token != "") and (self.last_token != self.new_token or self.last_token == "D") and not(is_stkn(self.new_token) and is_stkn(self.last_token)):
-            #     # print(self.name, "update1")
-            #     self.output_token = self.last_token
-            #     self.last_token = self.new_token
-            # elif self.new_token != "" and is_stkn(self.last_token) and is_stkn(self.new_token) and self.new_token != self.last_token:
-            #     #print(self.name, "update2")
-            #     self.last_token = self.new_token
-            #     self.output_token = self.last_token
-            #     self.last_token = ""
-            #     self.new_token = ""
-            # elif is_stkn(self.last_token) and is_stkn(self.new_token):
-            #     self.output_token = ""
-            # return self.output_token
-            # if new_token == self.last_token and new_token != "":
-            #     return ""
-            # self.last_token = new_token
-            # return new_token
+        # # if self.out_crd_array[dimension] == "":
+        #     # return ''
+        # self.new_token = self.out_crd_array[dimension]
+        # if self.first_stop and self.new_token != "" and not is_stkn(self.new_token):
+        #     self.first_stop = False
+        # # elif self.first_stop and is_stkn(self.new_token) or (is_stkn(self.last_token) and is_stkn(self.new_token)) or self.last_token == "D":
+        # elif self.first_stop and is_stkn(self.new_token):
+        #     return ""
+        # if (self.last_token == "D" or self.new_token != "") and (self.last_token != self.new_token or self.last_token == "D") and not(is_stkn(self.new_token) and is_stkn(self.last_token)):
+        #     # print(self.name, "update1")
+        #     self.output_token = self.last_token
+        #     self.last_token = self.new_token
+        # elif self.new_token != "" and is_stkn(self.last_token) and is_stkn(self.new_token) and self.new_token != self.last_token:
+        #     #print(self.name, "update2")
+        #     self.last_token = self.new_token
+        #     self.output_token = self.last_token
+        #     self.last_token = ""
+        #     self.new_token = ""
+        # elif is_stkn(self.last_token) and is_stkn(self.new_token):
+        #     self.output_token = ""
+        # return self.output_token
+        # if new_token == self.last_token and new_token != "":
+        #     return ""
+        # self.last_token = new_token
+        # return new_token
 
     def return_statistics(self):
         if self.get_stats:
@@ -342,14 +362,23 @@ class RandomDropout(CrdMask):
     def __init__(self, dimension=2, drop_probability=0.5, **kwargs):
         super().__init__(dimension, lambda crds: np.random.rand() < (1 - drop_probability), name="random", **kwargs)
 
+
 class LowerTriangular(CrdMask):
     def __init__(self, dimension=2, **kwargs):
         super().__init__(dimension, lambda crds: crds[0] > crds[1], name="tril", **kwargs)
+
 
 class UpperTriangular(CrdMask):
     def __init__(self, dimension=2, **kwargs):
         super().__init__(dimension, lambda crds: crds[0] < crds[1], name="triu", **kwargs)
 
+
 class Diagonal(CrdMask):
     def __init__(self, dimension=2, **kwargs):
         super().__init__(dimension, lambda crds: crds[0] != crds[1], name="diag", **kwargs)
+
+
+class Relu(Primitive):
+    def __init__(self, num_dims=3, **kwargs):
+        super().__init__(**kwargs)
+        self.out_crd_array[num_dims] = []

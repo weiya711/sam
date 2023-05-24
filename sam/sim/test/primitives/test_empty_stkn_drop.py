@@ -17,10 +17,11 @@ arrs_dict7 = {'in': [0, 1, 3, 'S0', 'D']}
 arrs_dict8 = {'in': [8, 'S0', 'S1', 'D']}
 arrs_dict9 = {'in': [8, 9, 'S0', 10, 'S0', 'S0', 'S1', 11, 'S1', 'S0', 'S2', 'D']}
 arrs_dict10 = {'in': ['S0', 'S1', 8, 9, 'S0', 10, 'S0', 'S0', 'S1', 11, 'S1', 'S0', 'S2', 'D']}
+arrs_dict11 = {'in': ['S0', 1, 1, 'S0', 'S0', 'S0', 'S0', 5, 'S0', 'S0', 'S1', 'S0', 1, 1, 'S0', 'S0', 'S0', 'S0', 'S0', 'S0', 'S2', 'D']}
 
 
 @pytest.mark.parametrize("arrs", [arrs_dict1, arrs_dict2, arrs_dict3, arrs_dict4, arrs_dict5, arrs_dict6, arrs_dict7,
-                                  arrs_dict8, arrs_dict9, arrs_dict10])
+                                  arrs_dict8, arrs_dict9, arrs_dict10, arrs_dict11])
 def test_empty_stkn_drop(arrs, debug_sim):
     ival = copy.deepcopy(arrs['in'])
 

@@ -3,13 +3,15 @@ from .crd_manager import CrdPtConverter
 
 
 class Reduce(Primitive):
-    def __init__(self, depth=1, **kwargs):
+    def __init__(self, depth=1, block_size=1, **kwargs):
         super().__init__(**kwargs)
 
         self.in_val = []
         self.curr_out = ""
         self.in_val_size = 0
-        self.sum = 0
+        self.block_size = block_size
+        self.init_sum = 0 if self.block_size == 1 else [0] * (self.block_size ** 2)
+        self.sum = self.init_sum
         self.emit_stkn = False
         self.curr_in_val = None
 
@@ -73,7 +75,7 @@ class Reduce(Primitive):
                 self.curr_out = ""
                 # Reset state
                 self.in_val_size = 0
-                self.sum = 0
+                self.sum = self.init_sum
                 self.emit_stkn = False
                 self.done = False
             elif self.emit_stkn:
@@ -83,10 +85,10 @@ class Reduce(Primitive):
                 self.curr_in_val = self.in_val.pop(0)
                 if is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) == 0:
                     self.curr_out = self.sum
-                    self.sum = 0
+                    self.sum = self.init_sum
                 elif is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) > 0:
                     self.curr_out = self.sum
-                    self.sum = 0
+                    self.sum = self.init_sum
                     self.emit_stkn = True
                 elif self.curr_in_val == 'D':
                     self.done = True
@@ -94,6 +96,7 @@ class Reduce(Primitive):
                 else:
                     if self.get_stats:
                         self.reduction_count += 1
+                    print(self.curr_in_val)
                     self.sum += self.curr_in_val
                     self.curr_out = ""
             else:
@@ -153,13 +156,13 @@ class Reduce(Primitive):
 
 
 class MaxReduce(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, depth=1, **kwargs):
         super().__init__(**kwargs)
 
         self.in_val = []
         self.curr_out = ""
         self.in_val_size = 0
-        self.max = -1e-9
+        self.max = -1000000
         self.emit_stkn = False
         self.curr_in_val = None
 
@@ -173,65 +176,113 @@ class MaxReduce(Primitive):
             self.zero_out = 0
             self.nonzero_out = 0
 
+        if self.backpressure_en:
+            self.ready_backpressure = True
+            self.data_valid = True
+            self.depth = depth
+            self.fifo_avail = True
+
+    def check_backpressure(self):
+        if self.backpressure_en:
+            copy_backpressure = self.ready_backpressure
+            self.ready_backpressure = True
+            return copy_backpressure
+        return True
+
+    def set_backpressure(self, backpressure):
+        if not backpressure:
+            self.ready_backpressure = False
+
+    def fifo_available(self, br=""):
+        if self.backpressure_en:
+            return self.fifo_avail
+        return True
+
+    def update_ready(self):
+        if self.backpressure_en:
+            if len(self.in_val) > self.depth:
+                self.fifo_avail = False
+            else:
+                self.fifo_avail = True
+
+    def add_child(self, child=None, branch=""):
+        if self.backpressure_en and child is not None:
+            self.backpressure.append(child)
+            self.branch.append(branch)
+
     def update(self):
+        self.update_ready()
         self.update_done()
-        if (len(self.in_val) > 0):
-            self.block_start = False
+        if self.backpressure_en:
+            self.data_valid = False
+        if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if self.backpressure_en:
+                self.data_valid = True
+            if (len(self.in_val) > 0):
+                self.block_start = False
 
-        curr_in_val = ""
-        if self.done:
-            self.curr_out = ""
-        elif self.emit_stkn:
-            self.curr_out = decrement_stkn(self.curr_in_val)
-            self.emit_stkn = False
-        elif len(self.in_val) > 0:
-            self.curr_in_val = self.in_val.pop(0)
-            if is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) == 0:
-                self.curr_out = self.max
-                self.max = 0
-            elif is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) > 0:
-                self.curr_out = self.max
-                self.max = 0
-                self.emit_stkn = True
-            elif self.curr_in_val == 'D':
-                self.done = True
-                self.curr_out = 'D'
-            else:
-                if self.get_stats:
-                    self.reduction_count += 1
-                self.max = max(self.curr_in_val, self.max)
+            curr_in_val = ""
+            if self.done:
                 self.curr_out = ""
-        else:
-            self.curr_out = ""
-
-        if self.get_stats:
-            if self.curr_out == "":
-                self.drop_token_out += 1
-            elif is_stkn(self.curr_out):
-                self.stop_token_out += 1
-            else:
-                if(isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
-                    self.zero_out += 1
+                # Reset state
+                self.in_val_size = 0
+                self.max = -1000000
+                self.emit_stkn = False
+                self.done = False
+            elif self.emit_stkn:
+                self.curr_out = decrement_stkn(self.curr_in_val)
+                self.emit_stkn = False
+            elif len(self.in_val) > 0:
+                self.curr_in_val = self.in_val.pop(0)
+                if is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) == 0:
+                    self.curr_out = self.max
+                    self.max = -1000000
+                elif is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) > 0:
+                    self.curr_out = self.max
+                    self.max = -1000000
+                    self.emit_stkn = True
+                elif self.curr_in_val == 'D':
+                    self.done = True
+                    self.curr_out = 'D'
                 else:
-                    self.nonzero_out += 1
-                self.valid_token_out += 1
+                    if self.get_stats:
+                        self.reduction_count += 1
+                    self.max = max(self.max, self.curr_in_val)
+                    self.curr_out = ""
+            else:
+                self.curr_out = ""
 
-        if self.get_stats:
-            self.compute_fifos()
+            if self.get_stats:
+                if self.curr_out == "":
+                    self.drop_token_out += 1
+                elif is_stkn(self.curr_out):
+                    self.stop_token_out += 1
+                else:
+                    if (isinstance(self.curr_out, float) or isinstance(self.curr_out, int)) and self.curr_out == 0:
+                        self.zero_out += 1
+                    else:
+                        self.nonzero_out += 1
+                    self.valid_token_out += 1
+
+            if self.get_stats:
+                self.compute_fifos()
         if self.debug:
             print("DEBUG: REDUCE:", "\t CurrIn:", self.curr_in_val, "\tCurrOut:", self.curr_out,
-                  "\t Sum:", self.sum)
+                  "\t Max:", self.max)
 
-    def set_in_val(self, val):
+    def set_in_val(self, val, parent=None):
         if val != '' and val is not None:
             if self.get_stats:
                 self.num_inputs += 1
             self.in_val.append(val)
+        if self.backpressure_en:
+            parent.set_backpressure(self.fifo_avail)
 
     def out_val(self):
-        if self.get_stats:
-            self.num_outputs += 1
-        return self.curr_out
+        if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
+            if self.get_stats:
+                self.num_outputs += 1
+            return self.curr_out
 
     def compute_fifos(self):
         self.in_val_size = max(self.in_val_size, len(self.in_val))
