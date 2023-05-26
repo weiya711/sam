@@ -632,34 +632,43 @@ def check_gold_tensor3_linear_multiply(frosttname, debug_sim, cast, out_crds, ou
 
 
 def check_gold_tensor3_linear_add(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
-    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_add")
-    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    B_shape_filename = os.path.join(B_dirname, "tensor_C_mode_shape")
     B_shape = read_inputs(B_shape_filename)
-    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_add")
-    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    C_shape_filename = os.path.join(C_dirname, "tensor_d_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
-    C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
+    B_tens = get_tensor_from_files(name="C", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    C_tens = get_tensor_from_files(name="d", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
 
     B_ref = torch.from_numpy(B_tens.get_matrix())
     C_ref = torch.from_numpy(C_tens.get_matrix())
     print(B_ref.shape)
     print(C_ref.shape)
     # C_ref = torch.unsqueeze(C_ref, 0).unsqueeze(1)
+
+
+    # pytest.set_trace()
+
+    C_ref = torch.unsqueeze(C_ref, 0)
+    C_ref = torch.unsqueeze(C_ref, 2)
+    C_ref = torch.broadcast_to(C_ref, (1, 4, 2))
+
+    # C_ref = torch.unsqueeze(C_ref, 2)
     print(C_ref.shape)
+    # gold_ref = B_ref / C_ref
+    gold_ref = torch.add(B_ref, C_ref)
 
-
-    pytest.set_trace()
-
-    # C_ref = torch.broadcast_to(B_ref, B_shape)
-    gold_ref = B_ref + C_ref.view(-1, 1, 10, 1)
+    # gold_ref = B_ref + C_ref.view(-1, 1, 10, 1)
     gold_ref = gold_ref.numpy()
     # gold_ref = torch.einsum('jl, ilk->ijk', B_ref, C_ref).numpy()
 
     mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
     mat_g.dump_outputs(format='CSF')
     gold_tup = convert_ndarr_point_tuple(gold_ref)
+    print(B_ref)
+    print(C_ref)
     print("After add: ", gold_tup)
     pytest.set_trace()
     # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
@@ -758,6 +767,97 @@ def check_gold_tensor4_multiply(frosttname, debug_sim, out_crds, out_segs, out_v
         assert (check_point_tuple(out_tup, gold_tup))
 
 
+def check_gold_tensor4_multiply2_blocked(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, block_size, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+
+    # B_shape = [B_shape[i] * (block_size ** 2) for i in range(len(B_shape))]
+    # C_shape = [C_shape[i] * (block_size ** 2) for i in range(len(C_shape))]
+    # B_shape[len[B_shape] - 1] *= block_size ** 2
+    # C_shape[len[C_shape] - 1] *= block_size ** 2
+    print(B_shape)
+    print(C_shape)
+    B_shape = [*B_shape[:2], B_shape[2] * block_size, B_shape[3] * block_size]
+    C_shape = [*C_shape[:2], C_shape[2] * block_size, C_shape[3] * block_size]
+    print(B_shape)
+    print(C_shape)
+    pytest.set_trace()
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
+    
+    print(B_shape)
+    print(B_tens)
+    pytest.set_trace()
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
+    # mode1 = (0,2,1,3)
+    # mode2 = (0,2,3,1)
+    # B_tens.transpose_tensor(mode1)
+    # C_tens.transpose_tensor(mode2)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    # B_tens.dump_outputs(format='CSF')
+    # C_tens.dump_outputs(format='CSF')
+
+    # pytest.set_trace()
+
+    # pytest.set_trace()
+    print("B numpy shape:", B_tens.shape)
+    print("C numpy shape:", C_tens.shape)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+
+    B_ref = torch.permute(B_ref, (0, 2, 1, 3))
+    C_ref = torch.permute(C_ref, (0, 3, 1, 2))
+    
+    print(B_ref.shape)
+    print(C_ref.shape)
+    pytest.set_trace()
+
+    gold_ref = torch.einsum('ijkl, iljm->ikjm', B_ref, C_ref).numpy()
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+    # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
+    # print(mg.get_matrix())
+    print("Out crds:", out_crds)
+    print()
+    print("Out segs:", out_segs)
+    print()
+    print("Out vals:", out_vals)
+    print(len(out_vals))
+    print("sizes:", [len(arr) for arr in out_crds])
+    print("sizes:", [len(arr) for arr in out_segs])
+    print(gold_ref.shape)
+    pytest.set_trace()
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
+
 def check_gold_tensor4_multiply2(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
     B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
@@ -795,6 +895,82 @@ def check_gold_tensor4_multiply2(frosttname, debug_sim, cast, out_crds, out_segs
     print(B_ref.shape)
     print(C_ref.shape)
     pytest.set_trace()
+
+    gold_ref = torch.einsum('ijkl, iljm->ikjm', B_ref, C_ref).numpy()
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+    # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
+    # print(mg.get_matrix())
+    print("Out crds:", out_crds)
+    print()
+    print("Out segs:", out_segs)
+    print()
+    print("Out vals:", out_vals)
+    print(len(out_vals))
+    print("sizes:", [len(arr) for arr in out_crds])
+    print("sizes:", [len(arr) for arr in out_segs])
+    print(gold_ref.shape)
+    pytest.set_trace()
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor4_msoftmax_multiply2(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
+    # mode1 = (0,2,1,3)
+    # mode2 = (0,2,3,1)
+    # B_tens.transpose_tensor(mode1)
+    # C_tens.transpose_tensor(mode2)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    # B_tens.dump_outputs(format='CSF')
+    # C_tens.dump_outputs(format='CSF')
+
+    # pytest.set_trace()
+
+    # pytest.set_trace()
+    print("B numpy shape:", B_tens.shape)
+    print("C numpy shape:", C_tens.shape)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+
+    B_ref = torch.permute(B_ref, (0, 2, 1, 3))
+    C_ref = torch.permute(C_ref, (0, 3, 1, 2))
+    
+    print(B_ref.shape)
+    print(C_ref.shape)
+    # pytest.set_trace()
+    B_ref = torch.nn.functional.softmax(B_ref, dim=3)
 
     gold_ref = torch.einsum('ijkl, iljm->ikjm', B_ref, C_ref).numpy()
 
@@ -880,27 +1056,8 @@ def check_gold_tensor3_norm_scale(frosttname, debug_sim, cast, out_crds, out_seg
     C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_norm_scale")
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
-    # formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-    # B_dirname = os.path.join(formatted_dir, frosttname, "orig", "ss01")
-    # C_dirname = os.path.join(formatted_dir, frosttname, "other", "sss021")
-    # D_dirname = os.path.join(formatted_dir, frosttname, "other", "s0")
-    # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
-    # B_shape = read_inputs(B_shape_filename)
-    # C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
-    # C_shape = read_inputs(C_shape_filename)
-    # D_shape_filename = os.path.join(D_dirname, "D_shape.txt")
-    # D_shape = read_inputs(D_shape_filename)
     B_tens = get_tensor_from_files(name="b", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
     C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
-    # D_tens = get_tensor_from_files(name="D", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x')
-
-    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
-    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "sss021")
-    # mode = (0,2,1)
-    # B_tens.transpose_tensor(mode)
-    # C_tens.transpose_tensor(mode)
-    # B_tens.set_dump_dir(B_dirname_trans)
-    # C_tens.set_dump_dir(C_dirname_trans)
 
     B_ref = torch.from_numpy(B_tens.get_matrix())
     C_ref = torch.from_numpy(C_tens.get_matrix())
@@ -1099,6 +1256,620 @@ def check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, 
     else:
         print("gold:", gold_tup)
         print("size: ", len(gold_tup))
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+def check_gold_tensor4_softmax_mask(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_softmax")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+
+    B_ref = torch.tril(B_ref)
+
+
+    # gold_ref = torch.clamp(B_ref, min=0.0)
+    print(B_ref.shape)
+    print(out_vals)
+    B_ref = B_ref.masked_fill(B_ref == 0, -1e9)
+    gold_ref = torch.nn.functional.softmax(B_ref, dim=3)
+    gold_ref = gold_ref.numpy()
+
+    print(gold_ref)
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        print("gold:", gold_tup)
+        print("size: ", len(gold_tup))
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+def check_gold_tensor3_dropout(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, prob, drop_prob, dropped, scalar, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_dropout")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    B_ref = B_tens.get_matrix()
+
+    nnz_idx = [x for x in zip(*np.where(B_ref != 0))]
+
+    for i, p in enumerate(dropped):
+        if p:
+            B_ref[nnz_idx[i]] = 0.0
+
+    gold_ref = B_ref
+    # gold_ref = torch.clamp(B_ref, min=0.0)
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_vals)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor3_reluDropout(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, prob, drop_prob, dropped, scalar, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_dropout2")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    B_ref = B_tens.get_matrix()
+
+    gold_ref = torch.clamp(torch.from_numpy(B_ref), min=0.0)
+
+    nnz_idx = [x for x in zip(*np.where(gold_ref != 0))]
+
+    for i, p in enumerate(dropped):
+        if p:
+            gold_ref[nnz_idx[i]] = 0.0
+
+    # gold_ref = B_ref
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_vals)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+def check_gold_tensor3_fusedlinear(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+    # formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+    # B_dirname = os.path.join(formatted_dir, frosttname, "orig", "ss01")
+    # C_dirname = os.path.join(formatted_dir, frosttname, "other", "sss021")
+    D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    # B_shape = read_inputs(B_shape_filename)
+    # C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    # C_shape = read_inputs(C_shape_filename)
+    D_shape_filename = os.path.join(D_dirname, "tensor_d_mode_shape")
+    D_shape = read_inputs(D_shape_filename)
+
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
+    D_tens = get_tensor_from_files(name="d", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x')
+
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "sss021")
+    # mode = (0,2,1)
+    # B_tens.transpose_tensor(mode)
+    # C_tens.transpose_tensor(mode)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+    D_ref = torch.from_numpy(D_tens.get_matrix())
+
+    print("D", D_ref)
+
+    # C_ref = torch.permute(C_ref, (2,0,1))
+
+    
+    # gold_ref = C_ref
+
+    # print()
+
+    gold_ref = torch.einsum('jl, ilk->ijk', B_ref, C_ref)
+    print(gold_ref.shape)
+    D_ref = torch.unsqueeze(D_ref, 0)
+    D_ref = torch.unsqueeze(D_ref, 2)
+    D_ref = torch.broadcast_to(D_ref, gold_ref.shape)
+    print("D", D_ref)
+
+    print("Before add:", gold_ref)
+    # print(D)
+
+    # C_ref = torch.unsqueeze(C_ref, 2)
+    print(C_ref.shape)
+    # gold_ref = B_ref / C_ref
+    gold_ref = torch.add(gold_ref, D_ref)
+    gold_ref = torch.permute(gold_ref, (1,2,0))
+
+    gold_tup = convert_ndarr_point_tuple(gold_ref.numpy())
+    gold_ref = gold_ref.numpy()
+
+    out_name = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_transposed")
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor3_fused_feedforward(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, dropped, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+    # formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+    # B_dirname = os.path.join(formatted_dir, frosttname, "orig", "ss01")
+    # C_dirname = os.path.join(formatted_dir, frosttname, "other", "sss021")
+    D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_")
+    # B_shape_filename = os.path.join(B_dirname, "B_shape.txt")
+    # B_shape = read_inputs(B_shape_filename)
+    # C_shape_filename = os.path.join(C_dirname, "C_shape.txt")
+    # C_shape = read_inputs(C_shape_filename)
+    D_shape_filename = os.path.join(D_dirname, "tensor_d_mode_shape")
+    D_shape = read_inputs(D_shape_filename)
+
+    B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
+    D_tens = get_tensor_from_files(name="d", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x')
+
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "sss021")
+    # mode = (0,2,1)
+    # B_tens.transpose_tensor(mode)
+    # C_tens.transpose_tensor(mode)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+    D_ref = torch.from_numpy(D_tens.get_matrix())
+
+    print("D", D_ref)
+
+    # C_ref = torch.permute(C_ref, (2,0,1))
+
+    
+    # gold_ref = C_ref
+
+    # print()
+
+    gold_ref = torch.einsum('jl, ilk->ijk', B_ref, C_ref)
+    print(gold_ref.shape)
+    D_ref = torch.unsqueeze(D_ref, 0)
+    D_ref = torch.unsqueeze(D_ref, 2)
+    D_ref = torch.broadcast_to(D_ref, gold_ref.shape)
+    print("D", D_ref)
+
+    print("Before add:", gold_ref)
+    # print(D)
+
+    # C_ref = torch.unsqueeze(C_ref, 2)
+    print(C_ref.shape)
+    # gold_ref = B_ref / C_ref
+    gold_ref = torch.add(gold_ref, D_ref)
+    gold_ref = torch.clamp(gold_ref, min=0.0)
+
+    nnz_idx = [x for x in zip(*np.where(gold_ref != 0))]
+    for i, p in enumerate(dropped):
+        if p:
+            gold_ref[nnz_idx[i]] = 0.0
+
+    gold_ref = torch.permute(gold_ref, (1,2,0))
+
+    gold_tup = convert_ndarr_point_tuple(gold_ref.numpy())
+    gold_ref = gold_ref.numpy()
+
+    out_name = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor3_linear_transposed")
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    if True:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    pytest.set_trace()
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        pytest.set_trace()
+        assert (check_point_tuple(out_tup, gold_tup))
+
+def check_gold_tensor4_fused(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T")
+    B_shape_filename = os.path.join(B_dirname, "tensor_Q_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T")
+    C_shape_filename = os.path.join(C_dirname, "tensor_K_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+    D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T")
+    D_shape_filename = os.path.join(D_dirname, "tensor_V_mode_shape")
+    D_shape = read_inputs(D_shape_filename)
+
+    B_tens = get_tensor_from_files(name="Q", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    C_tens = get_tensor_from_files(name="K", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x', mode_ordering=[0,2,3,1])
+    D_tens = get_tensor_from_files(name="V", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x', mode_ordering=[0,2,3,1])
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
+    # mode1 = (0,2,1,3)
+    # mode2 = (0,2,3,1)
+    # B_tens.transpose_tensor(mode1)
+    # C_tens.transpose_tensor(mode2)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    # B_tens.dump_outputs(format='CSF')
+    # C_tens.dump_outputs(format='CSF')
+
+    # pytest.set_trace()
+
+    # pytest.set_trace()
+    print("B numpy shape:", B_tens.shape)
+    print("C numpy shape:", C_tens.shape)
+    print("D numpy shape:", D_tens.shape)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+    D_ref = torch.from_numpy(D_tens.get_matrix())
+
+    # B_ref = torch.permute(B_ref, (0, 1, 2, 3))
+    
+    # out_name = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_transposed")
+    out_name = "test"
+    mat_Q = MatrixGenerator("Q", shape=B_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=B_ref.numpy())
+    mat_K = MatrixGenerator("K", shape=C_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=C_ref.numpy())
+    # mat_g.dump_outputs(format='CSF')
+    mat_V = MatrixGenerator("V", shape=D_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=D_ref.numpy())
+    # mat_g.dump_outputs(format='CSF')
+
+    # C_ref = torch.permute(C_ref, (0, 3, 1, 2))
+    # D_ref = torch.permute(D_ref, (0, 3, 1, 2))
+    C_ref = torch.permute(C_ref, (0, 3, 1, 2))
+    D_ref = torch.permute(D_ref, (0, 3, 1, 2))
+
+    print("B:", B_ref.numpy())
+    print("B_gen:", mat_Q.array)
+    print("C:", C_ref.numpy())
+    print("C_gen:", mat_K.array)
+    print("D:", D_ref.numpy())
+    print("D_gen:", mat_V.array)
+
+    print(B_ref.shape)
+    print(C_ref.shape)
+    pytest.set_trace()
+
+    # gold_ref = D_ref.numpy()
+    gold_ref_temp = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref)
+    print(gold_ref_temp.shape)
+    gold_ref = torch.einsum('ijkl, iljm->ikjm', gold_ref_temp, D_ref).numpy()
+
+    pytest.set_trace()
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+    # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
+    # print(mg.get_matrix())
+    print("Out crds:", out_crds)
+    print()
+    print("Out segs:", out_segs)
+    print()
+    print("Out vals:", out_vals)
+    print(len(out_vals))
+    print("sizes:", [len(arr) for arr in out_crds])
+    print("sizes:", [len(arr) for arr in out_segs])
+    print(gold_ref.shape)
+    pytest.set_trace()
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor4_multiply_ijklm(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fusedsoftmax_ijklm")
+    B_shape_filename = os.path.join(B_dirname, "tensor_Q_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fusedsoftmax_ijklm")
+    C_shape_filename = os.path.join(C_dirname, "tensor_K_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+    D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fusedsoftmax_ijklm")
+    D_shape_filename = os.path.join(D_dirname, "tensor_V_mode_shape")
+    D_shape = read_inputs(D_shape_filename)
+
+    B_tens = get_tensor_from_files(name="Q", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+    C_tens = get_tensor_from_files(name="K", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+    # D_tens = get_tensor_from_files(name="V", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x', mode_ordering=[0,2,3,1])
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
+    # mode1 = (0,2,1,3)
+    # mode2 = (0,2,3,1)
+    # B_tens.transpose_tensor(mode1)
+    # C_tens.transpose_tensor(mode2)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    # B_tens.dump_outputs(format='CSF')
+    # C_tens.dump_outputs(format='CSF')
+
+    # pytest.set_trace()
+
+    # pytest.set_trace()
+    print("B numpy shape:", B_tens.shape)
+    print("C numpy shape:", C_tens.shape)
+    # print("D numpy shape:", D_tens.shape)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+    # D_ref = torch.from_numpy(D_tens.get_matrix())
+
+    # B_ref = torch.permute(B_ref, (0, 1, 2, 3))
+    
+    # out_name = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_transposed")
+    out_name = "test"
+    mat_Q = MatrixGenerator("Q", shape=B_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=B_ref.numpy())
+    mat_K = MatrixGenerator("K", shape=C_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=C_ref.numpy())
+    # mat_g.dump_outputs(format='CSF')
+    # mat_V = MatrixGenerator("V", shape=D_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=D_ref.numpy())
+    # mat_g.dump_outputs(format='CSF')
+
+    B_ref = torch.permute(B_ref, (0, 2, 1, 3))
+    C_ref = torch.permute(C_ref, (0, 2, 1, 3))
+    # C_ref = torch.permute(C_ref, (0, 3, 1, 2))
+    # D_ref = torch.permute(D_ref, (0, 3, 1, 2))
+
+    print("B:", B_ref.numpy())
+    print("B_gen:", mat_Q.array)
+    print("C:", C_ref.numpy())
+    print("C_gen:", mat_K.array)
+    # print("D:", D_ref.numpy())
+    # print("D_gen:", mat_V.array)
+
+    print(B_ref.shape)
+    print(C_ref.shape)
+    pytest.set_trace()
+
+    # gold_ref = D_ref.numpy()
+    gold_ref = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref)
+    gold_ref = gold_ref.masked_fill(gold_ref == 0, -1e9)
+    print(gold_ref)
+    gold_ref = torch.nn.functional.softmax(gold_ref, dim=3).numpy()
+    print(gold_ref.shape)
+    # gold_ref = torch.einsum('ijkl, iljm->ikjm', gold_ref_temp, D_ref).numpy()
+    print(gold_ref)
+
+    pytest.set_trace()
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+    # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
+    # print(mg.get_matrix())
+    print("Out crds:", out_crds)
+    print()
+    print("Out segs:", out_segs)
+    print()
+    print("Out vals:", out_vals)
+    print(len(out_vals))
+    print("sizes:", [len(arr) for arr in out_crds])
+    print("sizes:", [len(arr) for arr in out_segs])
+    print(gold_ref.shape)
+    pytest.set_trace()
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor4_multiply2_ijklm(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fusedsoftmax_ijklm")
+    B_shape_filename = os.path.join(B_dirname, "tensor_S_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fusedsoftmax_ijklm")
+    C_shape_filename = os.path.join(C_dirname, "tensor_V_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+    # D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fusedsoftmax_ijklm")
+    # D_shape_filename = os.path.join(D_dirname, "tensor_V_mode_shape")
+    # D_shape = read_inputs(D_shape_filename)
+
+    B_tens = get_tensor_from_files(name="S", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
+    C_tens = get_tensor_from_files(name="V", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+    # D_tens = get_tensor_from_files(name="V", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x', mode_ordering=[0,2,3,1])
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
+    # mode1 = (0,2,1,3)
+    # mode2 = (0,2,3,1)
+    # B_tens.transpose_tensor(mode1)
+    # C_tens.transpose_tensor(mode2)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    # B_tens.dump_outputs(format='CSF')
+    # C_tens.dump_outputs(format='CSF')
+
+    # pytest.set_trace()
+
+    # pytest.set_trace()
+    print("B numpy shape:", B_tens.shape)
+    print("C numpy shape:", C_tens.shape)
+    # print("D numpy shape:", D_tens.shape)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+    # D_ref = torch.from_numpy(D_tens.get_matrix())
+
+    # B_ref = torch.permute(B_ref, (0, 1, 2, 3))
+    
+    # out_name = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_transposed")
+    out_name = "test"
+    mat_Q = MatrixGenerator("Q", shape=B_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=B_ref.numpy())
+    mat_K = MatrixGenerator("K", shape=C_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=C_ref.numpy())
+    # mat_g.dump_outputs(format='CSF')
+    # mat_V = MatrixGenerator("V", shape=D_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=D_ref.numpy())
+    # mat_g.dump_outputs(format='CSF')
+
+    # B_ref = torch.permute(B_ref, (0, 2, 1, 3))
+    C_ref = torch.permute(C_ref, (0, 2, 1, 3))
+    # C_ref = torch.permute(C_ref, (0, 3, 1, 2))
+    # D_ref = torch.permute(D_ref, (0, 3, 1, 2))
+
+    print("B:", B_ref.numpy())
+    print("B_gen:", mat_Q.array)
+    print("C:", C_ref.numpy())
+    print("C_gen:", mat_K.array)
+    # print("D:", D_ref.numpy())
+    # print("D_gen:", mat_V.array)
+
+    print(B_ref.shape)
+    print(C_ref.shape)
+    pytest.set_trace()
+
+    # gold_ref = D_ref.numpy()
+    # gold_ref = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref)
+    # gold_ref = gold_ref.masked_fill(gold_ref == 0, -1e9)
+    # print(gold_ref)
+    # gold_ref = torch.nn.functional.softmax(gold_ref, dim=3).numpy()
+    gold_ref = torch.einsum('ijkl, iljm->ikjm', B_ref, C_ref).numpy()
+    print(gold_ref.shape)
+    print(gold_ref)
+
+    pytest.set_trace()
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+    # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
+    # print(mg.get_matrix())
+    print("Out crds:", out_crds)
+    print()
+    print("Out segs:", out_segs)
+    print()
+    print("Out vals:", out_vals)
+    print(len(out_vals))
+    print("sizes:", [len(arr) for arr in out_crds])
+    print("sizes:", [len(arr) for arr in out_segs])
+    print(gold_ref.shape)
+    pytest.set_trace()
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
         out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
         out_tup = remove_zeros(out_tup)
         print("ref:", out_tup)

@@ -15,7 +15,7 @@ from sam.sim.test.test import *
 
 class MatrixGenerator():
 
-    def __init__(self, name='B', shape=None, sparsity=0.6, format='CSF', dump_dir=None, tensor=None, value_cap=None) -> None:
+    def __init__(self, name='B', shape=None, mode_ordering=None, block_size=1, block_naive=True, sparsity=0.6, format='CSF', dump_dir=None, tensor=None, value_cap=None) -> None:
 
         # assert dimension is not None
         # self.dimension = dimension
@@ -24,6 +24,9 @@ class MatrixGenerator():
         self.sparsity = sparsity
         self.format = format
         self.name = name
+        self.mode_ordering = mode_ordering
+        self.block_size = block_size
+        self.block_naive = block_naive
         if value_cap is None:
             self.value_cap = int(math.pow(2, 8)) - 1
         else:
@@ -35,18 +38,26 @@ class MatrixGenerator():
             self.dump_dir = dump_dir
             if not os.path.isdir(self.dump_dir):
                 os.mkdir(self.dump_dir)
-            else:
-                # Otherwise clean it
-                for filename in os.listdir(self.dump_dir):
-                    ret = os.remove(self.dump_dir + "/" + filename)
+            # else:
+            #     # Otherwise clean it
+            #     for filename in os.listdir(self.dump_dir):
+            #         ret = os.remove(self.dump_dir + "/" + filename)
         else:
             self.dump_dir = tempfile.gettempdir()
 
         if tensor is not None:
             self.array = tensor
             self.shape = self.array.shape
+            if mode_ordering is None:
+                self.mode_ordering = range(len(shape))
         else:
             assert shape is not None
+            # assert mode_ordering is not None
+            if mode_ordering is None:
+                self.mode_ordering = range(len(shape))
+            assert len(shape) == len(mode_ordering)
+            if mode_ordering != list(range(len(shape))):
+                self.shape = [shape[i] for i in mode_ordering]
             self._create_matrix(value_cap=self.value_cap)
         self._create_fiber_tree()
 
@@ -54,6 +65,8 @@ class MatrixGenerator():
         '''
         Routine to create the actual matrix from the dimension/shape
         '''
+        self.shape = [*self.shape[:len(self.shape) - 1], self.shape[len(self.shape) - 2] * self.block_size,
+                      self.shape[len(self.shape) - 2] * self.block_size]
         self.array = numpy.random.randint(low=0, high=value_cap, size=self.shape)
         for idx, x in numpy.ndenumerate(self.array):
             if random.random() < self.sparsity:
@@ -119,7 +132,8 @@ class MatrixGenerator():
                     fake_lines_val = ["0000"]
                 else:
                     fake_lines_val = ["0000"]
-                for mode in range(len(self.array.shape)):
+                # for mode in range(len(self.array.shape)):
+                for mode in self.mode_ordering:
                     if glb_override:
                         lines = [len(fake_lines_seg), *fake_lines_seg, len(fake_lines_crd), *fake_lines_crd]
                         self.write_array(lines, name=f"tensor_{self.name}_mode_{mode}", dump_dir=use_dir, hex=print_hex)
@@ -143,12 +157,14 @@ class MatrixGenerator():
             seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
             if glb_override:
                 lines = [len(seg_arr), *seg_arr, len(coord_arr), *coord_arr]
-                self.write_array(lines, name=f"tensor_{self.name}_mode_0", dump_dir=use_dir, hex=print_hex)
+                self.write_array(lines, name=f"tensor_{self.name}_mode_{self.mode_ordering[0]}", dump_dir=use_dir, hex=print_hex)
             else:
-                self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg", dump_dir=use_dir, hex=print_hex)
-                self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd", dump_dir=use_dir, hex=print_hex)
+                print(self.mode_ordering)
+                self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{self.mode_ordering[0]}_seg", dump_dir=use_dir, hex=print_hex)
+                self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{self.mode_ordering[0]}_crd", dump_dir=use_dir, hex=print_hex)
 
             at_vals = False
+            # TODO: Might need a try catch
             i = 1
             while at_vals is False:
                 # Make the next level of fibers - basically BFS but segmented across depth of tree
@@ -175,10 +191,10 @@ class MatrixGenerator():
                     seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
                     if glb_override:
                         lines = [len(seg_arr), *seg_arr, len(coord_arr), *coord_arr]
-                        self.write_array(lines, name=f"tensor_{self.name}_mode_{i}", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_{self.mode_ordering[i]}", dump_dir=use_dir, hex=print_hex)
                     else:
-                        self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg", dump_dir=use_dir, hex=print_hex)
-                        self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{self.mode_ordering[i]}_seg", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{self.mode_ordering[i]}_crd", dump_dir=use_dir, hex=print_hex)
                 i = i + 1
         elif self.format == "UNC":
             flat_array = []
@@ -435,12 +451,15 @@ def run_statistics(name, seed, shape, dump_dir, sparsity):
 
 def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
     mat_base = numpy.zeros(shape)
+    print("create_matrix shape:", shape)
     dims = len(shape)
     for pt_idx in range(len(pt_list[0])):
         pt_base = []
         for i in range(dims):
             pt_base.append(pt_list[i][pt_idx])
         mat_base[tuple(pt_base)] = pt_list[dims][pt_idx]
+
+    print(mat_base)
 
     mg = MatrixGenerator(name=f"{name}", shape=shape, sparsity=0.7, format='CSF', dump_dir=None, tensor=mat_base)
     return mg
@@ -481,7 +500,7 @@ def convert_aha_glb_output_file(glbfile, output_dir):
                 sl_ptr += 1
 
 
-def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_terminate=None) -> MatrixGenerator:
+def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_terminate=None, mode_ordering=None) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
 
@@ -498,7 +517,12 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
         created_empty = False
         segs = []
         crds = []
-        for mode in range(dims):
+        modes = []
+        if mode_ordering is not None:
+            modes = mode_ordering
+        else:
+            modes = range(dims)
+        for mode in modes:
             seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
             crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
             seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate)
@@ -512,6 +536,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
             crds.append(crd_t_)
         if not created_empty:
             pt_list = get_point_list(crds, segs, val_arr=vals)
+            print(pt_list)
             mg = create_matrix_from_point_list(name, pt_list, shape)
     elif format == 'COO':
         crds = []
