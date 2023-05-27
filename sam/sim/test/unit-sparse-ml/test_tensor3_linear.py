@@ -191,6 +191,9 @@ def test_tensor3_linear(samBench, frosttname, cast, check_gold, debug_sim, repor
     out_segs = [fiberwrite_X0_3.get_seg_arr(), fiberwrite_X2_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
 
+    print(time_cnt)
+    pytest.set_trace()
+
     def bench():
         time.sleep(0.01)
 

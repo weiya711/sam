@@ -26,8 +26,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0, block_size=2):
-    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2_blocked")
+def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0, block_size=4):
+    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2_blocked_32")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -54,7 +54,7 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2_blocked")
+    C_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2_blocked_32")
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -116,12 +116,16 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     reduce_6 = Reduce(debug=debug_sim, statistics=report_stats)
     drop_9 = CrdDrop(debug=debug_sim)
     div_6 = Divide2(debug=debug_sim, statistics=report_stats)
-    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[2] * B_shape[1] * C_shape[3], block_size=block_size, fill=fill,
+    fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * B_shape[2] * B_shape[1] * C_shape[3], block_size=block_size,
+                                    fill=fill,
                                     debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
     time_cnt = 0
+    naive_cnt = 0
+
+    in_b = []
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
@@ -152,6 +156,9 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
         intersectl_9.set_in2(fiberlookup_Cl_11.out_ref(), fiberlookup_Cl_11.out_crd())
         arrayvals_B_7.set_load(intersectl_9.out_ref1())
         arrayvals_C_8.set_load(intersectl_9.out_ref2())
+
+        in_b.append(arrayvals_B_7.out_load())
+        # print(remove_emptystr(in_b))
 
         mul_6.set_in1(arrayvals_B_7.out_val())
         mul_6.set_in2(arrayvals_C_8.out_val())
@@ -184,8 +191,13 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
         reduce_5.update()
         fiberwrite_Xvals_0.update()
 
-        done = fiberwrite_X0_4.out_done() and fiberwrite_X1_3.out_done() and fiberwrite_X2_2.out_done() and fiberwrite_X3_1.out_done() and fiberwrite_Xvals_0.out_done()
-        time_cnt += 1
+        done = fiberwrite_X0_4.out_done() and fiberwrite_X1_3.out_done() and fiberwrite_X2_2.out_done() \
+               and fiberwrite_X3_1.out_done() and fiberwrite_Xvals_0.out_done()
+
+        count_increment = 2 * block_size + 1 if mul_6.get_sys_ready() else 1
+        # count_increment = 1
+        time_cnt += count_increment
+        naive_cnt += 1
 
     fiberwrite_X0_4.autosize()
     fiberwrite_X1_3.autosize()
@@ -199,7 +211,14 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
                 fiberwrite_X3_1.get_seg_arr()]
     out_vals = fiberwrite_Xvals_0.get_arr()
 
-    print(out_vals)
+    print("Blocked: ", time_cnt)
+    print("Naive: ", naive_cnt * block_size * block_size)
+    # print(out_vals)
+    print(B_shape)
+    print(C_shape)
+    print(len(B_vals))
+    print(len(C_vals))
+    pytest.set_trace()
 
     def bench():
         time.sleep(0.01)
@@ -295,5 +314,6 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor4_multiply2(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, "ssss0123")
+        check_gold_tensor4_multiply2_blocked(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, block_size,
+                                             "ssss0123")
     samBench(bench, extra_info)
