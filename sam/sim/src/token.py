@@ -3,10 +3,10 @@ from .base import *
 
 # Drops tokens
 class StknDrop(Primitive):
-    def __init__(self, depth=1, **kwargs):
+    def __init__(self, depth=1, fifos=None, **kwargs):
         super().__init__(**kwargs)
 
-        self.in_stream = []
+        self.in_val = []
 
         self.curr_out = ''
         if self.backpressure_en:
@@ -14,6 +14,9 @@ class StknDrop(Primitive):
             self.depth = depth
             self.fifo_avail = True
             self.ready_backpressure = True
+
+        if fifos is not None:
+            self.in_val = fifos[0]
 
     def set_backpressure(self, backpressure):
         if not backpressure:
@@ -26,9 +29,12 @@ class StknDrop(Primitive):
             return copy_backpressure
         return True
 
+    def return_fifo(self):
+        return self.in_val
+
     def update_ready(self):
         if self.backpressure_en:
-            if len(self.in_stream) > self.depth:
+            if len(self.in_val) > self.depth:
                 self.fifo_avail = False
             else:
                 self.fifo_avail = True
@@ -37,20 +43,22 @@ class StknDrop(Primitive):
         self.update_done()
         self.update_ready()
         self.data_valid = False
+        ival = ''
+
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
-            if len(self.in_stream) > 0:
+            if len(self.in_val) > 0:
                 self.block_start = False
 
-            ival = ''
+
 
             if self.done:
                 self.curr_out = ''
                 # return
 
-            if len(self.in_stream) > 0:
-                ival = self.in_stream.pop(0)
+            if len(self.in_val) > 0:
+                ival = self.in_val.pop(0)
                 if ival == 'D':
                     self.done = True
                     self.curr_out = 'D'
@@ -62,9 +70,9 @@ class StknDrop(Primitive):
         if self.debug:
             print("Curr InnerCrd:", ival, "\t Curr OutputCrd:", self.curr_out)
 
-    def set_in_stream(self, val, parent=None):
+    def set_in_val(self, val, parent=None):
         if val != '' and val is not None:
-            self.in_stream.append(val)
+            self.in_val.append(val)
         if self.backpressure_en:
             parent.set_backpressure(self.fifo_avail)
 
@@ -77,7 +85,7 @@ class EmptyFiberStknDrop(Primitive):
     def __init__(self, depth=4, **kwargs):
         super().__init__(**kwargs)
 
-        self.in_stream = []
+        self.in_val = []
 
         self.largest_stkn = None
         self.prev_stkn = False
@@ -114,7 +122,7 @@ class EmptyFiberStknDrop(Primitive):
     def update(self):
         self.update_done()
         self.update_ready()
-        if len(self.in_stream) > 0:
+        if len(self.in_val) > 0:
             self.block_start = False
         if self.backpressure_en:
             self.data_valid = False
@@ -138,8 +146,8 @@ class EmptyFiberStknDrop(Primitive):
                     self.leading_stkn = False
                 return
 
-            if len(self.in_stream) > 0:
-                ival = self.in_stream.pop(0)
+            if len(self.in_val) > 0:
+                ival = self.in_val.pop(0)
                 if is_stkn(ival) and not self.leading_stkn:
                     self.largest_stkn = ival if self.largest_stkn is None else larger_stkn(self.largest_stkn, ival)
                     self.curr_out = ''
@@ -169,9 +177,9 @@ class EmptyFiberStknDrop(Primitive):
                 print("Curr InnerCrd:", ival, "\t Curr OutputCrd:", self.curr_out)
 
     # This can be both val or crd
-    def set_in_stream(self, val, parent=None):
+    def set_in_val(self, val, parent=None):
         if val != '' and val is not None:
-            self.in_stream.append(val)
+            self.in_val.append(val)
         if self.backpressure_en:
             parent.set_backpressure(self.fifo_avail)
 

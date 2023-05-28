@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 def gen_stkns(dim=10):
     return ['S' + str(i) for i in range(dim)]
 
@@ -32,10 +31,19 @@ def is_valid_val(elem, dim=10):
 def is_0tkn(elem):
     return elem == 'N'
 
+# Checks if a token is a non-control (numerical) token
+def is_nc_tkn(elem, datatype=int):
+    return isinstance(elem, datatype)
 
 def is_stkn(elem):
     if isinstance(elem, str):
         return elem.startswith('S') and (len(elem) == 2)
+    return False
+
+
+def is_dtkn(elem):
+    if isinstance(elem, str):
+        return elem == 'D'
     return False
 
 
@@ -88,6 +96,11 @@ class Primitive(ABC):
     @abstractmethod
     def update(self):
         pass
+
+    # Check the input token of something
+    def valid_token(self, element, datatype=int):
+        return element != "" and element is not None and \
+            (is_dtkn(element) or is_stkn(element) or is_nc_tkn(element, datatype) or is_0tkn(element))
 
     def reset(self):
         self.done = False
