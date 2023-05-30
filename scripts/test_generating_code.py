@@ -2,6 +2,7 @@ import pydot
 import os
 import argparse
 import networkx as nx
+import copy
 
 from collections import defaultdict
 
@@ -58,7 +59,16 @@ class TensorFormat:
             return 1
 
 
-class CodeGenerationdatasets:
+def strip_quotes_dict(dd):
+    return_dict = {}
+    for kk, vv in dd.items():
+        assert(isinstance(vv, str))
+        element = vv.replace('"', '')
+        return_dict[kk] = element
+    return return_dict
+
+
+class CodeGenerationDatasets:
     def __init__(self):
         # Rememebers [parents of a node
         self.stream_join_elements = {}
@@ -67,16 +77,24 @@ class CodeGenerationdatasets:
         # Not used required since intersection has special structure need to know which reference is which coordinate
         self.intersect_dataset = defaultdict(dict)
         self.done_all = {}
+        self.edge_data_map = {}
 
     def build_datasets(self, networkx_graph):
         for u, v, a in networkx_graph.edges(data=True):
+            print(u, v, a)
             if v not in self.done_all:
                 self.done_all[v] = 0
             if v not in self.stream_join_elements:
                 self.stream_join_elements[v] = [u]
+                clean_map = strip_quotes_dict(a)
+                print(clean_map)
+                self.set_edge_data_map(u, v, clean_map)
                 self.edge_data[v] = [str((a["label"]).strip('"'))]
             else:
                 self.stream_join_elements[v].append(u)
+                clean_map = strip_quotes_dict(a)
+                print(clean_map)
+                self.set_edge_data_map(u, v, clean_map)
                 self.edge_data[v].append(str((a["label"]).strip('"')))
 
     def get_edge_data(self):
@@ -85,6 +103,7 @@ class CodeGenerationdatasets:
     def get_edge_info(self, v, i):
         if self.edge_data[v][i] is None and len(self.edge_data[v][i]) == 0:
             return ""
+        # FIXME: This can't handle any index variable... Only 'ijk' what about 'lmn...'
         if "-i" in self.edge_data[v][i] or "-j" in self.edge_data[v][i] or "-k" in self.edge_data[v][i]:
             return str(self.edge_data[v][i])[:-2]
         return str(self.edge_data[v][i])
@@ -104,6 +123,14 @@ class CodeGenerationdatasets:
     def get_if_node_done(self, v):
         return self.done_all[v]
 
+    def get_edge_data_map(self):
+        return self.edge_data_map
+
+    def set_edge_data_map(self, in_node_id, out_node_id, node_attr_map):
+        if in_node_id in self.edge_data_map.keys():
+            self.edge_data_map[in_node_id][out_node_id] = node_attr_map
+        else:
+            self.edge_data_map[in_node_id] = {out_node_id: node_attr_map}
 
 def tab(a):
     ans = ""
@@ -218,73 +245,73 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
         if tensor_format_parse.get_format(ten) == "ds01":
             f.write(
                 tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname" + ",  \"tensor_" + ten +
-                "_mode_1_seg\" )\n")
+                "_mode_1_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_dirname" + "tensor_" + ten + "_mode_1_crd\" )\n")
+                "_dirname" + "tensor_" + ten + "_mode_1_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ds10":
             f.write(
                 tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_0_seg\" )\n")
+                "_mode_0_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_0_crd\" )\n")
+                "_mode_0_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             # f.write(tab(scope_lvl) + ten + "_seg1" +  " = read_inputs(" + ten + "1_crd_filename)")
         elif tensor_format_parse.get_format(ten) == "ss01":
             f.write(
                 tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten +
-                "_mode_0_seg\" )\n")
+                "_mode_0_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_0_crd\" )\n")
+                "_mode_0_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             f.write(
                 tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_1_seg\" )\n")
+                "_mode_1_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_1_crd\" )\n")
+                "_mode_1_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
         elif tensor_format_parse.get_format(ten) == "ss10":
             f.write(
                 tab(scope_lvl) + ten + "0_seg_filename = os.path.join(" + ten + "_dirname,  \"tensor_" + ten +
-                "_mode_0_seg\" )\n")
+                "_mode_0_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg0" + " = read_inputs(" + ten + "0_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "0_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_0_crd\" )\n")
+                "_mode_0_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd0" + " = read_inputs(" + ten + "0_crd_filename)\n\n")
             f.write(
                 tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_1_seg\" )\n")
+                "_mode_1_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_1_crd\" )\n")
+                "_mode_1_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
 
         elif tensor_format_parse.get_format(ten) == "dss012":
             f.write(
                 tab(scope_lvl) + ten + "1_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_1_seg\" )\n")
+                "_mode_1_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg1" + " = read_inputs(" + ten + "1_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "1_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_1_crd\" )\n")
+                "_mode_1_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd1" + " = read_inputs(" + ten + "1_crd_filename)\n\n")
             f.write(
                 tab(scope_lvl) + ten + "2_seg_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_2_seg\" )\n")
+                "_mode_2_seg\")\n")
             f.write(tab(scope_lvl) + ten + "_seg2" + " = read_inputs(" + ten + "2_seg_filename)\n")
             f.write(
                 tab(scope_lvl) + ten + "2_crd_filename = os.path.join(" + ten + "_dirname, \"tensor_" + ten +
-                "_mode_2_crd\" )\n")
+                "_mode_2_crd\")\n")
             f.write(tab(scope_lvl) + ten + "_crd2" + " = read_inputs(" + ten + "2_crd_filename)\n\n")
         else:
             ct = 0
@@ -302,6 +329,13 @@ def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_for
         f.write(tab(scope_lvl) + ten + "_vals_filename = os.path.join(" + ten +
                 "_dirname, \"tensor_" + ten + "_mode_vals\")\n")
         f.write(tab(scope_lvl) + ten + "_vals" + " = read_inputs(" + ten + "_vals_filename, float)\n\n")
+
+
+# Gets the input number for a sparse accumulator block given the index string
+def get_spacc_input(node, index):
+    for k, v in node.items():
+        if v == index:
+            return k
 
 
 def gen_data_formats(size, app_name, path):
@@ -546,29 +580,23 @@ def get_all_files(directory_path):
 
 parser = argparse.ArgumentParser("Generate sam apps/")
 parser.add_argument("--input_dir", type=str, default="./compiler/sam-outputs/dot")
+parser.add_argument("--name", type=str, default="all")
 args = parser.parse_args()
 
 file_paths, out_name = get_all_files(args.input_dir)
-# FIXME: (owhsu) use enumerate
-num = 0
-for apath in file_paths:
-    # apath = "../compiler/sam-outputs/dot/matmul_ijk.gv"
-    # out_name[0] = "matmul_ijk"
-    # apath = os.path.join(directory, ".gv")
-    if out_name[num] in frostt_list or out_name[num] in suitesparse_list\
-            or out_name[num] in vec_list or out_name[num] in other_list:
+
+for num, apath in enumerate(file_paths):
+    if args.name in apath or args.name == "all":
         graphs = pydot.graph_from_dot_file(apath)
         graph = graphs[0]
+
         networkx_graph = nx.nx_pydot.from_pydot(graph)
 
         tensor_format_parse = TensorFormat()
         tensor_format_parse.set_all_tensors(apath)
-        # FIXME: (owhsu) Use with open
         f = open(out_name[num] + ".py", "w")
         generate_header(f, out_name[num])
-        # nx.draw(networkx_graph, with_labels=True)
-        # plt.savefig("Graph.png", format="PNG")
-        # plt.show()
+
         networkx_graph = remove_broadcast_nodes(networkx_graph)
         # Node Dataset present
         d = {}
@@ -606,19 +634,19 @@ for apath in file_paths:
                 if node_info["format"] == "dense":
                     f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] +
                             node_info["index"] + "_" + str(u) + " = UncompressCrdRdScan(dim=" + node_info["tensor"] +
-                            "_shape[" + node_info["mode"] + "], " + get_default_obj_str() + ")\n")
+                            "_shape[" + node_info["mode"] + "]" + ", debug=debug_sim, statistics=report_stats)\n")
                     d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
                 if node_info["format"] == "compressed":
                     f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] +
                             "_" + str(u) + " = CompressedCrdRdScan(crd_arr=" + node_info["tensor"] +
                             "_crd" + node_info["mode"] + ", seg_arr=" + node_info["tensor"] +
-                            "_seg" + node_info["mode"] + ", " + get_default_obj_str() + ")\n")
+                            "_seg" + node_info["mode"] + ", debug=debug_sim, statistics=report_stats)\n")
                     d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
 
             elif node_info["type"] == "arrayvals":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + " = Array(init_arr=" +
-                        node_info["tensor"] + "_vals, " + get_default_obj_str() + ")\n")
+                        node_info["tensor"] + "_vals, " + "debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u)
 
             elif "broadcast" in networkx_graph.nodes[u]['comment']:
@@ -626,84 +654,65 @@ for apath in file_paths:
 
             elif node_info["type"] == "repsiggen":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["index"] + "_" + str(u) +
-                        " = RepeatSigGen(" + get_default_obj_str() + ")\n")
+                        " = RepeatSigGen(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u)
 
-            elif node_info["type"] == "exp":
-                f.write(tab(1) + node_info["type"] + "_" + str(u) +
-                        " = Exp(in2=0, " + get_default_obj_str() + ")\n")
-                d[u]["object"] = node_info["type"] + "_" + str(u)
             elif node_info["type"] == "repeat":
                 f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u) +
-                        " = Repeat(" + get_default_obj_str() + ")\n")
+                        " = Repeat(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["index"] + "_" + str(u)
             elif node_info["type"] == "intersect":
-                f.write(tab(1) + node_info["type"] + node_info["index"] + "_" +
-                        str(u) + " = Intersect2(" + get_default_obj_str() +
-                        ")\n")
+                f.write(
+                    tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Intersect2(debug=debug_sim, " +
+                    "statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
             elif node_info["type"] == "union":
-                f.write(tab(1) + node_info["type"] + node_info["index"] + "_" +
-                        str(u) + " = Union2(" + get_default_obj_str() + ")\n")
+                f.write(tab(1) + node_info["type"] + node_info["index"] + "_" + str(u) + " = Union2(debug=debug_sim, " +
+                        "statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + node_info["index"] + "_" + str(u)
                 # invalid_flag = 1
             elif node_info["type"] == "spaccumulator" and node_info["order"] == "1":
                 f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + " = SparseAccumulator1(" + get_default_obj_str() + ")\n")
+                    u) + " = SparseAccumulator1(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
-                f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + "_drop_crd_inner" + " = StknDrop(" + get_default_obj_str() + ")\n")
-                f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + "_drop_crd_outer" + " = StknDrop(" + get_default_obj_str() + ")\n")
-                f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + "_drop_val" + " = StknDrop(" + get_default_obj_str() + ")\n")
             elif node_info["type"] == "spaccumulator" and node_info["order"] == "2":
                 f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + " = SparseAccumulator2(" + get_default_obj_str() + ")\n")
+                    u) + " = SparseAccumulator2(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + node_info["order"] + "_" + str(u)
-                f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + "_drop_crd_inner" + " = StknDrop(" + get_default_obj_str() + ")\n")
-                f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + "_drop_crd_outer" + " = StknDrop(" + get_default_obj_str() + ")\n")
-                # f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                #    u) + "_drop_crd_in_2" + " = StknDrop(debug=debug_sim)\n")
-                f.write(tab(1) + node_info["type"] + node_info["order"] + "_" + str(
-                    u) + "_drop_val" + " = StknDrop(" + get_default_obj_str() + ")\n")
             elif node_info["type"] == "crddrop":
                 f.write(
-                    tab(1) + node_info["type"] + "_" + str(u) + " = CrdDrop(" + get_default_obj_str() + ")\n")
+                    tab(1) + node_info["type"] + "_" + str(
+                        u) + " = CrdDrop(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + str(u)
             elif node_info["type"] == "crdhold":
                 f.write(
-                    tab(1) + node_info["type"] + "_" + str(u) + " = CrdHold(" + get_default_obj_str() + ")\n")
+                    tab(1) + node_info["type"] + "_" + str(
+                        u) + " = CrdHold(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + str(u)
             elif node_info["type"] == "mul":
                 f.write(
-                    tab(1) + node_info["type"] + "_" + str(u) + " = Multiply2(" + get_default_obj_str() + ")\n")
-                d[u]["object"] = node_info["type"] + "_" + str(u)
-            elif node_info["type"] == "div":
-                f.write(
-                    tab(1) + node_info["type"] + "_" + str(u) + " = Divide2(" + get_default_obj_str() + ")\n")
+                    tab(1) + node_info["type"] + "_" + str(
+                        u) + " = Multiply2(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + str(u)
             elif node_info["type"] == "add":
-                f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Add2(" + get_default_obj_str() + ")\n")
+                f.write(
+                    tab(1) + node_info["type"] + "_" + str(u) + " = Add2(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + str(u)
             elif node_info["type"] == "reduce":
-                f.write(tab(1) + node_info["type"] + "_" + str(u) + " = Reduce(" + get_default_obj_str() + ")\n")
-                d[u]["object"] = node_info["type"] + "_" + str(u)
-            elif node_info["type"] == "maxreduce":
-                f.write(tab(1) + node_info["type"] + "_" + str(u) + " = MaxReduce(" + get_default_obj_str() + ")\n")
+                f.write(
+                    tab(1) + node_info["type"] + "_" + str(u) + " = Reduce(debug=debug_sim, statistics=report_stats)\n")
                 d[u]["object"] = node_info["type"] + "_" + str(u)
             elif node_info["type"] == "fiberwrite":
                 if node_info["mode"] == "vals":
                     f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                             " = ValsWrScan(size=" + array_size_computation(node_info["size"]) +
-                            ", fill=fill, " + get_default_obj_str() + ")\n")
+                            ", fill=fill, debug=debug_sim, statistics=report_stats)\n")
                     d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
                 elif node_info["format"] == "compressed":
                     f.write(tab(1) + node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u) +
                             " = CompressWrScan(seg_size=" + array_size_computation(node_info["segsize"]) + ", size=" +
-                            array_size_computation(node_info["crdsize"]) + ", fill=fill, " + get_default_obj_str() + ")\n")
+                            array_size_computation(node_info["crdsize"]) + ", fill=fill," + " debug=debug_sim, " +
+                            "statistics=report_stats)\n")
                     d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
                 else:
                     d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + node_info["mode"] + "_" + str(u)
@@ -723,7 +732,7 @@ for apath in file_paths:
         f.write(tab(1) + "while not done and time_cnt < TIMEOUT:\n")
 
         intersect_dataset = defaultdict(dict)
-        data = CodeGenerationdatasets()
+        data = CodeGenerationDatasets()
         data.build_datasets(networkx_graph)
         for u in networkx_graph.nodes():
             if d[u]["type"] == "fiberlookup" and u not in data.get_if_done():
@@ -738,7 +747,8 @@ for apath in file_paths:
             for u, v, _ in list(nx.edge_bfs(networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
                 a = networkx_graph.get_edge_data(u, v)[0]
                 if d[v]["type"] == "fiberlookup" and data.get_if_node_done(v) == 0 and parents_done(networkx_graph,
-                                                                                                    data.get_if_done(), v):
+                                                                                                    data.get_if_done(),
+                                                                                                    v):
                     for i in range(len(data.get_parents()[v])):
                         u_ = data.get_parents()[v][i]
                         if "intersect" in d[u_]["object"] or "union" in d[u_]["object"]:
@@ -795,17 +805,13 @@ for apath in file_paths:
 
                 if d[v]["type"] == "intersect" and parents_done(networkx_graph, data.get_if_done(), v) and \
                         data.get_if_node_done(v) == 0:
-                    print(range(len(data.get_parents()[v])))
                     for i in range(len(data.get_parents()[v])):
                         if i % 2 == 1:
                             continue
                         u_ = data.get_parents()[v][i]
                         f.write(tab(2) + d[v]["object"] + ".set_in" + str((i) // 2 + 1) + "(" +
                                 d[u_]["object"] + ".out_ref(), " + d[u_]["object"] + ".out_crd())\n")
-                        try: 
-                            intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
-                        except:
-                            print(intersect_dataset)
+                        intersect_dataset[d[v]["object"]][d[u_]["tensor"]] = i // 2 + 1
                     nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                     # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
@@ -827,16 +833,12 @@ for apath in file_paths:
                         data.get_if_node_done(v) == 0:
                     for u_ in data.get_parents()[v]:
                         index_value = data.get_edge_data()[v][data.get_parents()[v].index(u_)][-1]
-                        edge_name = data.get_edge_data()[v][data.get_parents()[v].index(u_)][:-2]
-                        if edge_name[-2:] == "in":
-                            # Handle special case of crd_in vs crd names. This might be incorrect in the compiler
-                            edge_name = edge_name[:-3]
                         if index_value == d[v]["inner"]:
-                            f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] +
-                                    ".out_" + edge_name + "())\n")
+                            f.write(
+                                tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                         if index_value == d[v]["outer"]:
-                            f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] +
-                                    ".out_" + edge_name + "())\n")
+                            f.write(
+                                tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
                     nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                     # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
@@ -863,51 +865,36 @@ for apath in file_paths:
                     for i in range(len(data.get_parents()[v])):
                         u_ = data.get_parents()[v][i]
                         local_edge = ""
+                        node_data = d[v]
                         if "crd" in data.get_edge_data()[v][i]:
                             local_edge = data.get_edge_data()[v][i][:-2]
-                            index_value = data.get_edge_data()[v][i][-1]
-                            if "in0" not in d[v].keys() or "in1" not in d[v].keys():
-                                print("ERROR: ", d[v]["object"], " block is missing one input")
-                                # exit()
-                            elif index_value == d[v]["in0"]:
-                                f.write(tab(2) + d[v]["object"] + "_drop_crd_inner.set_in_stream(" +
-                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
-                            elif index_value == d[v]["in1"]:
-                                f.write(tab(2) + d[v]["object"] + "_drop_crd_outer.set_in_stream(" +
-                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
-                            else:
-                                print("ERROR: ", d[v]["object"], " block has extra input")
-                                # exit()
-                        else:
-                            local_edge = data.get_edge_data()[v][i]
-                            if local_edge != "crd":
-                                f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                        d[u_]["object"] + ".out_val())\n")
-                            else:
-                                # Should be an error
-                                pass
-                        if local_edge != "crd":
-                            nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
-                        # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
 
-                    for i in range(len(data.get_parents()[v])):
-                        u_ = data.get_parents()[v][i]
-                        local_edge = ""
-                        if "crd" in data.get_edge_data()[v][i]:
-                            local_edge = data.get_edge_data()[v][i][:-2]
-                            if local_edge != "crd":
-                                f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                        d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                            else:
-                                # Should be an error
-                                pass
+                            # Get the index of the edge
+                            local_index = data.get_edge_data_map()[u_][v]["index"]
+
+                            # Get that edge's input number based on the spacc index to number map
+                            local_input_num = get_spacc_input(d[v], local_index)[-1]
+                            local_edge_type = data.get_edge_data()
+                            f.write(tab(2) + d[v]["object"] + ".set_in_crd" + local_input_num + "(" +
+                                    d[u_]["object"] + ".out_" + local_edge + "())\n")
                         else:
                             local_edge = data.get_edge_data()[v][i]
-                            # if local_edge != "crd":
                             f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                    d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
+                                    d[u_]["object"] + ".out_val())\n")
+                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
 
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                    # for i in range(len(data.get_parents()[v])):
+                    #     u_ = data.get_parents()[v][i]
+                    #     local_edge = ""
+                    #     if "crd" in data.get_edge_data()[v][i]:
+                    #         local_edge = data.get_edge_data()[v][i][:-2]
+                    #         f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
+                    #                 d[v]["object"] + ".out_val())\n")
+                    #     else:
+                    #         local_edge = data.get_edge_data()[v][i]
+                    #         f.write(tab(2) + d[v]["object"] + ".set_in_" + local_edge + "(" +
+                    #                 d[v]["object"] + ".out_val())\n")
+                    # nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                     # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
 
@@ -919,57 +906,30 @@ for apath in file_paths:
                         local_edge = ""
                         if "crd" in data.get_edge_data()[v][i]:
                             local_edge = data.get_edge_data()[v][i][:-2]
-                            index_value = data.get_edge_data()[v][i][-1]
-                            if "in0" not in d[v].keys() or "in1" not in d[v].keys():
-                                print("ERROR: ", d[v]["object"], " block is missing one input")
-                                # exit()
-                            elif index_value == d[v]["in0"]:
-                                f.write(tab(2) + d[v]["object"] + "_drop_crd_inner.set_in_stream(" +
-                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
-                            elif index_value == d[v]["in1"]:
-                                f.write(tab(2) + d[v]["object"] + "_drop_crd_outer.set_in_stream(" +
-                                        d[u_]["object"] + ".out_" + local_edge + "())\n")
-                            else:
-                                print("ERROR: ", d[v]["object"], " block has extra input")
-                                # exit()
-                        else:
-                            local_edge = data.get_edge_data()[v][i]
-                            f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".set_in_stream(" +
-                                    d[u_]["object"] + ".out_val())\n")
-                        if local_edge != "crd":
-                            nodes_updating_list.append(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
-                        # f.write(tab(2) + d[v]["object"] + "_drop_" + local_edge + ".update()\n")
-
-                    for i in range(len(data.get_parents()[v])):
-                        u_ = data.get_parents()[v][i]
-                        local_edge = ""
-                        if "crd" in data.get_edge_data()[v][i]:
-                            local_edge = data.get_edge_data()[v][i][:-2]
-                            if local_edge != "crd":
-                                f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                        d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                            else:
-                                # Should be an error
-                                pass
+                            f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
+                                    d[u_]["object"] + ".out_" + local_edge + "())\n")
                         else:
                             local_edge = data.get_edge_data()[v][i]
                             f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
-                                    d[v]["object"] + "_drop_" + local_edge + ".out_val())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+                                    d[u_]["object"] + ".out_val())\n")
+                        nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
+
+                    # for i in range(len(data.get_parents()[v])):
+                    #     u_ = data.get_parents()[v][i]
+                    #     local_edge = ""
+                    #     if "crd" in data.get_edge_data()[v][i]:
+                    #         local_edge = data.get_edge_data()[v][i][:-2]
+                    #         f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
+                    #                 d[v]["object"] + ".out_val())\n")
+                    #     else:
+                    #         local_edge = data.get_edge_data()[v][i]
+                    #         f.write(tab(2) + d[v]["object"] + ".set_" + local_edge + "(" +
+                    #                 d[v]["object"] + ".out_val())\n")
+                    # nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                     # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
 
                 if d[v]["type"] == "mul" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                        data.get_if_node_done(v) == 0:
-                    for i in range(len(data.get_parents()[v])):
-                        u_ = data.get_parents()[v][i]
-                        f.write(tab(2) + d[v]["object"] + ".set_in" + str(data.get_parents()[v].index(u_) + 1) + "(" +
-                                d[u_]["object"] + ".out_" + str(data.get_edge_info(v, i)) + "())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    data.add_done(v)
-
-                if d[v]["type"] == "div" and parents_done(networkx_graph, data.get_if_done(), v) and \
                         data.get_if_node_done(v) == 0:
                     for i in range(len(data.get_parents()[v])):
                         u_ = data.get_parents()[v][i]
@@ -998,38 +958,21 @@ for apath in file_paths:
                     # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                     data.add_done(v)
 
-                if d[v]["type"] == "maxreduce" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                        data.get_if_node_done(v) == 0:
-                    for u_ in data.get_parents()[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in_" +
-                                str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "(" + d[u_]["object"] +
-                                ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    data.add_done(v)
-
-                if d[v]["type"] == "exp" and parents_done(networkx_graph, data.get_if_done(), v) and \
-                        data.get_if_node_done(v) == 0:
-                    for u_ in data.get_parents()[v]:
-                        f.write(tab(2) + d[v]["object"] + ".set_in1" +
-                                "(" + d[u_]["object"] +
-                                ".out_" + str(data.get_edge_data()[v][data.get_parents()[v].index(u_)]) + "())\n")
-                    nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
-                    # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
-                    data.add_done(v)
-
                 if d[v]["type"] == "fiberwrite" and parents_done(networkx_graph, data.get_if_done(), v) and \
                         data.get_if_node_done(v) == 0:
                     for i in range(len(data.get_parents()[v])):
                         u_ = data.get_parents()[v][i]
                         if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
                                 in d[u_]["object"]:
-                            local_index = data.get_edge_data()[v][i][-1]
-                            if d[u_]["in0"] == local_index:
-                                local_cord = "_inner"
-                            else:
-                                local_cord = "_outer"
-                            data.set_edge_data(v, i, "crd" + local_cord)
+
+                            # Get the index of the edge
+                            local_index = data.get_edge_data_map()[u_][v]["index"]
+
+                            # Get that edge's input number based on the spacc index to number map
+                            local_input_num = get_spacc_input(d[u_], local_index)[-1]
+                            print(local_index, local_input_num, v, u_, d[v])
+
+                            data.set_edge_data(v, i, "crd" + local_input_num)
                         if d[v]["mode"] == "vals":
                             f.write(tab(2) + d[v]["object"] + ".set_input(" + d[u_]["object"] + ".out_" +
                                     str(data.get_edge_info(v, i)) + "())\n")
@@ -1040,12 +983,7 @@ for apath in file_paths:
                             nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                     data.add_done(v)
 
-        output_tensor = ""
-        ct = 0
-        for k in tensor_format_parse.return_all_tensors():
-            if ct == 0:
-                output_tensor = k
-            ct += 1
+        output_tensor = list(tensor_format_parse.return_all_tensors())[0]
 
         sorted_nodes = sort_output_nodes(output_nodes, tensor_format_parse.get_format(output_tensor))
         output_list = finish_outputs(f, sorted_nodes, nodes_updating_list)
@@ -1056,4 +994,3 @@ for apath in file_paths:
         f.close()
         os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
         os.system("rm " + out_name[num] + ".py")
-    num += 1

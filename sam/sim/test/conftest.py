@@ -19,7 +19,7 @@ def pytest_addoption(parser):
                      help="Flag that enables functional output checking")
     parser.addoption("--skip-empty", action="store_true", default=False,
                      help="Flag that enables functional output checking")
-    parser.addoption("--yaml_name", type=str, default="memory_config_real.yaml",
+    parser.addoption("--yaml_name", type=str, default="memory_config.yaml",
                      help="Name of yaml file for tiling memory configuration")
     parser.addoption("--nbuffer", action="store_true", default=False,
                      help="If nbuffering is enabled")

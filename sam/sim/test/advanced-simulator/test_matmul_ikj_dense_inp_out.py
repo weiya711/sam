@@ -44,7 +44,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     with open(os.path.join(sam_home, "sam/sim/src/tiling/" + yaml_name), "r") as stream:
         loop_config = yaml.safe_load(stream)
     with open(os.path.join(sam_home, "./sam/sim/src/tiling/" + yaml_name), "r") as stream:
-        memory_config = yaml.safe_load(stream) 
+        memory_config = yaml.safe_load(stream)
     struct = {"i00": 1 + int(sizes_dict_level_full["B"][0]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
               "k00": 1 + int(sizes_dict_level_full["B"][1]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
               "j00": 1 + int(sizes_dict_level_full["C"][1]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
@@ -63,12 +63,12 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
     in_ref_B0 = []
     in_ref_C0 = []
     done = False
-    time_cnt = 0 
+    time_cnt = 0
     glb_model_b = memory_block(name="GLB_B", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
                                bandwidth=memory_config["Glb_tile_bandwidth"],
                                latency=memory_config["Global_Glb_latency"], debug=debug_sim)
-    glb_model_c = memory_block(name="GLB_C", skip_blocks=skip_empty, nbuffer=nbuffer, 
+    glb_model_c = memory_block(name="GLB_C", skip_blocks=skip_empty, nbuffer=nbuffer,
                                element_size=memory_config["Bytes_per_element"], size=memory_config["Glb_memory"],
                                bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Global_Glb_latency"],
                                debug=debug_sim)
@@ -82,7 +82,7 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                                debug=debug_sim)
     mem_model_x = output_memory_block(name="X", element_size=memory_config["Bytes_per_element"], level="mem2glb",
                                       bandwidth=memory_config["Mem_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"],
-                                      debug=debug_sim, loop_order=[struct["i0"], struct["k0"], struct["j0"]]) 
+                                      debug=debug_sim, loop_order=[struct["i0"], struct["k0"], struct["j0"]])
     glb_model_x = output_memory_block(name="X", element_size=memory_config["Bytes_per_element"], level="glb2global",
                                       bandwidth=memory_config["Glb_tile_bandwidth"], latency=memory_config["Glb_Mem_latency"],
                                       debug=debug_sim,
@@ -350,8 +350,8 @@ def test_matmul_ikj_tiled_lp(samBench, ssname, check_gold, debug_sim, report_sta
                                            fiberwrite_X0_2.get_seg_arr(), fiberwrite_X1_1.get_seg_arr(),
                                            fiberwrite_Xvals_0.get_arr()], valid=tiled_done)
             glb_model_x.add_upstream(tilecoord=mem_model_x.token(),
-                                     data = mem_model_x.get_size(),
-                                     valid = mem_model_x.out_done())
+                                     data=mem_model_x.get_size(),
+                                     valid=mem_model_x.out_done())
 
         mem_model_x.set_child_ready(glb_model_x.out_ready())
         fiberlookup_Bi00.update()

@@ -8,7 +8,7 @@ from sam.sim.src.compute import Multiply2
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
+from sam.sim.src.accumulator_helpers import SpAcc1NoCrdHold
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
@@ -24,7 +24,7 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
     reason='CI lacks datasets',
 )
 @pytest.mark.suitesparse
-def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, cast, fill=0):
+def test_matmul_ikj_FINAL(samBench, ssname, check_gold, debug_sim, cast, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "matmul_ikj")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
@@ -42,7 +42,8 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, cast, fill=0):
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = B_dirname
+    C_dirname = os.path.join(formatted_dir, ssname, "matmul_ikj")
+
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -72,7 +73,7 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, cast, fill=0):
     repeat_Bj_7 = Repeat(debug=debug_sim)
     arrayvals_B_5 = Array(init_arr=B_vals, debug=debug_sim)
     mul_4 = Multiply2(debug=debug_sim)
-    spaccumulator1_3 = SparseAccumulator1(debug=debug_sim)
+    spaccumulator1_3 = SpAcc1NoCrdHold(debug=debug_sim)
     spaccumulator1_3_drop_crd_in_inner = StknDrop(debug=debug_sim)
     spaccumulator1_3_drop_crd_in_outer = StknDrop(debug=debug_sim)
 
@@ -90,74 +91,73 @@ def test_matmul_ikj(samBench, ssname, check_gold, debug_sim, cast, fill=0):
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_17.set_in_ref(in_ref_B.pop(0))
-        fiberlookup_Bi_17.update()
 
         fiberlookup_Bk_12.set_in_ref(fiberlookup_Bi_17.out_ref())
-        fiberlookup_Bk_12.update()
 
         fiberwrite_X0_2.set_input(fiberlookup_Bi_17.out_crd())
-        fiberwrite_X0_2.update()
 
         repsiggen_i_15.set_istream(fiberlookup_Bi_17.out_crd())
-        repsiggen_i_15.update()
 
         if len(in_ref_C) > 0:
             repeat_Ci_14.set_in_ref(in_ref_C.pop(0))
         repeat_Ci_14.set_in_repsig(repsiggen_i_15.out_repsig())
-        repeat_Ci_14.update()
 
         fiberlookup_Ck_13.set_in_ref(repeat_Ci_14.out_ref())
-        fiberlookup_Ck_13.update()
 
         intersectk_11.set_in1(fiberlookup_Ck_13.out_ref(), fiberlookup_Ck_13.out_crd())
         intersectk_11.set_in2(fiberlookup_Bk_12.out_ref(), fiberlookup_Bk_12.out_crd())
-        intersectk_11.update()
 
         fiberlookup_Cj_10.set_in_ref(intersectk_11.out_ref1())
-        fiberlookup_Cj_10.update()
 
         arrayvals_C_6.set_load(fiberlookup_Cj_10.out_ref())
-        arrayvals_C_6.update()
 
         repsiggen_j_8.set_istream(fiberlookup_Cj_10.out_crd())
-        repsiggen_j_8.update()
 
         repeat_Bj_7.set_in_ref(intersectk_11.out_ref2())
         repeat_Bj_7.set_in_repsig(repsiggen_j_8.out_repsig())
-        repeat_Bj_7.update()
 
         arrayvals_B_5.set_load(repeat_Bj_7.out_ref())
-        arrayvals_B_5.update()
 
         mul_4.set_in1(arrayvals_B_5.out_load())
         mul_4.set_in2(arrayvals_C_6.out_load())
-        mul_4.update()
 
         spaccumulator1_3_crd_hold_in_ik.set_outer_crd(fiberlookup_Bi_17.out_crd())
         spaccumulator1_3_crd_hold_in_ik.set_inner_crd(intersectk_11.out_crd())
-        spaccumulator1_3_crd_hold_in_ik.update()
 
         spaccumulator1_3_crd_hold_in_ij.set_outer_crd(spaccumulator1_3_crd_hold_in_ik.out_crd_outer())
         spaccumulator1_3_crd_hold_in_ij.set_inner_crd(fiberlookup_Cj_10.out_crd())
+
+        spaccumulator1_3_drop_crd_in_outer.set_in_val(spaccumulator1_3_crd_hold_in_ij.out_crd_outer())
+        spaccumulator1_3_drop_val.set_in_val(mul_4.out_val())
+        spaccumulator1_3_drop_crd_in_inner.set_in_val(fiberlookup_Cj_10.out_crd())
+
+        spaccumulator1_3.set_in_crd1(spaccumulator1_3_drop_crd_in_outer.out_val())
+        spaccumulator1_3.set_val(spaccumulator1_3_drop_val.out_val())
+        spaccumulator1_3.set_in_crd0(spaccumulator1_3_drop_crd_in_inner.out_val())
+
+        fiberwrite_Xvals_0.set_input(spaccumulator1_3.out_val())
+        fiberwrite_X1_1.set_input(spaccumulator1_3.out_crd0())
+
+        fiberlookup_Bi_17.update()
+        fiberlookup_Bk_12.update()
+        fiberwrite_X0_2.update()
+        repsiggen_i_15.update()
+        repeat_Ci_14.update()
+        fiberlookup_Ck_13.update()
+        intersectk_11.update()
+        fiberlookup_Cj_10.update()
+        arrayvals_C_6.update()
+        repsiggen_j_8.update()
+        repeat_Bj_7.update()
+        arrayvals_B_5.update()
+        mul_4.update()
+        spaccumulator1_3_crd_hold_in_ik.update()
         spaccumulator1_3_crd_hold_in_ij.update()
-
-        spaccumulator1_3_drop_crd_in_outer.set_in_stream(spaccumulator1_3_crd_hold_in_ij.out_crd_outer())
-        spaccumulator1_3_drop_val.set_in_stream(mul_4.out_val())
-        spaccumulator1_3_drop_crd_in_inner.set_in_stream(fiberlookup_Cj_10.out_crd())
-
         spaccumulator1_3_drop_crd_in_outer.update()
         spaccumulator1_3_drop_val.update()
         spaccumulator1_3_drop_crd_in_inner.update()
-
-        spaccumulator1_3.set_crd_outer(spaccumulator1_3_drop_crd_in_outer.out_val())
-        spaccumulator1_3.set_val(spaccumulator1_3_drop_val.out_val())
-        spaccumulator1_3.set_crd_inner(spaccumulator1_3_drop_crd_in_inner.out_val())
         spaccumulator1_3.update()
-
-        fiberwrite_Xvals_0.set_input(spaccumulator1_3.out_val())
         fiberwrite_Xvals_0.update()
-
-        fiberwrite_X1_1.set_input(spaccumulator1_3.out_crd_inner())
         fiberwrite_X1_1.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_Xvals_0.out_done() and fiberwrite_X1_1.out_done()

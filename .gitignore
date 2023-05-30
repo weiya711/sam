@@ -7,6 +7,7 @@ __pycache__/
 *.swo
 *.txt
 *.out
+*.log
 
 # Files for MacOS and IDEs
 .DS_store
@@ -35,8 +36,12 @@ suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
 
+# Generated folder for SAM tiling 
+tiles/
+
 # Generated SAM simulator tests
-*/sim/test/apps/test_*.py
+sam/sim/test/apps/
+sam/sim/test/apps/test_*.py
 
 *.gv
 

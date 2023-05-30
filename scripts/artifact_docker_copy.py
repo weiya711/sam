@@ -26,8 +26,6 @@ memory_model = [
 ]
 
 
-
-
 def docker_copy(docker_id, fp, output_dir, root=False):
 
     docker_cp_command = ['docker', 'cp', f'{docker_id}:{fp}', f'{output_dir}']
