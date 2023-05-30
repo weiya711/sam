@@ -1875,3 +1875,60 @@ def check_gold_tensor4_multiply2_ijklm(frosttname, debug_sim, cast, out_crds, ou
         print("ref:", out_tup)
         print("gold:", gold_tup)
         assert (check_point_tuple(out_tup, gold_tup))
+
+
+def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T1")
+    B_shape_filename = os.path.join(B_dirname, "tensor_Q_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T1")
+    C_shape_filename = os.path.join(C_dirname, "tensor_K_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+    D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T1")
+    D_shape_filename = os.path.join(D_dirname, "tensor_V_mode_shape")
+    D_shape = read_inputs(D_shape_filename)
+
+    B_tens = get_tensor_from_files(name="Q", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+    C_tens = get_tensor_from_files(name="K", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+    D_tens = get_tensor_from_files(name="V", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+    D_ref = torch.from_numpy(D_tens.get_matrix())
+
+    # mat_Q = MatrixGenerator("Q", shape=B_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=B_ref.numpy())
+    # mat_K = MatrixGenerator("K", shape=C_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=C_ref.numpy())
+    # mat_V = MatrixGenerator("V", shape=D_ref.shape, sparsity=0.1, format='CSF', dump_dir=out_name, tensor=D_ref.numpy())
+
+    B_ref = torch.permute(B_ref, (0, 2, 1, 3))
+    C_ref = torch.permute(C_ref, (0, 2, 1, 3))
+    D_ref = torch.permute(D_ref, (0, 2, 1, 3))
+
+    gold_ref_temp = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref)
+
+    # Basically torch.sparse.softmax way of computing softmax of sparse tensor
+    gold_ref_temp = gold_ref_temp.masked_fill(gold_ref_temp == 0, -1e9)
+    gold_ref_temp = torch.nn.functional.softmax(gold_ref_temp, dim=3)
+
+    gold_ref = torch.einsum('ijkl, iljm->ikjm', gold_ref_temp, D_ref).numpy()
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))

@@ -366,7 +366,7 @@ class SquareRoot(UnaryALU):
 
 
 class ScalarMult(UnaryALU):
-    def __init__(self, in2=1, **kwargs):
+    def __init__(self, in2=1.0, **kwargs):
         super().__init__(**kwargs)
         self.fill_value = 0
 
@@ -439,9 +439,6 @@ class Softmax(Primitive):
         if len(self.inner_ref) > 0 and len(self.in_val) > 0:
             self.curr_inner_ref = self.inner_ref.pop(0)
             self.curr_val = self.in_val.pop(0)
-
-        print("Val:", self.curr_val)
-        print("curr inner ref:", self.curr_inner_ref)
 
         # if self.curr_val == 'D' and self.curr_inner_ref == 'D':
         #     self.done = True

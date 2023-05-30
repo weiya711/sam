@@ -529,7 +529,8 @@ class SparseCrdPtAccumulator1(Primitive):
             fiber = self.emit_output[0]
 
             self.curr_outer_crdpt = fiber[0]
-            print(self.storage)
+            if self.debug:
+                print(self.storage)
             self.curr_inner_crdpt = min(
                 [item for item in self.storage[self.curr_outer_crdpt].keys() if item > fiber[1]])
             self.curr_val = self.storage[self.curr_outer_crdpt][self.curr_inner_crdpt]

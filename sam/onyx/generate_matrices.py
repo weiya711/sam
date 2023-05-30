@@ -82,11 +82,7 @@ class MatrixGenerator():
                 if random.random() < self.sparsity:
                     self.array[idx] = 0
 
-        import matplotlib.pyplot as plt
-        print(self.array)
-        print(self.array[...,:self.shape[-2]:self.block_size,:self.shape[-1]:self.block_size])
-        plt.spy(self.array)
-        plt.savefig("test.png")
+        # print(self.array[...,:self.shape[-2]:self.block_size,:self.shape[-1]:self.block_size])
 
     def _create_fiber_tree(self):
         self.fiber_tree = FiberTree(tensor=self.array if self.block_naive else self.array[...,
@@ -485,15 +481,12 @@ def run_statistics(name, seed, shape, dump_dir, sparsity):
 
 def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
     mat_base = numpy.zeros(shape)
-    print("create_matrix shape:", shape)
     dims = len(shape)
     for pt_idx in range(len(pt_list[0])):
         pt_base = []
         for i in range(dims):
             pt_base.append(pt_list[i][pt_idx])
         mat_base[tuple(pt_base)] = pt_list[dims][pt_idx]
-
-    print(mat_base)
 
     mg = MatrixGenerator(name=f"{name}", shape=shape, sparsity=0.7, format='CSF', dump_dir=None, tensor=mat_base)
     return mg
@@ -570,7 +563,6 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
             crds.append(crd_t_)
         if not created_empty:
             pt_list = get_point_list(crds, segs, val_arr=vals)
-            print(pt_list)
             mg = create_matrix_from_point_list(name, pt_list, shape)
     elif format == 'COO':
         crds = []
