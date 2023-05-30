@@ -157,6 +157,7 @@ class Multiply2(Compute2):
         self.curr_in1 = ''
         self.curr_in2 = ''
         self.block_size = block_size
+        self.sys_array_ready = False
 
     def mult(self, a, b):
         if self.block_size == 1:
@@ -169,6 +170,7 @@ class Multiply2(Compute2):
         self.update_ready()
         if self.backpressure_en and self.debug:
             print("mul start: ", self.in1, self.in2)
+        self.sys_array_ready = False
         if self.backpressure_en:
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -216,6 +218,7 @@ class Multiply2(Compute2):
                     print(self.curr_in1, self.curr_in2)
 
                     self.curr_out = self.mult(self.curr_in1, self.curr_in2)
+                    self.sys_array_ready = True
                     if self.get_stats:
                         self.cycles_operated += 1
                     self.get1 = True
@@ -235,6 +238,9 @@ class Multiply2(Compute2):
                       "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1, "\t Curr In2:", self.curr_in2)
         else:
             self.curr_out = ''
+
+    def get_sys_ready(self):
+        return self.sys_array_ready
 
 
 class Divide2(Compute2):
@@ -285,6 +291,8 @@ class Divide2(Compute2):
                 self.get2 = True
             else:
                 # Both inputs are values
+                print(self.curr_in1)
+                print(self.curr_in2)
                 self.curr_out = self.curr_in1 / self.curr_in2
                 if self.get_stats:
                     self.cycles_operated += 1
