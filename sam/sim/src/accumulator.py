@@ -90,13 +90,12 @@ class Reduce(Primitive):
                     self.curr_out = self.sum
                     self.sum = self.init_sum
                     self.emit_stkn = True
-                elif self.curr_in_val == 'D':
+                elif not isinstance(self.curr_in_val, np.ndarray) and self.curr_in_val == 'D':
                     self.done = True
                     self.curr_out = 'D'
                 else:
                     if self.get_stats:
                         self.reduction_count += 1
-                    print(self.curr_in_val)
                     self.sum += self.curr_in_val
                     self.curr_out = ""
             else:
@@ -121,7 +120,7 @@ class Reduce(Primitive):
                   "\t Sum:", self.sum)
 
     def set_in_val(self, val, parent=None):
-        if val != '' and val is not None:
+        if isinstance(val, np.ndarray) or (val != '' and val is not None):
             if self.get_stats:
                 self.num_inputs += 1
             self.in_val.append(val)
