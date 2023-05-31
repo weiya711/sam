@@ -13,6 +13,7 @@ from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
+from sam.sim.test.gen_gantt import *
 import os
 import csv
 
@@ -26,7 +27,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0, block_size=4):
+def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, report_stats=True, fill=0, block_size=4):
     B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2_blocked_32")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
@@ -312,6 +313,12 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     for k in sample_dict.keys():
         extra_info["fiberlookup_Ci_25" + "_" + k] = sample_dict[k]
 
+    extra_info["backpressure"] = "True"
+    extra_info["depth"] = "4"
+
+    print(extra_info)
+
+    gen_gantt(extra_info, "multiply2_blocked")
     if check_gold:
         print("Checking gold...")
         check_gold_tensor4_multiply2_blocked(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, block_size,

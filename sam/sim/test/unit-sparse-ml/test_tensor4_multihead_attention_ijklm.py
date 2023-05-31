@@ -14,6 +14,7 @@ from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2, SpAc
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
+from math import *
 import os
 import csv
 cwd = os.getcwd()
@@ -27,7 +28,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
-    Q_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
+    test_name = "tensor4_fused_mul_T4"
+    Q_dirname = os.path.join(formatted_dir, frosttname, test_name)
     Q_shape_filename = os.path.join(Q_dirname, "tensor_Q_mode_shape")
     Q_shape = read_inputs(Q_shape_filename)
 
@@ -54,7 +56,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     Q_vals_filename = os.path.join(Q_dirname, "tensor_Q_mode_vals")
     Q_vals = read_inputs(Q_vals_filename, float)
 
-    K_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
+    K_dirname = os.path.join(formatted_dir, frosttname, test_name)
     K_shape_filename = os.path.join(K_dirname, "tensor_K_mode_shape")
     K_shape = read_inputs(K_shape_filename)
 
@@ -81,7 +83,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     K_vals_filename = os.path.join(K_dirname, "tensor_K_mode_vals")
     K_vals = read_inputs(K_vals_filename, float)
 
-    V_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
+    V_dirname = os.path.join(formatted_dir, frosttname, test_name)
     V_shape_filename = os.path.join(V_dirname, "tensor_V_mode_shape")
     V_shape = read_inputs(V_shape_filename)
 
@@ -173,7 +175,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     crddrop_kl = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crddrop_jk = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crddrop_ij = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    scalar_mul = ScalarMult(in2 = 1, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    scalar_mul = ScalarMult(in2 = 1.0 / sqrt(Q_shape[3]), debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     in_ref_V = [0, 'D']
     in_ref_Q = [0, 'D']
     in_ref_K = [0, 'D']
@@ -233,7 +235,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         crddrop_kl.set_inner_crd(intersectl_23.out_crd())
         crddrop_jk.set_outer_crd(intersectj3_421.out_crd())
         crddrop_jk.set_inner_crd(crddrop_kl.out_crd_outer())
-        crddrop_ij.set_outer_crd(intersecti3_424.out_crd())
+        crddrop_ij.set_outer_crd(intersecti_424.out_crd())
         crddrop_ij.set_inner_crd(crddrop_jk.out_crd_outer())
 
         fiberwrite_X0_44.set_input(crddrop_ij.out_crd_outer())
@@ -260,13 +262,26 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         mul_46.set_in1(arrayvals_Q_47.out_val())
         mul_46.set_in2(arrayvals_K_48.out_val())
         reduce_45.set_in_val(mul_46.out_val())
+        scalar_mul.set_in1(reduce_45.out_val())
 
         # TODO: Replace with softmax superblock
         maxreduce_434.set_in_val(reduce_45.out_val())
         repeat_QKl_437.set_in_repsig(repsiggen_l_414.out_repsig())
         repeat_QKl_437.set_in_ref(maxreduce_434.out_val())
         add_433.set_in1(reduce_45.out_val())
+        # add_433.set_in1(scalar_mul.out_val())
         add_433.set_in2(repeat_QKl_437.out_ref())
+        # print(scalar_mul.out_val())
+        # print(repeat_QKl_437.out_ref())
+        # div_0.append(scalar_mul.out_val())
+        # div_1.append(repeat_QKl_437.out_ref())
+
+        # print("scalar:", (div_0))
+        # print("repeat:", (div_1))
+
+        # div_1.append(add_433.out_val())
+        # print("repeat:", remove_emptystr(div_1))
+
         exp_427.set_in1(add_433.out_val())
         reduce_428.set_in_val(exp_427.out_val())
         repeat_QKl_431.set_in_repsig(repsiggen_l_414.out_repsig())
@@ -330,6 +345,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         repsiggen_m_20.update()
         mul_46.update()
         reduce_45.update()
+        scalar_mul.update()
         maxreduce_434.update()
         repeat_QKl_437.update()
         add_433.update()
@@ -345,6 +361,8 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
 
         done = fiberwrite_X0_44.out_done() and fiberwrite_X2_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X3_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
+        if time_cnt % 100000 == 0:
+            print("Cycle: ", time_cnt)
 
     fiberwrite_X0_44.autosize()
     fiberwrite_X2_3.autosize()
@@ -510,5 +528,5 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
 
     if check_gold:
         print("Checking gold...")
-        check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, "ssss0213")
+        check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, test_name)
     samBench(bench, extra_info)

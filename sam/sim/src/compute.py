@@ -215,12 +215,11 @@ class Multiply2(Compute2):
                     # Both inputs are values
                     if self.debug:
                         print(self.curr_in1, self.curr_in2)
-                    print(self.curr_in1, self.curr_in2)
 
                     self.curr_out = self.mult(self.curr_in1, self.curr_in2)
                     self.sys_array_ready = True
                     if self.get_stats:
-                        self.cycles_operated += 1
+                        self.cycles_operated += 1 if self.block_size == 1 else 2 * self.block_size + 1
                     self.get1 = True
                     self.get2 = True
                 self.compute_fifos()
@@ -291,8 +290,6 @@ class Divide2(Compute2):
                 self.get2 = True
             else:
                 # Both inputs are values
-                print(self.curr_in1)
-                print(self.curr_in2)
                 self.curr_out = self.curr_in1 / self.curr_in2
                 if self.get_stats:
                     self.cycles_operated += 1

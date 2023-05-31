@@ -388,29 +388,29 @@ class ScalarMult(UnaryALU):
                 # Inputs is done token
                 self.curr_out = self.curr_in1
                 self.get1 = True
-                # self.get2 = True
                 self.done = True
             elif is_stkn(self.curr_in1):
                 # Input is stop token
                 self.curr_out = self.curr_in1
                 self.get1 = True
-                # self.get2 = True
             elif isinstance(self.curr_in1, float):
                 # Input is value stream
+                # self.curr_out = math.exp(self.curr_in1)
                 self.curr_out = self.curr_in1 * self.curr_in2
                 if self.get_stats:
                     self.cycles_operated += 1
                 self.get1 = True
+                # self.get2 = True
             self.compute_fifos()
             if self.debug:
-                print("DEBUG: EXP: \t "
+                print("DEBUG: ScalarMult: \t "
                       "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1)
         else:
             self.curr_out = ''
 
 
 class Softmax(Primitive):
-    def __init__(self, debug_sim=False, **kwargs):
+    def __init__(self, row_wise=True, block_size=1, debug_sim=False, **kwargs):
         super().__init__(**kwargs)
         self.repeat_siggen = RepeatSigGen(debug=debug_sim)
         self.repeat = Repeat(debug=debug_sim)
@@ -428,6 +428,8 @@ class Softmax(Primitive):
         self.div_0 = []
         self.div_1 = []
         self.done = False
+        self.row_wise = row_wise
+        self.block_size = block_size
 
     def update(self):
         self.update_done()
@@ -442,7 +444,11 @@ class Softmax(Primitive):
 
         # if self.curr_val == 'D' and self.curr_inner_ref == 'D':
         #     self.done = True
-        self.max_reduce_5.set_in_val(self.curr_val)
+        # if self.row_wise:
+        #     self.max_reduce_5.set_in_val(self.curr_val)
+        # else:
+        #     if self.block_size > 1:
+        #         self.max
         self.repeat_siggen.set_istream(self.curr_inner_ref)
         self.repeat.set_in_ref(self.max_reduce_5.out_val())
         self.repeat.set_in_repsig(self.repeat_siggen.out_repsig())

@@ -1,7 +1,7 @@
 from .base import *
 from .repeater import RepeatSigGen, Repeat
 from .token import EmptyFiberStknDrop, StknDrop
-from .crd_manager import CrdDrop
+from .crd_manager import CrdDrop, CrdHold
 import numpy as np
 
 
@@ -382,3 +382,10 @@ class Relu(Primitive):
     def __init__(self, num_dims=3, **kwargs):
         super().__init__(**kwargs)
         self.out_crd_array[num_dims] = []
+
+
+class Tril(Primitive):
+    def __init__(self, debug=False, statistics=False, name="", back_en=False, **kwargs):
+        super().__init__(debug, statistics, name, back_en, **kwargs)
+
+        # self.crd_hold = CrdHold()

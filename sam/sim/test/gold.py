@@ -1877,14 +1877,14 @@ def check_gold_tensor4_multiply2_ijklm(frosttname, debug_sim, cast, out_crds, ou
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
-    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T1")
+def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, test_name):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test_name)
     B_shape_filename = os.path.join(B_dirname, "tensor_Q_mode_shape")
     B_shape = read_inputs(B_shape_filename)
-    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T1")
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test_name)
     C_shape_filename = os.path.join(C_dirname, "tensor_K_mode_shape")
     C_shape = read_inputs(C_shape_filename)
-    D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_fused_mul_T1")
+    D_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test_name)
     D_shape_filename = os.path.join(D_dirname, "tensor_V_mode_shape")
     D_shape = read_inputs(D_shape_filename)
 
@@ -1910,8 +1910,11 @@ def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, ou
     gold_ref_temp = gold_ref_temp.masked_fill(gold_ref_temp == 0, -1e9)
     gold_ref_temp = torch.nn.functional.softmax(gold_ref_temp, dim=3)
 
-    gold_ref = torch.einsum('ijkl, iljm->ikjm', gold_ref_temp, D_ref).numpy()
-    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    gold_ref = torch.einsum('ijkl, iljm->ikjm', gold_ref_temp, D_ref)
+
+    gold_ref = torch.permute(gold_ref, (0, 2, 1, 3))
+
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref.numpy())
     mat_g.dump_outputs(format='CSF')
     gold_tup = convert_ndarr_point_tuple(gold_ref)
 
