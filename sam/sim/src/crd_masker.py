@@ -388,4 +388,184 @@ class Tril(Primitive):
     def __init__(self, debug=False, statistics=False, name="", back_en=False, **kwargs):
         super().__init__(debug, statistics, name, back_en, **kwargs)
 
-        # self.crd_hold = CrdHold()
+        self.crd_hold = CrdHold(debug=debug_sim, statistics=statistics)
+        self.drop_1 = CrdDrop(debug=debug_sim, statistics=statistics)
+        self.drop_2 = CrdDrop(debug=debug_sim, statistics=statistics)
+        self.tril = LowerTriangular(dimension=2, debug=debug_sim, statistics=statistics)
+        self.done = False
+        self.outer_crd = []
+        self.inner_crd = []
+        self.inner_ref = []
+        self.curr_outer_crd = ''
+        self.curr_inner_crd = ''
+        self.curr_inner_ref = ''
+        self.curr_crd0 = ''
+        self.curr_crd1 = ''
+        self.crd0 = []
+        self.crd1 = []
+
+    def update(self):
+        self.update_done()
+
+        if self.done:
+            self.curr_outer_crd = ''
+            self.curr_inner_crd = ''
+            self.curr_inner_ref = ''
+            return
+        if len(self.outer_crd) > 0 and len(self.inner_crd) > 0 and len(self.inner_ref) > 0:
+            self.curr_outer_crd = self.outer_crd.pop(0)
+            self.curr_inner_crd = self.inner_crd.pop(0)
+            self.curr_inner_ref = self.inner_ref.pop(0)
+            self.curr_crd0 = self.crd0.pop(0)
+            self.curr_crd1 = self.crd1.pop(0)
+
+        self.crd_hold.set_outer_crd(self.curr_outer_crd)
+        self.crd_hold.set_inner_crd(self.curr_inner_crd)
+
+        self.tril.set_inner_crd(crd_hold.out_crd_inner())
+        self.tril.set_outer_crd(crd_hold.out_crd_outer())
+        self.tril.set_inner_ref(self.curr_inner_ref)
+
+        self.drop_1.set_inner_crd(self.tril.out_crd(1))
+        self.drop_1.set_outer_crd(self.curr_crd1)
+
+        self.drop_2.set_inner_crd(self.drop_1.out_crd_outer())
+        self.drop_2.set_outer_crd(self.curr_crd0)
+
+        if self.tril.out_ref == 'D':
+            self.done = True
+
+        self.crd_hold.update()
+        self.tril.update()
+        self.drop_1.update()
+        self.drop_2.update()
+
+    def set_inner_crd(self, crd):
+        if crd != '' and crd is not None:
+            self.inner_crd.append(crd)
+
+    def set_outer_crd(self, crd):
+        if crd != '' and crd is not None:
+            self.outer_crd.append(crd)
+
+    def set_inner_ref(self, ref):
+        if ref != '' and ref is not None:
+            self.inner_ref.append(ref)
+
+    def set_crd0(self, crd):
+        if crd != '' and crd is not None:
+            self.crd0.append(crd)
+
+    def set_crd1(self, crd):
+        if crd != '' and crd is not None:
+            self.crd1.append(crd)
+
+    def out_ref(self):
+        return self.tril.out_ref()
+
+    def out_crd_inner(self):
+        return self.tril.out_crd(0)
+    
+    def out_crd_outer(self):
+        return self.tril.out_crd(1)
+    
+    def out_crd0(self):
+        return self.drop_2.out_crd_outer()
+    
+    def out_crd1(self):
+        return self.drop_1.out_crd_outer()
+
+class Dropout(Primitive):
+    def __init__(self, drop_prob=0.5, debug=False, statistics=False, name="", back_en=False, **kwargs):
+        super().__init__(debug, statistics, name, back_en, **kwargs)
+
+        self.crd_hold = CrdHold(debug=debug_sim, statistics=statistics)
+        self.drop_1 = CrdDrop(debug=debug_sim, statistics=statistics)
+        self.drop_2 = CrdDrop(debug=debug_sim, statistics=statistics)
+        self.drop = RandomDropout(dimension=2, drop_probability=drop_prob, debug=debug_sim, statistics=statistics)
+        self.done = False
+        self.outer_crd = []
+        self.inner_crd = []
+        self.inner_ref = []
+        self.curr_outer_crd = ''
+        self.curr_inner_crd = ''
+        self.curr_inner_ref = ''
+        self.curr_crd0 = ''
+        self.curr_crd1 = ''
+        self.crd0 = []
+        self.crd1 = []
+
+    def update(self):
+        self.update_done()
+
+        if self.done:
+            self.curr_outer_crd = ''
+            self.curr_inner_crd = ''
+            self.curr_inner_ref = ''
+            return
+        if len(self.outer_crd) > 0 and len(self.inner_crd) > 0 and len(self.inner_ref) > 0:
+            self.curr_outer_crd = self.outer_crd.pop(0)
+            self.curr_inner_crd = self.inner_crd.pop(0)
+            self.curr_inner_ref = self.inner_ref.pop(0)
+            self.curr_crd0 = self.crd0.pop(0)
+            self.curr_crd1 = self.crd1.pop(0)
+
+        self.crd_hold.set_outer_crd(self.curr_outer_crd)
+        self.crd_hold.set_inner_crd(self.curr_inner_crd)
+
+        self.drop.set_inner_crd(crd_hold.out_crd_inner())
+        self.drop.set_outer_crd(crd_hold.out_crd_outer())
+        self.drop.set_inner_ref(self.curr_inner_ref)
+
+        self.drop_1.set_inner_crd(self.drop.out_crd(1))
+        self.drop_1.set_outer_crd(self.curr_crd1)
+
+        self.drop_2.set_inner_crd(self.drop_1.out_crd_outer())
+        self.drop_2.set_outer_crd(self.curr_crd0)
+
+        if self.drop.out_ref == 'D':
+            self.done = True
+
+        self.crd_hold.update()
+        self.drop.update()
+        self.drop_1.update()
+        self.drop_2.update()
+
+    def set_inner_crd(self, crd):
+        if crd != '' and crd is not None:
+            self.inner_crd.append(crd)
+
+    def set_outer_crd(self, crd):
+        if crd != '' and crd is not None:
+            self.outer_crd.append(crd)
+
+    def set_inner_ref(self, ref):
+        if ref != '' and ref is not None:
+            self.inner_ref.append(ref)
+
+    def set_crd0(self, crd):
+        if crd != '' and crd is not None:
+            self.crd0.append(crd)
+
+    def set_crd1(self, crd):
+        if crd != '' and crd is not None:
+            self.crd1.append(crd)
+
+    def out_ref(self):
+        return self.drop.out_ref()
+
+    def out_crd_inner(self):
+        return self.drop.out_crd(0)
+    
+    def out_crd_outer(self):
+        return self.drop.out_crd(1)
+    
+    def out_crd0(self):
+        return self.drop_2.out_crd_outer()
+    
+    def out_crd1(self):
+        return self.drop_1.out_crd_outer()
+
+
+
+
