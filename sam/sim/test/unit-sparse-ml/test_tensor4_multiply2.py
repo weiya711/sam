@@ -26,7 +26,8 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2")
+    test_name = "tensor4_fused_mul_T4"
+    B_dirname = os.path.join(formatted_dir, frosttname, test_name)
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -53,31 +54,31 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2")
-    C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
+    C_dirname = os.path.join(formatted_dir, frosttname, test_name)
+    C_shape_filename = os.path.join(C_dirname, "tensor_V_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
-    C0_seg_filename = os.path.join(C_dirname, "tensor_C_mode_0_seg")
+    C0_seg_filename = os.path.join(C_dirname, "tensor_V_mode_0_seg")
     C_seg0 = read_inputs(C0_seg_filename)
-    C0_crd_filename = os.path.join(C_dirname, "tensor_C_mode_0_crd")
+    C0_crd_filename = os.path.join(C_dirname, "tensor_V_mode_0_crd")
     C_crd0 = read_inputs(C0_crd_filename)
 
-    C1_seg_filename = os.path.join(C_dirname, "tensor_C_mode_1_seg")
+    C1_seg_filename = os.path.join(C_dirname, "tensor_V_mode_1_seg")
     C_seg1 = read_inputs(C1_seg_filename)
-    C1_crd_filename = os.path.join(C_dirname, "tensor_C_mode_1_crd")
+    C1_crd_filename = os.path.join(C_dirname, "tensor_V_mode_1_crd")
     C_crd1 = read_inputs(C1_crd_filename)
 
-    C2_seg_filename = os.path.join(C_dirname, "tensor_C_mode_2_seg")
+    C2_seg_filename = os.path.join(C_dirname, "tensor_V_mode_2_seg")
     C_seg2 = read_inputs(C2_seg_filename)
-    C2_crd_filename = os.path.join(C_dirname, "tensor_C_mode_2_crd")
+    C2_crd_filename = os.path.join(C_dirname, "tensor_V_mode_2_crd")
     C_crd2 = read_inputs(C2_crd_filename)
 
-    C3_seg_filename = os.path.join(C_dirname, "tensor_C_mode_3_seg")
+    C3_seg_filename = os.path.join(C_dirname, "tensor_V_mode_3_seg")
     C_seg3 = read_inputs(C3_seg_filename)
-    C3_crd_filename = os.path.join(C_dirname, "tensor_C_mode_3_crd")
+    C3_crd_filename = os.path.join(C_dirname, "tensor_V_mode_3_crd")
     C_crd3 = read_inputs(C3_crd_filename)
 
-    C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
+    C_vals_filename = os.path.join(C_dirname, "tensor_V_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
 
 

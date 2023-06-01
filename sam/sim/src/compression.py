@@ -102,8 +102,8 @@ class ValDropper(Primitive):
                     self.out_crds = ''
                     self.out_vals = ''
                 else:
-                    self.val_stkn_dropper.set_in_stream(self.curr_val)
-                    self.crd_stkn_dropper.set_in_stream(self.curr_crd)
+                    self.val_stkn_dropper.set_in_val(self.curr_val)
+                    self.crd_stkn_dropper.set_in_val(self.curr_crd)
                     self.val_stkn_dropper.update()
                     self.crd_stkn_dropper.update()
                     # self.out_crds = self.crd_stkn_dropper.out_val()

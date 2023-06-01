@@ -441,6 +441,11 @@ class Softmax(Primitive):
         if len(self.inner_ref) > 0 and len(self.in_val) > 0:
             self.curr_inner_ref = self.inner_ref.pop(0)
             self.curr_val = self.in_val.pop(0)
+        else:
+            return
+
+        # print(self.curr_val)
+        # print(self.curr_inner_ref)
 
         # if self.curr_val == 'D' and self.curr_inner_ref == 'D':
         #     self.done = True
@@ -449,6 +454,7 @@ class Softmax(Primitive):
         # else:
         #     if self.block_size > 1:
         #         self.max
+        self.max_reduce_5.set_in_val(self.curr_val)
         self.repeat_siggen.set_istream(self.curr_inner_ref)
         self.repeat.set_in_ref(self.max_reduce_5.out_val())
         self.repeat.set_in_repsig(self.repeat_siggen.out_repsig())
@@ -463,7 +469,7 @@ class Softmax(Primitive):
         if self.div_6.out_val() == 'D':
             self.done = True
 
-        self.div_0.append(self.exp_1.out_val())
+        self.div_0.append(self.repeat_siggen.out_repsig())
         self.div_1.append(self.repeat1.out_ref())
 
         # print("div 0:", remove_emptystr(self.div_0))

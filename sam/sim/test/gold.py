@@ -933,6 +933,81 @@ def check_gold_tensor4_multiply2(frosttname, debug_sim, cast, out_crds, out_segs
         assert (check_point_tuple(out_tup, gold_tup))
 
 
+def check_gold_tensor4_multiply1(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, test_name):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test_name)
+    B_shape_filename = os.path.join(B_dirname, "tensor_Q_mode_shape")
+    B_shape = read_inputs(B_shape_filename)
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test_name)
+    C_shape_filename = os.path.join(C_dirname, "tensor_K_mode_shape")
+    C_shape = read_inputs(C_shape_filename)
+
+    B_tens = get_tensor_from_files(name="Q", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+    C_tens = get_tensor_from_files(name="K", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
+    # B_dirname_trans = os.path.join(formatted_dir, frosttname, "orig", "ssss0213")
+    # C_dirname_trans = os.path.join(formatted_dir, frosttname, "other", "ssss0231")
+    # mode1 = (0,2,1,3)
+    # mode2 = (0,2,3,1)
+    # B_tens.transpose_tensor(mode1)
+    # C_tens.transpose_tensor(mode2)
+    # B_tens.set_dump_dir(B_dirname_trans)
+    # C_tens.set_dump_dir(C_dirname_trans)
+
+    # B_tens.dump_outputs(format='CSF')
+    # C_tens.dump_outputs(format='CSF')
+
+    # pytest.set_trace()
+
+    # pytest.set_trace()
+    print("B numpy shape:", B_tens.shape)
+    print("C numpy shape:", C_tens.shape)
+
+    B_ref = torch.from_numpy(B_tens.get_matrix())
+    C_ref = torch.from_numpy(C_tens.get_matrix())
+
+    B_ref = torch.permute(B_ref, (0, 2, 1, 3))
+    C_ref = torch.permute(C_ref, (0, 2, 1, 3))
+    
+    print(B_ref.shape)
+    print(C_ref.shape)
+    pytest.set_trace()
+
+    gold_ref = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref).numpy()
+
+    mat_g = MatrixGenerator("B", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g.dump_outputs(format='CSF')
+    gold_tup = convert_ndarr_point_tuple(gold_ref)
+    # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
+    # print(mg.get_matrix())
+    print("Out crds:", out_crds)
+    print()
+    print("Out segs:", out_segs)
+    print()
+    print("Out vals:", out_vals)
+    print(len(out_vals))
+    print("sizes:", [len(arr) for arr in out_crds])
+    print("sizes:", [len(arr) for arr in out_segs])
+    print(gold_ref.shape)
+    pytest.set_trace()
+
+    if debug_sim:
+        print("Out crds:", out_crds)
+        print("Out segs:", out_segs)
+        print("Out vals:", out_vals)
+        print("Dense Gold:", gold_ref)
+        print("Gold:", gold_tup)
+
+    if not out_vals:
+        assert out_vals == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_vals])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_vals))
+        out_tup = remove_zeros(out_tup)
+        print("ref:", out_tup)
+        print("gold:", gold_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+
 def check_gold_tensor4_msoftmax_multiply2(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
     B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")

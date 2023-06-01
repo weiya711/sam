@@ -234,9 +234,9 @@ class CrdMask(Primitive):
         self.out_dropper.update()
         self.out_crd_array[1] = self.out_dropper.get_token()
 
-        self.inner_stkn_dropper.set_in_stream(self.out_crd_array[0])
-        self.outer_stkn_dropper.set_in_stream(self.out_crd_array[1])
-        self.inner_ref_stkn_dropper.set_in_stream(self.inner_ref)
+        self.inner_stkn_dropper.set_in_val(self.out_crd_array[0])
+        self.outer_stkn_dropper.set_in_val(self.out_crd_array[1])
+        self.inner_ref_stkn_dropper.set_in_val(self.inner_ref)
 
         self.inner_stkn_dropper.update()
         self.outer_stkn_dropper.update()
@@ -388,10 +388,10 @@ class Tril(Primitive):
     def __init__(self, debug=False, statistics=False, name="", back_en=False, **kwargs):
         super().__init__(debug, statistics, name, back_en, **kwargs)
 
-        self.crd_hold = CrdHold(debug=debug_sim, statistics=statistics)
-        self.drop_1 = CrdDrop(debug=debug_sim, statistics=statistics)
-        self.drop_2 = CrdDrop(debug=debug_sim, statistics=statistics)
-        self.tril = LowerTriangular(dimension=2, debug=debug_sim, statistics=statistics)
+        self.crd_hold = CrdHold(debug=debug, statistics=statistics)
+        self.drop_1 = CrdDrop(debug=debug, statistics=statistics)
+        self.drop_2 = CrdDrop(debug=debug, statistics=statistics)
+        self.tril = LowerTriangular(dimension=2, debug=debug, statistics=statistics)
         self.done = False
         self.outer_crd = []
         self.inner_crd = []
@@ -416,14 +416,21 @@ class Tril(Primitive):
             self.curr_outer_crd = self.outer_crd.pop(0)
             self.curr_inner_crd = self.inner_crd.pop(0)
             self.curr_inner_ref = self.inner_ref.pop(0)
-            self.curr_crd0 = self.crd0.pop(0)
-            self.curr_crd1 = self.crd1.pop(0)
+            if len(self.crd0) > 0 and len(self.crd1) > 0:
+                self.curr_crd0 = self.crd0.pop(0)
+                self.curr_crd1 = self.crd1.pop(0)
+
+        print(self.curr_outer_crd)
+        print(self.curr_inner_crd)
+        print(self.curr_crd0)
+        print(self.curr_crd1)
+        print(self.curr_inner_ref)
 
         self.crd_hold.set_outer_crd(self.curr_outer_crd)
         self.crd_hold.set_inner_crd(self.curr_inner_crd)
 
-        self.tril.set_inner_crd(crd_hold.out_crd_inner())
-        self.tril.set_outer_crd(crd_hold.out_crd_outer())
+        self.tril.set_inner_crd(self.crd_hold.out_crd_inner())
+        self.tril.set_outer_crd(self.crd_hold.out_crd_outer())
         self.tril.set_inner_ref(self.curr_inner_ref)
 
         self.drop_1.set_inner_crd(self.tril.out_crd(1))
@@ -479,10 +486,10 @@ class Dropout(Primitive):
     def __init__(self, drop_prob=0.5, debug=False, statistics=False, name="", back_en=False, **kwargs):
         super().__init__(debug, statistics, name, back_en, **kwargs)
 
-        self.crd_hold = CrdHold(debug=debug_sim, statistics=statistics)
-        self.drop_1 = CrdDrop(debug=debug_sim, statistics=statistics)
-        self.drop_2 = CrdDrop(debug=debug_sim, statistics=statistics)
-        self.drop = RandomDropout(dimension=2, drop_probability=drop_prob, debug=debug_sim, statistics=statistics)
+        self.crd_hold = CrdHold(debug=debug, statistics=statistics)
+        self.drop_1 = CrdDrop(debug=debug, statistics=statistics)
+        self.drop_2 = CrdDrop(debug=debug, statistics=statistics)
+        self.drop = RandomDropout(dimension=2, drop_probability=drop_prob, debug=debug, statistics=statistics)
         self.done = False
         self.outer_crd = []
         self.inner_crd = []
@@ -513,8 +520,8 @@ class Dropout(Primitive):
         self.crd_hold.set_outer_crd(self.curr_outer_crd)
         self.crd_hold.set_inner_crd(self.curr_inner_crd)
 
-        self.drop.set_inner_crd(crd_hold.out_crd_inner())
-        self.drop.set_outer_crd(crd_hold.out_crd_outer())
+        self.drop.set_inner_crd(self.crd_hold.out_crd_inner())
+        self.drop.set_outer_crd(self.crd_hold.out_crd_outer())
         self.drop.set_inner_ref(self.curr_inner_ref)
 
         self.drop_1.set_inner_crd(self.drop.out_crd(1))

@@ -139,6 +139,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     fiberlookup_Vm_22 = CompressedCrdRdScan(crd_arr=V_crd3, seg_arr=V_seg3, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberlookup_Km_412 = CompressedCrdRdScan(crd_arr=K_crd3, seg_arr=K_seg3, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repsiggen_l_414 = RepeatSigGen(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    repsiggen_l1_414 = RepeatSigGen(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crdhold_9 = CrdHold(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_Ql_413 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crdhold_7 = CrdHold(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
@@ -177,7 +178,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     crddrop_ij = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     scalar_mul = ScalarMult(in2 = 1.0 / sqrt(Q_shape[3]), debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     tril = Tril(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    drop = Dropout(debug=debug_sim, drop_prob=0.5, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    dropout = Dropout(debug=debug_sim, drop_prob=0.5, statistics=report_stats, back_en=backpressure, depth=int(depth))
     in_ref_V = [0, 'D']
     in_ref_Q = [0, 'D']
     in_ref_K = [0, 'D']
@@ -231,7 +232,6 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         intersectl_23.set_in2(fiberlookup_Kl_416.out_ref(), fiberlookup_Kl_416.out_crd())
         fiberlookup_Vm_22.set_in_ref(intersectl_23.out_ref1())
         fiberlookup_Km_412.set_in_ref(intersectl_23.out_ref2())
-        repsiggen_l_414.set_istream(intersectl_23.out_crd())
 
         crddrop_kl.set_outer_crd(fiberlookup_Qk_420.out_crd())
         crddrop_kl.set_inner_crd(intersectl_23.out_crd())
@@ -240,10 +240,11 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         crddrop_ij.set_outer_crd(intersecti3_424.out_crd())
         crddrop_ij.set_inner_crd(crddrop_jk.out_crd_outer())
 
-        fiberwrite_X0_44.set_input(crddrop_ij.out_crd_outer())
-        fiberwrite_X2_3.set_input(crddrop_ij.out_crd_inner())
-        fiberwrite_X1_2.set_input(fiberlookup_Qk_420.out_crd())
+        # fiberwrite_X0_44.set_input(crddrop_ij.out_crd_outer())
+        # fiberwrite_X2_3.set_input(crddrop_ij.out_crd_inner())
+        # fiberwrite_X1_2.set_input(fiberlookup_Qk_420.out_crd())
         
+        repsiggen_l_414.set_istream(intersectl_23.out_crd())
         repeat_Ql_413.set_in_ref(fiberlookup_Qk_420.out_ref())
         repeat_Ql_413.set_in_repsig(repsiggen_l_414.out_repsig())
         fiberlookup_Qm_411.set_in_ref(repeat_Ql_413.out_ref())
@@ -264,13 +265,24 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         mul_46.set_in1(arrayvals_Q_47.out_val())
         mul_46.set_in2(arrayvals_K_48.out_val())
         reduce_45.set_in_val(mul_46.out_val())
-        scalar_mul.set_in1(reduce_45.out_val())
+        # scalar_mul.set_in1(reduce_45.out_val())
+
+        tril.set_outer_crd(crddrop_jk.out_crd_inner())
+        tril.set_inner_crd(crddrop_kl.out_crd_inner())
+        tril.set_inner_ref(reduce_45.out_val())
+        tril.set_crd1(intersectj3_421.out_crd())
+        tril.set_crd0(intersecti3_424.out_crd())
+
+        fiberwrite_X0_44.set_input(tril.out_crd0())
+        fiberwrite_X2_3.set_input(tril.out_crd1())
+        fiberwrite_X1_2.set_input(tril.out_crd_outer())
 
         # TODO: Replace with softmax superblock
-        maxreduce_434.set_in_val(reduce_45.out_val())
-        repeat_QKl_437.set_in_repsig(repsiggen_l_414.out_repsig())
+        maxreduce_434.set_in_val(tril.out_ref())
+        repsiggen_l1_414.set_istream(tril.out_crd_inner())
+        repeat_QKl_437.set_in_repsig(repsiggen_l1_414.out_repsig())
         repeat_QKl_437.set_in_ref(maxreduce_434.out_val())
-        add_433.set_in1(reduce_45.out_val())
+        add_433.set_in1(tril.out_ref())
         # add_433.set_in1(scalar_mul.out_val())
         add_433.set_in2(repeat_QKl_437.out_ref())
         # print(scalar_mul.out_val())
@@ -286,7 +298,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
 
         exp_427.set_in1(add_433.out_val())
         reduce_428.set_in_val(exp_427.out_val())
-        repeat_QKl_431.set_in_repsig(repsiggen_l_414.out_repsig())
+        repeat_QKl_431.set_in_repsig(repsiggen_l1_414.out_repsig())
         repeat_QKl_431.set_in_ref(reduce_428.out_val())
         div_432.set_in1(exp_427.out_val())
         div_432.set_in2(repeat_QKl_431.out_ref())
@@ -298,10 +310,16 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         mul_15.set_in2(arrayvals_V_17.out_val())
 
         spaccumulator1_5.set_in_crd0(intersectm3_410.out_crd())
-        spaccumulator1_5.set_in_crd1(crddrop_kl.out_crd_inner())
+        # spaccumulator1_5.set_in_crd1(crddrop_kl.out_crd_inner())
+        spaccumulator1_5.set_in_crd1(tril.out_crd_inner())
         spaccumulator1_5.set_val(mul_15.out_val())
         fiberwrite_Xvals_0.set_input(spaccumulator1_5.out_val())
         fiberwrite_X3_1.set_input(spaccumulator1_5.out_crd0())
+
+        div_0.append(spaccumulator1_5.out_val())
+        div_1.append(spaccumulator1_5.out_crd0())
+        print("val:", remove_emptystr(div_0))
+        print("crd:", remove_emptystr(div_1))
 
         fiberlookup_Vi_35.update()
         fiberlookup_Qi_425.update()
@@ -347,8 +365,10 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         repsiggen_m_20.update()
         mul_46.update()
         reduce_45.update()
+        tril.update()
         scalar_mul.update()
         maxreduce_434.update()
+        repsiggen_l1_414.update()
         repeat_QKl_437.update()
         add_433.update()
         exp_427.update()

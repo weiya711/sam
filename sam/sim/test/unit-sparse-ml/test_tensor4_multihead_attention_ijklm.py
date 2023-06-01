@@ -28,7 +28,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
-    test_name = "tensor4_fused_mul_T1"
+    test_name = "tensor4_fused_mul_T4"
     Q_dirname = os.path.join(formatted_dir, frosttname, test_name)
     Q_shape_filename = os.path.join(Q_dirname, "tensor_Q_mode_shape")
     Q_shape = read_inputs(Q_shape_filename)
@@ -176,8 +176,8 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     crddrop_jk = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crddrop_ij = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     scalar_mul = ScalarMult(in2 = 1.0 / sqrt(Q_shape[3]), debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    tril = Tril(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    drop = Dropout(debug=debug_sim, drop_prob=0.5, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    # tril = Tril(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    # drop = Dropout(debug=debug_sim, drop_prob=0.5, statistics=report_stats, back_en=backpressure, depth=int(depth))
     in_ref_V = [0, 'D']
     in_ref_Q = [0, 'D']
     in_ref_K = [0, 'D']
@@ -240,8 +240,10 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         crddrop_ij.set_outer_crd(intersecti3_424.out_crd())
         crddrop_ij.set_inner_crd(crddrop_jk.out_crd_outer())
 
-        fiberwrite_X0_44.set_input(crddrop_ij.out_crd_outer())
-        fiberwrite_X2_3.set_input(crddrop_ij.out_crd_inner())
+        # fiberwrite_X0_44.set_input(crddrop_ij.out_crd_outer())
+        fiberwrite_X0_44.set_input(intersecti3_424.out_crd())
+        # fiberwrite_X2_3.set_input(crddrop_ij.out_crd_inner())
+        fiberwrite_X2_3.set_input(intersectj3_421.out_crd())
         fiberwrite_X1_2.set_input(fiberlookup_Qk_420.out_crd())
         
         repeat_Ql_413.set_in_ref(fiberlookup_Qk_420.out_ref())

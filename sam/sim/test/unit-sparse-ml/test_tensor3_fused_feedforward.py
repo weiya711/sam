@@ -179,8 +179,8 @@ def test_tensor3_fused_feedforward(samBench, frosttname, cast, check_gold, debug
         comp_drop_1.set_crd(fiberlookup_Ci_20.out_crd())
 
         # TODO: Should these droppers be inside the ValDropper block? Relu can generate empty fibers
-        val_stkn_dropper.set_in_stream(comp_drop_1.out_val())
-        crd_stkn_dropper.set_in_stream(comp_drop_1.out_crd())
+        val_stkn_dropper.set_in_val(comp_drop_1.out_val())
+        crd_stkn_dropper.set_in_val(comp_drop_1.out_crd())
         drop_2.set_outer_crd(fiberlookup_Ck_26.out_crd())
         drop_2.set_inner_crd(comp_drop_1.out_crd())
         crd.set_outer_crd(drop_2.out_crd_outer())
@@ -197,6 +197,9 @@ def test_tensor3_fused_feedforward(samBench, frosttname, cast, check_gold, debug
         fiberwrite_X1_3.set_input(drop_3.out_crd_outer())
         fiberwrite_X2_2.set_input(dropout.out_crd(1))
         fiberwrite_X0_1.set_input(dropout.out_crd(0))
+
+        ref_arr.append(dropout.out_crd(0))
+        print(remove_emptystr(ref_arr))
 
         fiberlookup_Bj_31.update()
 
