@@ -9,7 +9,7 @@ from sam.sim.src.compute import Multiply2, Add2
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
 from sam.sim.src.accumulator import Reduce
-from sam.sim.src.accumulator import SparseAccumulator1, SparseAccumulator2
+from sam.sim.src.accumulator_OLD import SparseAccumulator1, SparseAccumulator2
 from sam.sim.src.token import *
 from sam.sim.test.test import *
 from sam.sim.test.gold import *
