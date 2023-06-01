@@ -27,7 +27,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T4")
+    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -132,7 +132,7 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
 
         out_debug.append(softmax.out_val())
 
-        # print("Val: ", remove_emptystr(out_debug))
+        print("Val: ", remove_emptystr(out_debug))
 
         # fiber_crd.append(fiberlookup_Bl_6.out_crd())
         reducer.append(max_reduce_5.out_val())
@@ -147,7 +147,7 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         #print("Repsig:", remove_emptystr(repsig))
 
         div1_in.append(arrayvals_B_4.out_load())
-        out_debug.append(softmax.out_val())
+        # out_debug.append(softmax.out_val())
         print("softmax", remove_emptystr(out_debug))
         # print("array vals:", remove_emptystr(div1_in))
         # print()
@@ -179,6 +179,7 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         repsiggen_l_13.update()
         repeat_Bl_12.update()
         div_6.update()
+
         fiberwrite_X0_3.update()
         fiberwrite_X1_2.update()
         fiberwrite_X2_1.update()

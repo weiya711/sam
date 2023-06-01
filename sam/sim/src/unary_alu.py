@@ -454,6 +454,19 @@ class Softmax(Primitive):
         # else:
         #     if self.block_size > 1:
         #         self.max
+        # max_reduce_5.set_in_val(arrayvals_B_4.out_load())
+        # repsiggen_l1_13.set_istream(fiberlookup_Bl_6.out_ref())
+        # repeat_Bl1_12.set_in_ref(max_reduce_5.out_val())
+        # repeat_Bl1_12.set_in_repsig(repsiggen_l1_13.out_repsig())
+        # add_10.set_in1(arrayvals_B_4.out_load())
+        # add_10.set_in2(repeat_Bl1_12.out_ref())
+        # exp_1.set_in1(add_10.out_val())
+        # reduce_5.set_in_val(exp_1.out_val())
+        # repsiggen_l_13.set_istream(fiberlookup_Bl_6.out_ref())
+        # repeat_Bl_12.set_in_ref(reduce_5.out_val())
+        # repeat_Bl_12.set_in_repsig(repsiggen_l_13.out_repsig())
+        # div_6.set_in1(exp_1.out_val())
+        # div_6.set_in2(repeat_Bl_12.out_ref())
         self.max_reduce_5.set_in_val(self.curr_val)
         self.repeat_siggen.set_istream(self.curr_inner_ref)
         self.repeat.set_in_ref(self.max_reduce_5.out_val())
@@ -466,6 +479,9 @@ class Softmax(Primitive):
         self.repeat1.set_in_repsig(self.repeat_siggen.out_repsig())
         self.div_6.set_in1(self.exp_1.out_val())
         self.div_6.set_in2(self.repeat1.out_ref())
+
+        self.curr_val = ''
+        self.curr_inner_ref = ''
         if self.div_6.out_val() == 'D':
             self.done = True
 
