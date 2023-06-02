@@ -1,7 +1,7 @@
 import copy
 import pytest
 
-from sam.sim.src.accumulator import SparseCrdPtAccumulator1, SparseCrdPtAccumulator2
+from sam.sim.src.accumulator_helpers import SparseCrdPtAccumulator1, SparseCrdPtAccumulator2
 from sam.sim.src.base import remove_emptystr
 from sam.sim.test.test import TIMEOUT
 

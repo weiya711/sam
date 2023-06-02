@@ -9,6 +9,7 @@ import os
 import csv
 import pickle
 import yaml
+
 cwd = os.getcwd()
 formatted_dir = os.getenv('TILED_SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 sam_home = os.getenv('SAM_HOME')
@@ -30,6 +31,7 @@ arr_dict5 = {"seg": [0, 1], "crd": [28], "in_ref": [0, 'S0', '', '', 'S0', '',
              "out_crd": [28, 'S1', 'S1', 28, 'S1', 'D'], "out_ref": [0, 'S1', 'S1', 0, 'S1', 'D']}
 
 
+@pytest.mark.skipif(sam_home is None, reason="Skipping because SAM_HOME not set")
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
 def test_memory_block_nbuffer(arrs, debug_sim, skip_empty, yaml_name, report_stats, nbuffer):
     nbuffer = True
@@ -98,6 +100,7 @@ def test_memory_block_nbuffer(arrs, debug_sim, skip_empty, yaml_name, report_sta
     assert out_gold == out
 
 
+@pytest.mark.skipif(sam_home is None, reason="Skipping because SAM_HOME not set")
 @pytest.mark.parametrize("arrs", [arr_dict1, arr_dict2, arr_dict3, arr_dict4, arr_dict5])
 def test_memory_block(arrs, debug_sim, skip_empty, yaml_name, report_stats, nbuffer):
     nbuffer = False

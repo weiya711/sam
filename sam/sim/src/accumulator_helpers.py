@@ -150,7 +150,8 @@ class SpAcc1NoCrdHold(Primitive):
 
             if self.val_stkn:
                 self.curr_val = self.crdpt_spacc_out_val.pop(0) if isinstance(self.curr_inner_crd, int) and \
-                                                                   len(self.crdpt_spacc_out_val) > 0 else self.curr_inner_crd
+                                                                   len(self.crdpt_spacc_out_val) > 0 else \
+                    self.curr_inner_crd
             else:
                 self.curr_val = self.crdpt_spacc_out_val.pop(0) if len(self.crdpt_spacc_out_val) > 0 else ''
 
@@ -520,7 +521,8 @@ class SparseCrdPtAccumulator1(Primitive):
             # If a done token is seen, cannot emit done until all coordinates have been written out
             elif self.curr_in_outer_crdpt == 'D':
                 assert self.curr_in_inner_crdpt == 'D' and self.curr_in_val == 'D', \
-                    "If one item is a 'D' token, then all inputs must be"
+                    "If one item is a 'D' token, then all inputs must be: " + str(self.curr_in_inner_crdpt) + ", " + \
+                str(self.curr_in_val)
                 self.seen_done = True
             else:
                 self.storage[self.curr_in_outer_crdpt] = {self.curr_in_inner_crdpt: self.valtype(self.curr_in_val)}
@@ -529,7 +531,6 @@ class SparseCrdPtAccumulator1(Primitive):
             fiber = self.emit_output[0]
 
             self.curr_outer_crdpt = fiber[0]
-            print(self.storage)
             self.curr_inner_crdpt = min(
                 [item for item in self.storage[self.curr_outer_crdpt].keys() if item > fiber[1]])
             self.curr_val = self.storage[self.curr_outer_crdpt][self.curr_inner_crdpt]

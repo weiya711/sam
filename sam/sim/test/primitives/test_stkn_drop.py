@@ -28,7 +28,7 @@ def test_tkn_drop(arrs, debug_sim):
     out = []
     while not done and time < TIMEOUT:
         if len(ival) > 0:
-            td.set_in_stream(ival.pop(0))
+            td.set_in_val(ival.pop(0))
 
         td.update()
 

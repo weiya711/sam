@@ -159,3 +159,4 @@ def samBench(benchmark):
         benchmark.pedantic(func, rounds=1, iterations=1, warmup_rounds=0)
 
     return f
+

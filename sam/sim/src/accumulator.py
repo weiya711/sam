@@ -301,7 +301,6 @@ class SpAcc1(Primitive):
                 # self.stkndrop_val = StknDrop(fifos=[fsd3], **self.kwargs)
                 pass
 
-
             # Set when block counts should start
             if len(self.in_crd1) > 0 or len(self.in_crd0) > 0 or len(self.in_val) > 0:
                 self.block_start = False
@@ -472,6 +471,7 @@ class SpAcc2(Primitive):
             self.fifo_avail_1 = True
             self.fifo_avail_0 = True
             self.fifo_avail_val = True
+
     def check_backpressure(self):
         if self.backpressure_en:
             copy_backpressure = self.ready_backpressure
@@ -513,7 +513,8 @@ class SpAcc2(Primitive):
         print("========== " + self.name + " SPACC2 (NEW) ==========")
         print("Inputs: ", self.in_crd2, self.in_crd1, self.in_crd0, self.in_val)
         print("Temps: ", self.curr_crd2, self.crd2_stkn, self.curr_in_crd1, self.curr_in_crd0, self.curr_in_val)
-        print("Store/Wr: ", self.storage, self.writeout_storage1, self.writeout_storage0, self.writeout1, self.writeout0)
+        print("Store/Wr: ", self.storage, self.writeout_storage1, self.writeout_storage0, self.writeout1,
+              self.writeout0)
         print("Outputs: ", self.curr_crd1, self.curr_crd0, self.curr_val)
         print("State: ", self.curr_state, self.next_state)
 
@@ -523,7 +524,6 @@ class SpAcc2(Primitive):
     def build_writeout(self):
         result = []
         for crd1 in sorted(self.storage.keys()):
-            print("storage:", self.storage[crd1])
             for crd0, val in self.storage[crd1].items():
                 result.append((crd0, val))
             result.append(('S0', 'S0'))
@@ -756,6 +756,7 @@ class SpAcc2(Primitive):
     def out_crd1(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_crd1
+
     def out_crd0(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_crd0

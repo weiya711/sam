@@ -5,12 +5,12 @@ from sam.sim.src.accumulator_helpers import SpAcc1NoCrdHold, SpAcc2NoCrdHold
 from sam.sim.src.base import remove_emptystr
 from sam.sim.test.test import TIMEOUT
 
-arrs_dict1 = {'ocrd_in': [0, 2, 2, 2, 2, 2, 2, 'D'],
+arrs_dict1 = {'ocrd_in': [0, 2, 2, 2, 2, 2, 2, 2, 2, 'D'],
               'icrd_in': [0, 2, 3, 0, 2, 3, 0, 2, 3, 'D'],
               'val_in': [50, 5, 10, 40, 4, 8, -40, 33, 36, 'D'],
               'ocrd_gold': [0, 2, 'S0', 'D'],
-              'icrd_gold': [0, 2, 3, 'S0', 0, 2, 3, 'S1', 'D'],
-              'val_gold': [50, 5, 10, 'S0', 0, 37, 44, 'S1', 'D']}
+              'icrd_gold': [0, 'S0', 0, 2, 3, 'S1', 'D'],
+              'val_gold': [50, 'S0', 0, 42, 54, 'S1', 'D']}
 
 
 @pytest.mark.parametrize("arrs", [arrs_dict1])
