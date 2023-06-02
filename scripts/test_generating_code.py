@@ -142,6 +142,7 @@ def generate_tiling_header(f, app_name, loop_order_and_sizes=None):
 
             for index in loop_order_and_sizes.keys():
                 f.write(index + "0 :  int(loop_config[\"Glb_tile_size\"])")
+    f.write("}")
     f.write("\n")
 
 
@@ -287,7 +288,6 @@ def generate_header(f, out_name):
     f.write("def test_" + out_name + "(samBench, " + get_dataset_name(out_name) + ", check_gold, debug_sim, "
             "report_stats, fill=0):\n")
 
-
 def get_dataset_name(test_name):
     if test_name in frostt_list:
         return "frosttname"
@@ -297,7 +297,6 @@ def get_dataset_name(test_name):
         return "vecname"
     else:
         return ""
-
 
 def get_common_test_name(test_name):
     if "matmul" in test_name:
@@ -1881,7 +1880,6 @@ for apath in file_paths:
                                                   tensors=mem_lvl.get_tensor_list())
         mem_blks = mem_lvl.get_memory_blocks()
         generate_tiling_end(f, mem_blks)
-
     else:
         tens_fmt = {}
         count = 0
@@ -1925,7 +1923,6 @@ for apath in file_paths:
 
         generate_benchmarking_code(f, tensor_format_parse, out_name[num])
         generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
-
     f.close()
     os.system("cp " + out_name[num] + ".py " + os.getcwd() + "/sam/sim/test/apps/test_" + out_name[num] + ".py")
     os.system("rm " + out_name[num] + ".py")
