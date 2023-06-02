@@ -28,7 +28,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 @pytest.mark.frostt
 def test_tensor4_mult2(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
     # test_name = "tensor4_fused_mul_T4"
-    test_name = "tensor4_mult2"
+    test_name = "tensor4_mult2_ijklm"
     B_dirname = os.path.join(formatted_dir, frosttname, test_name)
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)

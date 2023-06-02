@@ -976,7 +976,7 @@ class SparseAccumulator2(Primitive):
         return stats_dict
 
 # NEW VERSION: Accumulation into a matrix
-class SpAcc2New(Primitive):
+class SpAcc2(Primitive):
     def __init__(self, maxdim=100, valtype=float, last_level=True, val_stkn=False, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.kwargs = kwargs
@@ -998,7 +998,6 @@ class SpAcc2New(Primitive):
         self.curr_crd0 = None
         self.curr_val = None
 
-
         self.curr_in_crd1 = None
         self.curr_in_crd0 = None
         self.curr_in_val = None
@@ -1006,8 +1005,10 @@ class SpAcc2New(Primitive):
         self.states = enum.Enum('States', ['READY', 'ACC1', 'ACC0', 'WR', 'DONE'])
         self.curr_state = self.states.READY
         self.next_state = self.states.READY
-        self.writeout = False
-        self.writeout_storage = []
+        self.writeout0 = False
+        self.writeout1 = False
+        self.writeout_storage1 = []
+        self.writeout_storage0 = []
 
         self.seen_done = False
         self.crd2_stkn = None
@@ -1062,24 +1063,26 @@ class SpAcc2New(Primitive):
             self.fifo_avail_inner = not (len(self.in_crd0) > self.depth)
             self.fifo_avail_val = not (len(self.in_val) > self.depth)
 
-    def ACC1_body(self):
-        # In accumulation, accumulate into memory
-        self.curr_in_crd1 = self.in_crd1.pop(0)
+    def print_debug(self):
+        print("========== " + self.name + " SPACC2 (NEW) ==========")
+        print("Inputs: ", self.in_crd2, self.in_crd1, self.in_crd0, self.in_val)
+        print("Temps: ", self.curr_crd2, self.crd2_stkn, self.curr_in_crd1, self.curr_in_crd0, self.curr_in_val)
+        print("Store/Wr: ", self.storage, self.writeout_storage1, self.writeout_storage0, self.writeout1, self.writeout0)
+        print("Outputs: ", self.curr_crd1, self.curr_crd0, self.curr_val)
+        print("State: ", self.curr_state, self.next_state)
 
-        # All elements are ready
-        if len(self.in_crd) > 0 and len(self.in_val) > 0:
-            self.ACC0_body()
-        else:
-            self.next_state = self.states.ACC1
+    def get_writout(self):
+        return self.writeout0 or self.writeout1
 
     def build_writeout(self):
         result = []
-        for crd1 in self.storage.keys():
-            for crd0, val in self.storage[crd1]:
-                result.append((crd0,val))
-            result.append(('S0','S0'))
+        for crd1 in sorted(self.storage.keys()):
+            print("storage:", self.storage[crd1])
+            for crd0, val in self.storage[crd1].items():
+                result.append((crd0, val))
+            result.append(('S0', 'S0'))
         # Remove last stop token
-        return result[-1]
+        return result[:-1]
 
     def update_storage(self, crd1, crd0, val):
         if crd1 not in self.storage.keys():
@@ -1091,13 +1094,30 @@ class SpAcc2New(Primitive):
             else:
                 self.storage[crd1][crd0] += val
 
+    def ACC1_body(self):
+        # In accumulation, accumulate into memory
+        self.curr_in_crd1 = self.in_crd1.pop(0)
+
+        # All elements are ready
+        if is_nc_tkn(self.curr_in_crd1):
+            if len(self.in_crd0) > 0 and len(self.in_val) > 0:
+                self.ACC0_body()
+            else:
+                self.next_state = self.states.ACC0
+        elif is_stkn(self.curr_in_crd1):
+            self.next_state = self.states.READY
+        elif is_dtkn(self.curr_in_crd1):
+            assert False, "Shouldn't have done token for coordinates if in accumulate (ACC) state"
+        else:
+            assert False, "Cannot have a coordinate token of this type: " + str(self.curr_in_crd1)
+
     def ACC0_body(self):
         self.curr_in_crd0 = self.in_crd0.pop(0)
         self.curr_in_val = self.in_val.pop(0)
 
         if is_nc_tkn(self.curr_in_val, self.valtype):
             assert is_nc_tkn(self.curr_in_crd0, int), "The inner coordinate must be a non-control token"
-            self.update_storage(self.curr_in_crd0, self.curr_in_crd0, self.curr_in_val)
+            self.update_storage(self.curr_in_crd1, self.curr_in_crd0, self.curr_in_val)
             self.next_state = self.states.ACC0
         # In accumulation, if you see a stop token in the inner level, go back to start
         elif is_stkn(self.curr_in_crd0):
@@ -1108,7 +1128,7 @@ class SpAcc2New(Primitive):
             assert False, "Shouldn't have done token for coordinates if in accumulate (ACC) state"
         # Do nothing
         else:
-            self.next_state = self.states.ACC1
+            assert False, "Cannot have a coordinate token of this type: " + str(self.curr_in_crd0)
 
     def update(self):
         self.update_done()
@@ -1116,12 +1136,7 @@ class SpAcc2New(Primitive):
 
         # Print out debugging statements
         if self.debug:
-            print("========== " + self.name + " SPACC2 (NEW) ==========")
-            print("Inputs: ", self.in_crd2, self.in_crd1, self.in_crd0, self.in_val)
-            print("Temps: ", self.curr_crd2, self.crd2_stkn, self.curr_in_crd1, self.curr_in_crd0, self.curr_in_val)
-            print("Store/Wr: ", self.storage, self.writeout_storage, self.writeout)
-            print("Outputs: ", self.curr_crd1, self.curr_crd0, self.curr_val)
-            print("State: ", self.curr_state)
+            self.print_debug()
 
         if self.backpressure_en:
             self.data_valid = False
@@ -1151,7 +1166,6 @@ class SpAcc2New(Primitive):
                 # self.stkndrop_val = StknDrop(fifos=[fsd3], **self.kwargs)
                 pass
 
-
             # Set when block counts should start
             if len(self.in_crd1) > 0 or len(self.in_crd0) > 0 or len(self.in_val) > 0:
                 self.block_start = False
@@ -1162,6 +1176,8 @@ class SpAcc2New(Primitive):
                 pass
 
             # Begin state machine computation
+            # READY State
+            # Accepts crd2 token
             if self.curr_state == self.states.READY:
                 if len(self.in_crd2) > 0:
                     self.curr_crd2 = self.in_crd2.pop(0)
@@ -1170,32 +1186,44 @@ class SpAcc2New(Primitive):
                             self.ACC1_body()
                         else:
                             self.next_state = self.states.ACC1
-                    elif is_stkn(self.curr_crd1):
-                        # TODO: what to do when we want to writeout but writeout isn't done
-
+                    elif is_stkn(self.curr_crd2) and not self.get_writout():
                         # Set writeout to be true, move over storage, and clear it.
-                        self.crd1_stkn = self.curr_crd1
-                        self.writeout = True
+                        self.crd2_stkn = self.curr_crd2
+                        self.writeout1 = True
+                        self.writeout0 = True
                         self.writeout_storage1 = [k for k in sorted(self.storage.keys())]
                         self.writeout_storage0 = self.build_writeout()
                         self.storage = {}
                         self.next_state = self.states.READY
-                    elif is_dtkn(self.curr_crd1):
+                    elif is_stkn(self.curr_crd2):
+                        # Wait for previous writeout to be done
+                        self.next_state = self.states.WR
+                    elif is_dtkn(self.curr_crd2):
                         self.seen_done = True
-                        if self.writeout:
+                        if self.get_writout():
                             self.next_state = self.states.WR
                         else:
                             self.next_state = self.states.DONE
                     else:
-                        assert False, "Cannot have a coordinate token of this type: " + str(self.curr_crd1)
+                        assert False, "Cannot have a coordinate token of this type: " + str(self.curr_crd2)
             # Handle accumulation into storage
-            elif self.curr_state == self.states.ACC:
+            # Accepts crd1 token
+            elif self.curr_state == self.states.ACC1:
+                if len(self.in_crd1) > 0:
+                    self.ACC1_body()
+                else:
+                    self.next_state = self.states.ACC1
+            elif self.curr_state == self.states.ACC0:
                 if len(self.in_crd0) > 0 and len(self.in_val) > 0:
-                    self.ACC_body()
-            # Finish writeout and then be done.
+                    self.ACC0_body()
+                else:
+                    self.next_state = self.states.ACC0
+            # Finish writeout and then be done or go back to ready state
             elif self.curr_state == self.states.WR:
-                if not self.writeout:
+                if not self.get_writout() and self.seen_done:
                     self.next_state = self.states.DONE
+                elif not self.get_writout():
+                    self.next_state = self.states.READY
                 else:
                     self.next_state = self.states.WR
             # See a done signal AND writeout is done
@@ -1208,27 +1236,44 @@ class SpAcc2New(Primitive):
                 self.next_state = self.curr_state
 
         # Writeout is true, so writeout the current values for storage
-        if self.writeout:
+        if self.get_writout():
             # Writeout is done when there are no elements left
-            if len(self.writeout_storage) == 0:
-                self.writeout = False
-                assert self.crd2_stkn is not None, "The current writeout stop token should not be None"
-                self.curr_crd1 = self.crd2_stkn
-                self.curr_val = decrement_stkn(self.crd2_stkn)
-
-                self.curr_val = decrement_stkn(self.crd2_stkn)
+            # Writeout outer (crd1) level coordinates
+            if self.writeout1:
+                if len(self.writeout_storage1) == 0:
+                    self.writeout1 = False
+                    assert self.crd2_stkn is not None, "The current writeout stop token should not be None"
+                    self.curr_crd1 = self.crd2_stkn
+                else:
+                    curr_writeout_elem1 = self.writeout_storage1.pop(0)
+                    self.curr_crd1 = curr_writeout_elem1
             else:
-                curr_writeout_elem1 = self.writeout_storage1.pop(0)
-                curr_writeout_elem0 = self.writeout_storage0.pop(0)
-                self.curr_crd1 = curr_writeout_elem1[1]
-                self.curr_crd0 = curr_writeout_elem0[0]
-                self.curr_val = curr_writeout_elem0[1]
+                self.curr_crd1 = ""
+
+            # Writeout inner (crd0) level coordinates
+            if self.writeout0:
+                if len(self.writeout_storage0) == 0:
+                    self.writeout0 = False
+                    assert self.crd2_stkn is not None, "The current writeout stop token should not be None"
+                    self.curr_crd0 = increment_stkn(self.crd2_stkn)
+
+                    self.curr_val = increment_stkn(self.crd2_stkn)
+                else:
+                    curr_writeout_elem0 = self.writeout_storage0.pop(0)
+                    self.curr_crd0 = curr_writeout_elem0[0]
+                    self.curr_val = curr_writeout_elem0[1]
+            else:
+                self.curr_crd0 = ""
+                self.curr_val = ""
+
         elif self.done:
             self.curr_val = 'D'
             self.curr_crd0 = 'D'
+            self.curr_crd1 = 'D'
         else:
             self.curr_val = ""
             self.curr_crd0 = ""
+            self.curr_crd1 = ""
 
         # Update the current state
         self.curr_state = self.next_state
@@ -1236,6 +1281,7 @@ class SpAcc2New(Primitive):
         if self.debug:
             print(self.in_crd1, self.in_crd0, self.in_val)
             print(self.curr_crd1, self.curr_crd0, self.curr_val)
+            print("====== SPACC2 END =======")
 
     def set_in_crd0(self, crd, parent=None):
         if super().valid_token(crd, int):
