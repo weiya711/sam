@@ -441,8 +441,6 @@ class Softmax(Primitive):
         if len(self.inner_ref) > 0 and len(self.in_val) > 0:
             self.curr_inner_ref = self.inner_ref.pop(0)
             self.curr_val = self.in_val.pop(0)
-        else:
-            return
 
         # print(self.curr_val)
         # print(self.curr_inner_ref)

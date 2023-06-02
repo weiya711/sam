@@ -27,7 +27,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0):
-    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T1")
+    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_fused_mul_T2")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 

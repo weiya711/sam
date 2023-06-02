@@ -767,11 +767,11 @@ def check_gold_tensor4_multiply(frosttname, debug_sim, out_crds, out_segs, out_v
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_tensor4_multiply2_blocked(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, block_size, format_str):
-    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+def check_gold_tensor4_multiply2_blocked(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, block_size, test_name):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test_name)
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
-    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_multiply2")
+    C_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test_name)
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -788,6 +788,20 @@ def check_gold_tensor4_multiply2_blocked(frosttname, debug_sim, cast, out_crds, 
     pytest.set_trace()
     B_tens = get_tensor_from_files(name="B", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x')
     C_tens = get_tensor_from_files(name="C", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x')
+
+    repeat = lambda a, x, y: np.repeat(np.repeat(a, x, axis=2), y, axis=3)
+
+    B_tens = torch.from_numpy(repeat(B_tens.get_matrix(), block_size, block_size))
+    C_tens = torch.from_numpy(repeat(C_tens.get_matrix(), block_size, block_size))
+
+    print(B_tens)
+
+    
+
+    mat_B = MatrixGenerator("B", shape=B_tens.shape, sparsity=0.1, format='CSF', dump_dir=B_dirname+"_naive", tensor=B_tens.numpy())
+    mat_B.dump_outputs(format='CSF')
+    mat_C = MatrixGenerator("C", shape=C_tens.shape, sparsity=0.1, format='CSF', dump_dir=B_dirname+"_naive", tensor=C_tens.numpy())
+    mat_C.dump_outputs(format='CSF')
     
     print(B_shape)
     print(B_tens)

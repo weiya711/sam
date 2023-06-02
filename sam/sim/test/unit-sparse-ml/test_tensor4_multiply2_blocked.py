@@ -27,8 +27,11 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
     reason='CI lacks datasets',
 )
 @pytest.mark.frostt
-def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, report_stats=True, fill=0, block_size=4):
-    B_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2_blocked_32")
+def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, report_stats=True, fill=0, block_size=1):
+    # test_name = "tensor4_multiply2_blocked_" + str(block_size)
+    block = 2
+    test_name = "tensor4_multiply2_blocked_" + str(block) + "_naive"
+    B_dirname = os.path.join(formatted_dir, frosttname, test_name)
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -55,7 +58,7 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, frosttname, "tensor4_multiply2_blocked_32")
+    C_dirname = os.path.join(formatted_dir, frosttname, test_name)
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -316,11 +319,9 @@ def test_tensor4_multiply2(samBench, frosttname, cast, check_gold, debug_sim, re
     extra_info["backpressure"] = "True"
     extra_info["depth"] = "4"
 
-    print(extra_info)
-
-    gen_gantt(extra_info, "multiply2_blocked")
+    # gen_gantt(extra_info, "multiply2_blocked")
     if check_gold:
         print("Checking gold...")
         check_gold_tensor4_multiply2_blocked(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, block_size,
-                                             "ssss0123")
+                                             test_name)
     samBench(bench, extra_info)
