@@ -31,13 +31,11 @@ class TensorFormat:
         return self.tensors[ten]
 
     def set_all_tensors(self, path):
-        read_f = open(apath, "r")
-        comment_line = read_f.readlines()
-        comment = comment_line[1]
-        comment = comment[comment.index("\"") + 1: -1]
-        comment = comment[0: comment.index("\"")]
-        comment = comment.split(",")
-        for tensor_info in comment:
+        graphs1 = pydot.graph_from_dot_file(path)
+        graph1 = graphs1[0]
+        networkx_graph = nx.nx_pydot.from_pydot(graph1)
+        tensor_list = graph1.get_comment().strip('"').split(",")
+        for tensor_info in tensor_list:
             node = tensor_info.split("=")
             self.add_tensor_and_format(node[0], node[1])
         return
@@ -100,6 +98,12 @@ class CodeGenerationdatasets:
 
     def get_if_node_done(self, v):
         return self.done_all[v]
+
+    def if_all_graph_realized(self):
+        for nodes in self.done_all.keys():
+            if self.done_all[nodes] == 0:
+                return False
+        return True
 
 
 def tab(a):
@@ -172,7 +176,6 @@ def generate_header(f, out_name):
         f.write("@pytest.mark.frostt\n")
     if out_name in vec_list:
         f.write("@pytest.mark.vec\n")
-
     f.write("def test_" + out_name + "(samBench, " + get_dataset_name(out_name) + ", cast, check_gold, debug_sim, "
                                                                                   "report_stats, fill=0):\n")
 
@@ -710,7 +713,9 @@ for apath in file_paths:
                 data.add_done(u)
 
     # FIXME: RENAME VARIABLE FROM i. Also figure out why this in range(10) is there...
-    for i in range(10):
+    # print("FLAG ", apath, data.if_all_graph_realized(), " ", data.get_if_done())
+    while not data.if_all_graph_realized():
+        # print("FLAG ", apath, data.if_all_graph_realized(), " ", data.get_if_done())
         for u, v, _ in list(nx.edge_bfs(networkx_graph)):  # .edges(data=True), networkx_graph.nodes())):
             a = networkx_graph.get_edge_data(u, v)[0]
             if d[v]["type"] == "fiberlookup" and data.get_if_node_done(v) == 0 and parents_done(networkx_graph,
@@ -953,6 +958,6 @@ for apath in file_paths:
     generate_check_against_gold_code(f, tensor_format_parse, out_name[num])
 
     f.close()
-    os.system("cp " + out_name[num] + ".py ./sam/sim/test/apps/test_" + out_name[num] + ".py")
+    os.system("cp " + out_name[num] + ".py " + os.getcwd() + "/sam/sim/test/apps/test_" + out_name[num] + ".py")
     os.system("rm " + out_name[num] + ".py")
     num += 1
