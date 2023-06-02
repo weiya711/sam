@@ -5,7 +5,7 @@ class ReduceNode(HWNode):
     def __init__(self, name=None) -> None:
         super().__init__(name=name)
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.compute_node import ComputeNode
@@ -20,6 +20,7 @@ class ReduceNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         red = self.get_name()
 
@@ -85,6 +86,16 @@ class ReduceNode(HWNode):
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == FiberAccessNode:
+            print("REDUCE TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
 

@@ -23,7 +23,8 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.parametrize("run_length", [1, 2, 5, 10, 20, 30, 40, 50, 75, 100, 200, 300, 400])
 @pytest.mark.parametrize("vectype", ["random", "runs", "blocks"])
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
-def test_unit_vec_elemmul_u_u_u(samBench, run_length, vectype, sparsity, debug_sim, dim1=2000, max_val=1000, fill=0):
+def test_unit_vec_elemmul_u_u_u(samBench, run_length, vectype, sparsity, debug_sim, backpressure, depth,
+                                dim1=2000, max_val=1000, fill=0):
 
     if vectype == "random":
         b_dirname = os.path.join(synthetic_dir, vectype, "uncompressed", "B_" + vectype + "_sp_" + str(sparsity))
@@ -60,28 +61,30 @@ def test_unit_vec_elemmul_u_u_u(samBench, run_length, vectype, sparsity, debug_s
 
     gold_vec = [in_vec1[i] * in_vec2[i] for i in range(len(in_vec1))]
 
-    rdscan = UncompressCrdRdScan(dim=dim1, debug=debug_sim)
-    val1 = Array(init_arr=in_vec1, debug=debug_sim)
-    val2 = Array(init_arr=in_vec2, debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    wrscan = ValsWrScan(size=dim1, fill=fill, debug=debug_sim)
+    rdscan = UncompressCrdRdScan(dim=dim1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val1 = Array(init_arr=in_vec1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val2 = Array(init_arr=in_vec2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, dpeth=int(depth))
+    wrscan = ValsWrScan(size=dim1, fill=fill, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
     in_ref = [0, 'D']
     done = False
     time_cnt = 0
     while not done and time_cnt < TIMEOUT:
         if len(in_ref) > 0:
-            rdscan.set_in_ref(in_ref.pop(0))
+            rdscan.set_in_ref(in_ref.pop(0), "")
+        val1.set_load(rdscan.out_ref(), rdscan)
+        val2.set_load(rdscan.out_ref(), rdscan)
+        mul.set_in1(val1.out_load(), val1)
+        mul.set_in2(val2.out_load(), val2)
+        wrscan.set_input(mul.out_val(), mul)
+
         rdscan.update()
-        val1.set_load(rdscan.out_ref())
-        val2.set_load(rdscan.out_ref())
         val1.update()
         val2.update()
-        mul.set_in1(val1.out_load())
-        mul.set_in2(val2.out_load())
         mul.update()
-        wrscan.set_input(mul.out_val())
         wrscan.update()
+
         print("Timestep", time_cnt, "\t Done --", "\tRdScan:", rdscan.out_done(),
               "\tArr:", val1.out_done(), val2.out_done(),
               "\tMul:", mul.out_done(), "\tWrScan:", wrscan.out_done())

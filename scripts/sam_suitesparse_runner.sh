@@ -7,12 +7,12 @@
 set -u
 
 BENCHMARKS=(
-  mat_vecmul_FINAL
+#  mat_vecmul_FINAL
   matmul_FINAL
-  mat_elemadd_FINAL
-  mat_elemadd3_FINAL
-  mat_residual_FINAL
-  mat_mattransmul_FINAL
+#  mat_elemadd_FINAL
+#  mat_elemadd3_FINAL
+#  mat_residual_FINAL
+#  mat_mattransmul_FINAL
 )
 
 errors=()
@@ -89,12 +89,12 @@ for b in ${!BENCHMARKS[@]}; do
 			SUITESPARSE_TENSOR_PATH=$matrix python $basedir/scripts/datastructure_suitesparse.py -n $line 
 
 			SUITESPARSE_TENSOR_PATH=$matrix $basedir/compiler/taco/build/bin/taco-test sam.pack_other_ss    
-			python $basedir/scripts/datastructure_frostt.py -n $line -f ss01 --other -ss
+			python $basedir/scripts/datastructure_tns.py -n $line -f ss01 --other -ss
 		fi
 
 		cd $basedir/sam/sim
 
-		pytest test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
+		pytest test/final-apps/test_$bench.py --ssname $line -s --report-stats --benchmark-json=$path/$line.json 
 		python $basedir/scripts/converter.py --json_name $path/$line.json	
 		    
 		status=$?

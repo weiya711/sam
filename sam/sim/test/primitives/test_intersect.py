@@ -31,11 +31,15 @@ def test_intersect_direct_2d(debug_sim):
             inter.set_in1(in_ref1.pop(0), in_crd1.pop(0))
         if len(in_crd2) > 0:
             inter.set_in2(in_ref2.pop(0), in_crd2.pop(0))
+
         inter.update()
-        print("Timestep", time, "\t Crd:", inter.out_crd(), "\t Ref1:", inter.out_ref1(), "\t Ref2:", inter.out_ref2())
+
         out_crd.append(inter.out_crd())
         out_ref1.append(inter.out_ref1())
         out_ref2.append(inter.out_ref2())
+
+        print("Timestep", time, "\t Crd:", inter.out_crd(), "\t Ref1:", inter.out_ref1(), "\t Ref2:", inter.out_ref2())
+
         done = inter.done
         time += 1
 
@@ -74,11 +78,15 @@ def test_intersect_1d(in1, debug_sim):
             inter.set_in1(in_ref1.pop(0), in_crd1.pop(0))
         if len(in_crd2) > 0:
             inter.set_in2(in_ref2.pop(0), in_crd2.pop(0))
+
         inter.update()
-        print("Timestep", time, "\t Crd:", inter.out_crd(), "\t Ref1:", inter.out_ref1(), "\t Ref2:", inter.out_ref2())
+
         out_crd.append(inter.out_crd())
         out_ref1.append(inter.out_ref1())
         out_ref2.append(inter.out_ref2())
+
+        print("Timestep", time, "\t Crd:", inter.out_crd(), "\t Ref1:", inter.out_ref1(), "\t Ref2:", inter.out_ref2())
+
         done = inter.done
         time += 1
 
@@ -127,13 +135,17 @@ def test_intersect_direct_skip(arrs, debug_sim):
             inter.set_in1(in_ref1.pop(0), in_crd1.pop(0))
         if len(in_crd2) > 0:
             inter.set_in2(in_ref2.pop(0), in_crd2.pop(0))
+
         inter.update()
-        print("Timestep", time, "\t Crd:", inter.out_crd(), "\t Ref1:", inter.out_ref1(), "\t Ref2:", inter.out_ref2())
+
         out_crd.append(inter.out_crd())
         out_ref1.append(inter.out_ref1())
         out_ref2.append(inter.out_ref2())
         out_skip1.append(inter.out_crd_skip1())
         out_skip2.append(inter.out_crd_skip2())
+
+        print("Timestep", time, "\t Crd:", inter.out_crd(), "\t Ref1:", inter.out_ref1(), "\t Ref2:", inter.out_ref2())
+
         done = inter.done
         time += 1
 

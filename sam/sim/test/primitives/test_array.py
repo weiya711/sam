@@ -16,14 +16,16 @@ def test_arr_load_1d(dim1, debug_sim, max_val=1000):
     done = False
     time = 0
     out_val = []
-    count = 0
     while not done and time < TIMEOUT:
-        if count < len(in_val):
-            arr.set_load(in_val[count])
-            count += 1
+        if len(in_val) > 0:
+            arr.set_load(in_val.pop(0))
+
         arr.update()
-        print("Timestep", time, "\t Out:", arr.out_load())
+
         out_val.append(arr.out_load())
+
+        print("Timestep", time, "\t Out:", arr.out_load())
+
         done = arr.out_done()
         time += 1
 
@@ -50,12 +52,15 @@ def test_arr_store_1d(dim1, debug_sim, max_val=1000):
     out_val = []
     count = 0
     while not done and time < TIMEOUT:
-        if count < len(in_val):
-            arr.set_store(in_addr[count], in_val[count])
-            count += 1
+        if len(in_val) > 0:
+            arr.set_store(in_addr.pop(0), in_val.pop(0))
+
         arr.update()
-        print("Timestep", time, "\t Out:", arr.out_load())
+
         out_val.append(arr.out_load())
+
+        print("Timestep", time, "\t Out:", arr.out_load())
+
         done = arr.out_done()
         time += 1
 
@@ -99,8 +104,11 @@ def test_arr_load_direct_0tkn(arrs, debug_sim):
             arr.set_load(ref.pop(0))
 
         arr.update()
-        print("Timestep", time, "\t Out:", arr.out_load())
+
         out_val.append(arr.out_load())
+
+        print("Timestep", time, "\t Out:", arr.out_load())
+
         done = arr.out_done()
         time += 1
 

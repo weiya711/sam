@@ -9,7 +9,7 @@ class ComputeNode(HWNode):
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.glb_node import GLBNode
         from sam.onyx.hw_nodes.buffet_node import BuffetNode
@@ -24,6 +24,7 @@ class ComputeNode(HWNode):
         from sam.onyx.hw_nodes.broadcast_node import BroadcastNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         other_type = type(other)
 
@@ -69,7 +70,12 @@ class ComputeNode(HWNode):
             pe = self.get_name()
             # isect_conn = other.get_num_inputs()
 
-            isect_conn = other.get_connection_from_tensor(edge.get_tensor())
+            if 'tensor' not in edge.get_attributes():
+                # Taking some liberties here - but technically this is the combo val
+                # isect_conn = other.get_connection_from_tensor('B')
+                isect_conn = other.get_connection_from_tensor('C')
+            else:
+                isect_conn = other.get_connection_from_tensor(edge.get_tensor())
 
             new_conns = {
                 f'pe_to_isect_{in_str}_{isect_conn}': [
@@ -126,6 +132,16 @@ class ComputeNode(HWNode):
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+        elif other_type == FiberAccessNode:
+            print("COMPUTE TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
 
@@ -144,9 +160,9 @@ class ComputeNode(HWNode):
         op_code = 0
         if c_op == 'mul':
             op_code = 1
-        elif c_op == 'add' and 'sub' not in comment:
+        elif c_op == 'add' and 'sub=1' not in comment:
             op_code = 0
-        elif c_op == 'add' and 'sub' in comment:
+        elif c_op == 'add' and 'sub=1' in comment:
             op_code = 2
         cfg_kwargs = {
             'op': op_code

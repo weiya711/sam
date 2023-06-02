@@ -15,7 +15,8 @@ from sam.sim.test.test import *
 
 class MatrixGenerator():
 
-    def __init__(self, name='B', shape=None, sparsity=0.6, format='CSF', dump_dir=None, tensor=None, value_cap=None) -> None:
+    def __init__(self, name='B', shape=None, sparsity=0.6, format='CSF', dump_dir=None,
+                 tensor=None, value_cap=None, clean=True) -> None:
 
         # assert dimension is not None
         # self.dimension = dimension
@@ -35,7 +36,7 @@ class MatrixGenerator():
             self.dump_dir = dump_dir
             if not os.path.isdir(self.dump_dir):
                 os.mkdir(self.dump_dir)
-            else:
+            elif clean:
                 # Otherwise clean it
                 for filename in os.listdir(self.dump_dir):
                     ret = os.remove(self.dump_dir + "/" + filename)
@@ -62,7 +63,8 @@ class MatrixGenerator():
     def _create_fiber_tree(self):
         self.fiber_tree = FiberTree(tensor=self.array)
 
-    def dump_outputs(self, format=None, tpose=False, dump_shape=True, glb_override=False, glb_dump_dir=None):
+    def dump_outputs(self, format=None, tpose=False, dump_shape=True,
+                     glb_override=False, glb_dump_dir=None, suffix=""):
         '''
         Dump the matrix into many files depending on matrix format
         '''
@@ -75,6 +77,8 @@ class MatrixGenerator():
 
         print(f"Using dump directory - {use_dir}")
 
+        all_zeros = not np.any(self.array)
+
         # Transpose it first if necessary
         if tpose is True:
             self.array = numpy.transpose(self.array)
@@ -85,6 +89,33 @@ class MatrixGenerator():
             self.format = format
 
         if self.format == 'CSF':
+            # Handle the all zeros case...
+            if all_zeros:
+                fake_lines_seg = ["0000",
+                                  "0000"]
+                fake_lines_crd = ["0000"]
+                # If it's a scalar/length 1 vec
+                if len(self.shape) == 1 and self.shape[0] == 1:
+                    fake_lines_val = ["0000"]
+                else:
+                    fake_lines_val = ["0000"]
+                for mode in range(len(self.array.shape)):
+                    if glb_override:
+                        lines = [len(fake_lines_seg), *fake_lines_seg, len(fake_lines_crd), *fake_lines_crd]
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_{mode}{suffix}", dump_dir=use_dir, hex=print_hex)
+                    else:
+                        self.write_array(fake_lines_seg, name=f"tensor_{self.name}_mode_{mode}_seg{suffix}",
+                                         dump_dir=use_dir, hex=print_hex)
+                        self.write_array(fake_lines_crd, name=f"tensor_{self.name}_mode_{mode}_crd{suffix}",
+                                         dump_dir=use_dir, hex=print_hex)
+                if glb_override:
+                    lines = [len(fake_lines_val), *fake_lines_val]
+                    self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
+                else:
+                    self.write_array(fake_lines_val, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
+
+                return
+
             # In CSF format, need to iteratively create seg/coord arrays
             tmp_lvl_list = []
             tmp_lvl_list.append(self.fiber_tree.get_root())
@@ -92,10 +123,10 @@ class MatrixGenerator():
             seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
             if glb_override:
                 lines = [len(seg_arr), *seg_arr, len(coord_arr), *coord_arr]
-                self.write_array(lines, name=f"tensor_{self.name}_mode_0", dump_dir=use_dir, hex=print_hex)
+                self.write_array(lines, name=f"tensor_{self.name}_mode_0{suffix}", dump_dir=use_dir, hex=print_hex)
             else:
-                self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg", dump_dir=use_dir, hex=print_hex)
-                self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd", dump_dir=use_dir, hex=print_hex)
+                self.write_array(seg_arr, name=f"tensor_{self.name}_mode_0_seg{suffix}", dump_dir=use_dir, hex=print_hex)
+                self.write_array(coord_arr, name=f"tensor_{self.name}_mode_0_crd{suffix}", dump_dir=use_dir, hex=print_hex)
 
             at_vals = False
             i = 1
@@ -117,17 +148,17 @@ class MatrixGenerator():
                     if glb_override:
                         lines = [len(tmp_lvl_list), *tmp_lvl_list]
                         # self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals" dump_dir=use_dir)
-                        self.write_array(lines, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
                     else:
-                        self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
                 else:
                     seg_arr, coord_arr = self._dump_csf(tmp_lvl_list)
                     if glb_override:
                         lines = [len(seg_arr), *seg_arr, len(coord_arr), *coord_arr]
-                        self.write_array(lines, name=f"tensor_{self.name}_mode_{i}", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_{i}{suffix}", dump_dir=use_dir, hex=print_hex)
                     else:
-                        self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg", dump_dir=use_dir, hex=print_hex)
-                        self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg{suffix}", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(coord_arr, name=f"tensor_{self.name}_mode_{i}_crd{suffix}", dump_dir=use_dir, hex=print_hex)
                 i = i + 1
         elif self.format == "UNC":
             flat_array = []
@@ -135,9 +166,9 @@ class MatrixGenerator():
                 flat_array.append(val)
             if glb_override:
                 lines = [len(flat_array), *flat_array]
-                self.write_array(lines, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
             else:
-                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
         elif self.format == "COO":
             crd_dict = dict()
             order = len(self.array.shape)
@@ -154,21 +185,21 @@ class MatrixGenerator():
                 if key == order:
                     if glb_override:
                         lines = [len(crd_dict[key]), *crd_dict[key]]
-                        self.write_array(lines, name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
                     else:
-                        self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_vals", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(crd_dict[key], name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
                 else:
                     if glb_override:
                         lines = [len(crd_dict[key]), *crd_dict[key]]
-                        self.write_array(lines, name=f"tensor_{self.name}_mode_{key}_crd", dump_dir=use_dir, hex=print_hex)
+                        self.write_array(lines, name=f"tensor_{self.name}_mode_{key}_crd{suffix}", dump_dir=use_dir, hex=print_hex)
                     else:
                         self.write_array(crd_dict[key],
-                                         name=f"tensor_{self.name}_mode_{key}_crd",
+                                         name=f"tensor_{self.name}_mode_{key}_crd{suffix}",
                                          dump_dir=use_dir,
                                          hex=print_hex)
 
         if dump_shape:
-            self.write_array(self.array.shape, name=f"shape", dump_dir=use_dir, hex=print_hex)
+            self.write_array(self.array.shape, name=f"tensor_{self.name}_mode_shape{suffix}", dump_dir=use_dir, hex=print_hex)
 
         # Transpose it back
         if tpose is True:
@@ -210,10 +241,11 @@ class MatrixGenerator():
         full_path = dump_dir + "/" + name
         with open(full_path, "w+") as wr_file:
             for item in str_list:
+                item_int = int(item)
                 if hex:
-                    wr_file.write(f"{item:04X}\n")
+                    wr_file.write(f"{item_int:04X}\n")
                 else:
-                    wr_file.write(f"{item}\n")
+                    wr_file.write(f"{item_int}\n")
 
     def get_shape(self):
         return self.shape
@@ -394,12 +426,64 @@ def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
     return mg
 
 
-def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_terminate=None) -> MatrixGenerator:
+def convert_aha_glb_output_file(glbfile, output_dir):
+
+    glbfile_s = os.path.basename(glbfile).rstrip(".txt")
+
+    if 'mode_vals' in glbfile:
+        # num_blocks = 1
+        files = [f"{output_dir}/{glbfile_s}"]
+    else:
+        # num_blocks = 2
+        files = [f"{output_dir}/{glbfile_s}_seg",
+                 f"{output_dir}/{glbfile_s}_crd"]
+
+    straightline = []
+
+    # Straighten the file out
+    with open(glbfile, "r") as glbfile_h:
+        file_contents = glbfile_h.readlines()
+        for line in file_contents:
+            sp_line = line.strip().split(" ")
+            for sp_line_tok in sp_line:
+                sp_line_tok_stripped = sp_line_tok.strip()
+                straightline.append(int(sp_line_tok_stripped, base=16))
+
+    # Now we have straightline having the items in order
+    # Now write them to the output
+    sl_ptr = 0
+    for file_path in files:
+        num_items = straightline[sl_ptr]
+        sl_ptr += 1
+        with open(file_path, "w+") as fh_:
+            for _ in range(num_items):
+                fh_.write(f"{straightline[sl_ptr]:04X}\n")
+                sl_ptr += 1
+
+
+def get_tensor_from_files(name, files_dir, shape, base=10,
+                          format='CSF', early_terminate=None, tensor_ordering=None,
+                          suffix="") -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
 
+    # assert tensor_ordering is not None
+    # This is an example mode map - must transform it to lists
+    # ((0, (0, 's')), (1, (1, 's')))
+    # sort the ordering...
+    tensor_ordering_sorted = []
+    shape_reordered = []
+
+    if tensor_ordering is None:
+        to_loop = range(dims)
+        shape_reordered = shape
+    else:
+        for mode_tup in tensor_ordering:
+            tensor_ordering_sorted.insert(mode_tup[0], mode_tup[1][0])
+            shape_reordered.insert(mode_tup[1][0], shape[mode_tup[0]])
+        to_loop = tensor_ordering_sorted
     # Get vals first since all formats will have vals
-    val_f = [fil for fil in all_files if name in fil and f'mode_vals' in fil][0]
+    val_f = [fil for fil in all_files if name in fil and f'mode_vals{suffix}' in fil][0]
     vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate)
 
     mg = None
@@ -408,20 +492,29 @@ def get_tensor_from_files(name, files_dir, shape, base=10, format='CSF', early_t
         mat_sc[0] = vals[0]
         mg = MatrixGenerator(name=name, shape=shape, tensor=mat_sc)
     elif format == 'CSF':
+        created_empty = False
         segs = []
         crds = []
-        for mode in range(dims):
-            seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'seg' in fil][0]
-            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
-            segs.append(read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate))
-            crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
-
-        pt_list = get_point_list(crds, segs, val_arr=vals)
-        mg = create_matrix_from_point_list(name, pt_list, shape)
+        for mode_original in to_loop:
+            mode = mode_original
+            seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'seg{suffix}' in fil][0]
+            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
+            seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate)
+            segs.append(seg_t_)
+            # Empty matrix...
+            if mode == 0 and len(seg_t_) == 2 and seg_t_[0] == 0 and seg_t_[1] == 0:
+                mg = MatrixGenerator(name=name, shape=shape, sparsity=1.0)
+                created_empty = True
+                break
+            crd_t_ = read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate)
+            crds.append(crd_t_)
+        if not created_empty:
+            pt_list = get_point_list(crds, segs, val_arr=vals)
+            mg = create_matrix_from_point_list(name, pt_list, shape_reordered)
     elif format == 'COO':
         crds = []
         for mode in range(dims):
-            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and 'crd' in fil][0]
+            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
             crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
 
         pt_list = copy.deepcopy(crds)

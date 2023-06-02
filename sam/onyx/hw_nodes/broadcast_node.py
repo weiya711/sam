@@ -6,7 +6,7 @@ class BroadcastNode(HWNode):
     def __init__(self, name=None) -> None:
         super().__init__(name=name)
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         from sam.onyx.hw_nodes.compute_node import ComputeNode
         from sam.onyx.hw_nodes.glb_node import GLBNode

@@ -14,7 +14,7 @@ class MergeNode(HWNode):
     def get_inner(self):
         return self.inner
 
-    def connect(self, other, edge):
+    def connect(self, other, edge, kwargs=None):
 
         merge = self.get_name()
 
@@ -31,6 +31,7 @@ class MergeNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         new_conns = None
         other_type = type(other)
@@ -104,15 +105,23 @@ class MergeNode(HWNode):
         elif other_type == RepSigGenNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == CrdHoldNode:
-            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+        elif other_type == FiberAccessNode:
+            print("MERGE TO FIBER ACCESS")
+            assert kwargs is not None
+            assert 'flavor_that' in kwargs
+            that_flavor = other.get_flavor(kwargs['flavor_that'])
+            print(kwargs)
+            init_conns = self.connect(that_flavor, edge)
+            print(init_conns)
+            final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
 
         return new_conns
 
     def configure(self, attributes):
-        print("MERGE CONFIGURE")
-        print(attributes)
         cmrg_enable = 1
         # TODO what is this supposed to be?
         cmrg_stop_lvl = 1
