@@ -38,7 +38,8 @@ def inner_crd(ll, size, sf):
 @pytest.mark.parametrize("sparsity", [0.2, 0.6, 0.8, 0.9, 0.95, 0.975, 0.9875, 0.99375])
 # @pytest.mark.parametrize("nnz", [1, 10, 100, 500])
 @pytest.mark.parametrize("sf", [16, 32, 64, 256, 512])
-def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf, debug_sim, max_val=999, size=2000, fill=0):
+def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf, debug_sim, backpressure, depth,
+                           max_val=999, size=2000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
     if vectype == "random":
@@ -111,16 +112,19 @@ def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf,
         print("Crd arr2 0", gold_crd2_0)
         print("Crd arr2 1", gold_crd2_1)
 
-    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
-    split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
-    split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    wrscan1_0 = CompressWrScan(seg_size=inner_fiber_cnt + 1, size=size, fill=fill, debug=debug_sim)
-    wrscan1_1 = CompressWrScan(seg_size=2, size=inner_fiber_cnt, fill=fill, debug=debug_sim)
-    wrscan2_0 = CompressWrScan(seg_size=inner_fiber_cnt + 1, size=size, fill=fill, debug=debug_sim)
-    wrscan2_1 = CompressWrScan(seg_size=2, size=inner_fiber_cnt, fill=fill, debug=debug_sim)
-
+    wrscan1_0 = CompressWrScan(seg_size=inner_fiber_cnt + 1, size=size, fill=fill, debug=debug_sim,
+                               back_en=backpressure, depth=int(depth))
+    wrscan1_1 = CompressWrScan(seg_size=2, size=inner_fiber_cnt, fill=fill, debug=debug_sim,
+                               back_en=backpressure, depth=int(depth))
+    wrscan2_0 = CompressWrScan(seg_size=inner_fiber_cnt + 1, size=size, fill=fill, debug=debug_sim,
+                               back_en=backpressure, depth=int(depth))
+    wrscan2_1 = CompressWrScan(seg_size=2, size=inner_fiber_cnt, fill=fill, debug=debug_sim,
+                               back_en=backpressure, depth=int(depth))
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
     done = False
@@ -131,13 +135,13 @@ def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf,
     out_split2_1 = []
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
-            crdscan1.set_in_ref(in_ref1.pop(0))
+            crdscan1.set_in_ref(in_ref1.pop(0), "")
         if len(in_ref2) > 0:
-            crdscan2.set_in_ref(in_ref2.pop(0))
+            crdscan2.set_in_ref(in_ref2.pop(0), "")
 
-        split1.set_in_crd(crdscan1.out_crd())
+        split1.set_in_crd(crdscan1.out_crd(), crdscan1)
 
-        split2.set_in_crd(crdscan2.out_crd())
+        split2.set_in_crd(crdscan2.out_crd(), crdscan2)
 
         out_split1_0.append(split1.out_inner_crd())
         out_split1_1.append(split1.out_outer_crd())
@@ -149,10 +153,10 @@ def test_vec_elemmul_split(samBench, run_length, vectype, sparsity, vecname, sf,
             print(remove_emptystr(out_split2_0))
             print(remove_emptystr(out_split2_1))
 
-        wrscan1_0.set_input(split1.out_inner_crd())
-        wrscan1_1.set_input(split1.out_outer_crd())
-        wrscan2_0.set_input(split2.out_inner_crd())
-        wrscan2_1.set_input(split2.out_outer_crd())
+        wrscan1_0.set_input(split1.out_inner_crd(), split1)
+        wrscan1_1.set_input(split1.out_outer_crd(), split1)
+        wrscan2_0.set_input(split2.out_inner_crd(), split2)
+        wrscan2_1.set_input(split2.out_outer_crd(), split2)
 
         crdscan1.update()
         crdscan2.update()

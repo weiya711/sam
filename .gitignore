@@ -38,6 +38,11 @@ compiler/benchmark/
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
+*.gv
+
+*.mtx
+*.tns
+
 # Temporary matrices
 tmp_mat*/
 
@@ -48,5 +53,4 @@ tmp_mat*/
 tensor_*_mode_*
 
 # Tensor files
-*.mtx
-*.tns
+tiles/

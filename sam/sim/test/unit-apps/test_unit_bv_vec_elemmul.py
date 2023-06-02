@@ -30,7 +30,7 @@ def inner_bv(ll, size, sf):
 
 
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
+def test_vec_bv_split(nnz, debug_sim, backpressure, depth, max_val=999, size=1000, fill=0):
     sf = 32
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
@@ -55,20 +55,22 @@ def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
     gold_bv2_0 = inner_bv(crd_arr2, size, sf)
     gold_bv2_0 += (32 - len(gold_bv2_0)) * [0]
 
-    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
-    split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
-    split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim,
+                                   back_en=backpressure, depth=int(depth))
+    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim,
+                                   back_en=backpressure, depth=int(depth))
+    split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    bv1_0 = BV(debug=debug_sim)
-    bv1_1 = BV(debug=debug_sim)
-    bv2_0 = BV(debug=debug_sim)
-    bv2_1 = BV(debug=debug_sim)
+    bv1_0 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bv1_1 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bv2_0 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bv2_1 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    wrscan1_0 = ValsWrScan(size=int(size / sf) + 1, fill=fill)
-    wrscan1_1 = ValsWrScan(size=1, fill=fill)
-    wrscan2_0 = ValsWrScan(size=int(size / sf) + 1, fill=fill)
-    wrscan2_1 = ValsWrScan(size=1, fill=fill)
+    wrscan1_0 = ValsWrScan(size=int(size / sf) + 1, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan1_1 = ValsWrScan(size=1, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan2_0 = ValsWrScan(size=int(size / sf) + 1, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan2_1 = ValsWrScan(size=1, fill=fill, back_en=backpressure, depth=int(depth))
 
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
@@ -80,23 +82,23 @@ def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
     out_split2_1 = []
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
-            crdscan1.set_in_ref(in_ref1.pop(0))
+            crdscan1.set_in_ref(in_ref1.pop(0), "")
         if len(in_ref2) > 0:
-            crdscan2.set_in_ref(in_ref2.pop(0))
+            crdscan2.set_in_ref(in_ref2.pop(0), "")
 
-        split1.set_in_crd(crdscan1.out_crd())
+        split1.set_in_crd(crdscan1.out_crd(), crdscan1)
 
-        split2.set_in_crd(crdscan2.out_crd())
+        split2.set_in_crd(crdscan2.out_crd(), crdscan2)
 
-        bv1_0.set_in_crd(split1.out_inner_crd())
-        bv1_1.set_in_crd(split1.out_outer_crd())
-        bv2_0.set_in_crd(split2.out_inner_crd())
-        bv2_1.set_in_crd(split2.out_outer_crd())
+        bv1_0.set_in_crd(split1.out_inner_crd(), split1)
+        bv1_1.set_in_crd(split1.out_outer_crd(), split1)
+        bv2_0.set_in_crd(split2.out_inner_crd(), split2)
+        bv2_1.set_in_crd(split2.out_outer_crd(), split2)
 
-        wrscan1_0.set_input(bv1_0.out_bv_int())
-        wrscan1_1.set_input(bv1_1.out_bv_int())
-        wrscan2_0.set_input(bv2_0.out_bv_int())
-        wrscan2_1.set_input(bv2_1.out_bv_int())
+        wrscan1_0.set_input(bv1_0.out_bv_int(), bv1_0)
+        wrscan1_1.set_input(bv1_1.out_bv_int(), bv1_1)
+        wrscan2_0.set_input(bv2_0.out_bv_int(), bv2_0)
+        wrscan2_1.set_input(bv2_1.out_bv_int(), bv2_1)
 
         crdscan1.update()
         crdscan2.update()
@@ -145,7 +147,7 @@ def test_vec_bv_split(nnz, debug_sim, max_val=999, size=1000, fill=0):
 
 # TODO: BV already set vecmul ONLY and then combined
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_mat_elemmul_bvonly(nnz, debug_sim, max_val=1000, size=1001, fill=0):
+def test_mat_elemmul_bvonly(nnz, debug_sim, backpressure, depth, max_val=1000, size=1001, fill=0):
     assert (size > max_val)
     sf = 32
 
@@ -189,20 +191,20 @@ def test_mat_elemmul_bvonly(nnz, debug_sim, max_val=1000, size=1001, fill=0):
         print("BV arr2 0", gold_bv2_0)
         print("BV arr2 1", gold_bv2_1)
 
-    bvscan1_0 = BVRdScan(bv_arr=gold_bv1_0, debug=debug_sim)
-    bvscan1_1 = BVRdScan(bv_arr=gold_bv1_1, debug=debug_sim)
-    bvscan2_0 = BVRdScan(bv_arr=gold_bv2_0, debug=debug_sim)
-    bvscan2_1 = BVRdScan(bv_arr=gold_bv2_1, debug=debug_sim)
+    bvscan1_0 = BVRdScan(bv_arr=gold_bv1_0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvscan1_1 = BVRdScan(bv_arr=gold_bv1_1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvscan2_0 = BVRdScan(bv_arr=gold_bv2_0, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvscan2_1 = BVRdScan(bv_arr=gold_bv2_1, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    inter0 = IntersectBV2(debug=debug_sim)
-    inter1 = IntersectBV2(debug=debug_sim)
-    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
-    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    bvdrop = BVDrop(debug=debug_sim)
-    oval_wrscan = ValsWrScan(size=size, fill=fill)
-    wrscan0 = ValsWrScan(size=size, fill=fill)
-    wrscan1 = ValsWrScan(size=1, fill=fill)
+    inter0 = IntersectBV2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    inter1 = IntersectBV2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val1 = Array(init_arr=vals_arr1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val2 = Array(init_arr=vals_arr2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvdrop = BVDrop(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    oval_wrscan = ValsWrScan(size=size, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan0 = ValsWrScan(size=size, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan1 = ValsWrScan(size=1, fill=fill, back_en=backpressure, depth=int(depth))
 
     temp1 = []
     temp2 = []
@@ -215,34 +217,34 @@ def test_mat_elemmul_bvonly(nnz, debug_sim, max_val=1000, size=1001, fill=0):
     time = 0
     while not done and time < TIMEOUT:
         if len(in_ref1) > 0:
-            bvscan1_1.set_in_ref(in_ref1.pop(0))
+            bvscan1_1.set_in_ref(in_ref1.pop(0), "")
         if len(in_ref2) > 0:
-            bvscan2_1.set_in_ref(in_ref2.pop(0))
+            bvscan2_1.set_in_ref(in_ref2.pop(0), "")
 
-        inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv())
-        inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv())
+        inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv(), bvscan1_1)
+        inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv(), bvscan2_1)
 
-        bvscan1_0.set_in_ref(inter1.out_ref1())
+        bvscan1_0.set_in_ref(inter1.out_ref1(), inter1)
 
-        bvscan2_0.set_in_ref(inter1.out_ref2())
+        bvscan2_0.set_in_ref(inter1.out_ref2(), inter1)
 
-        inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv())
-        inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv())
+        inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv(), bvscan1_0)
+        inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv(), bvscan2_0)
 
-        val1.set_load(inter0.out_ref1())
-        val2.set_load(inter0.out_ref2())
-        mul.set_in1(val1.out_load())
-        mul.set_in2(val2.out_load())
+        val1.set_load(inter0.out_ref1(), inter0)
+        val2.set_load(inter0.out_ref2(), inter0)
+        mul.set_in1(val1.out_load(), val1)
+        mul.set_in2(val2.out_load(), val2)
 
-        oval_wrscan.set_input(mul.out_val())
+        oval_wrscan.set_input(mul.out_val(), mul)
 
         temp3.append(inter0.out_bv())
         temp4.append(inter1.out_bv())
-        bvdrop.set_inner_bv(inter0.out_bv())
-        bvdrop.set_outer_bv(inter1.out_bv())
+        bvdrop.set_inner_bv(inter0.out_bv(), inter0)
+        bvdrop.set_outer_bv(inter1.out_bv(), inter1)
 
-        wrscan0.set_input(bvdrop.out_bv_inner())
-        wrscan1.set_input(bvdrop.out_bv_outer())
+        wrscan0.set_input(bvdrop.out_bv_inner(), bvdrop)
+        wrscan1.set_input(bvdrop.out_bv_outer(), bvdrop)
 
         bvscan1_1.update()
         bvscan2_1.update()
@@ -292,7 +294,7 @@ def test_mat_elemmul_bvonly(nnz, debug_sim, max_val=1000, size=1001, fill=0):
 # NOTE: This is the full vector elementwise multiplication as a bitvector
 @pytest.mark.parametrize("sf", [16, 32, 64, 128])
 @pytest.mark.parametrize("nnz", [1, 10, 100, 500, 1000])
-def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0):
+def test_vec_elemmul_bv_split(nnz, sf, debug_sim, backpressure, depth, max_val=999, size=1000, fill=0):
     inner_fiber_cnt = int(size / sf) + 1
 
     crd_arr1 = [random.randint(0, max_val) for _ in range(nnz)]
@@ -335,20 +337,20 @@ def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0
         print("BV arr2 0", gold_bv2_0)
         print("BV arr2 1", gold_bv2_1)
 
-    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim)
-    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim)
-    split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
-    split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim)
+    crdscan1 = CompressedCrdRdScan(seg_arr=seg_arr1, crd_arr=crd_arr1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    crdscan2 = CompressedCrdRdScan(seg_arr=seg_arr2, crd_arr=crd_arr2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    split1 = Split(split_factor=sf, orig_crd=False, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    split2 = Split(split_factor=sf, orig_crd=False, debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    bv1_0 = BV(debug=debug_sim)
-    bv1_1 = BV(debug=debug_sim)
-    bv2_0 = BV(debug=debug_sim)
-    bv2_1 = BV(debug=debug_sim)
+    bv1_0 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bv1_1 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bv2_0 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bv2_1 = BV(debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    wrscan1_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill)
-    wrscan1_1 = ValsWrScan(size=1, fill=fill)
-    wrscan2_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill)
-    wrscan2_1 = ValsWrScan(size=1, fill=fill)
+    wrscan1_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan1_1 = ValsWrScan(size=1, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan2_0 = ValsWrScan(size=inner_fiber_cnt, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan2_1 = ValsWrScan(size=1, fill=fill, back_en=backpressure, depth=int(depth))
 
     # MAKE BIT-TREE
     in_ref1 = [0, 'D']
@@ -361,23 +363,23 @@ def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0
     out_split2_1 = []
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
-            crdscan1.set_in_ref(in_ref1.pop(0))
+            crdscan1.set_in_ref(in_ref1.pop(0), "")
         if len(in_ref2) > 0:
-            crdscan2.set_in_ref(in_ref2.pop(0))
+            crdscan2.set_in_ref(in_ref2.pop(0), "")
 
-        split1.set_in_crd(crdscan1.out_crd())
+        split1.set_in_crd(crdscan1.out_crd(), crdscan1)
 
-        split2.set_in_crd(crdscan2.out_crd())
+        split2.set_in_crd(crdscan2.out_crd(), crdscan2)
 
-        bv1_0.set_in_crd(split1.out_inner_crd())
-        bv1_1.set_in_crd(split1.out_outer_crd())
-        bv2_0.set_in_crd(split2.out_inner_crd())
-        bv2_1.set_in_crd(split2.out_outer_crd())
+        bv1_0.set_in_crd(split1.out_inner_crd(), split1)
+        bv1_1.set_in_crd(split1.out_outer_crd(), split1)
+        bv2_0.set_in_crd(split2.out_inner_crd(), split2)
+        bv2_1.set_in_crd(split2.out_outer_crd(), split2)
 
-        wrscan1_0.set_input(bv1_0.out_bv_int())
-        wrscan1_1.set_input(bv1_1.out_bv_int())
-        wrscan2_0.set_input(bv2_0.out_bv_int())
-        wrscan2_1.set_input(bv2_1.out_bv_int())
+        wrscan1_0.set_input(bv1_0.out_bv_int(), bv1_0)
+        wrscan1_1.set_input(bv1_1.out_bv_int(), bv1_1)
+        wrscan2_0.set_input(bv2_0.out_bv_int(), bv2_0)
+        wrscan2_1.set_input(bv2_1.out_bv_int(), bv2_1)
 
         crdscan1.update()
         crdscan2.update()
@@ -423,20 +425,20 @@ def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0
     check_arr(wrscan2_1, gold_bv2_1)
 
     # COMPUTE ON BIT-TREE
-    bvscan1_0 = BVRdScan(bv_arr=wrscan1_0.get_arr(), debug=debug_sim)
-    bvscan1_1 = BVRdScan(bv_arr=wrscan1_1.get_arr(), debug=debug_sim)
-    bvscan2_0 = BVRdScan(bv_arr=wrscan2_0.get_arr(), debug=debug_sim)
-    bvscan2_1 = BVRdScan(bv_arr=wrscan2_1.get_arr(), debug=debug_sim)
+    bvscan1_0 = BVRdScan(bv_arr=wrscan1_0.get_arr(), debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvscan1_1 = BVRdScan(bv_arr=wrscan1_1.get_arr(), debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvscan2_0 = BVRdScan(bv_arr=wrscan2_0.get_arr(), debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvscan2_1 = BVRdScan(bv_arr=wrscan2_1.get_arr(), debug=debug_sim, back_en=backpressure, depth=int(depth))
 
-    inter0 = IntersectBV2(debug=debug_sim)
-    inter1 = IntersectBV2(debug=debug_sim)
-    val1 = Array(init_arr=vals_arr1, debug=debug_sim)
-    val2 = Array(init_arr=vals_arr2, debug=debug_sim)
-    mul = Multiply2(debug=debug_sim)
-    bvdrop = BVDrop(debug=debug_sim)
-    oval_wrscan = ValsWrScan(size=size, fill=fill)
-    wrscan0 = ValsWrScan(size=size, fill=fill)
-    wrscan1 = ValsWrScan(size=1, fill=fill)
+    inter0 = IntersectBV2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    inter1 = IntersectBV2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val1 = Array(init_arr=vals_arr1, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    val2 = Array(init_arr=vals_arr2, debug=debug_sim, back_en=backpressure, depth=int(depth))
+    mul = Multiply2(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    bvdrop = BVDrop(debug=debug_sim, back_en=backpressure, depth=int(depth))
+    oval_wrscan = ValsWrScan(size=size, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan0 = ValsWrScan(size=size, fill=fill, back_en=backpressure, depth=int(depth))
+    wrscan1 = ValsWrScan(size=1, fill=fill, back_en=backpressure, depth=int(depth))
 
     in_ref1 = [0, 'D']
     in_ref2 = [0, 'D']
@@ -444,32 +446,32 @@ def test_vec_elemmul_bv_split(nnz, sf, debug_sim, max_val=999, size=1000, fill=0
     time2 = 0
     while not done and time1 < TIMEOUT:
         if len(in_ref1) > 0:
-            bvscan1_1.set_in_ref(in_ref1.pop(0))
+            bvscan1_1.set_in_ref(in_ref1.pop(0), "")
         if len(in_ref2) > 0:
-            bvscan2_1.set_in_ref(in_ref2.pop(0))
+            bvscan2_1.set_in_ref(in_ref2.pop(0), "")
 
-        inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv())
-        inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv())
+        inter1.set_in1(bvscan1_1.out_ref(), bvscan1_1.out_bv(), bvscan1_1)
+        inter1.set_in2(bvscan2_1.out_ref(), bvscan2_1.out_bv(), bvscan2_1)
 
-        bvscan1_0.set_in_ref(inter1.out_ref1())
+        bvscan1_0.set_in_ref(inter1.out_ref1(), inter1)
 
-        bvscan2_0.set_in_ref(inter1.out_ref2())
+        bvscan2_0.set_in_ref(inter1.out_ref2(), inter1)
 
-        inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv())
-        inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv())
+        inter0.set_in1(bvscan1_0.out_ref(), bvscan1_0.out_bv(), bvscan1_0)
+        inter0.set_in2(bvscan2_0.out_ref(), bvscan2_0.out_bv(), bvscan2_0)
 
-        val1.set_load(inter0.out_ref1())
-        val2.set_load(inter0.out_ref2())
-        mul.set_in1(val1.out_load())
-        mul.set_in2(val2.out_load())
+        val1.set_load(inter0.out_ref1(), inter0)
+        val2.set_load(inter0.out_ref2(), inter0)
+        mul.set_in1(val1.out_load(), val1)
+        mul.set_in2(val2.out_load(), val2)
 
-        oval_wrscan.set_input(mul.out_val())
+        oval_wrscan.set_input(mul.out_val(), mul)
 
-        bvdrop.set_inner_bv(inter0.out_bv())
-        bvdrop.set_outer_bv(inter1.out_bv())
+        bvdrop.set_inner_bv(inter0.out_bv(), inter0)
+        bvdrop.set_outer_bv(inter1.out_bv(), inter1)
 
-        wrscan0.set_input(bvdrop.out_bv_inner())
-        wrscan1.set_input(bvdrop.out_bv_outer())
+        wrscan0.set_input(bvdrop.out_bv_inner(), bvdrop)
+        wrscan1.set_input(bvdrop.out_bv_outer(), bvdrop)
 
         bvscan1_1.update()
         bvscan2_1.update()
