@@ -2003,6 +2003,8 @@ def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, ou
 
     gold_ref = torch.permute(gold_ref, (0, 2, 1, 3))
 
+    print(gold_ref)
+
     mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref.numpy())
     mat_g.dump_outputs(format='CSF')
     gold_tup = convert_ndarr_point_tuple(gold_ref)
