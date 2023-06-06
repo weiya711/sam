@@ -28,7 +28,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 @pytest.mark.frostt
 def test_tensor4_mult2(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
     # test_name = "tensor4_fused_mul_T4"
-    test_name = "tensor4_mult2"
+    test_name = "tensor4_mult2_ijklm"
     B_dirname = os.path.join(formatted_dir, frosttname, test_name)
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
@@ -155,7 +155,7 @@ def test_tensor4_mult2(samBench, frosttname, cast, check_gold, debug_sim, backpr
         mul_7.set_in1(arrayvals_B_8.out_val())
         mul_7.set_in2(arrayvals_V_9.out_val())
         # FIXME: Compiler bug possibly
-        reduce_6.set_in_val(mul_7.out_val())
+        # reduce_6.set_in_val(mul_7.out_val())
         # spaccumulator1_5_drop_crd_outer.set_in_stream(crddrop_12.out_crd_inner())
         # spaccumulator1_5_drop_val.set_in_stream(reduce_6.out_val())
         # spaccumulator1_5_drop_crd_inner.set_in_stream(fiberlookup_Vm_16.out_crd())

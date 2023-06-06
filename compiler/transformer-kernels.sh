@@ -13,8 +13,10 @@ KERNEL_NAMES=(
   # tensor3_fused_feedforward_linear
   # test_max
   # tensor4_mult2_ijklm
-  tensor4_mult2_ijkml
-  tensor4_mult2_ikjml
+  tensor4_mult2_ijlmk
+  tensor4_mult2_jimlk
+  # tensor4_mult2_jimlk
+  # tensor4_mult2_ikjml
   # tensor3_softmax_multiply2
   # tensor3_fusedlinear1
   # tensor4_mult
@@ -40,8 +42,10 @@ TACO_ARGS=(
   # "X(i,k,j,m)=Q(i,k,j,m)*K(i,l,j,m)*V(i,l,j,m) -f=X:ssss:0,2,1,3 -f=Q:ssss:0,2,1,3 -f=K:ssss:0,2,1,3 -f=V:ssss:0,2,1,3 -s=reorder(i,j,k,l,m)"
   # "X(i,j,k,l)=Q(i,k,j,m)*K(i,l,j,m) -f=X:ssss:0,1,2,3 -f=Q:ssss:0,2,1,3 -f=K:ssss:0,2,1,3 -s=reorder(i,j,k,l,m)"
   # "X(i,k,j,m)=B(i,j,k,l)*V(i,l,j,m) -f=X:ssss:0,2,1,3 -f=B:ssss:0,1,2,3 -f=V:ssss:0,2,1,3 -s=reorder(i,j,k,l,m)"
-  "X(i,k,j,m)=B(i,j,k,l)*V(i,l,j,m) -f=X:ssss:0,2,1,3 -f=B:ssss:0,1,2,3 -f=V:ssss:0,2,3,1 -s=reorder(i,j,k,m,l)"
-  "X(i,k,j,m)=B(i,j,k,l)*V(i,l,j,m) -f=X:ssss:0,1,2,3 -f=B:ssss:0,2,1,3 -f=V:ssss:0,2,3,1 -s=reorder(i,k,j,m,l)"
+  # "X(i,k,j,m)=B(i,j,k,l)*V(i,l,j,m) -f=X:ssss:0,2,1,3 -f=B:ssss:0,1,2,3 -f=V:ssss:0,2,3,1 -s=reorder(i,j,k,m,l)"
+  # "X(i,k,j,m)=B(i,j,k,l)*V(i,l,j,m) -f=X:ssss:0,2,1,3 -f=B:ssss:0,1,3,2 -f=V:ssss:0,2,1,3 -s=reorder(j,i,l,k,m)"
+  "X(i,k,j,m)=B(i,j,k,l)*V(i,l,j,m) -f=X:ssss:0,2,3,1 -f=B:ssss:0,1,3,2 -f=V:ssss:0,2,1,3 -s=reorder(i,j,l,m,k)"
+  "X(i,k,j,m)=B(i,j,k,l)*V(i,l,j,m) -f=X:ssss:2,0,3,1 -f=B:ssss:1,0,3,2 -f=V:ssss:2,0,3,1 -s=reorder(j,i,m,l,k)"
   # "X(i,k,j,m)=(Q(i,k,j,m)*K(i,l,j,m))*V(i,l,j,m) -f=X:ssss:0,2,1,3 -f=Q:ssss:0,2,1,3 -f=K:ssss:0,2,1,3 -f=V:ssss:0,2,1,3 -s=reorder(i,j,k,l,m)"
    # "X(i,k,j,m)=(Q(i,k,j,m)*K(i,l,j,m))*V(i,l,j,m) -f=X:ssss:0,2,1,3 -f=Q:ssss:0,2,1,3 -f=K:ssss:0,2,1,3 -f=V:ssss:0,2,1,3 -s=reorder(i,j,k,m,l)"
 #   "X(i,k,j,m)=Q(i,k,j,m)*K(i,l,j,m) -f=X:ssss:0,1,2,3 -f=Q:ssss:0,2,1,3 -f=K:ssss:0,3,1,2 -s=reorder(i,k,j,m,l)"
