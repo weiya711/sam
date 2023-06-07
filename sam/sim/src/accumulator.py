@@ -532,12 +532,13 @@ class SparseAccumulator1(Primitive):
 
 # NEW VERSION: Accumulation into a vector
 class SpAcc1New(Primitive):
-    def __init__(self, maxdim=100, valtype=float, last_level=True, val_stkn=False, depth=1, **kwargs):
+    def __init__(self, maxdim=100, block_size=1, valtype=float, last_level=True, val_stkn=False, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.kwargs = kwargs
         self.maxdim = maxdim
         self.valtype = valtype
         self.last_level = last_level
+        self.block_size = block_size
         # Boolean flag for whether to output stop tokens on the output val stream
         self.val_stkn = val_stkn
 

@@ -5,6 +5,7 @@ import os
 import math
 import torch
 import numpy as np
+from math import *
 
 from sam.onyx.generate_matrices import *
 from sam.sim.src.base import *
@@ -987,9 +988,11 @@ def check_gold_tensor4_multiply1(frosttname, debug_sim, cast, out_crds, out_segs
 
     gold_ref = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref).numpy()
 
-    mat_g = MatrixGenerator("B", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g = MatrixGenerator("B", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir=B_dirname, tensor=gold_ref)
     mat_g.dump_outputs(format='CSF')
     gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    pytest.set_trace()
     # mg = create_matrix_from_point_list("gold", gold_tup, gold_ref.shape)
     # print(mg.get_matrix())
     print("Out crds:", out_crds)
@@ -1310,8 +1313,8 @@ def check_gold_tensor3_pos_encoder_mult(frosttname, debug_sim, cast, out_crds, o
         assert (check_point_tuple(out_tup, gold_tup))
 
 
-def check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, format_str):
-    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, "tensor4_softmax")
+def check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, test):
+    B_dirname = os.path.join(FROSTT_FORMATTED_PATH, frosttname, test)
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -1322,10 +1325,20 @@ def check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, 
     # gold_ref = torch.clamp(B_ref, min=0.0)
     print(B_ref.shape)
     print(out_vals)
-    gold_ref = torch.nn.functional.softmax(B_ref, dim=3)
+    gold_ref_temp = B_ref.masked_fill(B_ref == 0, -1e9)
+    print(gold_ref_temp)
+    # gold_ref_temp = torch.nn.functional.softmax(gold_ref_temp, dim=3)
+    gold_ref = torch.nn.functional.softmax(gold_ref_temp, dim=3)
+
+    gold_ref[gold_ref==1/B_shape[3]] = 0.0
+    # gold_ref = torch.sparse.softmax(B_ref.cuda(), dim=3)
     gold_ref = gold_ref.numpy()
 
+    pytest.set_trace()
+
     print(gold_ref)
+
+    pytest.set_trace()
 
     mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
     mat_g.dump_outputs(format='CSF')
@@ -1977,6 +1990,8 @@ def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, ou
     D_shape_filename = os.path.join(D_dirname, "tensor_V_mode_shape")
     D_shape = read_inputs(D_shape_filename)
 
+    dk = 1.0 / sqrt(B_shape[3])
+
     B_tens = get_tensor_from_files(name="Q", files_dir=B_dirname, shape=B_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
     C_tens = get_tensor_from_files(name="K", files_dir=C_dirname, shape=C_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
     D_tens = get_tensor_from_files(name="V", files_dir=D_dirname, shape=D_shape, base=10, early_terminate='x', mode_ordering=[0,2,1,3])
@@ -1995,18 +2010,16 @@ def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, ou
 
     gold_ref_temp = torch.einsum('ikjm, iljm->ijkl', B_ref, C_ref)
 
-    # Basically torch.sparse.softmax way of computing softmax of sparse tensor
+    # QK_T / sqrt(d_k)
+    gold_ref_temp = gold_ref_temp * dk
+
+    # torch.sparse.softmax way of computing softmax of sparse tensor
     gold_ref_temp = gold_ref_temp.masked_fill(gold_ref_temp == 0, -1e9)
     gold_ref_temp = torch.nn.functional.softmax(gold_ref_temp, dim=3)
-
+    gold_ref_temp[gold_ref_temp==1/B_shape[2]] = 0.0
+    
     gold_ref = torch.einsum('ijkl, iljm->ikjm', gold_ref_temp, D_ref)
-
     gold_ref = torch.permute(gold_ref, (0, 2, 1, 3))
-
-    print(gold_ref)
-    print("# nnz: ", torch.count_nonzero(gold_ref))
-
-    pytest.set_trace()
 
     mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref.numpy())
     mat_g.dump_outputs(format='CSF')
@@ -2028,8 +2041,7 @@ def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, ou
         out_tup = remove_zeros(out_tup)
         print("ref:", out_tup)
         print("gold:", gold_tup)
-        diff = set(gold_tup).difference(out_tup)
-        print(diff)
-        print(len(diff))
-        pytest.set_trace()
-        assert (check_point_tuple(out_tup, gold_tup))
+        if debug_sim:
+            diff = set(gold_tup).difference(out_tup)
+            print(diff)
+        assert (check_point_tuple(out_tup, gold_tup, err=1e-9))

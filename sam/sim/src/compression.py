@@ -3,7 +3,7 @@ from .token import EmptyFiberStknDrop, StknDrop
 
 
 class ValDropper(Primitive):
-    def __init__(self, **kwargs):
+    def __init__(self, drop_refs=False, **kwargs):
         super().__init__(**kwargs)
 
         self.in_val = []
@@ -19,6 +19,7 @@ class ValDropper(Primitive):
         self.val_stkn_dropper = EmptyFiberStknDrop()
         self.crd_stkn_dropper = EmptyFiberStknDrop()
         self.ref_stkn_dropper = EmptyFiberStknDrop()
+        self.drop_refs = drop_refs
 
         if self.backpressure_en:
             self.ready_backpressure = True
@@ -66,50 +67,62 @@ class ValDropper(Primitive):
             if self.done:
                 self.curr_crd = ''
                 self.curr_val = ''
-                self.curr_ref = ''
                 self.out_crds = ''
                 self.out_vals = ''
-                self.out_refs = ''
+                if self.drop_refs:
+                    self.curr_ref = ''
+                    self.out_refs = ''
                 return
             elif (len(self.in_val) > 0 and len(self.in_crd) == 0) or (len(self.in_crd) > 0 and len(self.in_val) == 0) or (len(self.in_val) == 0 and len(self.in_crd) == 0):
                 self.out_crds = ''
-                self.out_refs = ''
                 self.out_vals = ''
-            elif len(self.in_val) > 0 and len(self.in_crd) > 0:
+                if self.drop_refs:
+                    self.out_refs = ''
+            elif len(self.in_val) > 0 and len(self.in_crd) > 0 and len(self.in_ref) > 0:
                 ival = self.in_val.pop(0)
                 icrd = self.in_crd.pop(0)
-                iref = self.in_ref.pop(0)
+                iref = ''
+                if self.drop_refs:
+                    iref = self.in_ref.pop(0)
 
                 # print("ival:", ival)
                 # print("icrd:", icrd)
 
                 assert ival != '', "ival is an empty str"
 
-                if isinstance(ival, float):
-                    assert isinstance(icrd, int), "both val and crd need ot match"
-                    if ival == 0:
+                if is_valid_num(ival):
+                    # assert isinstance(icrd, int), "both val and crd need ot match"
+                    if not isinstance(icrd, int) and icrd != 'N':
+                        print("Both val and icrd need to match")
+                        print(icrd, ival)
+                        exit(1)
+                    if ival == 0.0:
                         self.curr_crd = ''
                         self.curr_ref = ''
                         self.curr_val = ''
                     else:
                         self.curr_crd = icrd
-                        self.curr_ref = iref
                         self.curr_val = ival
+                        if self.drop_refs:
+                            self.curr_ref = iref
                 elif isinstance(ival, str) and ival != 'D':
                     assert isinstance(icrd, str), "both val and coord need to match"
                     self.curr_crd = icrd
-                    self.curr_ref = iref
                     self.curr_val = ival
+                    if self.drop_refs:
+                        self.curr_ref = iref
                 elif ival == 'D':
                     assert icrd == 'D'
                     self.curr_val = ival
-                    self.curr_ref = iref
                     self.curr_crd = icrd
+                    if self.drop_refs:
+                        self.curr_ref = iref
                     self.done = True
                 else:
                     self.curr_crd = icrd
-                    self.curr_ref = iref
                     self.curr_val = ival
+                    if self.drop_refs:
+                        self.curr_ref = iref
 
                 if self.curr_crd == self.out_crds or icrd == self.out_crds:
                     self.out_crds = ''
@@ -117,16 +130,17 @@ class ValDropper(Primitive):
                     self.out_refs = ''
                 else:
                     self.val_stkn_dropper.set_in_val(self.curr_val)
-                    self.ref_stkn_dropper.set_in_val(self.curr_ref)
                     self.crd_stkn_dropper.set_in_val(self.curr_crd)
                     self.val_stkn_dropper.update()
-                    self.ref_stkn_dropper.update()
                     self.crd_stkn_dropper.update()
                     # self.out_crds = self.crd_stkn_dropper.out_val()
                     # self.out_vals = self.val_stkn_dropper.out_val()
                     self.out_crds = self.curr_crd
-                    self.out_refs = self.curr_ref
                     self.out_vals = self.curr_val
+                    if self.drop_refs:
+                        self.ref_stkn_dropper.set_in_val(self.curr_ref)
+                        self.ref_stkn_dropper.update()
+                        self.out_refs = self.curr_ref
 
             if self.debug:
                 print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd,

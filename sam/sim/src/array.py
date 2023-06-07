@@ -2,7 +2,7 @@ from .base import *
 
 
 class Array(Primitive):
-    def __init__(self, name="", init_arr=None, size=1024, fill=0, block_size=1, depth=1, fifo=None, **kwargs):
+    def __init__(self, name="", init_arr=None, size=1024, fill=0, block_size=1, depth=1, fifo=None, datatype=int, **kwargs):
         super().__init__(**kwargs)
         self.name = name
         self.fill = fill
@@ -17,6 +17,7 @@ class Array(Primitive):
         self.store_vals = []
         self.load_en = False
         self.store_en = False
+        self.datatype = datatype
         self.block_size = block_size
         if self.backpressure_en:
             self.ready_backpressure = True
@@ -169,7 +170,7 @@ class Array(Primitive):
             val = addr
         # Special handling of loads of 'N' tokens
         elif is_0tkn(addr):
-            val = 0
+            val = 0 if self.datatype == int else 0.0
         elif addr == 'D':
             self.done = True
             val = 'D'

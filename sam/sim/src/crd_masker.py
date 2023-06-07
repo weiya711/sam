@@ -412,8 +412,9 @@ class Tril(Primitive):
             self.curr_inner_crd = ''
             self.curr_inner_ref = ''
             return
-        if len(self.outer_crd) > 0 and len(self.inner_crd) > 0 and len(self.inner_ref) > 0:
-            self.curr_outer_crd = self.outer_crd.pop(0)
+        if len(self.inner_crd) > 0 and len(self.inner_ref) > 0:
+            if len(self.outer_crd) > 0:
+                self.curr_outer_crd = self.outer_crd.pop(0)
             self.curr_inner_crd = self.inner_crd.pop(0)
             self.curr_inner_ref = self.inner_ref.pop(0)
             if len(self.crd0) > 0 and len(self.crd1) > 0:
@@ -425,6 +426,7 @@ class Tril(Primitive):
         print(self.curr_crd0)
         print(self.curr_crd1)
         print(self.curr_inner_ref)
+        print()
 
         self.crd_hold.set_outer_crd(self.curr_outer_crd)
         self.crd_hold.set_inner_crd(self.curr_inner_crd)

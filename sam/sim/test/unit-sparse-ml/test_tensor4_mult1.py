@@ -27,7 +27,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_mult1(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
-    test_name = "tensor4_fused_mul_T2"
+    test_name = "tensor4_fused_mul_T4"
     Q_dirname = os.path.join(formatted_dir, frosttname, test_name)
     Q_shape_filename = os.path.join(Q_dirname, "tensor_Q_mode_shape")
     Q_shape = read_inputs(Q_shape_filename)
@@ -194,6 +194,8 @@ def test_tensor4_mult1(samBench, frosttname, cast, check_gold, debug_sim, backpr
 
         done = fiberwrite_X0_4.out_done() and fiberwrite_X1_3.out_done() and fiberwrite_X2_2.out_done() and fiberwrite_X3_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1
+        if time_cnt % 100000 == 0:
+            print("Cycle: ", time_cnt)
 
     fiberwrite_X0_4.autosize()
     fiberwrite_X1_3.autosize()

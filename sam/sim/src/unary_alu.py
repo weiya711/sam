@@ -7,11 +7,14 @@ from .accumulator import Reduce, MaxReduce
 
 
 class UnaryALU(Primitive, ABC):
-    def __init__(self, in2=0, **kwargs):
+    def __init__(self, in2=0, delay=1, **kwargs):
         super().__init__(**kwargs)
 
         self.in1 = []
         self.in2 = in2
+        self.delay = delay
+        self.count_to_delay = 0
+        self.output_fifo = []
 
         if self.get_stats:
             self.in1_size = 0
@@ -61,7 +64,21 @@ class UnaryALU(Primitive, ABC):
 
     def out_val(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
-            return self.curr_out
+            if self.count_to_delay == self.delay:
+                return self.curr_out
+            else:
+                return ''
+            # print(self.count_to_delay)
+            # if len(self.output_fifo) > 0 and self.count_to_delay == self.delay and is_valid_num(self.output_fifo[0]):
+            #     curr_out = self.output_fifo.pop(0)
+            #     print("Resetting")
+            #     # self.count_to_delay = 0
+            #     return curr_out
+            # elif len(self.output_fifo) > 0 and (is_stkn(self.output_fifo[0]) or is_dtkn(self.output_fifo[0])):
+            #     curr_out = self.output_fifo.pop(0)
+            #     return curr_out
+            # else:
+            #     return ''
 
     def compute_fifos(self):
         if self.get_stats:
@@ -82,36 +99,64 @@ class UnaryALU(Primitive, ABC):
 
 
 class Exp(UnaryALU):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, in2=0, delay=0, **kwargs):
+        super().__init__(in2, delay,**kwargs)
         self.fill_value = 0
 
         self.get1 = True
         self.get2 = True
+        self.delay = delay
+        self.computed = False
 
         self.curr_in1 = ''
         self.curr_in2 = ''
+    
+    def set_computed(self):
+        self.computed = False
+
+    def get_computed(self):
+        return self.computed 
 
     def update(self):
         self.update_done()
         if (len(self.in1) > 0):
             self.block_start = False
 
+        # print(self.output_fifo)
+        # if self.count_to_delay == self.delay and len(self.output_fifo) == 0:
+        #     self.count_to_delay = 0
+        # if len(self.output_fifo) > 0 and is_valid_num(self.output_fifo[0]):
+        #     print(self.output_fifo)
+        #     self.count_to_delay += 1
+        #     return 
+
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
         if len(self.in1) > 0:
             if self.get1:
                 self.curr_in1 = self.in1.pop(0)
             if self.curr_in1 == 'D':
                 # Inputs is done token
                 self.curr_out = self.curr_in1
+                # self.output_fifo.append(self.curr_out)
                 self.get1 = True
                 self.done = True
             elif is_stkn(self.curr_in1):
                 # Input is stop token
                 self.curr_out = self.curr_in1
+                # self.output_fifo.append(self.curr_out)
                 self.get1 = True
-            elif isinstance(self.curr_in1, float):
+            # elif isinstance(self.curr_in1, float):
+            elif is_valid_num(self.curr_in1):
                 # Input is value stream
                 self.curr_out = math.exp(self.curr_in1)
+                self.computed = True
+                # Applying delay to output, so pushing to a queue
+                # self.output_fifo.append(self.curr_out)
+                # print("exp", self.output_fifo)
                 if self.get_stats:
                     self.cycles_operated += 1
                 self.get1 = True
@@ -122,6 +167,9 @@ class Exp(UnaryALU):
                       "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1)
         else:
             self.curr_out = ''
+            # self.output_fifo.append(self.curr_out)
+        # if self.curr_out != '':
+        #     self.output_fifo.append(self.curr_out)
 
 class Sin(UnaryALU):
     def __init__(self, **kwargs):
@@ -239,7 +287,8 @@ class Max(UnaryALU):
                 self.get1 = True
                 # self.done = True
                 # self.get2 = True
-            elif isinstance(self.curr_in1, float):
+            # elif isinstance(self.curr_in1, float):
+            elif is_valid_num(self.curr_in1):
                 # Input is value stream
                 self.curr_out = max(self.curr_in1, self.curr_in2)
                 if self.debug:
@@ -295,7 +344,8 @@ class Square(UnaryALU):
                 self.get1 = True
                 # self.done = True
                 # self.get2 = True
-            elif isinstance(self.curr_in1, float):
+            # elif isinstance(self.curr_in1, float):
+            elif is_valid_num(self.curr_in1):
                 # Input is value stream
                 self.curr_out = pow(self.curr_in1, 2)
                 if self.get_stats:
@@ -366,8 +416,8 @@ class SquareRoot(UnaryALU):
 
 
 class ScalarMult(UnaryALU):
-    def __init__(self, in2=1.0, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, in2=1.0, delay=0, **kwargs):
+        super().__init__(in2, delay, **kwargs)
         self.fill_value = 0
 
         self.get1 = True
@@ -381,6 +431,12 @@ class ScalarMult(UnaryALU):
         if (len(self.in1) > 0):
             self.block_start = False
 
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
+
         if len(self.in1) > 0:
             if self.get1:
                 self.curr_in1 = self.in1.pop(0)
@@ -393,10 +449,15 @@ class ScalarMult(UnaryALU):
                 # Input is stop token
                 self.curr_out = self.curr_in1
                 self.get1 = True
-            elif isinstance(self.curr_in1, float):
+            # elif isinstance(self.curr_in1, float):
+            elif is_valid_num(self.curr_in1) or isinstance(self.curr_in1, list):
                 # Input is value stream
                 # self.curr_out = math.exp(self.curr_in1)
-                self.curr_out = self.curr_in1 * self.curr_in2
+                if isinstance(self.curr_in1, list):
+                    self.curr_in1 = [x * self.curr_in2 for x in self.curr_in1]
+                else:
+                    self.curr_out = self.curr_in1 * self.curr_in2
+                self.output_fifo.append(self.curr_out)
                 if self.get_stats:
                     self.cycles_operated += 1
                 self.get1 = True
@@ -424,6 +485,8 @@ class Softmax(Primitive):
         self.inner_ref = []
         self.curr_val = ''
         self.curr_inner_ref = ''
+        self.curr_max = []
+        self.curr_sum = []
 
         self.div_0 = []
         self.div_1 = []
@@ -478,16 +541,18 @@ class Softmax(Primitive):
         self.div_6.set_in1(self.exp_1.out_val())
         self.div_6.set_in2(self.repeat1.out_ref())
 
+        self.div_0.append(self.curr_val)
+        self.div_1.append(self.repeat1.out_ref())
+
         self.curr_val = ''
         self.curr_inner_ref = ''
         if self.div_6.out_val() == 'D':
             self.done = True
 
-        self.div_0.append(self.repeat_siggen.out_repsig())
-        self.div_1.append(self.repeat1.out_ref())
+        # self.div_0.append(self.repeat_siggen.out_repsig())
 
-        # print("div 0:", remove_emptystr(self.div_0))
-        # print("div 1:", remove_emptystr(self.div_1))
+        print("div 0:", remove_emptystr(self.div_0))
+        print("div 1:", remove_emptystr(self.div_1))
 
         self.max_reduce_5.update()
         self.repeat_siggen.update()

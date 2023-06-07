@@ -7,7 +7,7 @@ from sam.sim.src.rd_scanner import UncompressCrdRdScan, CompressedCrdRdScan
 from sam.sim.src.wr_scanner import ValsWrScan
 from sam.sim.src.joiner import Intersect2, Union2
 from sam.sim.src.compute import Multiply2, Add2 #, Divider2
-from sam.sim.src.crd_masker import RandomDropout, LowerTriangular, UpperTriangular, Diagonal
+from sam.sim.src.crd_masker import RandomDropout, LowerTriangular, UpperTriangular, Diagonal, Tril
 from sam.sim.src.unary_alu import Max
 from sam.sim.src.crd_manager import CrdDrop, CrdHold
 from sam.sim.src.repeater import Repeat, RepeatSigGen
@@ -71,6 +71,7 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
     drop_prob = 0.4
     dropout = RandomDropout(dimension=2, drop_probability=drop_prob, debug=debug_sim)
     prob = np.random.rand(*B_shape)
+    tril = Tril(debug=debug_sim, statistics=report_stats)
     dropout.set_prob(prob, drop_prob)
 
     # drop_1 = Compression(debug=debug_sim, statistics=report_stats)
@@ -121,29 +122,38 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
         if i != "" and not is_stkn(i) and i != 'D':
             last_i = int(i)
 
-        dropout.set_inner_crd(crd.out_crd_inner())
-        dropout.set_outer_crd(crd.out_crd_outer())
-        dropout.set_inner_ref(fiberlookup_Bk_8.out_ref())
+        arrayvals_B_5.set_load(fiberlookup_Bk_8.out_ref())
+
+        # dropout.set_inner_crd(crd.out_crd_inner())
+        # dropout.set_outer_crd(crd.out_crd_outer())
+        # dropout.set_inner_ref(arrayvals_B_5.out_val())
+        tril.set_inner_crd(fiberlookup_Bk_8.out_crd())
+        tril.set_outer_crd(fiberlookup_Bj_11.out_crd())
+        tril.set_inner_ref(arrayvals_B_5.out_val())
 
         # out_drop.append(dropout.out_crd(1))
         # out_arr.append(dropout.out_crd(0))
         # print("out j:", remove_emptystr(out_drop))
         # print("out k:", remove_emptystr(out_arr))
 
-        arrayvals_B_5.set_load(dropout.out_ref())
+        # arrayvals_B_5.set_load(dropout.out_ref())
 
         # print(arrayvals_B_5.out_load())
         # print(max_1.out_val())
-        fiberwrite_Xvals_0.set_input(arrayvals_B_5.out_val())
+        # fiberwrite_Xvals_0.set_input(arrayvals_B_5.out_val())
+        fiberwrite_Xvals_0.set_input(tril.out_ref())
 
         drop_1.set_outer_crd(fiberlookup_Bi_14.out_crd())
         drop_1.set_inner_crd(dropout.out_crd(1))
 
 
-        fiberwrite_X0_3.set_input(drop_1.out_crd_outer())
+        # fiberwrite_X0_3.set_input(drop_1.out_crd_outer())
+        fiberwrite_X0_3.set_input(fiberlookup_Bi_14.out_crd())
         # fiberwrite_X1_2.set_input(fiberlookup_Bj_11.out_crd())
-        fiberwrite_X1_2.set_input(dropout.out_crd(1))
-        fiberwrite_X2_1.set_input(dropout.out_crd(0))
+        fiberwrite_X1_2.set_input(tril.out_crd_outer())
+        fiberwrite_X2_1.set_input(tril.out_crd_inner())
+        # fiberwrite_X1_2.set_input(dropout.out_crd(1))
+        # fiberwrite_X2_1.set_input(dropout.out_crd(0))
 
         # input_arr.append(fiberlookup_Bj_11.out_crd())
         # arr_vals.append(fiberlookup_Bk_8.out_crd())
@@ -159,8 +169,9 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
         fiberlookup_Bj_11.update()
         fiberlookup_Bk_8.update()
         crd.update()
-        dropout.update()
         arrayvals_B_5.update()
+        dropout.update()
+        tril.update()
         fiberwrite_Xvals_0.update()
         drop_1.update()
         fiberwrite_X0_3.update()
@@ -189,11 +200,11 @@ def test_tensor3_dropout(samBench, frosttname, check_gold, report_stats, debug_s
 
     # print(arr_vals)
     # print("Values:")
-    # print("segs:", out_segs)
-    # print("crds:", out_crds)
-    # print(out_vals)
+    print("segs:", out_segs)
+    print("crds:", out_crds)
+    print(out_vals)
 
-    # pytest.set_trace()
+    pytest.set_trace()
 
     def bench():
         time.sleep(0.01)
