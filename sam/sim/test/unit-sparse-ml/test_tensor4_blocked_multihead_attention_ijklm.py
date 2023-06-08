@@ -146,13 +146,13 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     repsiggen_m_20 = RepeatSigGen(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     mul_46 = Multiply2(debug=debug_sim,  block_size=block_size, statistics=report_stats, back_en=backpressure, depth=int(depth))
     reduce_45 = Reduce(debug=debug_sim, block_size=block_size, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    maxreduce_434 = MaxReduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    maxreduce_434 = MaxReduce(debug=debug_sim, block_size=block_size, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_QKl_437 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    add_433 = Add2(debug=debug_sim, neg2=True, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    exp_427 = Exp(in2=0, delay=17, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    add_433 = Add2(debug=debug_sim, block_size=block_size, neg2=True, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    exp_427 = Exp(in2=0, delay=17, block_size=block_size, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     reduce_428 = Reduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_QKl_431 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    div_432 = Divide2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    div_432 = Divide2(debug=debug_sim, block_size=block_size, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_QKm_19 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     mul_15 = Multiply2(debug=debug_sim, block_size=block_size, statistics=report_stats, back_en=backpressure, depth=int(depth))
     spaccumulator1_5 = SpAcc1New(debug=debug_sim, block_size=block_size, valtype=float, val_stkn=True, statistics=report_stats, back_en=backpressure, depth=int(depth))
@@ -162,9 +162,9 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     crddrop_kl = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crddrop_jk = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     crddrop_ij = CrdDrop(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    scalar_mul = ScalarMult(in2 = 1.0 / sqrt(Q_shape[3]), debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    comp_drop_1 = ValDropper(debug=debug_sim, drop_refs=True, statistics=report_stats)
-    softmax = Softmax(debug=debug_sim)
+    scalar_mul = ScalarMult(in2 = 1.0 / sqrt(Q_shape[3]), block_size=block_size, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    comp_drop_1 = ValDropper(debug=debug_sim, block_size=block_size, drop_refs=True, statistics=report_stats)
+    softmax = Softmax(debug=debug_sim, block_size=block_size)
     # tril = Tril(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     # drop = Dropout(debug=debug_sim, drop_prob=0.5, statistics=report_stats, back_en=backpressure, depth=int(depth))
     in_ref_V = [0, 'D']
@@ -174,6 +174,8 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     time_cnt = 0
 
     deb = []
+    spacc = []
+    mul = []
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_V) > 0:
@@ -238,13 +240,16 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         # div_432.set_in1(exp_427.out_val())
         # div_432.set_in2(repeat_QKl_431.out_ref())
         softmax.set_val(scalar_mul.out_val())
-        print(scalar_mul.out_val())
+        # print("scalar:", scalar_mul.out_val())
         softmax.set_inner_ref(fiberlookup_Kl_416.out_ref())
+        # print("softmax", softmax.out_val())
+        # pytest.set_trace()
 
         # Remove possible zeros generated from softmax
         comp_drop_1.set_val(div_432.out_val())
         comp_drop_1.set_crd(fiberlookup_Kl_416.out_crd())
         comp_drop_1.set_ref(fiberlookup_Kl_416.out_ref())
+        # print("spacc out", spaccumulator1_5.out_val())
 
         intersectl_23.set_in1(fiberlookup_Vl_25.out_ref(), fiberlookup_Vl_25.out_crd())
         # intersectl_23.set_in2(comp_drop_1.out_ref(), comp_drop_1.out_crd())
@@ -268,11 +273,16 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         spaccumulator1_5.set_in_crd0(fiberlookup_Vm_22.out_crd())
         spaccumulator1_5.set_in_crd1(crddrop_kl.out_crd_inner())
         spaccumulator1_5.set_val(mul_15.out_val())
+        spacc.append(spaccumulator1_5.out_val())
+        # print("spacc out", remove_emptystr(spacc))
+
+        mul.append(mul_15.out_val())
+        # print("mul out", remove_emptystr(mul))
 
         deb.append(mul_46.out_val())
         # print("Deb:", remove_emptystr(deb))
 
-        # fiberwrite_Xvals_0.set_input(spaccumulator1_5.out_val())
+        fiberwrite_Xvals_0.set_input(spaccumulator1_5.out_val())
         fiberwrite_X0_44.set_input(crddrop_ij.out_crd_outer())
         fiberwrite_X2_3.set_input(crddrop_ij.out_crd_inner())
         fiberwrite_X1_2.set_input(crddrop_jk.out_crd_inner())

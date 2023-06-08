@@ -131,7 +131,7 @@ class Repeat(Primitive):
                 repeat = self.in_repeat.pop(0)
                 # FIXME: See if self.meta_union_mode is ever needed?
                 if repeat == 'S' and self.empty_rep_fiber and self.meta_union_mode:
-                    if isinstance(self.curr_in_ref, int) or isinstance(self.curr_in_ref, float):
+                    if is_valid_num(self.curr_in_ref) or (isinstance(self.curr_in_ref, np.ndarray)):
                         self.curr_out_ref = self.curr_in_ref
                         self.emit_stkn = True
                     elif is_0tkn(self.curr_in_ref):
@@ -155,7 +155,7 @@ class Repeat(Primitive):
                 if repeat == 'S':
                     self.get_next_ref = True
                     self.get_next_rep = False
-                    if isinstance(self.curr_in_ref, int) or isinstance(self.curr_in_ref, float) or is_0tkn(self.curr_in_ref):
+                    if isinstance(self.curr_in_ref, int) or isinstance(self.curr_in_ref, float) or isinstance(self.curr_in_ref, np.ndarray) or is_0tkn(self.curr_in_ref):
                         if len(self.in_ref) > 0:
                             next_in = self.in_ref[0]
                             if is_stkn(next_in):

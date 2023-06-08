@@ -102,7 +102,10 @@ class Reduce(Primitive):
                 else:
                     if self.get_stats:
                         self.reduction_count += 1
-                    self.sum += self.curr_in_val
+                    if self.block_size == 1:
+                        self.sum += self.curr_in_val
+                    else:
+                        self.sum = np.add(self.sum, self.curr_in_val)
                     self.curr_out = ""
             else:
                 self.curr_out = ""
@@ -161,15 +164,18 @@ class Reduce(Primitive):
 
 
 class MaxReduce(Primitive):
-    def __init__(self, depth=1, **kwargs):
+    def __init__(self, depth=1, block_size=1, **kwargs):
         super().__init__(**kwargs)
 
         self.in_val = []
         self.curr_out = ""
         self.in_val_size = 0
-        self.max = -1000000
+        # self.max = -1000000
         self.emit_stkn = False
         self.curr_in_val = None
+        self.block_size = block_size
+        self.init_max = -100000 if self.block_size == 1 else [-1000000] * (self.block_size ** 2)
+        self.max = self.init_max
 
         if self.get_stats:
             self.reduction_count = 0
@@ -231,7 +237,8 @@ class MaxReduce(Primitive):
                 self.curr_out = ""
                 # Reset state
                 self.in_val_size = 0
-                self.max = -1000000
+                # self.max = -1000000
+                self.max = self.init_max
                 self.emit_stkn = False
                 self.done = False
             elif self.emit_stkn:
@@ -241,10 +248,13 @@ class MaxReduce(Primitive):
                 self.curr_in_val = self.in_val.pop(0)
                 if is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) == 0:
                     self.curr_out = self.max
-                    self.max = -1000000
+                    # self.max = -1000000
+                    self.max = self.init_max
                 elif is_stkn(self.curr_in_val) and stkn_order(self.curr_in_val) > 0:
                     self.curr_out = self.max
-                    self.max = -1000000
+                    # self.max = -1000000
+                    # self.max = -1000000
+                    self.max = self.init_max
                     self.emit_stkn = True
                 elif self.curr_in_val == 'D':
                     self.done = True
@@ -252,7 +262,10 @@ class MaxReduce(Primitive):
                 else:
                     if self.get_stats:
                         self.reduction_count += 1
-                    self.max = max(self.max, self.curr_in_val)
+                    if self.block_size == 1:
+                        self.max = max(self.max, self.curr_in_val)
+                    else:
+                        self.max = np.maximum(self.max, self.curr_in_val)
                     self.curr_out = ""
             else:
                 self.curr_out = ""
@@ -618,11 +631,14 @@ class SpAcc1New(Primitive):
         self.curr_in_crd0 = self.in_crd0.pop(0)
         self.curr_in_val = self.in_val.pop(0)
         # In accumulation, accumulate into memory
-        if is_nc_tkn(self.curr_in_val, self.valtype):
+        if is_nc_tkn(self.curr_in_val, self.valtype) or (isinstance(self.curr_in_val, np.ndarray) and self.block_size > 1):
             assert is_nc_tkn(self.curr_in_crd0, int), "The inner coordinate must be a non-control token"
             if self.curr_in_crd0 in self.storage.keys():
                 # Coordinate is in storage, so accumulate
-                self.storage[self.curr_in_crd0] += self.curr_in_val
+                if self.block_size == 1:
+                    self.storage[self.curr_in_crd0] += self.curr_in_val
+                else:
+                    self.storage[self.curr_in_crd0] = np.add(self.storage[self.curr_in_crd0], self.curr_in_val)
             else:
                 # Coordinate is not in storage, so add it in
                 self.storage[self.curr_in_crd0] = self.curr_in_val

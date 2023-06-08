@@ -47,7 +47,7 @@ class WrScan(Primitive, ABC):
     def set_input(self, val, parent=None):
         # Make sure streams have correct token type
         if self.block_size > 1:
-            assert(isinstance(val, np.ndarray) or val in valid_tkns)
+            assert(isinstance(val, np.ndarray) or val in valid_tkns or val is None)
             if isinstance(val, np.ndarray):
                 val = val.tolist()
         else:

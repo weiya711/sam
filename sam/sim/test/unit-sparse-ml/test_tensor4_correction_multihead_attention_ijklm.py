@@ -29,7 +29,7 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gold, debug_sim, backpressure, depth, report_stats, fill=0):
-    test_name = "tensor4_fused_mul_T4"
+    test_name = "tensor4_fused_mul_T1"
     # test_name = "tensor4_fused_mul_T1"
     Q_dirname = os.path.join(formatted_dir, frosttname, test_name)
     Q_shape_filename = os.path.join(Q_dirname, "tensor_Q_mode_shape")
@@ -221,6 +221,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         reduce_45.set_in_val(mul_46.out_val())
         # QK_T / sqrt(d_k)
         scalar_mul.set_in1(reduce_45.out_val())
+        # print("scalar", scalar_mul.out_val())
 
         # TODO: Replace with softmax superblock
         maxreduce_434.set_in_val(scalar_mul.out_val())

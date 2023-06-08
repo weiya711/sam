@@ -243,12 +243,13 @@ class Multiply2(Compute2):
 
 
 class Divide2(Compute2):
-    def __init__(self, **kwargs):
+    def __init__(self, block_size=1,**kwargs):
         super().__init__(**kwargs)
         self.fill_value = 0
 
         self.get1 = True
         self.get2 = True
+        self.block_size = block_size
 
         self.curr_in1 = ''
         self.curr_in2 = ''
@@ -290,7 +291,10 @@ class Divide2(Compute2):
                 self.get2 = True
             else:
                 # Both inputs are values
-                self.curr_out = self.curr_in1 / self.curr_in2
+                if self.block_size == 1:
+                    self.curr_out = self.curr_in1 / self.curr_in2
+                else:
+                    self.curr_out = np.divide(self.curr_in1, self.curr_in2)
                 if self.get_stats:
                     self.cycles_operated += 1
                 self.get1 = True

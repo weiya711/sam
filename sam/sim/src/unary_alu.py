@@ -99,7 +99,7 @@ class UnaryALU(Primitive, ABC):
 
 
 class Exp(UnaryALU):
-    def __init__(self, in2=0, delay=0, **kwargs):
+    def __init__(self, in2=0, delay=0, block_size=1, **kwargs):
         super().__init__(in2, delay,**kwargs)
         self.fill_value = 0
 
@@ -107,6 +107,7 @@ class Exp(UnaryALU):
         self.get2 = True
         self.delay = delay
         self.computed = False
+        self.block_size = block_size
 
         self.curr_in1 = ''
         self.curr_in2 = ''
@@ -150,9 +151,13 @@ class Exp(UnaryALU):
                 # self.output_fifo.append(self.curr_out)
                 self.get1 = True
             # elif isinstance(self.curr_in1, float):
-            elif is_valid_num(self.curr_in1):
+            elif is_valid_num(self.curr_in1) or isinstance(self.curr_in1, list) or (isinstance(self.curr_in1, np.ndarray) and self.block_size > 1):
                 # Input is value stream
-                self.curr_out = math.exp(self.curr_in1)
+                # self.curr_out = math.exp(self.curr_in1)
+                if not is_valid_num(self.curr_in1) and self.block_size > 1:
+                    self.curr_out = [math.exp(x) for x in self.curr_in1]
+                else:
+                    self.curr_out = math.exp(self.curr_in1)
                 self.computed = True
                 # Applying delay to output, so pushing to a queue
                 # self.output_fifo.append(self.curr_out)
@@ -416,12 +421,13 @@ class SquareRoot(UnaryALU):
 
 
 class ScalarMult(UnaryALU):
-    def __init__(self, in2=1.0, delay=0, **kwargs):
+    def __init__(self, in2=1.0, delay=0, block_size=1, **kwargs):
         super().__init__(in2, delay, **kwargs)
         self.fill_value = 0
 
         self.get1 = True
         self.get2 = True
+        self.block_size = block_size
 
         self.curr_in1 = ''
         self.curr_in2 = in2
@@ -450,11 +456,11 @@ class ScalarMult(UnaryALU):
                 self.curr_out = self.curr_in1
                 self.get1 = True
             # elif isinstance(self.curr_in1, float):
-            elif is_valid_num(self.curr_in1) or isinstance(self.curr_in1, list):
+            elif is_valid_num(self.curr_in1) or isinstance(self.curr_in1, list) or (isinstance(self.curr_in1, np.ndarray) and self.block_size > 1):
                 # Input is value stream
                 # self.curr_out = math.exp(self.curr_in1)
-                if isinstance(self.curr_in1, list):
-                    self.curr_in1 = [x * self.curr_in2 for x in self.curr_in1]
+                if not is_valid_num(self.curr_in1):
+                    self.curr_out = [x * self.curr_in2 for x in self.curr_in1]
                 else:
                     self.curr_out = self.curr_in1 * self.curr_in2
                 self.output_fifo.append(self.curr_out)
@@ -476,11 +482,11 @@ class Softmax(Primitive):
         self.repeat_siggen = RepeatSigGen(debug=debug_sim)
         self.repeat = Repeat(debug=debug_sim)
         self.repeat1 = Repeat(debug=debug_sim)
-        self.exp_1 = Exp(in2=0, debug=debug_sim)
-        self.reduce_5 = Reduce(debug=debug_sim)
-        self.max_reduce_5 = MaxReduce(debug=debug_sim)
-        self.div_6 = Divide2(debug=debug_sim)
-        self.add_10 = Add2(debug=debug_sim, neg2=True)
+        self.exp_1 = Exp(in2=0, block_size=block_size, debug=debug_sim)
+        self.reduce_5 = Reduce(debug=debug_sim, block_size=block_size)
+        self.max_reduce_5 = MaxReduce(debug=debug_sim, block_size=block_size)
+        self.div_6 = Divide2(debug=debug_sim, block_size=block_size)
+        self.add_10 = Add2(debug=debug_sim, block_size=block_size, neg2=True)
         self.in_val = []
         self.inner_ref = []
         self.curr_val = ''
@@ -504,6 +510,10 @@ class Softmax(Primitive):
         if len(self.inner_ref) > 0 and len(self.in_val) > 0:
             self.curr_inner_ref = self.inner_ref.pop(0)
             self.curr_val = self.in_val.pop(0)
+        # if len(self.inner_ref) > 0:
+        #     self.curr_inner_ref = self.inner_ref.pop(0)
+        # if len(self.in_val) > 0:
+        #     self.curr_val = self.in_val.pop(0)
 
         # print(self.curr_val)
         # print(self.curr_inner_ref)
@@ -542,7 +552,7 @@ class Softmax(Primitive):
         self.div_6.set_in2(self.repeat1.out_ref())
 
         self.div_0.append(self.curr_val)
-        self.div_1.append(self.repeat1.out_ref())
+        self.div_1.append(self.div_6.out_val())
 
         self.curr_val = ''
         self.curr_inner_ref = ''
@@ -551,8 +561,9 @@ class Softmax(Primitive):
 
         # self.div_0.append(self.repeat_siggen.out_repsig())
 
-        print("div 0:", remove_emptystr(self.div_0))
-        print("div 1:", remove_emptystr(self.div_1))
+        # print("div 0:", remove_emptystr(self.div_0))
+        # print("div 1:", remove_emptystr(self.div_1))
+        # print("Again")
 
         self.max_reduce_5.update()
         self.repeat_siggen.update()

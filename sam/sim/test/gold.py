@@ -2016,7 +2016,8 @@ def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, ou
     # torch.sparse.softmax way of computing softmax of sparse tensor
     gold_ref_temp = gold_ref_temp.masked_fill(gold_ref_temp == 0, -1e9)
     gold_ref_temp = torch.nn.functional.softmax(gold_ref_temp, dim=3)
-    gold_ref_temp[gold_ref_temp==1/B_shape[2]] = 0.0
+    if B_shape[2] != 1:
+        gold_ref_temp[gold_ref_temp==1/B_shape[2]] = 0.0
     
     gold_ref = torch.einsum('ijkl, iljm->ikjm', gold_ref_temp, D_ref)
     gold_ref = torch.permute(gold_ref, (0, 2, 1, 3))
@@ -2024,6 +2025,11 @@ def check_gold_tensor4_multihead_attention_ijklm(frosttname, debug_sim, cast, ou
     mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref.numpy())
     mat_g.dump_outputs(format='CSF')
     gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    print(gold_tup)
+    pytest.set_trace()
+    print(gold_ref)
+    pytest.set_trace()
 
     if debug_sim:
         print("Out crds:", out_crds)
