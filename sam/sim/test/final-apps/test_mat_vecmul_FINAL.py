@@ -21,7 +21,8 @@ other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-fo
 
 
 @pytest.mark.suitesparse
-def test_mat_vecmul_FINAL(samBench, ssname, cast, positive_only, check_gold, report_stats, debug_sim, backpressure, depth, fill=0):
+def test_mat_vecmul_FINAL(samBench, ssname, cast, positive_only, check_gold, report_stats, debug_sim, backpressure,
+                          depth, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "mat_vecmul")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename, positive_only=positive_only)

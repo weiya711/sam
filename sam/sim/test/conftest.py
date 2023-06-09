@@ -32,7 +32,7 @@ def pytest_addoption(parser):
     parser.addoption("--cast", action="store_true", default=False,
                      help="Flag that runs all simulations using integer input "
                           "and output data (used for hardware simulation comparison, "
-                          "when data is formatted with the '-hw' flag)")
+                          "when data is formatted with the '-cast' flag)")
     parser.addoption("--positive-only", action="store_true", default=False,
                      help="Flag that casts all inputs to positive values only "
                           "(used for hardware simulation comparison)")
@@ -149,6 +149,7 @@ def yaml_name(request):
 @pytest.fixture
 def cast(request):
     return request.config.getoption("--cast")
+
 
 @pytest.fixture
 def positive_only(request):

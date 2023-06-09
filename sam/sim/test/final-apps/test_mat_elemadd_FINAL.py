@@ -20,7 +20,8 @@ formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd
 
 
 @pytest.mark.suitesparse
-def test_mat_elemadd_FINAL(samBench, ssname, cast, positive_only, check_gold, report_stats, backpressure, depth, debug_sim, fill=0):
+def test_mat_elemadd_FINAL(samBench, ssname, cast, positive_only, check_gold, report_stats, debug_sim, backpressure,
+                           depth, fill=0):
     B_dirname = os.path.join(formatted_dir, ssname, "mat_elemadd")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename, positive_only=positive_only)
