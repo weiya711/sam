@@ -9,7 +9,7 @@ from .token import StknDrop
 
 
 class Reduce(Primitive):
-    def __init__(self, depth=1, block_size=1, **kwargs):
+    def __init__(self, depth=1, block_size=1, delay=0, **kwargs):
         super().__init__(**kwargs)
 
         self.in_val = []
@@ -20,6 +20,8 @@ class Reduce(Primitive):
         self.sum = self.init_sum
         self.emit_stkn = False
         self.curr_in_val = None
+        self.delay = delay
+        self.count_to_delay = 0
 
         if self.get_stats:
             self.reduction_count = 0
@@ -68,6 +70,13 @@ class Reduce(Primitive):
     def update(self):
         self.update_ready()
         self.update_done()
+
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
+
         if self.backpressure_en:
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -140,7 +149,10 @@ class Reduce(Primitive):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             if self.get_stats:
                 self.num_outputs += 1
-            return self.curr_out
+            if self.count_to_delay == self.delay:
+                return self.curr_out
+            else:
+                return ''
 
     def compute_fifos(self):
         self.in_val_size = max(self.in_val_size, len(self.in_val))
@@ -164,8 +176,8 @@ class Reduce(Primitive):
 
 
 class MaxReduce(Primitive):
-    def __init__(self, depth=1, block_size=1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, depth=1, block_size=1, lazy=False, delay=0, **kwargs):
+        super().__init__(delay=delay, **kwargs)
 
         self.in_val = []
         self.curr_out = ""
@@ -176,6 +188,10 @@ class MaxReduce(Primitive):
         self.block_size = block_size
         self.init_max = -100000 if self.block_size == 1 else [-1000000] * (self.block_size ** 2)
         self.max = self.init_max
+        self.lazy = lazy
+        self.curr_max = self.init_max
+        self.delay = delay
+        self.count_to_delay = 0
 
         if self.get_stats:
             self.reduction_count = 0
@@ -224,6 +240,13 @@ class MaxReduce(Primitive):
     def update(self):
         self.update_ready()
         self.update_done()
+
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
+
         if self.backpressure_en:
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -265,7 +288,9 @@ class MaxReduce(Primitive):
                     if self.block_size == 1:
                         self.max = max(self.max, self.curr_in_val)
                     else:
+                        print(self.max, self.curr_in_val)
                         self.max = np.maximum(self.max, self.curr_in_val)
+                        print(self.max)
                     self.curr_out = ""
             else:
                 self.curr_out = ""
@@ -300,7 +325,13 @@ class MaxReduce(Primitive):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             if self.get_stats:
                 self.num_outputs += 1
-            return self.curr_out
+            if not self.lazy:
+                if self.count_to_delay == self.delay:
+                    return self.curr_out
+                else:
+                    return ''
+            else:
+                return self.curr_out
 
     def compute_fifos(self):
         self.in_val_size = max(self.in_val_size, len(self.in_val))

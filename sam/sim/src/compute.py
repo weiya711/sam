@@ -3,11 +3,14 @@ import numpy as np
 
 
 class Compute2(Primitive, ABC):
-    def __init__(self, depth=1, **kwargs):
+    def __init__(self, depth=1, delay=0, **kwargs):
         super().__init__(**kwargs)
 
         self.in1 = []
         self.in2 = []
+
+        self.delay = delay
+        self.count_to_delay = 0
 
         if self.get_stats:
             self.in1_size = 0
@@ -58,7 +61,10 @@ class Compute2(Primitive, ABC):
 
     def out_val(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
-            return self.curr_out
+            if self.count_to_delay == self.delay:
+                return self.curr_out
+            else:
+                return ''
 
     def compute_fifos(self):
         if self.get_stats:
@@ -79,8 +85,8 @@ class Compute2(Primitive, ABC):
 
 
 class Add2(Compute2):
-    def __init__(self, neg1=False, neg2=False, block_size=1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, neg1=False, neg2=False, block_size=1, delay=0, **kwargs):
+        super().__init__(delay=delay, **kwargs)
         self.fill_value = 0
         self.neg1 = neg1
         self.neg2 = neg2
@@ -101,6 +107,12 @@ class Add2(Compute2):
         self.update_ready()
         if len(self.in1) > 0 or len(self.in2) > 0:
             self.block_start = False
+
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
 
         if len(self.in1) > 0 and len(self.in2) > 0:
             if self.get1:
@@ -147,8 +159,8 @@ class Add2(Compute2):
 
 
 class Multiply2(Compute2):
-    def __init__(self, block_size=1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, block_size=1, delay=0, **kwargs):
+        super().__init__(delay=delay, **kwargs)
         self.fill_value = 0
 
         self.get1 = True
@@ -163,7 +175,9 @@ class Multiply2(Compute2):
         if self.block_size == 1:
             return a * b
         else:
-            return np.multiply(a, b)
+            return np.reshape(np.multiply(np.reshape(a, (self.block_size, self.block_size)), 
+                                          np.reshape(b, (self.block_size, self.block_size))), 
+                                          (self.block_size * self.block_size))
 
     def update(self):
         self.update_done()
@@ -171,6 +185,13 @@ class Multiply2(Compute2):
         if self.backpressure_en and self.debug:
             print("mul start: ", self.in1, self.in2)
         self.sys_array_ready = False
+
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
+
         if self.backpressure_en:
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
@@ -243,8 +264,8 @@ class Multiply2(Compute2):
 
 
 class Divide2(Compute2):
-    def __init__(self, block_size=1,**kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, block_size=1, delay=0, **kwargs):
+        super().__init__(delay=delay, **kwargs)
         self.fill_value = 0
 
         self.get1 = True
@@ -258,6 +279,12 @@ class Divide2(Compute2):
         self.update_done()
         if (len(self.in1) > 0 or len(self.in2) > 0):
             self.block_start = False
+
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
 
         if len(self.in1) > 0 and len(self.in2) > 0:
             if self.get1:

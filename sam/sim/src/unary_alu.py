@@ -136,6 +136,7 @@ class Exp(UnaryALU):
             return
         else:
             self.count_to_delay = 0
+
         if len(self.in1) > 0:
             if self.get1:
                 self.curr_in1 = self.in1.pop(0)
@@ -478,15 +479,16 @@ class ScalarMult(UnaryALU):
 
 class Softmax(Primitive):
     def __init__(self, row_wise=True, block_size=1, debug_sim=False, **kwargs):
+        print(block_size)
         super().__init__(**kwargs)
         self.repeat_siggen = RepeatSigGen(debug=debug_sim)
         self.repeat = Repeat(debug=debug_sim)
         self.repeat1 = Repeat(debug=debug_sim)
-        self.exp_1 = Exp(in2=0, block_size=block_size, debug=debug_sim)
+        self.exp_1 = Exp(in2=0, delay=17, block_size=block_size, debug=debug_sim)
         self.reduce_5 = Reduce(debug=debug_sim, block_size=block_size)
         self.max_reduce_5 = MaxReduce(debug=debug_sim, block_size=block_size)
-        self.div_6 = Divide2(debug=debug_sim, block_size=block_size)
-        self.add_10 = Add2(debug=debug_sim, block_size=block_size, neg2=True)
+        self.div_6 = Divide2(debug=debug_sim, delay=block_size*block_size, block_size=block_size)
+        self.add_10 = Add2(debug=debug_sim, delay=block_size*block_size, block_size=block_size, neg2=True)
         self.in_val = []
         self.inner_ref = []
         self.curr_val = ''
