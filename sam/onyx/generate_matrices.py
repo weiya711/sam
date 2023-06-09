@@ -176,7 +176,8 @@ class MatrixGenerator:
                 lines = [len(flat_array), *flat_array]
                 self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
             else:
-                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, hex=print_hex)
+                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir,
+                                 hex=print_hex)
         elif self.format == "COO":
             crd_dict = dict()
             order = len(self.array.shape)
@@ -339,7 +340,8 @@ def get_runs(v1, v2):
             # If both are 0 it's fine
             pass
         else:
-            # If both are 1 the run is over at the previous nonzero value, and we are no longer on a run (assuming we were)
+            # If both are 1 the run is over at the previous nonzero value,
+            # and we are no longer on a run (assuming we were)
             if on_run:
                 if run_side == 0:
                     run_end = last_nonzero_v1
@@ -475,7 +477,7 @@ def convert_aha_glb_output_file(glbfile, output_dir):
 
 def get_tensor_from_files(name, files_dir, shape, base=10,
                           format='CSF', early_terminate=None, tensor_ordering=None,
-                          suffix="") -> MatrixGenerator:
+                          suffix="", positive_only=True) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
 
@@ -496,7 +498,8 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
         to_loop = tensor_ordering_sorted
     # Get vals first since all formats will have vals
     val_f = [fil for fil in all_files if name in fil and f'mode_vals{suffix}' in fil][0]
-    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate)
+    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate,
+                       positive_only=positive_only)
 
     mg = None
     if dims == 1 and shape[0] == 1:     # scalar
@@ -511,14 +514,16 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
             mode = mode_original
             seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'seg{suffix}' in fil][0]
             crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
-            seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate)
+            seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate,
+                                 positive_only=positive_only)
             segs.append(seg_t_)
             # Empty matrix...
             if mode == 0 and len(seg_t_) == 2 and seg_t_[0] == 0 and seg_t_[1] == 0:
                 mg = MatrixGenerator(name=name, shape=shape, sparsity=1.0)
                 created_empty = True
                 break
-            crd_t_ = read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate)
+            crd_t_ = read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate,
+                                 positive_only=positive_only)
             crds.append(crd_t_)
         if not created_empty:
             pt_list = get_point_list(crds, segs, val_arr=vals)
@@ -527,7 +532,8 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
         crds = []
         for mode in range(dims):
             crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
-            crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate))
+            crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate,
+                                    positive_only=positive_only))
 
         pt_list = copy.deepcopy(crds)
         pt_list.append(vals)
