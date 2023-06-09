@@ -175,9 +175,12 @@ class Multiply2(Compute2):
         if self.block_size == 1:
             return a * b
         else:
-            return np.reshape(np.multiply(np.reshape(a, (self.block_size, self.block_size)), 
+            print(a, b)
+            res = np.reshape(np.matmul(np.reshape(a, (self.block_size, self.block_size)), 
                                           np.reshape(b, (self.block_size, self.block_size))), 
                                           (self.block_size * self.block_size))
+            print("Result:", res)
+            return res
 
     def update(self):
         self.update_done()

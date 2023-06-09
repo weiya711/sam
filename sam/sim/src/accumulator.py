@@ -16,7 +16,7 @@ class Reduce(Primitive):
         self.curr_out = ""
         self.in_val_size = 0
         self.block_size = block_size
-        self.init_sum = 0 if self.block_size == 1 else [0] * (self.block_size ** 2)
+        self.init_sum = 0 if self.block_size == 1 else [0] * (self.block_size)
         self.sum = self.init_sum
         self.emit_stkn = False
         self.curr_in_val = None
@@ -114,7 +114,8 @@ class Reduce(Primitive):
                     if self.block_size == 1:
                         self.sum += self.curr_in_val
                     else:
-                        self.sum = np.add(self.sum, self.curr_in_val)
+                        # self.sum = np.add(self.sum, self.curr_in_val)
+                        self.sum = np.sum(np.reshape(self.curr_in_val, (self.block_size, self.block_size)), axis=1)
                     self.curr_out = ""
             else:
                 self.curr_out = ""
@@ -186,7 +187,7 @@ class MaxReduce(Primitive):
         self.emit_stkn = False
         self.curr_in_val = None
         self.block_size = block_size
-        self.init_max = -100000 if self.block_size == 1 else [-1000000] * (self.block_size ** 2)
+        self.init_max = -100000 if self.block_size == 1 else [-1000000] * (self.block_size)
         self.max = self.init_max
         self.lazy = lazy
         self.curr_max = self.init_max
@@ -288,9 +289,11 @@ class MaxReduce(Primitive):
                     if self.block_size == 1:
                         self.max = max(self.max, self.curr_in_val)
                     else:
-                        print(self.max, self.curr_in_val)
-                        self.max = np.maximum(self.max, self.curr_in_val)
-                        print(self.max)
+                        print("max:", self.max, self.curr_in_val)
+                        # self.max = np.maximum(self.max, 
+                        #                       np.reshape(self.curr_in_val, (self.block_size, self.block_size)))
+                        self.max = np.amax(np.reshape(self.curr_in_val, (self.block_size, self.block_size)), axis=1)
+                        print("max res:", self.max)
                     self.curr_out = ""
             else:
                 self.curr_out = ""

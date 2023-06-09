@@ -187,7 +187,10 @@ class Repeat(Primitive):
                 elif repeat == 'R':
                     self.get_next_ref = False
                     self.get_next_rep = True
-                    self.curr_out_ref = self.curr_in_ref
+                    if isinstance(self.curr_in_ref, np.ndarray):
+                        self.curr_out_ref.append(self.curr_in_ref)
+                    else:
+                        self.curr_out_ref = self.curr_in_ref
                     self.empty_rep_fiber = False
                 else:
                     raise Exception('Repeat signal cannot be: ' + str(repeat))
