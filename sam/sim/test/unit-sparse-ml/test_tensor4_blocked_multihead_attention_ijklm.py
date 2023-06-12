@@ -176,6 +176,8 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     deb = []
     spacc = []
     mul = []
+    scal = []
+    red = []
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_V) > 0:
@@ -239,6 +241,10 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         # repeat_QKl_431.set_in_ref(reduce_428.out_val())
         # div_432.set_in1(exp_427.out_val())
         # div_432.set_in2(repeat_QKl_431.out_ref())
+        scal.append(scalar_mul.out_val())
+        red.append(mul_46.out_val())
+        print("Scal:", remove_emptystr(scal))
+        print("Mul:", remove_emptystr(red))
         softmax.set_val(scalar_mul.out_val())
         # print("scalar:", scalar_mul.out_val())
         softmax.set_inner_ref(fiberlookup_Kl_416.out_ref())

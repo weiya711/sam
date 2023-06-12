@@ -147,6 +147,7 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     mul_46 = Multiply2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     reduce_45 = Reduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     maxreduce_434 = MaxReduce(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    # maxreduce_434 = MaxReduce(debug=debug_sim, lazy=True, statistics=report_stats, back_en=backpressure, depth=int(depth))
     repeat_QKl_437 = Repeat(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     add_433 = Add2(debug=debug_sim, neg2=True, statistics=report_stats, back_en=backpressure, depth=int(depth))
     exp_427 = Exp(in2=0, delay=17, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
@@ -171,6 +172,11 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     in_ref_K = [0, 'D']
     done = False
     time_cnt = 0
+
+    max_arr = []
+    adj_max = []
+    sub_arr =[]
+    test_arr = []
 
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_V) > 0:
@@ -229,6 +235,15 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         repeat_QKl_437.set_in_ref(maxreduce_434.out_val())
         add_433.set_in1(scalar_mul.out_val())
         add_433.set_in2(repeat_QKl_437.out_ref())
+        # add_433.set_in2(maxreduce_434.out_val())
+
+        sub_arr.append(add_433.out_val())
+        test_arr.append(scalar_mul.out_val())
+        adj_max.append(maxreduce_434.out_val())
+        # print("Scal:", remove_emptystr(test_arr))
+        # print("Unreduced:", remove_emptystr(adj_max))
+        # print("Sub:", remove_emptystr(sub_arr))
+        
         exp_427.set_in1(add_433.out_val())
         reduce_428.set_in_val(exp_427.out_val())
         repeat_QKl_431.set_in_repsig(repsiggen_l_414.out_repsig())
@@ -251,6 +266,9 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         repeat_QKm_19.set_in_ref(comp_drop_1.out_val())
         mul_15.set_in1(repeat_QKm_19.out_ref())
         mul_15.set_in2(arrayvals_V_17.out_val())
+
+        max_arr.append(mul_15.out_val())
+        print("Mul QKV:", remove_emptystr(max_arr))
 
         crddrop_kl.set_outer_crd(fiberlookup_Qk_420.out_crd())
         crddrop_kl.set_inner_crd(intersectl_23.out_crd())
@@ -321,6 +339,12 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         fiberwrite_X2_3.update()
         fiberwrite_X1_2.update()
         fiberwrite_X3_1.update()
+        
+        print(fiberwrite_X0_44.out_done())
+        print(fiberwrite_X1_2.out_done())
+        print(fiberwrite_X2_3.out_done())
+        print(fiberwrite_X3_1.out_done())
+        print(fiberwrite_Xvals_0.out_done())
 
         done = fiberwrite_X0_44.out_done() and fiberwrite_X2_3.out_done() and fiberwrite_X1_2.out_done() and fiberwrite_X3_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1

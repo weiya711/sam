@@ -188,7 +188,9 @@ class Repeat(Primitive):
                     self.get_next_ref = False
                     self.get_next_rep = True
                     if isinstance(self.curr_in_ref, np.ndarray):
+                        print("self out ref", self.curr_out_ref)
                         self.curr_out_ref.append(self.curr_in_ref)
+                        print("self out ref", self.curr_out_ref)
                     else:
                         self.curr_out_ref = self.curr_in_ref
                     self.empty_rep_fiber = False
