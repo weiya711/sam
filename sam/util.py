@@ -40,6 +40,29 @@ def safeCastScipyTensorToInts(tensor):
     return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
 
 
+# TODO: flesh out this tensor object to read and write for tiling of arbitary tensors
+class GeneralTensor:
+    def __init__(self, orig_tensor, other_tensor_path, kernel_name):
+        self.orig_tensor_path = orig_tensor
+        self.other_tensor_path = other_tensor_path
+        self.kernel_name = kernel_name
+
+    def get_scipy_matrix(self, tns_tensor=None):
+        if tns_tensor is not None:
+            dims = tns_tensor[0]
+            crds = tns_tensor[1]
+            values = tns_tensor[2]
+            return scipy.sparse.coo_matrix((values, (coords, [0] * len(coords))), shape=dims)
+        other_vector_path = os.path.join(SUITESPARSE_FORMATTED_PATH,
+                                         os.path.join(orig_tensor,
+                                         os.path.join(self.kernel_name)))
+                                         # , self.other_tensor_path)))
+        values = read_inputs(other_vector_path + "tensor_C_mode_vals", float)
+        coords = read_inputs(other_vector_path + "tensor_C_mode_0_crd", int)
+        shape = read_inputs(other_vector_path + "tensor_C_mode_shape", int)
+        return scipy.sparse.coo_matrix((values, (coords, [0] * len(coords))))
+
+
 # ScipyTensorShifter shifts all elements in the last mode
 # of the input scipy/sparse tensor by one.
 class ScipyTensorShifter:
