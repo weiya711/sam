@@ -18,7 +18,6 @@ vec_list = ["vec_elemadd", "vec_elemmul", "vec_scalar_mul", "vec_identity",
             "vec_sd_compression", "vec_ds_compression"]
 other_list = ["mat_mattransmul", "mat_residual", "tensor3_ttm", "tensor3_mttkrp", "tensor3_ttv", "mat_vecmul_ij",
               "mat_vecmul_ji"]
-
 MEM_LEVELS = 2
 
 
@@ -779,9 +778,9 @@ class GraphRealization:
         for r in self.root_nodes:
             self.blks_to_realize.append(tab(self.scope_lvl + 1) + "in_ref_" + str(r) + self.mem_lvl + " = [0, 'D']\n")
 
-    def node_instantiations1(self, output_nodes, tens_fmt={}, tensor_information={},
-                             tensor_format_parse=None, out_name=None, pipelined_tiles=False,
-                             parent=[], whether_pipelined=False):
+    def node_instantiations_mem(self, output_nodes, tens_fmt={}, tensor_information={},
+                                tensor_format_parse=None, out_name=None, pipelined_tiles=False,
+                                parent=[], whether_pipelined=False):
         invalid_flag = 0
         temp_string = ""
         temp_string += tab(self.scope_lvl)
@@ -1750,7 +1749,7 @@ for apath in file_paths:
         mem_blks = []
         glb_lvl = GraphRealization(tiling_graph, mem_lvl="00", scope_lvl=0, f=f,
                                    mem_blks=mem_blks, pipelined_memory_nodes=pipelined_memory_nodes)
-        d, invalid_flag, output_nodes, parents, whether_pipelined = glb_lvl.node_instantiations1(output_nodes)
+        d, invalid_flag, output_nodes, parents, whether_pipelined = glb_lvl.node_instantiations_mem(output_nodes)
         data = CodeGenerationdatasets(tiling_graph)
         data.build_datasets(tiling_graph)
         output_check_nodes(f, root_nodes)
@@ -1760,10 +1759,10 @@ for apath in file_paths:
                                    parent=glb_lvl, mem_blks=glb_lvl.get_memory_blocks(),
                                    pipelined_memory_nodes=pipelined_memory_nodes)
         d, invalid_flag, output_nodes, parents, whether_pipelined =\
-            mem_lvl.node_instantiations1(output_nodes,
-                                         pipelined_tiles=True,
-                                         parent=parents,
-                                         whether_pipelined=whether_pipelined)
+            mem_lvl.node_instantiations_mem(output_nodes,
+                                            pipelined_tiles=True,
+                                            parent=parents,
+                                            whether_pipelined=whether_pipelined)
         glb_lvl.loop_start()
         glb_lvl.write_nodes()
         glb_lvl.connect_nodes(nodes_updating_list, data)
@@ -1824,9 +1823,9 @@ for apath in file_paths:
             mem_lvl = GraphRealization(tiling_graph, mem_lvl=mem_string, scope_lvl=MEM_LEVELS - mem_loop,
                                        f=f, mem_blks=mem_blks)
             d, invalid_flag, output_nodes, parents, whether_pipelined =\
-                mem_lvl.node_instantiations1(output_nodes,
-                                             parent=parents,
-                                             whether_pipelined=whether_pipelined)
+                mem_lvl.node_instantiations_mem(output_nodes,
+                                                parent=parents,
+                                                whether_pipelined=whether_pipelined)
         data = CodeGenerationdatasets(tiling_graph)
         data.build_datasets(tiling_graph)
         output_check_nodes(f, root_nodes)
