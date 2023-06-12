@@ -1086,16 +1086,13 @@ class GraphRealization:
                              "_" + str(u) + "_" + self.mem_lvl + " = Array(init_arr=" +
                              node_info["tensor"] + "_vals, " + "debug=debug_sim, statistics=report_stats)\n")
                 self.d[u]["object"] = node_info["type"] + "_" + node_info["tensor"] + "_" + str(u) + "_" + self.mem_lvl
-
             elif "broadcast" in self.networkx_graph.nodes[u]['comment']:
                 continue
-
             elif node_info["type"] == "repsiggen":
                 self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" +
                              node_info["index"] + "_" + str(u) + "_" + self.mem_lvl +
                              " = RepeatSigGen(debug=debug_sim, statistics=report_stats)\n")
                 self.d[u]["object"] = node_info["type"] + "_" + node_info["index"] + "_" + str(u) + "_" + self.mem_lvl
-
             elif node_info["type"] == "repeat":
                 self.f.write(tab(self.scope_lvl + 1) + node_info["type"] + "_" + node_info["tensor"] +
                              node_info["index"] + "_" + str(u) + "_" + self.mem_lvl +
