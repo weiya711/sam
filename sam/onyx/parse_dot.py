@@ -29,7 +29,7 @@ class SAMDotGraph():
 
         if unroll > 1:
             self.duplicate_graph('B', unroll)
-            self.annotate_IO_nodes()
+        self.annotate_IO_nodes()
         # self.unroll_graph('b', 2)
         self.graph.write_png('mek.png')
         # exit()
