@@ -952,7 +952,7 @@ class SAMDotGraph():
     def annotate_IO_nodes(self):
         original_nodes = self.graph.get_nodes()
         output_nodes = ['x', 'X']
-        input_nodes = ['c', 'C', 'b', 'B', 'd', 'D', 'e', 'E']
+        input_nodes = ['c', 'C', 'b', 'B', 'd', 'D', 'e', 'E', 'f', 'F']
         exclude_nodes = ['b', 'B']
         for node in original_nodes:
             node_attrs = node.get_attributes()
