@@ -518,7 +518,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
                                  positive_only=positive_only)
             segs.append(seg_t_)
             # Empty matrix...
-            if mode == 0 and len(seg_t_) == 2 and seg_t_[0] == 0 and seg_t_[1] == 0:
+            if len(seg_t_) == 2 and seg_t_[0] == 0 and seg_t_[1] == 0:
                 mg = MatrixGenerator(name=name, shape=shape, sparsity=1.0)
                 created_empty = True
                 break
