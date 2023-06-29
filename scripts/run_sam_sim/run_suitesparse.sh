@@ -2,6 +2,9 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+# 1. Formats input files 
+# 2. Runs suitesparse sam sims in pytest
+
 # THIS FILE MUST BE RUN FROM sam/ location
 outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 basedir=$(pwd)
@@ -33,7 +36,7 @@ for i in ${!DATASET_NAMES[@]}; do
 
     cd $outdir
     echo "Generating input format files for $name..."
-    python $basedir/scripts/datastructure_suitesparse.py -n $name 
+    python $basedir/scripts/formatting/datastructure_suitesparse.py -n $name 
     chgrp -R sparsity $outdir
     chmod -R 777 $outdir
 

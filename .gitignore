@@ -7,6 +7,7 @@ __pycache__/
 *.swo
 *.txt
 *.out
+download_suitesparse_partial.sh
 
 # Files for MacOS and IDEs
 .DS_store
@@ -38,8 +39,10 @@ compiler/benchmark/
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
+# Generated SAM graphs
 *.gv
 
+# Downloaded data
 *.mtx
 *.tns
 
@@ -52,5 +55,9 @@ tmp_mat*/
 # Generated formatted tensor files
 tensor_*_mode_*
 
-# Tensor files
+# Tiling files
 tiles/
+
+# sam package info
+sam.egg-info/
+

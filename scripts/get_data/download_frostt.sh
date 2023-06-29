@@ -3,6 +3,8 @@
 #SBATCH -t 360
 #SBATCH -p lanka-v3
 
+# Command: ./scripts/get_data/download_frostt.sh
+
 set -e
 
 TENSOR_NAMES=(
@@ -37,7 +39,7 @@ TENSOR_URLS=(
   "https://s3.us-east-2.amazonaws.com/frostt/frostt_data/vast-2015-mc1/vast-2015-mc1-5d.tns.gz"
 )
 
-outdir=/data/scratch/owhsu/datasets/frostt
+outdir=$FROSTT_PATH
 
 mkdir -p $outdir
 

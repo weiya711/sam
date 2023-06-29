@@ -2,6 +2,8 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+# Command: ./scripts/get_data/unpack_suitesparse.sh <tensor_names.txt>
+
 pushd .
 cd $SUITESPARSE_PATH
 

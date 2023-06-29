@@ -2,6 +2,9 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+# Req: Need to run this after synthetic/ is generated
+# 1. Runs all of the synthetic tests from the ASPLOS 2023 SAM paper
+
 # Vars
 if [ -z "$2" ]
 then

@@ -2,6 +2,7 @@ import argparse
 import os
 import csv
 
+# This is using the old CSF file types
 
 def write_csv(path, outpath):
     with open(outpath, 'w+', newline='') as outcsv:

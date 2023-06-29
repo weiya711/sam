@@ -2,6 +2,8 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+# Command: ./scripts/get_data/unpack_suitesparse_all.sh
+
 cd $SUITESPARSE_PATH
 
 for f in *.tar.gz; do

@@ -2,6 +2,8 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+# Command: ./scripts/formatting/generate_frostt_formats.sh 
+
 DATASET_NAMES=(
   fb1k
   fb10k
@@ -39,8 +41,8 @@ for i in ${!FORMATS[@]}; do
         
         name=${DATASET_NAMES[$j]} 
         echo "Generating input format files for $name..."
-        python $basedir/scripts/datastructure_tns.py -n $name -f $format
-        python $basedir/scripts/datastructure_tns.py -n $name -f $format --other
+        python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format
+        python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other
         chmod -R 775 $FROSTT_FORMATTED_PATH
     done
 done

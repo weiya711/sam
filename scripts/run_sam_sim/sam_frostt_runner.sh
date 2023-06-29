@@ -4,6 +4,12 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
+# Script steps
+# 1. Formats data
+# 2. Runs SAM sim in Pytest
+# 3. Converts data to CSV
+# 4. Aggregates CSV
+
 set -u
 
 BENCHMARKS=(

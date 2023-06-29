@@ -2,7 +2,9 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
-outdir=/nobackup/owhsu/sparse-datasets/suitesparse
+# Command: ./scripts/get_data/download_suitesparse.sh
+
+outdir=$SUITESPARSE_PATH
 
 mkdir -p $outdir
 cd $outdir

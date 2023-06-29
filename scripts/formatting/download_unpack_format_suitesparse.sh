@@ -1,8 +1,10 @@
 #!/bin/bash
 
+# Command: ./scripts/formatting/download_unpack_format_suitesparse.sh <tensor_names.txt>
+
 basedir=$(pwd)
 path=$basedir/jsons
-download_script=scripts/download_suitesparse_stream_overhead.sh
+download_script=scripts/get_data/download_suitesparse_partial.sh
 
 mkdir -p $path
 
@@ -30,7 +32,7 @@ BENCHMARKS=(
 echo "mkdir -p ${SUITESPARSE_PATH}" >> $download_script
 echo "pushd ." >> $download_script
 echo "cd ${SUITESPARSE_PATH}" >> $download_script
-grep -F -f $1 scripts/download_suitesparse.sh >> $download_script 
+grep -F -f $1 scripts/get_data/download_suitesparse.sh >> $download_script 
 echo "popd" >> $download_script
 
 # Make it an executable
@@ -40,13 +42,13 @@ chmod ugo+x $download_script
 ./$download_script
 
 # Unpack the downloaded suitesparse files since they come in .tar format
-./scripts/unpack_suitesparse.sh $(realpath $1)
+./scripts/get_data/unpack_suitesparse.sh $(realpath $1)
 
 for b in ${!BENCHMARKS[@]}; do
 	bench=${BENCHMARKS[$b]}
 	while read line; do
 		echo "Generating input format files for $line..."
 		sspath=${SUITESPARSE_PATH}/$line
-		SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/datastructure_suitesparse.py -n $line -hw -b $bench 
+		SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/formatting/datastructure_suitesparse.py -n $line -hw -b $bench 
 	done <$(realpath $1)
 done
