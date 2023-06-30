@@ -4,6 +4,10 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
+# ./suitesparse_runner.sh  <tensor_names.txt> <0|1|2>
+# First argument - Textfile with names of suitesparse tensors to run
+# Second argument - Which machine to run on
+
 set -u
 
 cwd=$(pwd)

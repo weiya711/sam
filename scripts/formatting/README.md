@@ -4,7 +4,6 @@ The `scripts/formatting/` folder contains scripts used to format the datasets fr
 
 1. `datastructure_suitesparse.py` - Python script used by
    `generate_suitesparse_formats.sh` to format from mtx to CSF files. 
-   - 
 2. `datastructure_tns.py` - Python script used by
    `generate_frostt_formats.sh` to format from tns to CSF files. 
 3. `download_unpack_format_suitesparse.sh` - Script that downloads, unpacks,
