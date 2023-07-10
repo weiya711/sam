@@ -54,7 +54,7 @@ numToInsert = 0
 frostt_path = os.environ['FROSTT_PATH']
 for i in range(50):
     filename = os.path.join(frostt_path, "tensor"+str(tensor_num)+".tns")
-    f = open(filename, "a")
+    f = open(filename, "w")
     lineToAddInFile = ""
     #f.write('dimensions:' + '\n')
     #f.write(""+str(dimensions[i*3]) + " " + str(dimensions[i*3+1]) + " " + str(dimensions[i*3+2]))
