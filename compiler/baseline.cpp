@@ -78,6 +78,7 @@ struct TensorInputCache {
 
         }
         if (includeVec and genOther) {
+	    std::cout << "Generating OTHER vector for " << datasetName << std::endl; 
             this->otherVecFirstMode = genOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
             this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
@@ -350,9 +351,9 @@ std::string opName(SuiteSparseOp op) {
     }
 }
 
-static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fill_value = 0) {
+static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 
-    bool GEN_OTHER = getEnvVar("GEN") == "ON";
+    bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
 
     // Counters must be present in every run to get reported to the CSV.
     state.counters["dimx"] = 0;
@@ -519,13 +520,15 @@ static void bench_suitesparse(benchmark::State &state, SuiteSparseOp op, int fil
         }
     }
 
-    TACO_BENCH_ARGS(bench_suitesparse, vecmul_spmv, SPMV);
-    TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3);
-    TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM);
-    TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL);
-    TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD);
+    // The first app is set to true to generate both mode0 and mode1 vector
+    // generation.
+    TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL, true);
+    TACO_BENCH_ARGS(bench_suitesparse, vecmul_spmv, SPMV, false);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd3_plus3, PLUS3, false);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_sddmm, SDDMM, false);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_residual, RESIDUAL, false);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_elemadd_mmadd, MMADD, false);
     // TODO: need to fix for DCSC for this
-    TACO_BENCH_ARGS(bench_suitesparse, mat_mattransmul, MATTRANSMUL);
-    TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM);
-    TACO_BENCH_ARGS(bench_suitesparse, mat_elemmul, MMMUL);
+    TACO_BENCH_ARGS(bench_suitesparse, matmul_spmm, SPMM, false);
+    TACO_BENCH_ARGS(bench_suitesparse, mat_elemmul, MMMUL, false);
 
