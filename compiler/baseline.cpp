@@ -262,6 +262,56 @@ static void bench_frostt(benchmark::State &state, std::string tnsPath, FrosttOp 
 }
 
 #define FOREACH_FROSTT_TENSOR(__func__) \
+  __func__(tensor1, "tensor1.tns") \
+  __func__(tensor2, "tensor2.tns") \
+  __func__(tensorspec, "tensorspec.tns") \
+  __func__(tensor4, "tensor4.tns") \
+  __func__(tensor5, "tensor5.tns") \
+  __func__(tensor6, "tensor6.tns") \
+  __func__(tensor7, "tensor7.tns") \
+  __func__(tensor8, "tensor8.tns") \
+  __func__(tensor9, "tensor9.tns") \
+  __func__(tensor10, "tensor10.tns") \
+  __func__(tensor11, "tensor11.tns") \
+  __func__(tensor12, "tensor12.tns") \
+  __func__(tensor13, "tensor13.tns") \
+  __func__(tensor14, "tensor14.tns") \
+  __func__(tensor15, "tensor15.tns") \
+  __func__(tensor16, "tensor16.tns") \
+  __func__(tensor17, "tensor17.tns") \
+  __func__(tensor18, "tensor18.tns") \
+  __func__(tensor19, "tensor19.tns") \
+  __func__(tensor20, "tensor20.tns") \
+  __func__(tensor21, "tensor21.tns") \
+  __func__(tensor22, "tensor22.tns") \
+  __func__(tensor23, "tensor23.tns") \
+  __func__(tensor24, "tensor24.tns") \
+  __func__(tensor25, "tensor25.tns") \
+  __func__(tensor26, "tensor26.tns") \
+  __func__(tensor27, "tensor27.tns") \
+  __func__(tensor28, "tensor28.tns") \
+  __func__(tensor29, "tensor29.tns") \
+  __func__(tensor30, "tensor30.tns") \
+  __func__(tensor31, "tensor31.tns") \
+  __func__(tensor32, "tensor32.tns") \
+  __func__(tensor33, "tensor33.tns") \
+  __func__(tensor34, "tensor34.tns") \
+  __func__(tensor35, "tensor35.tns") \
+  __func__(tensor36, "tensor36.tns") \
+  __func__(tensor37, "tensor37.tns") \
+  __func__(tensor38, "tensor38.tns") \
+  __func__(tensor39, "tensor39.tns") \
+  __func__(tensor40, "tensor40.tns") \
+  __func__(tensor41, "tensor41.tns") \
+  __func__(tensor42, "tensor42.tns") \
+  __func__(tensor43, "tensor43.tns") \
+  __func__(tensor44, "tensor44.tns") \
+  __func__(tensor45, "tensor45.tns") \
+  __func__(tensor46, "tensor46.tns") \
+  __func__(tensor47, "tensor47.tns") \
+  __func__(tensor48, "tensor48.tns") \
+  __func__(tensor49, "tensor49.tns") \
+  __func__(tensor50, "tensor50.tns") \
   __func__(facebook, "facebook.tns") \
   __func__(fb1k, "fb1k.tns") \
   __func__(fb10k, "fb10k.tns") \
@@ -343,7 +393,7 @@ std::string opName(SuiteSparseOp op) {
             return "mmadd";
         }
 	case MMMUL: {
-	    return "mmmul"
+	    return "mmmul";
 	}
         default:
             return "";
