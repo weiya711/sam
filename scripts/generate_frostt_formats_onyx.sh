@@ -9,12 +9,12 @@ FORMATS=(
 )
 
 BENCHMARKS=(
-tensor3_elemadd
-#tensor3_elemmul
-tensor3_innerprod
-tensor3_mttkrp
-tensor3_ttm
-tensor3_ttv
+  tensor3_elemadd
+  # tensor3_elemmul
+  # tensor3_innerprod
+  # tensor3_mttkrp
+  # tensor3_ttm
+  # tensor3_ttv
 )
 
 #export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
