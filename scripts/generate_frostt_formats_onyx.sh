@@ -2,22 +2,19 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
-DATASET_NAMES=(
-  fb1k
-  fb10k
-  facebook
-  nell-2
-  nell-1
-)
-
-IGNORED_NAMES=(
-  amazon-reviews
-  reddit
-  patents
-)
+# ./scripts/generate_frostt_formats_onyx.sh <tensor_name.txt>
 
 FORMATS=(
   sss012
+)
+
+BENCHMARKS=(
+tensor3_elemadd
+#tensor3_elemmul
+tensor3_innerprod
+tensor3_mttkrp
+tensor3_ttm
+tensor3_ttv
 )
 
 #export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
@@ -34,13 +31,15 @@ for i in ${!FORMATS[@]}; do
     
     $basedir/compiler/taco/build/bin/taco-test sam.pack_$format
     $basedir/compiler/taco/build/bin/taco-test sam.pack_other_frostt
-
-    for j in ${!DATASET_NAMES[@]}; do
+    for b in ${!BENCHMARKS[@]}; do
+	    bench=${BENCHMARKS[$b]}
+    	while read line; do
         
-        name=${DATASET_NAMES[$j]} 
-        echo "Generating input format files for $name..."
-        python $basedir/scripts/datastructure_tns.py -n $name -f $format 0b $bench -hw
-        python $basedir/scripts/datastructure_tns.py -n $name -f $format --other -b $bench -hw
-        chmod -R 775 $FROSTT_FORMATTED_PATH
+        	name=$line 
+        	echo "Generating input format files for $name..."
+        	python $basedir/scripts/datastructure_tns.py -n $name -f $format -b $bench -hw
+        	python $basedir/scripts/datastructure_tns.py -n $name -f $format --other -b $bench -hw
+        	chmod -R 775 $FROSTT_FORMATTED_PATH
+    	done <$1
     done
 done
