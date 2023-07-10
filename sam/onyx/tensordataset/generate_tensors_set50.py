@@ -6,6 +6,7 @@ import os
 # Set the seed value
 seed_value = 42
 random.seed(seed_value)
+np.random.seed(seed_value)
 
 
 #generating tensor dimensions and storing results in an array (array size is 150, 50 tensors and 3 dimensions for each tensor)
