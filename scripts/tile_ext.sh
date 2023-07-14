@@ -1,7 +1,8 @@
 #!/bin/bash
 
 BENCHMARKS=(
-  matmul_ikj
+  	mat_vecmul
+	# matmul_ikj
 )
 
 # THIS FILE MUST BE RUN FROM sam/ location
@@ -26,6 +27,6 @@ for b in ${!BENCHMARKS[@]}; do
 
 	echo "Generating input format files for $ext_path..."
 	python $basedir/scripts/datastructure_suitesparse.py -n temp -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
-
+	python $basedir/scripts/datastructure_tns.py -n bcsstm02 -f ss01 --other -ss --tiled=$basedir/tiles/$bench/mtx/tensor_C_tile_0_0.tns -tn=$basedir/tiles/$bench/formatted/tensor_C_tile_0_0
 done
 

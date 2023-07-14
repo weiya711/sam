@@ -272,6 +272,7 @@ def generate_header(f, out_name):
         f.write("formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
     if out_name in other_list:
         f.write("other_dir = os.getenv('OTHER_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
+    f.write("sam_home = os.getenv(\'SAM_HOME\', default=os.path.join(cwd, \'mode-formats\'))\n")
     f.write("\n\n# FIXME: Figureout formats\n")
     f.write("@pytest.mark.skipif(\n")
     f.write(tab(1) + "os.getenv('CI', 'false') == 'true',\n")
