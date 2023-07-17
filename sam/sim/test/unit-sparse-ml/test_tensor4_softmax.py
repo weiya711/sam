@@ -28,8 +28,9 @@ formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.frostt
 def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, report_stats, fill=0):
-    # test = "tensor4_mult2_ijklm"
-    test_name = "tensor4_fused_mul_T4"
+    # test_name = "tensor4_mult2_ijklm"
+    # test_name = "tensor4_softmax"
+    test_name = "tensor4_softmax_large"
     B_dirname = os.path.join(formatted_dir, frosttname, test_name)
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
@@ -57,6 +58,10 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
+    out_crds = []
+    out_segs = []
+    out_vals = []
+    check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, out_vals, test_name)
 
     fiberlookup_Bi_7 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
     fiberwrite_X0_3 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
@@ -78,7 +83,7 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     repsiggen_l1_13 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
     repeat_Bl1_12 = Repeat(debug=debug_sim, statistics=report_stats)
     # Using this paper as baseline: 17 clock cycles -> https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7309545
-    exp_1 = Exp(in2=0, delay=17, debug=debug_sim, statistics=report_stats)
+    exp_1 = Exp(in2=0, delay=1, debug=debug_sim, statistics=report_stats)
     reduce_5 = Reduce(debug=debug_sim, statistics=report_stats)
     max_reduce_5 = MaxReduce(debug=debug_sim, statistics=report_stats)
     drop_9 = CrdDrop(debug=debug_sim)
@@ -125,16 +130,16 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         # fiberwrite_X2_1.set_input(fiberlookup_Bk_5.out_crd())
         # fiberwrite_X3_0.set_input(fiberlookup_Bl_6.out_crd())
 
-        if len(in_ref_B_dense) > 0:
-            fiberlookup_dense_i.set_in_ref(in_ref_B_dense.pop(0))
-        fiberlookup_dense_j.set_in_ref(fiberlookup_dense_i.out_ref())
-        fiberlookup_dense_k.set_in_ref(fiberlookup_dense_j.out_ref())
-        fiberlookup_dense_l.set_in_ref(fiberlookup_dense_k.out_ref())
+        # if len(in_ref_B_dense) > 0:
+        #     fiberlookup_dense_i.set_in_ref(in_ref_B_dense.pop(0))
+        # fiberlookup_dense_j.set_in_ref(fiberlookup_dense_i.out_ref())
+        # fiberlookup_dense_k.set_in_ref(fiberlookup_dense_j.out_ref())
+        # fiberlookup_dense_l.set_in_ref(fiberlookup_dense_k.out_ref())
 
         # FIXME: Need to fix union below to get dense softmax,
         # Currently this ignores rows with only zeros which should output 1/(# rows)
-        unionl_42.set_in1(fiberlookup_Bl_6.out_ref(), fiberlookup_Bl_6.out_crd())
-        unionl_42.set_in2(fiberlookup_dense_l.out_ref(), fiberlookup_dense_l.out_crd())
+        # unionl_42.set_in1(fiberlookup_Bl_6.out_ref(), fiberlookup_Bl_6.out_crd())
+        # unionl_42.set_in2(fiberlookup_dense_l.out_ref(), fiberlookup_dense_l.out_crd())
         # arrayvals_B_4.set_load(unionl_42.out_ref1())
 
         # out_l_crd.append(fiberlookup_dense_l.out_crd())
@@ -157,8 +162,8 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         div_in.append(max_reduce_5.out_val())
         div1_in.append(repeat_Bl1_12.out_ref())
 
-        # print("first:", remove_emptystr(div_in))
-        # print("second:", remove_emptystr(div1_in))
+        print("first:", remove_emptystr(div_in))
+        print("second:", remove_emptystr(div1_in))
         
         exp_1.set_in1(add_10.out_val())
         test.append(arrayvals_B_4.out_val())
@@ -219,11 +224,11 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
         fiberlookup_Bj_6.update()
         fiberlookup_Bk_5.update()
         fiberlookup_Bl_6.update()
-        fiberlookup_dense_i.update()
-        fiberlookup_dense_j.update()
-        fiberlookup_dense_k.update()
-        fiberlookup_dense_l.update()
-        unionl_42.update()
+        # fiberlookup_dense_i.update()
+        # fiberlookup_dense_j.update()
+        # fiberlookup_dense_k.update()
+        # fiberlookup_dense_l.update()
+        # unionl_42.update()
         arrayvals_B_4.update()
 
         softmax.update()
@@ -277,7 +282,7 @@ def test_tensor4_softmax(samBench, frosttname, cast, check_gold, debug_sim, repo
     print("out_vals:", out_vals)
     print("# cycles: ", time_cnt)
 
-    pytest.set_trace()
+    # pytest.set_trace()
 
     def bench():
         time.sleep(0.01)
