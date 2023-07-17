@@ -10,6 +10,8 @@
 # 3. Converts data to CSV
 # 4. Aggregates CSV
 
+# ./scripts/run_sam_sim/sam_frostt_runner.sh <tensor_names.txt>
+
 set -u
 
 BENCHMARKS=(
@@ -20,60 +22,14 @@ BENCHMARKS=(
   tensor3_mttkrp_FINAL
 )
 
-TENSORS=(
-  fb1k
-  fb10k
-  facebook
-  nell-2
-  nell-1
-)
-
-
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
-
-# LANKA
-if [ $1 -eq 1 ]; then
-	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
-	export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
-	export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
-	export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
-	
-	mkdir -p $TACO_TENSOR_PATH
-	mkdir -p $SUITESPARSE_FORMATTED_PATH
-	mkdir -p $FROSTT_FORMATTED_TACO_PATH
-	mkdir -p $FROSTT_FORMATTED_PATH
-
-	lanka=ON
-	neva=OFF
-elif [ $1 -eq 2 ]; then
-	lanka=OFF
-	neva=ON
-else
-	lanka=OFF
-	neva=OFF
-fi
 
 format_outdir=${FROSTT_FORMATTED_PATH} 
 basedir=$(pwd)
 frosttpath=$FROSTT_PATH
 benchout=frostt-bench/sam
-
-__conda_setup="$('/data/scratch/owhsu/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/data/scratch/owhsu/miniconda/etc/profile.d/conda.sh" ]; then
-        . "/data/scratch/owhsu/miniconda/etc/profile.d/conda.sh"
-    else
-        export PATH="/data/scratch/owhsu/miniconda/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-conda activate aha
 
 mkdir -p "$benchout"
 mkdir -p $format_outdir
@@ -87,8 +43,8 @@ for b in ${!BENCHMARKS[@]}; do
 	mkdir -p $basedir/$benchout/$bench
 	echo "Testing $bench..."
 
-	for t in ${!TENSORS[@]}; do
-		name=${TENSORS[$t]}
+	while read line; do
+		name=$line
 		cd $format_outdir
 
 
@@ -97,15 +53,15 @@ for b in ${!BENCHMARKS[@]}; do
 
 			$basedir/compiler/taco/build/bin/taco-test sam.pack_sss012
 			$basedir/compiler/taco/build/bin/taco-test sam.pack_other_frostt
-			python $basedir/scripts/datastructure_tns.py -n $name -f sss012
-			python $basedir/scripts/datastructure_tns.py -n $name -f sss012 --other
+			python $basedir/scripts/formatting/datastructure_tns.py -n $name -f sss012
+			python $basedir/scripts/formatting/datastructure_tns.py -n $name -f sss012 --other
 			chmod -R 775 $FROSTT_FORMATTED_PATH
 		fi
 
 		cd $basedir/sam/sim
 
 		pytest test/final-apps/test_$bench.py --frosttname $name --benchmark-json=$path/$name.json 
-		python $basedir/scripts/converter.py --json_name $path/$name.json	
+		python $basedir/scripts/util/converter.py --json_name $path/$name.json	
 		    
 		status=$?
 		if [ $status -gt 0 ]
@@ -114,9 +70,9 @@ for b in ${!BENCHMARKS[@]}; do
 		fi
 
 		cd $basedir
-	done 
+	done <$1 
 
-	python $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/frostt_$bench.csv
+	python $basedir/scripts/util/bench_csv_aggregator.py $path $basedir/$benchout/frostt_$bench.csv
 
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do

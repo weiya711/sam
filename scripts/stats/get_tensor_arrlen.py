@@ -1,7 +1,8 @@
+# python scripts/stats/get_tensor_arrlen.py <formatted_dir> <output.csv>
+
 import argparse
 import os
 import csv
-
 
 # This is using the old CSF file types
 def write_csv(path, outpath):

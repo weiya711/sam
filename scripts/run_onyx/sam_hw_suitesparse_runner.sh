@@ -4,6 +4,16 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
+# This should be run from the sam/ directory
+
+# ./sam_hw_suitesparse_runner.sh <tensor_names.txt> <machine>
+# Arg1 <tensor_names.txt> - File with the SuiteSparse matrices to run 
+# Arg2 <machine> - Which machine is being used (0:local, 1:Lanka, 2:Kiwi/Neva)
+
+# This script:
+# 1. Formats teh matrices
+# 2. Then runs build_tb in garnet
+
 set -u
 
 BENCHMARKS=(

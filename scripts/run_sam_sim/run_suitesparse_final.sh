@@ -4,6 +4,8 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
+# ./scripts/run_sam_sim/run
+
 pushd .
 cd sam/sim
 

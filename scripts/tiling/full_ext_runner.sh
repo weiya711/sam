@@ -3,7 +3,8 @@
 #SBATCH --mem 120000
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
-#SBATCH --mail-user=oliviahsu1107@gmail.com
+
+# ./scripts/tiling/full_ext_runner.sh
 
 NNZ=(
   5000
@@ -27,6 +28,6 @@ DIMENSIONS=(
 for nnz in ${!NNZ[@]}; do
 	for dim in ${!DIMENSIONS[@]}; do
 		filename=${NNZ[$nnz]}_${DIMENSIONS[$dim]}
-		./scripts/ext_runner.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
+		./scripts/tiling/ext_runner.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
 	done
 done 

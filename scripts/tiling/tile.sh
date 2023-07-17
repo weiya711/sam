@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# ./scripts/tiling/tile.sh <tensor_names.txt>
+
 BENCHMARKS=(
   matmul_ikj
 )
@@ -22,7 +24,7 @@ for b in ${!BENCHMARKS[@]}; do
                 python $basedir/sam/sim/src/tiling/tile.py --input_tensor $line --cotile $bench --multilevel --hw_config $basedir/sam/sim/src/tiling/$2 
 
                 echo "Generating input format files for $line..."
-                python $basedir/scripts/datastructure_suitesparse.py -n $line -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
+                python $basedir/scripts/formatting/datastructure_suitesparse.py -n $line -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
 
 	done <$1
 done

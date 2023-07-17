@@ -2,6 +2,7 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+# ./scripts/run_sam_sim/pytest_frostt_with_benchmarks.sh <tensor_names.txt>
 
 BENCHMARKS=(
   tensor3_elemmul
@@ -11,15 +12,6 @@ BENCHMARKS=(
   tensor3_ttv
   tensor3_innerprod
   tensor_mttkrp
-)
-
-DATASET_NAMES=(
-   facebook
-   fb10k
-   fb1k
-   nell-1
-   nell-2
-   taco-tensor
 )
 
 outdir=/nobackup/owhsu/sparse-datasets/frostt-formatted
@@ -33,7 +25,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 
-cwd=$(pwd)
+basedir=$(pwd)
 resultdir=results
 
 
@@ -41,27 +33,27 @@ cd ./sam/sim
 
 for b in ${!BENCHMARKS[@]}; do
     bench=${BENCHMARKS[$b]}
-    path=$cwd/$resultdir/$bench
+    path=$basedir/$resultdir/$bench
 
-    mkdir -p $cwd/$resultdir/$bench
+    mkdir -p $basedir/$resultdir/$bench
     echo "Testing $bench..."
 
-    for i in ${!DATASET_NAMES[@]}; do
-        name=${DATASET_NAMES[$i]} 
+    while read line; do
+        name=$line 
 
         echo "Testing $name..."
 
         pytest test/apps/test_$bench.py --ssname $name -s --benchmark-json=$path/$name.json 
-        python $cwd/scripts/converter.py --json_name $path/$name.json	
+        python $basedir/scripts/util/converter.py --json_name $path/$name.json	
             
         status=$?
         if [ $status -gt 0 ]
         then 
           errors+=("${name}, ${bench}")
         fi
-    done
+    done <$1
     
-    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/suitesparse_$bench.csv
+    python $basedir/scripts/util/bench_csv_aggregator.py $path $basedir/suitesparse_$bench.csv
 
 done
 

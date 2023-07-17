@@ -1,16 +1,13 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -t 360
-outdir=/nobackup/owhsu/sparse-datasets/frostt-formatted
 
-DATASET_NAMES=(
-   facebook
-   fb10k
-   fb1k
-   nell-1
-   nell-2
-   taco-tensor
-)
+# Run from sam/ repo
+# ./scripts/run_sam_sim/pytest_frostt.sh <tensor_names.txt> 
+
+# Script that runs ALL test_tensor* pytest tests under sam/sim/test
+
+outdir=/nobackup/owhsu/sparse-datasets/frostt-formatted
 
 errors=()
 RED='\033[0;31m'
@@ -22,89 +19,18 @@ export FROSTT_FORMATTED_PATH=$outdir
 mkdir -p $outdir
 cd ./sam/sim
 
-for i in ${!DATASET_NAMES[@]}; do
-    name=${DATASET_NAMES[$i]} 
+while read line; do
+    name=$line 
 
     echo "Testing $name..."
-#    pytest -k test_mat_mul_ijk_csr_full_i --ssname $name 
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      errors+=("${name} matmul_ijk_full")
-#    fi
-
-#    pytest -k test_mat_identity_i --ssname $name -s 
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then
-#      errors+=("${name} matmul_ijk")
-#    fi
  
     pytest -k test_tensor --frosttname $name -s -vv #--debug-sim 
     status=$?
     if [ $status -gt 0 ]
     then 
-      errors+=("${name} matmul_ijk")
+      errors+=("${name} test")
     fi
- 
-
-#
-#    pytest -k test_matmul_ijk_i --ssname $name -s #--debug-sim 
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      errors+=("${name} matmul_ijk")
-#    fi
-   
-#    pytest -k test_mat_elemmul_i --ssname $name -s 
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      errors+=("${name} matmul_ijk")
-#    fi
- 
-
-#    pytest -k test_tensor3_elemmul_i --ssname $name -s 
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      errors+=("${name} matmul_ijk")
-#    fi
-
-#    pytest -k test_matmul_jik_i --ssname $name -s 
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      errors+=("${name} matmul_ijk")
-#    fi
-
-#    pytest -k test_matmul_jki_i --ssname $name -s 
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      errors+=("${name} matmul_ijk")
-#    fi
-
-
-
-
-#    pytest -k test_mat_identity_i --ssname $name -s
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      errors+=("${name} mat_identity")
-#    fi
-
-#    pytest -k test_mat_elemmul_i --ssname $name -s
-#    status=$?
-#    if [ $status -gt 0 ]
-#    then 
-#      	    errors+=("${name} mat_identity")
-#    fi
-
-
-
-done
+done <$1
 
 echo -e "${RED}Failed tests:"
 for i in ${!errors[@]}; do

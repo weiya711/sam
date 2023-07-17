@@ -4,10 +4,13 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
+# ./scripts/tiling/advanced_simulator_runner.sh <tensor_names.txt> <machine>
+# where machine is either 0(local), 1(Lanka), or 2(Kiwi/Neva/Lagos) 
+
 set -u
 
 BENCHMARKS=(
-##  mat_vecmul_FINAL
+#  mat_vecmul_FINAL
 #  matmul_FINAL
 #  mat_identity
 #  mat_identity_back
@@ -17,7 +20,7 @@ BENCHMARKS=(
 #  matmul_ikj_glb_tile2
 matmul_ikj_tile_pipeline_final
 #  matmul_ikj_glb_tile_pipeline
-# i matmul_ikj_glb_no_pipe
+#  matmul_ikj_glb_no_pipe
 #  matmul_ikj_input_only
 #  matmul_ikj_tiled_bcsstm02
 #  matmul_ikj_check
@@ -36,63 +39,11 @@ NC='\033[0m' # No Color
 
 basedir=$(pwd)
 
-# LANKA
-if [ $2 -eq 1 ]; then
-	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
-	export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
-	export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
-	export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
-	export SAM_HOME=$basedir
-	export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
-	export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
-
-	mkdir -p $TACO_TENSOR_PATH
-	mkdir -p $SUITESPARSE_FORMATTED_PATH
-	mkdir -p $FROSTT_FORMATTED_TACO_PATH
-	mkdir -p $FROSTT_FORMATTED_PATH
-
-	lanka=ON
-	neva=OFF
-elif [ $2 -eq 2 ]; then
-	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
-	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
-	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
-	export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
-    export SAM_HOME=$basedir
-	export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
-	export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
-	lanka=OFF
-	neva=ON
-else
-	lanka=OFF
-	neva=OFF
-	export SAM_HOME=$basedir
-	export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ikj/formatted
-	export TILED_OUTPUT_PATH=${SAM_HOME}/tiles/matmul_ikj/output/
-fi
-
 sspath=$SUITESPARSE_PATH
 benchout=suitesparse-bench_simulator/sam
 format_outdir=${SUITESPARSE_FORMATTED_PATH} 
 
 source $basedir/../venv/bin/activate
-
-#__conda_setup="$('/data/scratch/owhsu/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-#if [ $? -eq 0 ]; then
-#    eval "$__conda_setup"
-#else
-#    if [ -f "/data/scratch/owhsu/miniconda/etc/profile.d/conda.sh" ]; then
-#        . "/data/scratch/owhsu/miniconda/etc/profile.d/conda.sh"
-#    else
-#        export PATH="/data/scratch/owhsu/miniconda/bin:$PATH"
-#    fi
-#fi
-#unset __conda_setup
-#conda activate aha
 
 mkdir -p "$benchout"
 mkdir -p $format_outdir
@@ -127,7 +78,7 @@ for b in ${!BENCHMARKS[@]}; do
 		#python -m cProfile -o test/final-apps/test_$bench.py --ssname $line -s --benchmark-json=$path/$line.json 
 		pytest test/advanced-simulator/test_$bench.py --ssname $line -s  --report-stats --check-gold --skip-empty --nbuffer --yaml_name=$3 --benchmark-json=$path/$line.json 
 		# pytest test/advanced-simulator/test_$bench.py --ssname $line -s --report-stats --back --depth=1 --debug-sim --check-gold --benchmark-json=$path/$line.json
-		# python $basedir/scripts/converter.py --json_name $path/$line.json	
+		# python $basedir/scripts/util/converter.py --json_name $path/$line.json	
 		    
 		status=$?
 		if [ $status -gt 0 ]
@@ -138,7 +89,7 @@ for b in ${!BENCHMARKS[@]}; do
 		cd $basedir
 	done <$1
 
-	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
+	python $basedir/scripts/util/bench_csv_aggregator.py $path $basedir/$benchout/suitesparse_$bench.csv
 
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do

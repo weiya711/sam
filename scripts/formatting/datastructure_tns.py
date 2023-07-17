@@ -1,7 +1,7 @@
 import argparse
 import os
 from pathlib import Path
-from util import parse_taco_format
+from sam.util import parse_taco_format
 
 cwd = os.getcwd()
 

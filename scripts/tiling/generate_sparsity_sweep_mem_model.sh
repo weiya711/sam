@@ -1,3 +1,5 @@
+# ./scripts/tiling/generate_sparsity_sweep_mem_model.sh 
+
 SECONDS=0
 
 mkdir extensor_mtx

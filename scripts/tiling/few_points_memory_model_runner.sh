@@ -4,6 +4,9 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
+# ./few_points_memory_model_runner.sh <config.yaml> <gold>
+# where gold is 0(no gold check) or 1(with gold check)
+
 SECONDS=0
 set -u
 
@@ -49,9 +52,9 @@ for b in ${!BENCHMARKS[@]}; do
 	for nnz in ${!NNZ[@]}; do
 		for dim in ${!DIMENSIONS[@]}; do
 			if [ $2 -eq 0 ]; then
-				./scripts/prepare_files_no_gold.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
+				./scripts/tiling/prepare_files_no_gold.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
 			elif [ $2 -eq 1 ]; then
-				./scripts/prepare_files.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
+				./scripts/tiling/prepare_files.sh extensor_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.mtx
 			fi
 			bench=${BENCHMARKS[$b]}
 			path=$basedir/$benchout
@@ -65,7 +68,7 @@ for b in ${!BENCHMARKS[@]}; do
 			else
 				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
 			fi
-			python $basedir/scripts/converter.py --json_name $path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json	
+			python $basedir/scripts/util/converter.py --json_name $path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json	
 			    
 			status=$?
 			if [ $status -gt 0 ]
@@ -75,7 +78,7 @@ for b in ${!BENCHMARKS[@]}; do
 			cd $basedir
 		done
 	done
-	python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
+	python3 $basedir/scripts/util/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
 	
 	echo -e "${RED}Failed tests:"
 	for i in ${!errors[@]}; do

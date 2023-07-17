@@ -4,8 +4,8 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
-# ./frostt_runner.sh <0|1|2> 
-# where 0 us for local, 1 is for Lanka, and 2 is for Kiwi/Neva 
+# ./frostt_runner.sh <machine> 
+# Arg1 <machine> - Which machine is being used (0:local, 1:Lanka, 2:Kiwi/Neva) 
 
 DATASET_NAMES=(
   fb1k

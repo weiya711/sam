@@ -4,6 +4,8 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
+# ./scripts/tiling/single_point_memory_model_runner.sh extensor_<NNZ>_<DIMSIZE>.mtx
+
 benchout=memory_model_out
 
 basedir=$(pwd)
@@ -31,13 +33,13 @@ mkdir -p $path
 mkdir -p $basedir/tiles/
 rm -rf $basedir/tiles/*
 
-./scripts/prepare_files.sh $fname 
+./scripts/tiling/prepare_files.sh $fname 
 
 cd $basedir/sam/sim
 pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$yaml_fname --nnz-value=$nnz --benchmark-json=$path/${line}_${nnz}_${dim}.json 
 
-python $basedir/scripts/converter.py --json_name $path/${line}_${nnz}_${dim}.json	
+python $basedir/scripts/util/converter.py --json_name $path/${line}_${nnz}_${dim}.json	
 
-python3 $basedir/scripts/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
+python3 $basedir/scripts/util/bench_csv_aggregator.py $path $basedir/$benchout/$bench.csv
 
 popd

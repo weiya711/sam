@@ -5,22 +5,11 @@
 # 1. Formats input files 
 # 2. Runs suitesparse sam sims in pytest
 
+# ./scripts/run_sam_sim/run_suitesparse.sh <tensor_names.txt>
+
 # THIS FILE MUST BE RUN FROM sam/ location
 outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
 basedir=$(pwd)
-
-DATASET_NAMES=(
-  bcsstm04
-  bcsstm02
-  bcsstm03
-  lpi_bgprtr
-  cage4
-  klein-b1
-  GD02_a
-  GD95_b
-  Hamrle1
-  LF10
-)
 
 errors=()
 RED='\033[0;31m'
@@ -31,8 +20,8 @@ export SUITESPARSE_FORMATTED_PATH=$outdir
 
 mkdir -p $outdir
 
-for i in ${!DATASET_NAMES[@]}; do
-    name=${DATASET_NAMES[$i]} 
+while read line; do
+    name=$line
 
     cd $outdir
     echo "Generating input format files for $name..."
@@ -53,7 +42,7 @@ for i in ${!DATASET_NAMES[@]}; do
     cd $outdir
     echo "Removing format files for $name..."
     rm ./$name*.txt
-done
+done < $1
 
 echo -e "${RED}Failed tests:"
 for i in ${!errors[@]}; do

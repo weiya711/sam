@@ -32,7 +32,7 @@ build/
 logs/
 results/
 results-cpu/
-suitesparse-bench/
+suitesparse-bench*/
 sam-outputs/
 compiler/benchmark/
 

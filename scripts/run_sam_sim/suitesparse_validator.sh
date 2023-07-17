@@ -3,6 +3,9 @@
 #SBATCH --mem 120000
 #SBATCH --exclusive
 
+# ./scripts/run_sam_sim/suitesparse_validator.sh <out_path>
+# where out_path is optional
+
 SAMNAME=(
   matmul_ikj
   vecmul_ij
@@ -25,8 +28,13 @@ TACONAME=(
 
 set -u
 
-sspath=/nobackup/owhsu/sparse-datasets/suitesparse
-vout=/nobackup/owhsu/validate
+sspath=$SUITESPARSE_PATH
+if [ -z "$1" ]
+then
+    vout=$basedir/validate/
+else
+    vout=$1
+fi
 
 mkdir -p "$vout"
 
@@ -34,7 +42,7 @@ while read line; do
 	matrix="$sspath/$line.mtx"
     
     # TACO
-    GEN=ON SUITESPARSE_TENSOR_PATH="$matrix" make -j8 validate-bench BENCHES="bench_suitesparse" VALIDATION_OUTPUT_PATH="$vout" NEVA=ON 
+    GEN=ON SUITESPARSE_TENSOR_PATH="$matrix" make -j8 validate-bench BENCHES="bench_suitesparse" VALIDATION_OUTPUT_PATH="$vout" 
 
     cd sam/sim
     # SAM

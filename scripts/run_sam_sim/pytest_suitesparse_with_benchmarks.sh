@@ -2,6 +2,8 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
+# ./scripts/run_sam_sim/pytest_suitesparse_with_benchmarks.sh <tensor_names.txt>
+
 BENCHMARKS=(
   matmul_kij
   matmul_kji
@@ -22,27 +24,11 @@ BENCHMARKS=(
 )
 
 
-# FIXME: Need to change this to take in an input file as in taco side
-DATASET_NAMES=(
-  bcsstm04
-  bcsstm02
-  bcsstm03
-  lpi_bgprtr
-  cage4
-  klein-b1
-  GD02_a
-  GD95_b
-  Hamrle1
-  LF10
-)
-
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 
-export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
 cwd=$(pwd)
 resultdir=results
 
@@ -56,13 +42,13 @@ for b in ${!BENCHMARKS[@]}; do
     mkdir -p $cwd/$resultdir/$bench
     echo "Testing $bench..."
 
-    for i in ${!DATASET_NAMES[@]}; do
-        name=${DATASET_NAMES[$i]} 
+    while read line; do
+        name=$line
 
         echo "Testing $name..."
 
         pytest test/apps/test_$bench.py --ssname $name -s --benchmark-json=$path/$name.json 
-        python $cwd/scripts/converter.py --json_name $path/$name.json	
+        python $cwd/scripts/util/converter.py --json_name $path/$name.json	
             
         status=$?
         if [ $status -gt 0 ]
@@ -71,9 +57,9 @@ for b in ${!BENCHMARKS[@]}; do
         fi
     done
     
-    python $cwd/scripts/bench_csv_aggregator.py $path $cwd/suitesparse_$bench.csv
+    python $cwd/scripts/util/bench_csv_aggregator.py $path $cwd/suitesparse_$bench.csv
 
-done
+done < $1
 
 echo -e "${RED}Failed tests:"
 for i in ${!errors[@]}; do
