@@ -1,19 +1,10 @@
 import argparse
 import os
-import shutil
-import scipy.sparse
-import numpy as np
-import sys
-
 from pathlib import Path
 from util import parse_taco_format
 
-from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
-# custom_path = '/nobackup/jadivara/sam/sam/util.py'
-# sys.path.append(custom_path)
-# from  import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
-
 cwd = os.getcwd()
+
 
 formats = ["sss012", "ss01", "dss", "dds", "ddd", "dsd", "sdd", "sds", "ssd"]
 
@@ -32,6 +23,7 @@ parser.add_argument('-np', '--numpy', action='store_true', default=False, help='
 parser.add_argument('-b', '--bench', type=str, default=None, help='Name of benchmark')
 
 args = parser.parse_args()
+
 if args.other:
     if args.suitesparse:
         outdir_name = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -56,69 +48,68 @@ if args.name is None:
     print("Please enter a tensor name")
     exit()
 
-#breakpoint()
+
 if args.format is not None:
     assert args.format in formats
     levels = args.format[:-3]
-    print("GOT HERE!")
-    print(args.other)
-    if args.bench != "tensor3_elemadd" and args.bench != "tensor3_innerprod":
+    if args.other:
+        print("got here!")
+        args.bench = "tensor3_ttv"
         assert args.bench is not None
-        #$FROSTT_FORMATTED_TACO_PATH
-        taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO"
-        outdir_other_name = os.path.join(outdir_name, args.name, args.bench)
-        # outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
-        outdir_orig_path = Path(outdir_other_name)
-        outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
-        name = None
-        taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
+        otherfileNames = [f for f in os.listdir(taco_format_dirname) if
+                          os.path.isfile(os.path.join(taco_format_dirname, f)) and args.name in f]
 
-        if args.bench == "tensor3_ttv":
-            outdir_orig_name = os.path.join(outdir_name, args.name, args.bench, args.format)
-            outdir_orig_path = Path(outdir_orig_name)
+        for otherfile in otherfileNames:
+            taco_format_orig_filename = os.path.join(taco_format_dirname, otherfile)
+            outdir_other_name = os.path.join(outdir_name, args.name, args.bench)
+            # outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
+            outdir_orig_path = Path(outdir_other_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
-            taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
-            parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
-            #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
-            file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
-            file1 = open(file_path_name, 'r')
-            shape = [0]*3
-            Lines = file1.readlines()
-            count = 0
-            # Strips the newline character
-            for line in Lines:
-                shape[count] = int(line)
-                count += 1
-            coo = inputCache.load(tensor, False)
-            
-            formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
-            tensorname = 'c'
-            vec = scipy.sparse.random(shape[1], 1, density=args.density, data_rvs=np.ones)
-            vec = vec.toarray().flatten()
-            formatWriter.writeout_separate_vec(vec, dirname, tensorname)
+            name = None
+            if args.bench == "mat_residual":
+                if "mode0" in otherfile:
+                    name = 'b'
+                elif "mode1" in otherfile:
+                    name = 'd'
+                else:
+                    raise NotImplementedError
+            elif args.bench == "mat_mattransmul":
+                if "mode0" in otherfile:
+                    name = 'd'
+                elif "mode1" in otherfile:
+                    name = 'f'
+                else:
+                    raise NotImplementedError
+            elif "mat_vecmul" in args.bench:
+                if "mode1" in otherfile:
+                    name = 'c'
+                elif "mode0" in otherfile:
+                    continue
+                else:
+                    raise NotImplementedError
+            elif "tensor3_ttv" in args.bench:
+                if "mode2" in otherfile:
+                    name = 'c'
+                elif "mode1" in otherfile:
+                    continue
+                elif "mode0" in otherfile:
+                    continue
+                else:
+                    raise NotImplementedError
+            else:
+                raise NotImplementedError
 
-
-
-            vec = scipy.sparse.random(shape[2], 1, data_rvs=np.ones)
-            vec = vec.toarray().flatten()
-            formatWriter.writeout_separate_vec(vec, out_path, tensorname)
-            #FormatWriter.writeout_separate_vec(vec, out_path, tensorname, tensorname)
-            #formatWriter.writeout_separate_sparse_only()
-        else:
-            raise NotImplementedError
-
-        assert name is not None, "Other tensor name was not set properly and is None"
-        parse_taco_format(taco_format_orig_filename, outdir_other_name, name, args.format, hw_filename=args.hw)
+            assert name is not None, "Other tensor name was not set properly and is None"
+            parse_taco_format(taco_format_orig_filename, outdir_other_name, name, args.format, hw_filename=args.hw)
 
     else:
-        #this code is used for: tensor3_elemadd, tensor3_innerprod
         taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
         taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
 
         # Original
-        outdir_orig_name = os.path.join(outdir_name, args.name, args.bench, args.format)
+        outdir_orig_name = os.path.join(outdir_name, args.name, 'orig', args.format)
         outdir_orig_path = Path(outdir_orig_name)
         outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
@@ -126,7 +117,7 @@ if args.format is not None:
 
         # Shifted
         if args.shift:
-            outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
+            outdir_shift_name = os.path.join(outdir_name, args.name, 'shift', args.format)
             outdir_shift_path = Path(outdir_shift_name)
             outdir_shift_path.mkdir(parents=True, exist_ok=True)
 

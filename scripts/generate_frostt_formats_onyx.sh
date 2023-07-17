@@ -9,14 +9,16 @@ FORMATS=(
 )
 
 BENCHMARKS=(
-  tensor3_elemadd
-  # tensor3_elemmul
+  #using all tensor apps except elemmul here**
+  # tensor3_elemadd
   # tensor3_innerprod
+  tensor3_ttv
+  # tensor3_elemmul
   # tensor3_mttkrp
-  # tensor3_ttm
-  # tensor3_ttv
+  # using tensor3_ttm
 )
 
+OTHERBENCHES='["tensor3_ttv"]'
 #export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
 #export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
 #export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
@@ -39,7 +41,11 @@ for i in ${!FORMATS[@]}; do
         	echo "Generating input format files for $name..."
         	python $basedir/scripts/datastructure_tns.py -n $name -f $format -b $bench -hw
         	python $basedir/scripts/datastructure_tns.py -n $name -f $format --other -b $bench -hw
-        	chmod -R 775 $FROSTT_FORMATTED_PATH
+        	# if [[ $OTHERBENCHES =~ "$bench" ]]; then
+			    #   echo "Generating format of 'other' tensor"
+			    #   python3 $basedir/scripts/datastructure_tns_old.py -n $line -f ss01 --other -ss -b $bench -hw
+		      # fi
+          chmod -R 775 $FROSTT_FORMATTED_PATH
     	done <$1
     done
 done

@@ -72,7 +72,8 @@ for i in range(50):
                     randomNumber = 0
                 #print(arr[x][y][z])
                 if(arr[x][y][z]!=0):
-                    lineToAddInFile="" + str(x) + " " + str(y) + " " + str(z) + " " + str(arr[x][y][z])
+                    #tensor files are not 0 indexed - say want to insert a point at (0,0,0), then need to feed in (1,1,1) to the tensor file to insert at the (0,0,0) location
+                    lineToAddInFile="" + str(x+1) + " " + str(y+1) + " " + str(z+1) + " " + str(arr[x][y][z])
                     f.write(lineToAddInFile + '\n')
     tensor_num = tensor_num + 1
 
