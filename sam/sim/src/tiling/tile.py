@@ -23,11 +23,16 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
-            "mat_mattransmul": "X(i,j)=B(i,j)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss -f=d:ss  -s=reorder(i,j,k)"}
+            "mat_mattransmul": "X(i,j)=B(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)"}
 
 def print_dict(dd):
     for k, v in dd.items():
         print(k, ":", v)
+
+def print_ast(node):
+    for child in ast.iter_child_nodes(node):
+        print_ast(child)
+    print(node)
 
 
 def get_ivars(names, expr):
@@ -95,7 +100,12 @@ def tile_coo(tensor, ivar_map, split_map, new_ivar_order=None):
     tile_sizes = dict()
     order = len(tensor.shape)
 
-    tensor_points = tensor.todok()
+    tensor_coo = scipy.sparse.coo_matrix(tensor)
+    tensor_points = tensor_coo.todok()
+
+    print("ivar_map: ", ivar_map)
+    print("split_map: ", split_map)
+    print("order = ", order)
 
     new_shape = []
     for lvl in range(order):
@@ -158,10 +168,15 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map):
         tensor_format = permutation_strs[i]
         ivar_map = dict()
         order = len(tensor.shape)
+        print("order is ", order)
         for dim in range(order):
+            print("tensor format: ", tensor_format)
+            print("dim is ", dim)
+            print("tensor_format[dim:dim+1] is ", tensor_format[dim:dim+1])
             lvl_permutation = tensor_format[dim:dim + 1][0]
             ivar = ivar_strs[i][dim]
             ivar_map[lvl_permutation] = ivar
+            print("ivar_map is ", ivar_map)
 
         tiles, tile_sizes = tile_coo(tensor, ivar_map, split_map)
         tiled_tensors[tensor_name] = tiles
@@ -198,8 +213,8 @@ def get_other_tensors(app_str, tensor):
     elif "mat_mattransmul" in app_str:
         print("Writing other tensors...")
         rows, cols = tensor.shape # i,j
-        tensor_c = scipy.sparse.random(cols, 1)
-        tensor_d = scipy.sparse.random(rows, 1)
+        tensor_c = scipy.sparse.random(cols, 1).toarray().flatten()
+        tensor_d = scipy.sparse.random(rows, 1).toarray().flatten()
 
         tensors.append(tensor_c)
         tensors.append(tensor_d)
@@ -220,8 +235,8 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
     tensors = get_other_tensors(app_str, tensors[0])
 
     names, format_permutations, ivars = parse_sam_input(args.cotile)
-    print(ivars)
 
+    import pdb; pdb.set_trace();
     sizes_dict = {}
     for i, name in enumerate(names):
         tensor = tensors[i]
@@ -257,6 +272,8 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
 
                 if cotiled is None:
                     # First iteration of tiling
+                    print("tensor shapes: ", tensors[0].shape, " ", tensors[1].shape, " ", tensors[2].shape)
+                    print("format_permutations: ", format_permutations)
                     cotiled, cotiled_sizes = cotile_coo(names, tensors, format_permutations, ivars, split_map)
                 else:
                     # recursively tile the blocks
