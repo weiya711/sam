@@ -5,7 +5,7 @@ import os
 
 data = ['rel5']
 # app_name = "mat_elemadd"
-app_name = "mat_elemmul"
+app_name = "mat_mattransmul"
 # data_file = open("scripts/tensor_names/suitesparse_valid_mid50.txt")
 # data_file_lines = data_file.readlines()
 # for line in data_file_lines:
