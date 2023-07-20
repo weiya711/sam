@@ -4,25 +4,27 @@ import random
 import os
 
 # Set the seed value
-seed_value = 42
+#previously used to be this: seed_value = 42
+seed_value = 100
 random.seed(seed_value)
 np.random.seed(seed_value)
 
 
 #generating tensor dimensions and storing results in an array (array size is 150, 50 tensors and 3 dimensions for each tensor)
 #conditions which need to be met for each set of 3 tensor dimensions: no dimension can't be 0, and can't have a tensor with more than 900 elements (meaning dimension1*dimension2*dimension3 <= 900)
+#note try to make it so no dimension is 1 or 2 (gives slight issues later, esp 2nd and 3rd dimensions)
 dimensions = [0] * 150
 dimensions_onetensor = [0] * 3
 # x goes from 0 to 49
 for x in range(50):
     dimensions_onetensor[0] = random.randint(1,60)
-    dimensions_onetensor[1] = random.randint(1,60)
-    dimensions_onetensor[2] = random.randint(1,60)
+    dimensions_onetensor[1] = random.randint(3,60)
+    dimensions_onetensor[2] = random.randint(3,60)
 
     while((dimensions_onetensor[0]*dimensions_onetensor[1]*dimensions_onetensor[2])>901):
         dimensions_onetensor[0] = random.randint(1,60)
-        dimensions_onetensor[1] = random.randint(1,60)
-        dimensions_onetensor[2] = random.randint(1,60)
+        dimensions_onetensor[1] = random.randint(3,60)
+        dimensions_onetensor[2] = random.randint(3,60)
 
     #print(dimensions_onetensor[0])
     #print(dimensions_onetensor[1])
