@@ -1,3 +1,4 @@
+import sys
 import argparse
 import os
 import shutil
@@ -7,7 +8,10 @@ import numpy as np
 from pathlib import Path
 
 from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
-from sam.util import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
+# custom_path = '/nobackup/jadivara/sam'
+# sys.path.append(custom_path)
+# from sam.util import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
+SUITESPARSE_FORMATTED_PATH = '/nobackup/jadivara/sam/SUITESPARSE_FORMATTED'
 
 all_formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]
 formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense"]
@@ -32,7 +36,7 @@ def write_datastructure_tiles(args, tensor, out_path, tile_name):
 
 
 def write_datastructure_bench(args, tensor, out_path, tiles=None):
-    shifter = ScipyTensorShifter()
+    # shifter = ScipyTensorShifter()
 
     print("Writing " + args.name + " for test " + args.benchname + "...")
 

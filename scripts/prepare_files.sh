@@ -11,4 +11,4 @@ rm -rf $basedir/tiles/*
 
 ./scripts/tile_ext.sh $1 $2
 
-python scripts/generate_gold_matmul_tiled.py --yaml_name $2
+python3 scripts/generate_gold_matmul_tiled.py --yaml_name $2
