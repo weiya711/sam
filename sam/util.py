@@ -207,12 +207,13 @@ class ScipyTensorShifter:
 
 @dataclass
 class DoublyCompressedMatrix:
-    shape: (int)
-    seg0: [int]
-    crd0: [int]
-    seg1: [int]
-    crd1: [int]
-    data: [float]
+    # shape: (int)
+    shape = [int]
+    seg0 = [int]
+    crd0 = [int]
+    seg1 = [int]
+    crd1 = [int]
+    data = [float]
 
 
 # ScipyMatrixMarketTensorLoader loads tensors in the matrix market format

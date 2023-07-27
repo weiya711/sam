@@ -11,6 +11,12 @@ app_name = "mat_mattransmul"
 # for line in data_file_lines:
 #    data.append(line[:-1])
 
+if not os.path.exists("extensor_mtx"):
+   os.mkdir("extensor_mtx")
+
+if not os.path.exists("tiles_compiled"):
+   os.mkdir("tiles_compiled")
+
 for datum in data:
    mtx_file = glob.glob(f"/nobackup/owhsu/sparse-datasets/suitesparse/{datum}.mtx")[0]
    shutil.copy(mtx_file,f"extensor_mtx/{datum}.mtx")
