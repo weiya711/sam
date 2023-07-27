@@ -3,15 +3,16 @@
 #SBATCH -t 360
 
 BENCHMARKS=(
-  matmul_ikj
-  matmul_ijk
-  matmul_kij
-  mat_elemmul
-  mat_elemadd
-  mat_elemadd3
-  mat_residual
-  mat_mattransmul
-  mat_identity
+	mat_vecmul
+#   matmul_ikj
+#   matmul_ijk
+#   matmul_kij
+#   mat_elemmul
+#   mat_elemadd
+#   mat_elemadd3
+#   mat_residual
+#   mat_mattransmul
+#   mat_identity
 )
 
 # This is a list of benchmarks that have "other" tensors that are generated
@@ -40,3 +41,15 @@ for b in ${!BENCHMARKS[@]}; do
 	
 	done <$textfile
 done
+# echo "FORMATTING CORRECTLY!"
+# source_directory="/nobackup/jadivara/sam/SUITESPARSE_FORMATTED/b1_ss/mat_vecmul"
+# cd "$sourcedirectory"
+# pwd
+# mv tensor_B_mode_0_crd tensor_B_mode_1_crd1
+# mv "tensor_B_mode_0_seg" "tensor_B_mode_1_seg1"
+
+# mv "tensor_B_mode_1_crd" "tensor_B_mode_0_crd"
+# mv "tensor_B_mode_1_seg" "tensor_B_mode_0_seg"
+
+# mv "tensor_B_mode_1_crd1" "tensor_B_mode_1_crd"
+# mv "tensor_B_mode_1_seg1" "tensor_B_mode_1_seg"
