@@ -57,16 +57,16 @@ guard-%:
 
 # ---- Run SAM python simulator stuff ----
 csv: 
-	scripts/pytest_suitesparse_with_benchmarks.sh
+	scripts/run_sam_sim/pytest_suitesparse_with_benchmarks.sh
 run-final: submodules
-	./scripts/run_suitesparse_final.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
+	./scripts/run_sam_sim/run_suitesparse_final.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
 
 run-gen: submodules
-	./scripts/run_suitesparse_generated.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
+	./scripts/run_sam_sim/run_suitesparse_generated.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
 
 tests: sam 
 	mkdir -p sam/sim/test/apps
-	python scripts/test_generating_code.py
+	python scripts/gen_sam_apps/test_generating_code.py
 
 # ---- Build taco and make sam graphs ----
 .PHONY: sam
@@ -109,10 +109,10 @@ endif
 # ---- Setup proper environment stuff ----
 suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
-	set -e && ./scripts/generate_suitesparse_formats.sh
+	set -e && ./scripts/formatting/generate_suitesparse_formats.sh
 
 frostt-formats: taco/build guard-FROSTT_FORMATTED_PATH guard-FROSTT_PATH
-	./scripts/generate_frostt_formats.sh
+	./scripts/formatting/generate_frostt_formats.sh
 
 .PHONY: pydepends
 pydepends:
