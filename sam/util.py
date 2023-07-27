@@ -143,21 +143,22 @@ class ScipySparseTensorLoader:
 
 # PydataSparseTensorLoader loads a sparse tensor from a file into
 # a pydata.sparse tensor.
-# class PydataSparseTensorLoader:
-#     def __init__(self):
-#         self.loader = TnsFileLoader()
-#
-#     def load(self, path):
-#         dims, coords, values = self.loader.load(path)
-#         return sparse.COO(coords, values, tuple(dims))
-#
-# # PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
-# class PydataSparseTensorDumper:
-#     def __init__(self):
-#         self.dumper = TnsFileDumper()
-#
-#     def dump(self, tensor, path):
-#         self.dumper.dump_dict_to_file(tensor.shape, sparse.DOK(tensor).data, path)
+class PydataSparseTensorLoader:
+    def __init__(self):
+        self.loader = TnsFileLoader()
+
+    def load(self, path):
+        dims, coords, values = self.loader.load(path)
+        return sparse.COO(coords, values, tuple(dims))
+
+# PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
+class PydataSparseTensorDumper:
+    def __init__(self):
+        self.dumper = TnsFileDumper()
+
+    def dump(self, tensor, path):
+        assert isinstance(tensor, sparse.DOK), "The tensor needs to be a pydata/sparse DOK format"
+        self.dumper.dump_dict_to_file(tensor.shape, tensor.data, path)
 #
 #
 #

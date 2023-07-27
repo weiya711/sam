@@ -25,7 +25,7 @@ for b in ${!BENCHMARKS[@]}; do
 	rm -rf $basedir/tiles/*
 
 	echo "Tiling mtx file"
-	python3 $basedir/sam/sim/src/tiling/tile.py --extensor --input_path $ext_path --cotile $bench --multilevel --hw_config $basedir/sam/sim/src/tiling/$2 
+	python3 $basedir/sam/sim/src/tiling/tile.py --tensor_type dataset --input_path $ext_path --cotile $bench --multilevel --hw_config $basedir/sam/sim/src/tiling/$2 
 
 	echo "Generating input format files for $ext_path..."
 	python3 $basedir/scripts/datastructure_suitesparse.py -n temp -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
