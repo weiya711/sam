@@ -13,11 +13,12 @@ app_name = "mat_mattransmul"
 # for line in data_file_lines:
 #    data.append(line[:-1])
 
-if not os.path.exists("extensor_mtx"):
-   os.mkdir("extensor_mtx")
-
-if not os.path.exists("tiles_compiled"):
-   os.mkdir("tiles_compiled")
+os.environ["SUITESPARSE_PATH"] = "/nobackup/owhsu/sparse-datasets/suitesparse/"
+os.environ["FROSTT_PATH"] = "/nobackup/owhsu/sparse-datasets/frostt/"
+os.environ["SUITESPARSE_FORMATTED_PATH"] = "/home/avb03/sam/SUITESPARSE_FORMATTED"
+os.environ["FROSTT_FORMATTED_TACO_PATH"] = "/home/avb03/sam/FROST_FORMATTED_TACO"
+os.environ["FROSTT_FORMATTED_PATH"] = "/home/avb03/sam/FROST_FORMATTED"
+os.environ["TACO_TENSOR_PATH"] = "/home/avb03/sam/TACO_TENSOR"
 
 for datum in data:
    mtx_file = glob.glob(f"{SUITESPARSE_PATH}/{datum}.mtx")[0]

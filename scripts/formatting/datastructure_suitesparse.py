@@ -219,7 +219,8 @@ tensor = None
 mtx_files = None
 if args.tiles:
     # get all mtx tile files from args.input_path
-    mtx_files = [os.path.join(args.input_path, fname) for fname in os.listdir(args.input_path) if fname.endswith(".mtx")]
+    # mtx_files = [os.path.join(args.input_path, fname) for fname in os.listdir(args.input_path) if fname.endswith(".mtx")]
+    mtx_files = [os.path.join(args.input_path, fname) for fname in os.listdir(args.input_path)]
 
     tensor = [SuiteSparseTensor(mtx_file) for mtx_file in mtx_files]
 elif args.input_path is not None:
