@@ -546,6 +546,20 @@ class InputCacheTensor:
             return self.tensor
 
 
+# FrosttTensor represents a tensor in the FROSTT dataset.
+class FrosttTensor:
+    def __init__(self, path):
+        self.path = path
+        self.__name__ = self.__str__()
+
+    def __str__(self):
+        f = os.path.split(self.path)[1]
+        return f.replace(".tns", "")
+
+    def load(self):
+        return PydataSparseTensorLoader().load(self.path)
+
+
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
 # into pydata.sparse matrices.
 # class PydataMatrixMarketTensorLoader:

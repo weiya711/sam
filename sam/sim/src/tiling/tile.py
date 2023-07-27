@@ -12,8 +12,8 @@ import scipy.sparse
 import sparse
 import yaml
 
-from sam.util import SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter, PydataSparseTensorDumper, \
-    SUITESPARSE_PATH, FROSTT_PATH
+from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter, \
+    FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor
 from sam.sim.src.tiling.process_expr import parse_all
 
 # FIXME: This should not be here... Set your SAM_HOME directory
@@ -387,6 +387,7 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path, hi
 
 
 inputCache = InputCacheSuiteSparse()
+inputCacheTensor = InputCacheTensor()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='script that tiles tensors')
@@ -445,7 +446,7 @@ if __name__ == "__main__":
 
         # FIXME: This is broken
         frostt_tensor = FrosttTensor(tensor_path)
-        tensor = inputCache.load(frostt_tensor, False)
+        tensor = inputCacheTensor.load(frostt_tensor, False)
 
     else:
         raise ValueError("This choice of 'tensor_type' is unreachable")
