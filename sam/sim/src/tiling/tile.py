@@ -1,13 +1,11 @@
-import numpy as np
-import scipy.sparse
-import os
 import argparse
 import ast
-import yaml
 import copy
+import os
 import pickle
 import random
 import sys
+<<<<<<< HEAD
 
 from itertools import compress
 from pathlib import Path
@@ -17,22 +15,35 @@ sys.path.append(custom_path)
 
 from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 
+=======
+from pathlib import Path
+
+import numpy as np
+import scipy.sparse
+import sparse
+import yaml
+
+from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter, \
+    FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor
+from sam.sim.src.tiling.process_expr import parse_all
+
+# FIXME: This should not be here... Set your SAM_HOME directory
+>>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
 custom_path = '/home/avb03/sam'
 sys.path.append(custom_path)
 
-from sam.util import SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
-from sam.sim.src.tiling.process_expr import parse_all, update_dict
-
-SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)", 
+SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)",
             "matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)",
             "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_mattransmul": "X(i,j)=B(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)"}
 
+
 def print_dict(dd):
     for k, v in dd.items():
         print(k, ":", v)
+
 
 def print_ast(node):
     for child in ast.iter_child_nodes(node):
@@ -92,6 +103,72 @@ def parse_sam_input(string):
     ivars = get_ivars(tensors, str_arr[0])
     ivars = [ivars[tensor] for tensor in tensors]
     return tensors, permutations, ivars
+
+
+# Outputs Pydata/sparse tensor tiles, given a pydata/sparse tensor (DOK or COO)
+# ASSUME: tensor is a scipy.sparse.coo_matrix
+# TODO: new_ivar_order right now is assumed to be one fixed order
+#       In the future, will have to take into acocunt all reorderings
+def tile_tensor(tensor, ivar_map, split_map, new_ivar_order=None):
+    human_readable = False
+
+    tiles = dict()
+    tile_sizes = dict()
+    order = len(tensor.shape)
+
+    tensor_coo = sparse.COO(tensor)
+    tensor_points = sparse.DOK.from_coo(tensor_coo)
+
+    print("ivar_map: ", ivar_map)
+    print("split_map: ", split_map)
+    print("order = ", order)
+
+    new_shape = []
+    for lvl in range(order):
+        ivar = ivar_map[lvl]
+        sf = split_map[ivar]
+        new_shape.append(sf)
+
+    for crds, val in tensor_points.data.items():
+        point = list(crds)
+
+        new_point = []
+        tile_id = []
+        for lvl in range(order):
+            ivar = ivar_map[lvl]
+            sf = split_map[ivar]
+
+            new_point.append(point[lvl] % sf)
+            tile_id.append(int(point[lvl] / sf))
+
+        # Add in value to the new_point as well
+        new_point.append(val)
+        tile_id = tuple(tile_id)
+
+        if tile_id in tiles:
+            tiles[tile_id].append(new_point)
+        else:
+            tiles[tile_id] = [new_point]
+
+    # sort the new coo lists
+    for key, val in tiles.items():
+        if human_readable:
+            dok = sorted(val)
+        else:
+            dok = sparse.DOK(tuple(new_shape))
+            for point in val:
+                dok[tuple(point[0:-1])] = point[-1]
+
+        tiles[key] = dok
+
+    for tile_id, tile_dok in tiles.items():
+        tile = tile_dok.to_coo()
+        # FIXME: This size number isn't correct for tensor tiles
+        nonempty_rows = tile.nnz
+        nonempty_row_ind = np.where(nonempty_rows > 0)[0]
+        tile_sizes[tile_id] = tile.nnz * 2 + 2 * len(nonempty_row_ind) + 3
+
+    return tiles, tile_sizes
 
 
 # Outputs COO tiles, given a COO tensor
@@ -226,7 +303,7 @@ def tile_coo_tensor_named(tensor_name, tensor, ivar_map, split_map, new_ivar_ord
 # permutation_strs: list of permutation_strs [ss01, ss10] following tensor_names (from SAM)
 # ivar_strs: list of ivar_strs ["ik", "kj"] following tensor_names (from SAM)
 # split_map: dictionary of split factors (from hardware)
-def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map):
+def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, higher_order=False):
     tiled_tensors = dict()
     tiled_tensor_sizes = dict()
 
@@ -242,13 +319,21 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map):
         for dim in range(order):
             print("tensor format: ", tensor_format)
             print("dim is ", dim)
-            print("tensor_format[dim:dim+1] is ", tensor_format[dim:dim+1])
+            print("tensor_format[dim:dim+1] is ", tensor_format[dim:dim + 1])
             lvl_permutation = tensor_format[dim:dim + 1][0]
             ivar = ivar_strs[i][dim]
             ivar_map[lvl_permutation] = ivar
             print("ivar_map is ", ivar_map)
 
+<<<<<<< HEAD
         tiles, tile_sizes = tile_coo_tensor_named(tensor_name, tensor, ivar_map, split_map)
+=======
+        if higher_order:
+            tiles, tile_sizes = tile_tensor(tensor, ivar_map, split_map)
+        else:
+            tiles, tile_sizes = tile_coo(tensor, ivar_map, split_map)
+
+>>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
         tiled_tensors[tensor_name] = tiles
         tiled_tensor_sizes[tensor_name] = tile_sizes
 
@@ -284,9 +369,15 @@ def get_other_tensors(app_str, tensor):
         pass
     elif "mat_mattransmul" in app_str:
         print("Writing other tensors...")
+<<<<<<< HEAD
         rows, cols = tensor.shape # i,j
         tensor_c = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
         tensor_d = scipy.sparse.random(rows, 1, data_rvs=np.ones).toarray().flatten()
+=======
+        rows, cols = tensor.shape  # i,j
+        tensor_c = scipy.sparse.random(cols, 1).toarray().flatten()
+        tensor_d = scipy.sparse.random(rows, 1).toarray().flatten()
+>>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
 
         # # import pdb; pdb.set_trace()
 
@@ -296,7 +387,7 @@ def get_other_tensors(app_str, tensor):
         tensors.append(tensor_d)
 
     elif "mat_residual" in app_str:
-        pass    
+        pass
     elif "mat_vecmul" in app_str:
         pass
     else:
@@ -307,14 +398,19 @@ def get_other_tensors(app_str, tensor):
     return tensors
 
 
-def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
+def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path, higher_order=False):
     tensors = get_other_tensors(app_str, tensors[0])
 
     names, format_permutations, ivars = parse_sam_input(args.cotile)
 
+<<<<<<< HEAD
     print("cotile_multilevel_coo tensors: ", tensors)
 
     # import pdb; pdb.set_trace();
+=======
+    import pdb
+    pdb.set_trace()
+>>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
     sizes_dict = {}
     for i, name in enumerate(names):
         tensor = tensors[i]
@@ -352,8 +448,13 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
                     # First iteration of tiling
                     print("tensor shapes: ", tensors[0].shape, " ", tensors[1].shape, " ", tensors[2].shape)
                     print("format_permutations: ", format_permutations)
+<<<<<<< HEAD
                     cotiled, cotiled_sizes = cotile_coo(names, tensors, format_permutations, ivars, split_map)
                     print("cotiled is ", cotiled)
+=======
+                    cotiled, cotiled_sizes = cotile_coo(names, tensors, format_permutations, ivars, split_map,
+                                                        higher_order)
+>>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
                 else:
                     # recursively tile the blocks
                     new_cotiled = {}
@@ -363,9 +464,13 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
                         new_cotiled[name] = {}
                         new_cotiled_sizes[name] = {}
                         for tile_id, tile in cotiled[name].items():
-                            new_cotiled_temp, new_cotiled_sizes_temp = cotile_coo(name, [tile.tocoo()],
+                            if higher_order:
+                                tile_in_coo = tile.to_coo()
+                            else:
+                                tile_in_coo = tile.tocoo()
+                            new_cotiled_temp, new_cotiled_sizes_temp = cotile_coo(name, [tile_in_coo],
                                                                                   [format_permutations[i]], [ivars[i]],
-                                                                                  split_map)
+                                                                                  split_map, higher_order)
 
                             for kk, vv in copy.deepcopy(new_cotiled_temp)[name].items():
                                 new_tile_id = tuple(list(tile_id) + list(kk))
@@ -387,8 +492,10 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path):
 
 
 inputCache = InputCacheSuiteSparse()
+inputCacheTensor = InputCacheTensor()
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description='Tile matrices')
     parser.add_argument("--input_tensor", type=str, default=None)
     parser.add_argument("--gen_tensor", action="store_true")
@@ -398,22 +505,68 @@ if __name__ == "__main__":
     parser.add_argument("--multilevel", action="store_true")
     parser.add_argument("--input_path", type=str, default=None)
     parser.add_argument("--extensor", action="store_true")
+=======
+    parser = argparse.ArgumentParser(description='script that tiles tensors')
+    parser.add_argument("--tensor_type", choices=['ex', 'gen', 'file', 'ss', 'frostt'], help='The \
+        tiles, tile_sizes = tile_coo(tensor, ivar_map, split_map) \
+        type of tensor to tile: extensor(ex), generated (gen), \
+        SuiteSparse (ss), FROSTT (frostt), or input file (file)')
+    parser.add_argument("--higher_order", action="store_true", help="If \
+    true then we want to process a higher-order tensor. With higher-order set to true, if \
+    'tensor_type' is: \
+    \n 'gen' then a 3-tensor is generated instead of matrix. \
+    \n 'file' then a .tns file is read instead of a .mtx file. \
+    \n 'ss' then other matrices used with SuiteSparse are .tns instead of .mtx files. \
+    \n 'frostt' should always have 'higher_order' set as true.")
+
+    parser.add_argument("--input_tensor", type=str, default=None,
+                        help="Input tensor NAME if tensor_type is set to 'file'. \
+            This is for use with SuiteSparse or FROSTT")
+    parser.add_argument("--input_path", type=str, default=None, help="Input tensor path")
+    parser.add_argument("--output_dir_path", type=str, default="./tiles",
+                        help='Output path, directory where tiles get written to')
+    parser.add_argument("--hw_config", type=str, default=None,
+                        help='Path to the hardware config yaml')
+
+    parser.add_argument("--cotile", type=str, default=None, help='If \
+            this is true cotile multiple tensors, else tile one tensor only')
+    parser.add_argument("--multilevel", action="store_true", help='If \
+            multilevel is true there will exist more than one level of tiles, \
+            else only tile once')
+    parser.add_argument("--seed", type=int, default=0, help="Random seed")
+>>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
 
     args = parser.parse_args()
 
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+
     tensor = None
     cwd = os.getcwd()
-    if args.gen_tensor:
-        tensor = scipy.sparse.random(16, 16)
-    elif args.extensor:
+    if args.tensor_type == "gen":
+        if args.higher_order:
+            tensor = sparse.COO(sparse.random((16, 16, 16)))
+        else:
+            tensor = scipy.sparse.random(16, 16)
+    elif args.tensor_type == "ex":
         tensor = scipy.io.mmread(args.input_path)
-    else:
+    elif args.tensor_type == "ss":
         assert args.input_tensor is not None
-        SS_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(cwd, 'suitesparse'))
-        # print("PATH:", SS_PATH)
-        tensor_path = os.path.join(SS_PATH, args.input_tensor + ".mtx")
+        tensor_path = os.path.join(SUITESPARSE_PATH, args.input_tensor + ".mtx")
         ss_tensor = SuiteSparseTensor(tensor_path)
         tensor = inputCache.load(ss_tensor, False)
+    elif args.tensor_type == "frostt":
+        assert args.input_tensor is not None
+        assert args.higher_order
+
+        tensor_path = os.path.join(FROSTT_PATH, args.input_tensor + ".tns")
+
+        # FIXME: This is broken
+        frostt_tensor = FrosttTensor(tensor_path)
+        tensor = inputCacheTensor.load(frostt_tensor, False)
+
+    else:
+        raise ValueError("This choice of 'tensor_type' is unreachable")
 
     split_map = {"i": 16, "j": 16, "k": 16}
 
@@ -433,12 +586,15 @@ if __name__ == "__main__":
         if args.multilevel:
             assert args.cotile is not None
             cotiled_tensors = cotile_multilevel_coo(args.cotile, args.hw_config, [tensor],
-                                                    os.path.join(args.output_dir_path, args.cotile))
+                                                    os.path.join(args.output_dir_path,
+                                                                 args.cotile),
+                                                    args.higher_order)
         elif args.cotile is not None:
             tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
             names, format_permutations, ivars = parse_sam_input(args.cotile)
 
-            cotiled_tensors = cotile_coo(names, [tensor, tensor2], format_permutations, ivars, split_map)
+            cotiled_tensors = cotile_coo(names, [tensor, tensor2],
+                                         format_permutations, ivars, split_map, args.higher_order)
             # print(cotiled_tensors)
 
         names = cotiled_tensors.keys()
@@ -447,9 +603,15 @@ if __name__ == "__main__":
         for name in names:
             for tile_id, tile in cotiled_tensors[name].items():
                 [str(item) for item in tile_id]
-                filename = "tensor_" + name + "_tile_" + "_".join([str(item) for item in tile_id]) + ".mtx"
+                filename = "tensor_" + name + "_tile_" + "_".join([str(item) for item in tile_id])
+                filename += ".tns" if args.higher_order else ".mtx"
                 mtx_path_name = os.path.join(output_mtx_name, filename)
                 print(tile)
-                print(mtx_path_name, cwd)
-                scipy.io.mmwrite(mtx_path_name, tile)
-                print(os.path.exists(mtx_path_name))
+                print("Output path:", mtx_path_name)
+
+                if args.higher_order:
+                    tns_dumper = PydataSparseTensorDumper()
+                    print(tile.shape)
+                    tns_dumper.dump(tile, mtx_path_name)
+                else:
+                    scipy.io.mmwrite(mtx_path_name, tile)
