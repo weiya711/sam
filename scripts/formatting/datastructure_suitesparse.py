@@ -128,7 +128,8 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
 
     elif "mat_mattransmul" in args.benchname:
         formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
-        if not args.no_gen_other:
+        # if not args.no_gen_other:
+        if False:
             tensorname = 'd'
             vec = scipy.sparse.random(shape[0], 1, density=args.density, data_rvs=np.ones)
             vec = vec.toarray().flatten()
@@ -217,7 +218,8 @@ tensor = None
 mtx_files = None
 if args.tiles:
     # get all mtx tile files from args.input_path
-    mtx_files = [os.path.join(args.input_path, fname) for fname in os.listdir(args.input_path) if fname.endswith(".mtx")]
+    # mtx_files = [os.path.join(args.input_path, fname) for fname in os.listdir(args.input_path) if fname.endswith(".mtx")]
+    mtx_files = [os.path.join(args.input_path, fname) for fname in os.listdir(args.input_path)]
 
     tensor = [SuiteSparseTensor(mtx_file) for mtx_file in mtx_files]
 elif args.input_path is not None:

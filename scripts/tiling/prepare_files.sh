@@ -12,4 +12,4 @@ rm -rf $basedir/tiles/*
 
 ./scripts/tiling/tile_ext.sh $1 memory_config_extensor_17M_llb.yaml
 
-python scripts/tiling/generate_gold_matmul_tiled.py --yaml_name memory_config_extensor_17M_llb.yaml
+python3 scripts/tiling/generate_gold_matmul_tiled.py --yaml_name memory_config_extensor_17M_llb.yaml

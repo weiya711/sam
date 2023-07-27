@@ -1,3 +1,4 @@
+import sys
 import scipy.sparse
 import scipy.io
 import os
@@ -10,9 +11,10 @@ import numpy as np
 from pathlib import Path
 from dataclasses import dataclass
 
-#from sam.utils import round_sparse, TnsFileLoader, HOSTNAME
-#from sam.util import round_sparse, TnsFileLoader, HOSTNAME
-
+# from sam.utils import round_sparse, TnsFileLoader, HOSTNAME
+custom_path = "nobackup/jadivara/sam"
+sys.path.append(custom_path)
+from sam.util import round_sparse, TnsFileLoader, HOSTNAME
 
 # TnsFileDumper dumps a dictionary of coordinates to values
 # into a coordinate list tensor file.
@@ -103,12 +105,12 @@ class ScipySparseTensorLoader:
 
 @dataclass
 class DoublyCompressedMatrix:
-    shape : (int)
-    seg0 : [int]
-    crd0 : [int]
-    seg1 : [int]
-    crd1 : [int]
-    data : [float]
+    shape: (int)
+    seg0: [int]
+    crd0: [int]
+    seg1: [int]
+    crd1: [int]
+    data: [float]
 
 
 # ScipyMatrixMarketTensorLoader loads tensors in the matrix market format

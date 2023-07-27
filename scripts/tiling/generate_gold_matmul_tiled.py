@@ -1,3 +1,4 @@
+import sys
 import scipy
 import scipy.sparse
 import os
@@ -8,13 +9,19 @@ import math
 import pickle
 import argparse
 
-from pathlib import Path
-from scripts.util.util import round_sparse
+custom_path = "nobackup/jadivara/sam"
+sys.path.append(custom_path)
 
+from pathlib import Path
+from sam.util import round_sparse
+# from scripts.util.util import round_sparse
+
+
+app_name = "mat_mattransmul"
 
 def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01"):
     # CSR
-    formatted_dir = "./tiles/matmul_ikj/mtx"
+    formatted_dir = f"./tiles/{app_name}/mtx"
     B_dir = "tensor_B_tile_"
     for a in tile_crd_b:
         B_dir += str(a) + "_"
@@ -58,6 +65,7 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
             itr += 1
         C_scipy = C_scipy.tocsc()
         gold_nd = (B_scipy @ C_scipy)
+        # gold_nd = B_scipy.dot(C_scipy)
         gold_out = gold_nd.tocoo()
         assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[2]
         scipy.io.mmwrite(
@@ -69,25 +77,26 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate tiled output gold")
     parser.add_argument("--yaml_name", type=str, default="memory_config_real.yaml")
     args = parser.parse_args()
-    outdir = "./tiles/matmul_ikj/output/"
+    outdir = f"./tiles/{app_name}/output/"
     outpath = Path(outdir)
-    outpath.mkdir(parents=True, exist_ok=True)
+    outpath.mkdir(parents=True)
 
     # generate_gold_matmul_tiled([0, 1, 2, 9], [1, 0, 9, 0], outdir)
 
     # generate_gold_matmul_tiled([0, 1, 0, 7], [1, 0, 7, 0], outdir)
     # quit()    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
 
-    with open("./tiles/matmul_ikj/tensor_sizes", "rb") as ff:
+    with open(f"./tiles/{app_name}/tensor_sizes", "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
 
     with open("./sam/sim/src/tiling/" + args.yaml_name, "r") as stream:
         loop_config = yaml.safe_load(stream)
 
+    print("sizes_dict_level_full", sizes_dict_level_full)
     struct = {
         "i00": 1 + int(sizes_dict_level_full["B"][0]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
-        "k00": 1 + int(sizes_dict_level_full["B"][1]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
-        "j00": 1 + int(sizes_dict_level_full["C"][1]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
+        "k00": 1 + int(sizes_dict_level_full["c"][0]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
+        "j00": 1 + int(sizes_dict_level_full["d"][0]) // (loop_config["Glb_tile_size"] * loop_config["Mem_tile_size"]),
         "i0": loop_config["Glb_tile_size"], "k0": loop_config["Glb_tile_size"], "j0": loop_config["Glb_tile_size"]}
     print(struct)
     # quit()
