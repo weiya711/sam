@@ -8,6 +8,9 @@ __pycache__/
 *.txt
 *.out
 
+# Generated Python Package files
+*.egg-info/
+
 # Files for MacOS and IDEs
 .DS_store
 .idea/
@@ -38,13 +41,14 @@ compiler/benchmark/
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
-*.gv
-
+# Tensor files
 *.mtx
 *.tns
 
-# Temporary matrices
+# Temporary or generated tensor directories 
 tmp_mat*/
+tiles/
+synthetic/
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/
@@ -52,5 +56,3 @@ tmp_mat*/
 # Generated formatted tensor files
 tensor_*_mode_*
 
-# Tensor files
-tiles/

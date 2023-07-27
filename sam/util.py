@@ -1,24 +1,20 @@
-import scipy.sparse
-import scipy.io
-import os
 import glob
-import numpy
 import itertools
-import shutil
-import numpy as np
 import math
-import sparse 
-
-from pathlib import Path
-from dataclasses import dataclass
-
 import os
-import math
+import shutil
+from dataclasses import dataclass
+from pathlib import Path
+
 import numpy
+import numpy as np
+import scipy.io
+import scipy.sparse
+import sparse
 
 # All environment variables for SAM should live here or in make file
 cwd = os.getcwd()
-SAM_HOME = os.getenv('HOSTNAME', default=cwd)
+SAM_HOME = os.getenv('SAM_HOME', default=cwd)
 HOSTNAME = os.getenv('HOSTNAME', default="local")
 SUITESPARSE_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(SAM_HOME, "data", "suitesparse"))
 SUITESPARSE_FORMATTED_PATH = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(SAM_HOME, "data",
@@ -151,6 +147,7 @@ class PydataSparseTensorLoader:
         dims, coords, values = self.loader.load(path)
         return sparse.COO(coords, values, tuple(dims))
 
+
 # PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
 class PydataSparseTensorDumper:
     def __init__(self):
@@ -159,6 +156,8 @@ class PydataSparseTensorDumper:
     def dump(self, tensor, path):
         assert isinstance(tensor, sparse.DOK), "The tensor needs to be a pydata/sparse DOK format"
         self.dumper.dump_dict_to_file(tensor.shape, tensor.data, path)
+
+
 #
 #
 #
