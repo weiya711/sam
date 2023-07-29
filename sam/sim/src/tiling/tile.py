@@ -504,8 +504,10 @@ if __name__ == "__main__":
                 print("Output path:", mtx_path_name)
 
                 if args.higher_order:
-                    tns_dumper = PydataSparseTensorDumper()
+                    # tns_dumper = PydataSparseTensorDumper()
                     print(tile.shape)
-                    tns_dumper.dump(tile, mtx_path_name)
+                    # tns_dumper.dump(tile, mtx_path_name)
+                    # print(np.array(tile.todense()).reshape(1,-1))
+                    scipy.io.mmwrite(mtx_path_name, np.array(tile.todense()).reshape(1,-1))
                 else:
                     scipy.io.mmwrite(mtx_path_name, tile)

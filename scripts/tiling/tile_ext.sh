@@ -31,5 +31,7 @@ for b in ${!BENCHMARKS[@]}; do
 	echo "Generating input format files for $tiles_path..."
 	python3 $basedir/scripts/formatting/datastructure_suitesparse.py -n temp -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
 
+	# $basedir/compiler/taco/build/bin/taco-test sam.pack_ss01
+	# python3 $basedir/scripts/formatting/datastructure_tns.py -n rel5 -f ss01 -b $bench -hw
 done
 
