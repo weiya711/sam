@@ -498,7 +498,8 @@ if __name__ == "__main__":
             for tile_id, tile in cotiled_tensors[name].items():
                 [str(item) for item in tile_id]
                 filename = "tensor_" + name + "_tile_" + "_".join([str(item) for item in tile_id])
-                filename += ".tns" if args.higher_order else ".mtx"
+                # filename += ".tns" if args.higher_order else ".mtx"
+                filename += ".mtx"
                 mtx_path_name = os.path.join(output_mtx_name, filename)
                 print(tile)
                 print("Output path:", mtx_path_name)
