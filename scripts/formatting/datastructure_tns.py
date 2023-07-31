@@ -9,7 +9,7 @@ import random
 from pathlib import Path
 from sam.util import parse_taco_format
 
-from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
+from sam.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 # custom_path = '/nobackup/jadivara/sam/sam/util.py'
 # sys.path.append(custom_path)
 # from  import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
@@ -187,12 +187,12 @@ if args.format is not None:
         outdir_orig_path = Path(outdir_orig_name)
         outdir_orig_path.mkdir(parents=True, exist_ok=True)
         taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
-        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
+        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
 
         # Shifted
-        if args.shift:
-            outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
-            outdir_shift_path = Path(outdir_shift_name)
-            outdir_shift_path.mkdir(parents=True, exist_ok=True)
-            taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
-            parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)
+        # if args.shift:
+        #     outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
+        #     outdir_shift_path = Path(outdir_shift_name)
+        #     outdir_shift_path.mkdir(parents=True, exist_ok=True)
+        #     taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
+        #     parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)

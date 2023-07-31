@@ -41,8 +41,8 @@ for i in ${!FORMATS[@]}; do
         
         	name=$line 
         	echo "Generating input format files for $name..."
-        	python $basedir/scripts/datastructure_tns.py -n $name -f $format -b $bench -hw
-        	python $basedir/scripts/datastructure_tns.py -n $name -f $format --other -b $bench -hw
+        	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format -b $bench -hw
+        	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw
         	# if [[ $OTHERBENCHES =~ "$bench" ]]; then
 			    #   echo "Generating format of 'other' tensor"
 			    #   python3 $basedir/scripts/datastructure_tns_old.py -n $line -f ss01 --other -ss -b $bench -hw
