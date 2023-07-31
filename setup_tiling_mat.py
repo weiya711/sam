@@ -19,12 +19,12 @@ os.makedirs("extensor_mtx", exist_ok=True)
 for datum in data:
    mtx_file = glob.glob(f"/nobackup/owhsu/sparse-datasets/suitesparse/{datum}.mtx")[0]
    shutil.copy(mtx_file,f"extensor_mtx/{datum}.mtx")
-
+   
    command = f"./scripts/suitesparse_memory_model_runner.sh {datum} {app_name}"
    os.system(command)
 
    copy_rename = f"cp -r tiles/{app_name} tiles_compiled/{app_name}_{datum}"
    os.system(copy_rename)
-
+   #Need to change docker name**
    docker_copy_command = f"docker cp tiles_compiled/{app_name}_{datum} jadivara_randommatrix:/aha/garnet/tiles_{app_name}_{datum}"
    os.system(docker_copy_command) 
