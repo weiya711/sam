@@ -33,7 +33,8 @@ if args.other:
     if taco_format_dirname is None:
         print("Please set the TACO_TENSOR_PATH environment variable")
         exit()
-    taco_format_dirname = os.path.join(taco_format_dirname, "other-formatted-taco")
+    taco_format_dirname = os.path.join(taco_format_dirname, "other")
+    # taco_format_dirname = os.path.join(taco_format_dirname, "other-formatted-taco")
 else:
     outdir_name = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
     taco_format_dirname = os.getenv('FROSTT_FORMATTED_TACO_PATH')
@@ -44,10 +45,13 @@ else:
 out_path = Path(outdir_name)
 out_path.mkdir(parents=True, exist_ok=True)
 
+print("args.name is ", args.name)
+
 if args.name is None:
     print("Please enter a tensor name")
     exit()
 
+print("\nhere after Please enter tensor name\n")
 
 if args.format is not None:
     assert args.format in formats
@@ -60,10 +64,15 @@ if args.format is not None:
         otherfileNames = [f for f in os.listdir(taco_format_dirname) if
                           os.path.isfile(os.path.join(taco_format_dirname, f)) and args.name in f]
 
+        print("have otherfileNames\n")
+        print(os.listdir(outdir_name))
+        print("length of otherfilenames is: ", len(otherfileNames), "\n")
+
         for otherfile in otherfileNames:
+            print("iterate thru otherfileNames\n")
             taco_format_orig_filename = os.path.join(taco_format_dirname, otherfile)
-            outdir_other_name = os.path.join(outdir_name, args.name, args.bench)
-            # outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
+            # outdir_other_name = os.path.join(outdir_name, args.name, args.bench)
+            outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
             outdir_orig_path = Path(outdir_other_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
@@ -89,15 +98,6 @@ if args.format is not None:
                     continue
                 else:
                     raise NotImplementedError
-            elif "tensor3_ttv" in args.bench:
-                if "mode2" in otherfile:
-                    name = 'c'
-                elif "mode1" in otherfile:
-                    continue
-                elif "mode0" in otherfile:
-                    continue
-                else:
-                    raise NotImplementedError
             else:
                 raise NotImplementedError
 
@@ -105,6 +105,7 @@ if args.format is not None:
             parse_taco_format(taco_format_orig_filename, outdir_other_name, name, args.format, hw_filename=args.hw)
 
     else:
+        print("in else statement\n")
         taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
         taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
 
@@ -112,6 +113,8 @@ if args.format is not None:
         outdir_orig_name = os.path.join(outdir_name, args.name, 'orig', args.format)
         outdir_orig_path = Path(outdir_orig_name)
         outdir_orig_path.mkdir(parents=True, exist_ok=True)
+
+        print("parse taco format\n")
 
         parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
 

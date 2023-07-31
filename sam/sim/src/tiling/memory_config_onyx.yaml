@@ -16,4 +16,4 @@ n_levels: 3
 level_names: ["Main", "Glb", "Mem"]
 Main_tile_size: None
 Glb_tile_size: 8 # 8 = (8x8) = 64 elements
-Mem_tile_size: 45 # Size of one dense dimension. 45 = (45*45) = 2025 
+Mem_tile_size: 30 #45 # Size of one dense dimension. 45 = (45*45) = 2025 

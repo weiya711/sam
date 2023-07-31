@@ -5,6 +5,7 @@ import scipy.sparse
 import numpy as np
 import sys
 import random
+import shutil
 
 from pathlib import Path
 from sam.util import parse_taco_format
@@ -55,6 +56,8 @@ else:
 out_path = Path(outdir_name)
 out_path.mkdir(parents=True, exist_ok=True)
 
+formatWriter = FormatWriter(args.cast)
+
 if args.name is None:
     print("Please enter a tensor name")
     exit()
@@ -63,8 +66,10 @@ if args.name is None:
 if args.format is not None:
     assert args.format in formats
     levels = args.format[:-3]
-    print("GOT HERE!")
-    print(args.other)
+
+    if os.path.exists('sam/FROST_FORMATTED/rand_tensor*'):
+        shutil.rmtree('sam/FROST_FORMATTED/rand_tensor*')
+    
     if args.bench != "tensor3_elemadd" and args.bench != "tensor3_innerprod":
         assert args.bench is not None
         #$FROSTT_FORMATTED_TACO_PATH
@@ -167,10 +172,10 @@ if args.format is not None:
             tensor_out_path = os.path.join(out_path, args.name, args.bench, args.format)
             formatWriter.writeout_separate_sparse_only(matrix, tensor_out_path, tensorname)
 
-            tensorname2 = 'D'
+            tensorname = 'D'
             matrix = scipy.sparse.random(dimension_j, dimension_l, density=args.density, data_rvs=np.ones).toarray()
-            formatWriter.writeout_separate_sparse_only(matrix, tensor_out_path, tensorname2)
-
+            tensor_out_path = os.path.join(out_path, args.name, args.bench, args.format)
+            formatWriter.writeout_separate_sparse_only(matrix, tensor_out_path, tensorname)
         else:
             raise NotImplementedError
 
@@ -190,9 +195,9 @@ if args.format is not None:
         parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
 
         # Shifted
-        # if args.shift:
-        #     outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
-        #     outdir_shift_path = Path(outdir_shift_name)
-        #     outdir_shift_path.mkdir(parents=True, exist_ok=True)
-        #     taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
-        #     parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)
+        if args.shift:
+            outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
+            outdir_shift_path = Path(outdir_shift_name)
+            outdir_shift_path.mkdir(parents=True, exist_ok=True)
+            taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
+            parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)

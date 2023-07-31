@@ -5,16 +5,17 @@
 # Command: ./scripts/formatting/generate_suitesparse_formats.sh <tensor_name.txt> 
 
 BENCHMARKS=(
-	# mat_vecmul
-#   matmul_ikj
-	matmul_ijk
-#   matmul_kij
-#   mat_elemmul
-#   mat_elemadd
-#   mat_elemadd3
-#   mat_residual
-#   mat_mattransmul
-#   mat_identity
+#  matmul_ikj
+#  matmul_ijk
+#  matmul_kij
+#  mat_elemmul
+#  mat_elemadd
+#  mat_elemadd3
+  mat_residual
+  mat_mattransmul
+  mat_vecmul
+#  mat_identity
+#  mat_sddmm
 )
 
 # This is a list of benchmarks that have "other" tensors that are generated

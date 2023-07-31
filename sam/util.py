@@ -534,7 +534,7 @@ class InputCacheTensor:
         self.lastName = None
         self.tensor = None
 
-    def load(self, tensor, suiteSparse, cast, format_str):
+    def load(self, tensor, cast):
         if self.lastName == str(tensor):
             return self.tensor
         else:

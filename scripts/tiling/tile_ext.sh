@@ -26,10 +26,13 @@ for b in ${!BENCHMARKS[@]}; do
 
 	echo "Tiling mtx file"
 	# python $basedir/sam/sim/src/tiling/tile.py --extensor --input_path $tiles_path --cotile $bench --multilevel --hw_config $basedir/sam/sim/src/tiling/$2 
-	# python3 ./sam/sim/src/tiling/tile.py --tensor_type ss --input_tensor rel5 --cotile mat_mattransmul --multilevel --hw_config ./sam/sim/src/tiling/memory_config_onyx.yaml --higher_order
-	python ./sam/sim/src/tiling/tile.py --tensor_type ss --input_tensor rel5 --cotile mat_mattransmul --multilevel --hw_config ./sam/sim/src/tiling/memory_config_onyx.yaml --higher_order
-	
+	python3 ./sam/sim/src/tiling/tile.py --tensor_type ss --input_tensor rel5 --cotile mat_mattransmul --multilevel --hw_config ./sam/sim/src/tiling/memory_config_onyx.yaml --higher_order
+
 	echo "Generating input format files for $tiles_path..."
 	python3 $basedir/scripts/formatting/datastructure_suitesparse.py -n temp -hw -b $bench --input $basedir/tiles/$bench/mtx/ --output_dir_path $basedir/tiles/$bench/formatted --tiles
+
+	# $basedir/compiler/taco/build/bin/taco-test sam.pack_ss01
+	# python3 $basedir/scripts/formatting/datastructure_tns.py -n rel5 -f ss01 -b $bench -hw
+done
 
 done
