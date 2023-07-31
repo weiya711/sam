@@ -1322,11 +1322,13 @@ def check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, 
 
     B_ref = torch.from_numpy(B_tens.get_matrix())
 
+    # print(B_ref)
+
     # gold_ref = torch.clamp(B_ref, min=0.0)
     print(B_ref.shape)
-    print(out_vals)
+    # print(out_vals)
     gold_ref_temp = B_ref.masked_fill(B_ref == 0, -1e9)
-    print(gold_ref_temp)
+    # print(gold_ref_temp)
     # gold_ref_temp = torch.nn.functional.softmax(gold_ref_temp, dim=3)
     gold_ref = torch.nn.functional.softmax(gold_ref_temp, dim=3)
 
@@ -1334,15 +1336,17 @@ def check_gold_tensor4_softmax(frosttname, debug_sim, cast, out_crds, out_segs, 
     # gold_ref = torch.sparse.softmax(B_ref.cuda(), dim=3)
     gold_ref = gold_ref.numpy()
 
-    pytest.set_trace()
+    # pytest.set_trace()
 
     print(gold_ref)
 
-    pytest.set_trace()
+    # pytest.set_trace()
 
-    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.1, format='CSF', dump_dir='test', tensor=gold_ref)
+    mat_g = MatrixGenerator("gold", shape=gold_ref.shape, sparsity=0.2, format='CSF', dump_dir='gold_test', tensor=gold_ref)
     mat_g.dump_outputs(format='CSF')
     gold_tup = convert_ndarr_point_tuple(gold_ref)
+
+    pytest.set_trace()
 
     if debug_sim:
         print("Out crds:", out_crds)
