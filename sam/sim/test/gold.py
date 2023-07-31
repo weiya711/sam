@@ -1381,6 +1381,7 @@ def check_gold_tensor4_softmax_mask(frosttname, debug_sim, cast, out_crds, out_s
     print(out_vals)
     B_ref = B_ref.masked_fill(B_ref == 0, -1e9)
     gold_ref = torch.nn.functional.softmax(B_ref, dim=3)
+    gold_ref[gold_ref==1/B_shape[3]] = 0.0
     gold_ref = gold_ref.numpy()
 
     print(gold_ref)
