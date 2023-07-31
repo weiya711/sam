@@ -5,9 +5,9 @@
 # Command: ./scripts/formatting/generate_suitesparse_formats.sh <tensor_name.txt> 
 
 BENCHMARKS=(
-	mat_vecmul
+	# mat_vecmul
 #   matmul_ikj
-#   matmul_ijk
+	matmul_ijk
 #   matmul_kij
 #   mat_elemmul
 #   mat_elemadd
