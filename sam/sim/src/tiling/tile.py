@@ -27,7 +27,8 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_mattransmul": "X(i,j)=C(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
-            "mat_vecmul_ij" : "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)"}
+            "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
+            "tensor3_ttv": "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"}
 
 
 def print_dict(dd):
@@ -229,7 +230,7 @@ def tile_coo(tensor, ivar_map, split_map, new_ivar_order=None, tensor_name=""):
 
 
 # tensor_names: list of tensor names [B,C,D] (from SAM)
-# tensors: list of scipy.sparse.coo_matrix following tensor_names (from SAM)
+# tensors: list of sparse COO tensors (either Scipy or Pydata/Sparse) following tensor_names (from SAM)
 # permutation_strs: list of permutation_strs [ss01, ss10] following tensor_names (from SAM)
 # ivar_strs: list of ivar_strs ["ik", "kj"] following tensor_names (from SAM)
 # split_map: dictionary of split factors (from hardware)
@@ -237,6 +238,7 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
     tiled_tensors = dict()
     tiled_tensor_sizes = dict()
 
+    print(tensor_names, tensors, permutation_strs, ivar_strs, split_map)
     for i, tensor in enumerate(tensors):
         tensor_name = tensor_names[i]
         tensor_format = permutation_strs[i]
@@ -245,6 +247,7 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
         print("order is ", order)
         for dim in range(order):
             print("tensor format: ", tensor_format)
+
             print("dim is ", dim)
             print("tensor_format[dim:dim+1] is ", tensor_format[dim:dim + 1])
             lvl_permutation = tensor_format[dim:dim + 1][0]
@@ -265,6 +268,7 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
 
 def get_other_tensors(app_str, tensor, other_nonempty=True):
     tensors = [tensor]
+
 
     if "matmul" in app_str:
         print("Writing shifted...")
@@ -312,13 +316,22 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
 
         if other_nonempty:
             tensor_c[0] = 1
-        
+
         tensors.append(tensor_c)
 
+    elif "tensor3_ttv" in app_str:
+        print("Writing other tensors...")
+        size_i, size_j, size_k = tensor.shape  # i,j,k
+        tensor_c = scipy.sparse.random(size_k, 1, data_rvs=np.ones).toarray().flatten()
+
+        if other_nonempty:
+            tensor_c[0] = 1
+
+        tensors.append(tensor_c)
     else:
-        tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
-        tensors.append(tensor2)
-        # raise NotImplementedError
+        # tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
+        # tensors.append(tensor2)
+        raise NotImplementedError
 
     return tensors
 
@@ -405,7 +418,8 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path, hi
             print(exc)
 
 
-inputCache = InputCacheSuiteSparse()
+inputCacheSuiteSparse = InputCacheSuiteSparse()
+inputCacheTensor = InputCacheTensor()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='script that tiles tensors')
@@ -446,6 +460,8 @@ if __name__ == "__main__":
 
     tensor = None
     cwd = os.getcwd()
+    inputCache = None
+
     if args.tensor_type == "gen":
         if args.higher_order:
             tensor = sparse.COO(sparse.random((16, 16, 16)))
@@ -455,6 +471,8 @@ if __name__ == "__main__":
         tensor = scipy.io.mmread(args.input_path)
     elif args.tensor_type == "ss":
         assert args.input_tensor is not None
+
+        inputCache = inputCacheSuiteSparse
         tensor_path = os.path.join(SUITESPARSE_PATH, args.input_tensor + ".mtx")
         ss_tensor = SuiteSparseTensor(tensor_path)
         tensor = inputCache.load(ss_tensor, False)
@@ -462,6 +480,7 @@ if __name__ == "__main__":
         assert args.input_tensor is not None
         assert args.higher_order
 
+        inputCache = inputCacheTensor
         tensor_path = os.path.join(FROSTT_PATH, args.input_tensor + ".tns")
 
         # FIXME: This is broken
@@ -512,12 +531,14 @@ if __name__ == "__main__":
                 print("Output path:", mtx_path_name)
 
                 if args.higher_order:
-                    # tns_dumper = PydataSparseTensorDumper()
-                    print(tile.shape)
-                    # print(tile)
-                    # tns_dumper.dump(tile, mtx_path_name)
-                    
-                    if len(tile.shape) == 1:  
+                    if args.tensor_type == "frostt":
+                        tns_dumper = PydataSparseTensorDumper()
+                        print(tile.shape)
+                        print(tile)
+                        tns_dumper.dump(tile, mtx_path_name)
+
+                    # FIXME: (owhsu) Why did avb03 add this in?
+                    elif len(tile.shape) == 1:
                         # print(np.array(tile.todense()).reshape(1,-1))
                         scipy.io.mmwrite(mtx_path_name, scipy.sparse.coo_matrix(tile.todense()))
                     else:
