@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import scipy.sparse
 import os
@@ -8,12 +9,12 @@ import copy
 import pickle
 import random
 
+# custom_path = '/home/avb03/sam'
+custom_path = "nobackup/jadivara/sam"
+sys.path.append(custom_path)
+
 from itertools import compress
 from pathlib import Path
-
-import sys
-custom_path = '/home/avb03/sam'
-sys.path.append(custom_path)
 
 from sam.util import SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 from sam.sim.src.tiling.process_expr import parse_all, update_dict
