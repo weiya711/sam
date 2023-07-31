@@ -157,13 +157,21 @@ taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Ten
     int dimension = original.getDimensions().at(mode);
     taco::Tensor<T> result(name, {dimension}, format);
 
+    int numElems = 0;
     for (int ii = 0; ii < dimension; ii++) {
         float rand_float = (float) rand() / (float) (RAND_MAX);
         if (rand_float < sparsity) {
             // (owhsu) Setting this number to 1 for now
             result.insert({ii}, T(1));
+	    numElems += 1;
         }
     }
+
+    // Always make sure there's at least one element so the 'other' tensor isn't empty
+    if (numElems == 0) {
+	result.insert({0}, T(1));
+    }
+
     result.pack();
     taco::write(constructOtherVecKey(datasetName, "vec_mode"+std::to_string(mode), sparsity), result);
 
@@ -188,15 +196,23 @@ taco::Tensor<T> genOtherMat(std::string name, std::string datasetName, taco::Ten
 
     taco::Tensor<T> result(name, dimensions, format);
 
+    int numElems = 0;
     for (int ii = 0; ii < dimensions[0]; ii++) {
         for (int jj = 0; jj < dimensions[1]; jj++) {
             float rand_float = (float) rand() / (float) (RAND_MAX);
             if (rand_float < sparsity) {
                 // (owhsu) Setting this number to 1 for now
                 result.insert({ii, jj}, T(1));
+		numElems += 1;
             }
         }
     }
+
+    // Always make sure there's at least one element so the 'other' tensor isn't empty
+    if (numElems == 0) {
+	result.insert({0, 0}, T(1));
+    }
+
     result.pack();
     taco::write(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode)+"_"+filestr, dimensions, sparsity), result);
 
