@@ -10,7 +10,7 @@ import shutil
 from pathlib import Path
 from sam.util import parse_taco_format
 
-from util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
+from scripts.util.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 # custom_path = '/nobackup/jadivara/sam/sam/util.py'
 # sys.path.append(custom_path)
 # from  import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
