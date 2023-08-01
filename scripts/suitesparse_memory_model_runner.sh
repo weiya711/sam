@@ -15,7 +15,8 @@ fname=$1
 
 appname=$2
 
-echo "Running for suitesparse $fname"
+# echo "Running for suitesparse $fname"
+echo "Running for frostt(tensor) $fname"
 
 export SAM_HOME=$basedir
 # export TILED_SUITESPARSE_FORMATTED_PATH=${SAM_HOME}/tiles/matmul_ijk/formatted
@@ -31,7 +32,8 @@ mkdir -p $path
 mkdir -p $basedir/tiles/
 rm -rf $basedir/tiles/*
 
-./scripts/tiling/prepare_files.sh $fname.mtx $yaml_fname 
+# ./scripts/tiling/prepare_files.sh $fname.mtx $yaml_fname 
+./scripts/tiling/prepare_files.sh $fname.tns $yaml_fname 
 
 cd $basedir/sam/sim
 # python3 -m pytest test/advanced-simulator/test_$bench.py --ssname $fname -s --check-gold --skip-empty --nbuffer --yaml_name=$yaml_fname  --benchmark-json=$path/mem_model_$fname.json 

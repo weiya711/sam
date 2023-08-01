@@ -29,6 +29,8 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_mattransmul": "X(i,j)=C(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
             "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
+            "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:2,1,0  -s=reorder(i,j,k)",
+            # "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:0  -s=reorder(i,j,k)",
             "tensor3_ttv": "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"}
 
 
@@ -329,6 +331,10 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
             tensor_c[0] = 1
 
         tensors.append(tensor_c)
+    elif "tensor3_elemadd" in app_str:
+        print("Writing shifted...")
+        shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
     else:
         # tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
         # tensors.append(tensor2)

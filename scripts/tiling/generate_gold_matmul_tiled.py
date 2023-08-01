@@ -17,7 +17,7 @@ from sam.util import round_sparse
 # from scripts.util.util import round_sparse
 
 
-app_name = "mat_mattransmul"
+app_name = "tensor3_elemadd"
 
 def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01"):
     # CSR
