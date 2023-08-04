@@ -8,7 +8,7 @@ import random
 import shutil
 
 from pathlib import Path
-from sam.util import parse_taco_format
+from scripts.util.util import parse_taco_format
 
 from sam.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 # custom_path = '/nobackup/jadivara/sam/sam/util.py'
@@ -34,8 +34,10 @@ parser.add_argument('-np', '--numpy', action='store_true', default=False, help='
 parser.add_argument('-b', '--bench', type=str, default=None, help='Name of benchmark')
 parser.add_argument('--density', type=int, default=0.25, help='If gen_other, used for density of "other" tensor')
 parser.add_argument('-cast', '--cast', action='store_true', default=False, help='Safe sparsity cast to int for values')
+parser.add_argument('--tiles', type=str, help="Set the input tile path if you are using this scripts with input tiles", default=None)
 
 args = parser.parse_args()
+
 if args.other:
     if args.suitesparse:
         outdir_name = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -46,6 +48,13 @@ if args.other:
         print("Please set the TACO_TENSOR_PATH environment variable")
         exit()
     taco_format_dirname = os.path.join(taco_format_dirname, "other-formatted-taco")
+# elif args.tiles is not None:
+#     # FIXME: Change this to be 'tns' for frostt tensors
+#     outdir_name = os.path.join(args.tiles, args.bench, "mtx") 
+#     taco_format_dirname = os.getenv('FROSTT_FORMATTED_TACO_PATH')
+#     if taco_format_dirname is None:
+#         print("Please set the FROSTT_FORMATTED_TACO_PATH environment variable")
+#         exit()
 else:
     outdir_name = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
     taco_format_dirname = os.getenv('FROSTT_FORMATTED_TACO_PATH')
@@ -58,6 +67,7 @@ out_path.mkdir(parents=True, exist_ok=True)
 
 formatWriter = FormatWriter(args.cast)
 
+# if args.tile:
 if args.name is None:
     print("Please enter a tensor name")
     exit()
