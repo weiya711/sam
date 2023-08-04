@@ -7,7 +7,9 @@ __pycache__/
 *.swo
 *.txt
 *.out
-download_suitesparse_partial.sh
+
+# Generated Python Package files
+*.egg-info/
 
 # Files for MacOS and IDEs
 .DS_store
@@ -27,37 +29,29 @@ cmake-build-*/
 *.csv
 *.json
 
+# Tensor files
+*.mtx
+*.tns
+
+# Generated formatted tensor files
+tensor_*_mode_*
+
 # Generated folders
 build/
 logs/
 results/
 results-cpu/
-suitesparse-bench*/
+suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
+
+# Temporary or generated tensor directories 
+tmp_mat*/
+tiles/
+synthetic/
 
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
-# Generated SAM graphs
-*.gv
-
-# Downloaded data
-*.mtx
-*.tns
-
-# Temporary matrices
-tmp_mat*/
-
-# Jupyter notebook checkpoints
-.ipynb_checkpoints/
-
-# Generated formatted tensor files
-tensor_*_mode_*
-
-# Tiling files
-tiles/
-
-# sam package info
-sam.egg-info/
-
+# Temporary scripts
+download_suitesparse_partial.sh
