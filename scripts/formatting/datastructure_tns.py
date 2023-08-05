@@ -83,7 +83,8 @@ if args.format is not None:
     if args.bench != "tensor3_elemadd" and args.bench != "tensor3_innerprod":
         assert args.bench is not None
         #$FROSTT_FORMATTED_TACO_PATH
-        taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO"
+        # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO"
+        taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH')
         outdir_other_name = os.path.join(outdir_name, args.name, args.bench)
         # outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
         outdir_orig_path = Path(outdir_other_name)
@@ -97,7 +98,8 @@ if args.format is not None:
             outdir_orig_path = Path(outdir_orig_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
-            taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+            # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+            taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
             #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
@@ -131,7 +133,8 @@ if args.format is not None:
             outdir_orig_name = os.path.join(outdir_name, args.name, args.bench, args.format)
             outdir_orig_path = Path(outdir_orig_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
-            taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+            # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+            taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
             #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
@@ -157,7 +160,8 @@ if args.format is not None:
             outdir_orig_name = os.path.join(outdir_name, args.name, args.bench, args.format)
             outdir_orig_path = Path(outdir_orig_name)
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
-            taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+            # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+            taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
             #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
@@ -201,7 +205,8 @@ if args.format is not None:
         outdir_orig_name = os.path.join(outdir_name, args.name, args.bench, args.format)
         outdir_orig_path = Path(outdir_orig_name)
         outdir_orig_path.mkdir(parents=True, exist_ok=True)
-        taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+        # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+        taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + "/" + args.name + "_" + levels + '.txt'
         parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
 
         # Shifted
@@ -209,5 +214,6 @@ if args.format is not None:
             outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
             outdir_shift_path = Path(outdir_shift_name)
             outdir_shift_path.mkdir(parents=True, exist_ok=True)
-            taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
+            # taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
+            taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)

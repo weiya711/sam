@@ -12,9 +12,9 @@ FORMATS=(
 
 BENCHMARKS=(
   # using all tensor apps except elemmul here**
-  # tensor3_elemadd
+  tensor3_elemadd
   # tensor3_innerprod
-  tensor3_ttv
+#   tensor3_ttv
   # tensor3_ttm
   # tensor3_mttkrp
   # tensor3_elemmul
@@ -34,7 +34,9 @@ for i in ${!FORMATS[@]}; do
 	bench=${BENCHMARKS[$b]}
     
 	bench_path=$basedir/tiles/$bench
-	tile_path=$bench_path/mtx
+	# tile_path=$bench_path/mtx
+	#NOTE: had to rename from mtx to tns here manually - should find what causes it to be mtx in first place/switch to tns
+	tile_path=$bench_path/tns
 	mkdir -p $bench_path/taco
 
 	for f in $tile_path/tensor_B_*; do

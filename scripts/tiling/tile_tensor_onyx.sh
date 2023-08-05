@@ -28,9 +28,10 @@ for b in ${!BENCHMARKS[@]}; do
 	rm -rf $basedir/tiles/$bench/*
 
 	while read line; do 
+		echo "i got here!"
 		# echo "Tiling mtx file"
 		echo "Tiling tns file"
 		python ./sam/sim/src/tiling/tile.py --tensor_type frostt --input_tensor $line --cotile $bench --multilevel --hw_config ./sam/sim/src/tiling/memory_config_onyx.yaml --higher_order
-	done
+	done <$1
 
 done

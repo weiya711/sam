@@ -163,29 +163,29 @@ class PydataSparseTensorDumper:
 #
 # # PydataTensorShifter shifts all elements in the last mode
 # # of the input pydata/sparse tensor by one.
-# class PydataTensorShifter:
-#     def __init__(self):
-#         pass
-#
-#     def shiftLastMode(self, tensor):
-#         coords = tensor.coords
-#         data = tensor.data
-#         resultCoords = []
-#         for j in range(len(tensor.shape)):
-#             resultCoords.append([0] * len(data))
-#         resultValues = [0] * len(data)
-#         for i in range(len(data)):
-#             for j in range(len(tensor.shape)):
-#                 resultCoords[j][i] = coords[j][i]
-#             # resultValues[i] = data[i]
-#             # TODO (rohany): Temporarily use a constant as the value.
-#             resultValues[i] = 2
-#             # For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
-#             # that have even last coordinates. This ensures that there is at least some overlap
-#             # between the original tensor and its shifted counter part.
-#             if len(tensor.shape) <= 2 or resultCoords[-1][i] % 2 == 0:
-#                 resultCoords[-1][i] = (resultCoords[-1][i] + 1) % tensor.shape[-1]
-#         return sparse.COO(resultCoords, resultValues, tensor.shape)
+class PydataTensorShifter:
+    def __init__(self):
+        pass
+
+    def shiftLastMode(self, tensor):
+        coords = tensor.coords
+        data = tensor.data
+        resultCoords = []
+        for j in range(len(tensor.shape)):
+            resultCoords.append([0] * len(data))
+        resultValues = [0] * len(data)
+        for i in range(len(data)):
+            for j in range(len(tensor.shape)):
+                resultCoords[j][i] = coords[j][i]
+            # resultValues[i] = data[i]
+            # TODO (rohany): Temporarily use a constant as the value.
+            resultValues[i] = 2
+            # For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
+            # that have even last coordinates. This ensures that there is at least some overlap
+            # between the original tensor and its shifted counter part.
+            if len(tensor.shape) <= 2 or resultCoords[-1][i] % 2 == 0:
+                resultCoords[-1][i] = (resultCoords[-1][i] + 1) % tensor.shape[-1]
+        return sparse.COO(resultCoords, resultValues, tensor.shape)
 
 # ScipyTensorShifter shifts all elements in the last mode
 # of the input scipy/sparse tensor by one.

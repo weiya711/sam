@@ -14,7 +14,7 @@ import sys
 
 from pathlib import Path
 
-from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter, \
+from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, PydataTensorShifter, ScipyTensorShifter, \
     FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor
 from sam.sim.src.tiling.process_expr import parse_all
 
@@ -333,7 +333,8 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         tensors.append(tensor_c)
     elif "tensor3_elemadd" in app_str:
         print("Writing shifted...")
-        shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        # shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        shifted = PydataTensorShifter().shiftLastMode(tensor)
         tensors.append(shifted)
     else:
         # tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
