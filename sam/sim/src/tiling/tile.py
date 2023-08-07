@@ -508,7 +508,7 @@ if __name__ == "__main__":
         print("TILES:")
         print_dict(tiles)
     else:
-        output_mtx_name = os.path.join(args.output_dir_path, args.cotile, "mtx")
+        output_mtx_name = os.path.join(args.output_dir_path, "mtx")
         output_mtx_path = Path(output_mtx_name)
         output_mtx_path.mkdir(parents=True, exist_ok=True)
         print(os.path.exists(output_mtx_path))
@@ -516,8 +516,7 @@ if __name__ == "__main__":
         if args.multilevel:
             assert args.cotile is not None
             cotiled_tensors = cotile_multilevel_coo(args.cotile, args.hw_config, [tensor],
-                                                    os.path.join(args.output_dir_path,
-                                                                 args.cotile),
+                                                    os.path.join(args.output_dir_path),
                                                     args.higher_order)
         elif args.cotile is not None:
             tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
