@@ -69,7 +69,10 @@ run_format(){
     echo "Tensor format: $TENSOR_FORMAT"
 
 	$basedir/compiler/taco/build/bin/taco-test sam.pack_$format
-	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $bench_path/formatted/
+
+    mkdir -p $basedir/$bench_path/formatted/$name
+
+	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $basedir/$bench_path/formatted/$name
        	echo "Done processing $name" 
 }
 
