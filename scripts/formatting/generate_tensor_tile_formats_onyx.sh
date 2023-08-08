@@ -94,7 +94,7 @@ for i in ${!FORMATS[@]}; do
 		mkdir -p $bench_path/taco
 
 
-	 	find $tile_path -name tensor_B_tile_*.tns -maxdepth 1 | parallel run_format {} $bench $format $bench_path $tile_path $format "sss" 
+	 	find $tile_path -name tensor_B_tile_*.tns -maxdepth 1 | parallel run_format {} $bench $format $bench_path $tile_path "sss" 
 		
 		find $tile_path -name tensor_*_tile_*.tns -not -name tensor_B_tile_*.tns -maxdepth 1 | parallel run_format {} $bench $format $bench_path $tile_path "$other_format" 
 
