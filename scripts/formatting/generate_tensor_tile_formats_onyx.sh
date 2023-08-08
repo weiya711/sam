@@ -70,10 +70,9 @@ run_format(){
 
 	$basedir/compiler/taco/build/bin/taco-test sam.pack_$format
 
-    mkdir -p $basedir/$bench_path/formatted/$name
-
-	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $basedir/$bench_path/formatted/$name
-       	echo "Done processing $name" 
+	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $bench_path/formatted/$name
+    
+    echo "Done processing $name" 
 }
 
 export -f run_format
@@ -96,6 +95,7 @@ for i in ${!FORMATS[@]}; do
 		python $basedir/sam/sim/src/tiling/tile.py --tensor_type frostt --input_tensor $line --cotile $bench --multilevel --hw_config $2 --higher_order --output_dir_path $bench_path
 
 		mkdir -p $bench_path/taco
+        mkdir -p $bench_path/formatted/$name
 
 
 	 	find $tile_path -name tensor_B_tile_*.tns -maxdepth 1 | parallel run_format {} $bench $format $bench_path $tile_path "sss" 
