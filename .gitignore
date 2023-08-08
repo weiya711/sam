@@ -5,8 +5,10 @@ __pycache__/
 # Temporary output files
 *.swp
 *.swo
+*.swn
 *.txt
 *.out
+*.log
 
 # Generated Python Package files
 *.egg-info/
@@ -55,3 +57,6 @@ synthetic/
 
 # Temporary scripts
 download_suitesparse_partial.sh
+
+# Network Filesystem 
+.nfs*
