@@ -5,8 +5,10 @@ __pycache__/
 # Temporary output files
 *.swp
 *.swo
+*.swn
 *.txt
 *.out
+*.log
 
 # Generated Python Package files
 *.egg-info/
@@ -45,16 +47,6 @@ suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
 
-<<<<<<< HEAD
-=======
-# Generated SAM simulator tests
-*/sim/test/apps/test_*.py
-
-# Tensor files
-*.mtx
-*.tns
-
->>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
 # Temporary or generated tensor directories 
 tmp_mat*/
 tiles/
@@ -63,16 +55,8 @@ synthetic/
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
-<<<<<<< HEAD
-# Tensor files
-tiles/
-
-# SAM module
-sam.egg-info/
-=======
-<<<<<<< HEAD
->>>>>>> origin/avb03-tiling
 # Temporary scripts
 download_suitesparse_partial.sh
-=======
->>>>>>> 1b45a01e952656b52034005dfab5e2361850773f
+
+# Network Filesystem 
+.nfs*

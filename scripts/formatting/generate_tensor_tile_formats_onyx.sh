@@ -10,8 +10,8 @@ FORMATS=(
   sss012
 )
 
+# using all tensor apps except elemmul here**
 BENCHMARKS=(
-  # using all tensor apps except elemmul here**
   # tensor3_elemadd
   # tensor3_innerprod
   tensor3_ttv
@@ -22,13 +22,13 @@ BENCHMARKS=(
 )
 
 OTHER_FORMATS=(
-  sss
-  sss
+  # sss
+  # sss
   s
-  ss
-  ss
-  sss
-  ss
+  # ss
+  # ss
+  # sss
+  # ss
 	)
 
 OTHERBENCHES='["tensor3_ttv", "tensor3_ttm", "tensor3_mttkrp"]'
@@ -66,6 +66,7 @@ run_format(){
 	export FROSTT_TENSOR_PATH=$filename 
 	export FROSTT_FORMATTED_PATH=$bench_path/formatted/
 	export TENSOR_FORMAT=$tensor_format
+    echo "Tensor format: $TENSOR_FORMAT"
 
 	$basedir/compiler/taco/build/bin/taco-test sam.pack_$format
 	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $bench_path/formatted/
@@ -80,7 +81,7 @@ for i in ${!FORMATS[@]}; do
 
     for b in ${!BENCHMARKS[@]}; do
 	bench=${BENCHMARKS[$b]}
-	other_format=${OTHER_FORMAT[$b]}
+	other_format=${OTHER_FORMATS[$b]}
 
 	while read line; do
     
