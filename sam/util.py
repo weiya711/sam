@@ -7,7 +7,7 @@ import itertools
 import shutil
 import numpy as np
 import math
-import sparse 
+import sparse
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -142,7 +142,7 @@ class ScipySparseTensorLoader:
 
 
 # PydataSparseTensorLoader loads a sparse tensor from a file into
-# a pydata.sparse tensor.
+# a sparse tensor.
 # class PydataSparseTensorLoader:
 #     def __init__(self):
 #         self.loader = TnsFileLoader()
@@ -547,7 +547,7 @@ class InputCacheTensor:
 
 
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
-# into pydata.sparse matrices.
+# into sparse matrices.
 # class PydataMatrixMarketTensorLoader:
 #     def __init__(self):
 #         pass
