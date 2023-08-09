@@ -432,7 +432,6 @@ inputCacheTensor = InputCacheTensor()
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='script that tiles tensors')
     parser.add_argument("--tensor_type", choices=['ex', 'gen', 'file', 'ss', 'frostt'], help='The \
-        tiles, tile_sizes = tile_coo(tensor, ivar_map, split_map) \
         type of tensor to tile: extensor(ex), generated (gen), \
         SuiteSparse (ss), FROSTT (frostt), or input file (file)')
     parser.add_argument("--higher_order", action="store_true", help="If \
@@ -542,7 +541,7 @@ if __name__ == "__main__":
                         tns_dumper = PydataSparseTensorDumper()
                         print(tile.shape)
                         print(tile)
-                        tns_dumper.dump(tile, mtx_path_name)
+                        tns_dumper.dump(tile, mtx_path_name, True)
 
                     # FIXME: (owhsu) Why did avb03 add this in?
                     elif len(tile.shape) == 1:
