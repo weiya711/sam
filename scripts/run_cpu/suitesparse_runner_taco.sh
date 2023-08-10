@@ -38,15 +38,3 @@ while read line; do
 	csvout="$out/result-$line.csv"
 	SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse_$3" NEVA=$neva LANKA=$lanka GEN=ON
 done <$1
-
-# for path in $sspath/*; do
-#     if [ ! -d $path ]; then
-#         continue
-#     fi
-#     name="$(cut -d'/' -f3 <<< "$path")"
-#     matrix="$path/$name.mtx"
-# 
-#     csvout="$out/result-$name.csv"
-# 
-#     LANKA=ON SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse_ufunc"
-# done

@@ -4,6 +4,7 @@
 // We're using c++14, so wer're stuck with experimental filesystem.
 #include <experimental/filesystem>
 #include <tuple>
+#include <algorithm>
 
 #include "bench.h"
 #include "benchmark/benchmark.h"
@@ -821,7 +822,7 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
 
 
 static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
-
+  std::cout << "START BENCHMARK" << std::endl;
   bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
 
   // Counters must be present in every run to get reported to the CSV.
@@ -834,6 +835,7 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
   auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
   // std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
   if (tensorPath == "") {
+    std::cout << "BENCHMARK ERROR" << std::endl;
     state.error_occurred();
     return;
   }
@@ -843,7 +845,7 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
   auto tensorName = taco::util::split(filename, ".")[0];
   state.SetLabel(tensorName);
 
-  taco::Tensor<int64_t> ssTensor, otherShifted;
+  taco::Tensor<int16_t> ssTensor, otherShifted;
   try {
     taco::Format format = op == MATTRANSMUL ? CSC : CSR;
     std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
@@ -863,22 +865,22 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
   state.counters["dimy"] = DIM1;
   state.counters["nnz"] = inputCache.nnz;
 
-  taco::Tensor<int64_t> denseMat1;
-  taco::Tensor<int64_t> denseMat2;
-  taco::Tensor<int64_t> s1("s1"), s2("s2");
-  s1.insert({}, int64_t(2));
-  s2.insert({}, int64_t(2));
+  taco::Tensor<int16_t> denseMat1;
+  taco::Tensor<int16_t> denseMat2;
+  taco::Tensor<int16_t> s1("s1"), s2("s2");
+  s1.insert({}, int16_t(2));
+  s2.insert({}, int16_t(2));
   if (op == SDDMM) {
-    denseMat1 = Tensor<int64_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
-    denseMat2 = Tensor<int64_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
+    denseMat1 = Tensor<int16_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
+    denseMat2 = Tensor<int16_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
 
     // (owhsu) Making this dense matrices of all 1's
     for (int kk = 0; kk < DIM_EXTRA; kk++) {
       for (int ii = 0; ii < DIM0; ii++) {
-        denseMat1.insert({ii, kk}, int64_t(1));
+        denseMat1.insert({ii, kk}, int16_t(1));
       }
       for (int jj = 0; jj < DIM1; jj++) {
-        denseMat2.insert({kk, jj}, int64_t(1));
+        denseMat2.insert({kk, jj}, int16_t(1));
       }
     }
   }
@@ -887,6 +889,8 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
 
   int *ptr, *idx;
   float* vals;
+
+  std::cout << "GOT HERE" << std::endl;
   getCSRArrays(ssTensor, &ptr, &idx, &vals);
 
   sparse_matrix_t csrB;
@@ -899,20 +903,32 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
 
   for (auto _: state) {
     state.PauseTiming();
-    Tensor<int64_t> result;
+    Tensor<int16_t> result;
     IndexStmt stmt;
 
     switch (op) {
       case SPMV: {
 
-        Tensor<int64_t> otherVecj = inputCache.otherVecLastMode;
+        std::cout << "Entered SPMV Case" << std::endl;
+
+        Tensor<int16_t> otherVecj = inputCache.otherVecLastMode;
+
+        std::cout << "otherVecj: " << otherVecj << otherVecj.getStorage() << std::endl;
 
         const float* x = (float *)otherVecj.getStorage().getValues().getData();
-        float* y;
+        std::cout << "x: " << x << ", " << x << std::endl;
+
+        float y[DIM0];
         std::fill(y, y+DIM0, 0.0);
 
-        mkl_sparse_optimize(csrB);
+        std::cout << "y: " << y << std::endl;
+        std::cout << csrB << std::endl;
+
+        // mkl_sparse_optimize(csrB);
+        state.ResumeTiming();
         mkl_sparse_s_mv(SPARSE_OPERATION_NON_TRANSPOSE, 1.0, csrB, descrB, x, 0.0, y);
+        state.PauseTiming();
+        std::cout << csrB << std::endl;
         mkl_sparse_destroy(csrB);
       }
       case SPMM: {
@@ -983,20 +999,7 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
         return;
     }
 
-    if (op == SPMM) {
-      result.compile(stmt);
-      state.ResumeTiming();
-      result.assemble();
-    }
-    else {
-      result.setAssembleWhileCompute(true);
-      result.compile();
-      state.ResumeTiming();
-    }
 
-    result.compute();
-
-    state.PauseTiming();
     if (auto validationPath = getValidationOutputPath(); validationPath != "") {
       auto key = cpuBenchKey(tensorName, opName(op));
       auto outpath = validationPath + key + ".tns";
@@ -1007,4 +1010,4 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
   }
 }
 
-TACO_BENCH_ARGS(bench_suitesparse_mkl, vecmul_spmv_mkl, SPMV, false);
+TACO_BENCH_ARGS(bench_suitesparse_mkl, vecmul_spmv_mkl, SPMV, false)->UseRealTime();

@@ -6,11 +6,16 @@ option(LANKA "Build benchmarks for the lanka cluster." OFF)
 
 set(ENV{MKLROOT} "/opt/intel/oneapi/mkl/2023.2.0/")
 set(ENV{MKL_INCLUDE} "${MKLROOT}/include/")
+set(ENV{MKL_LINK} "static")
+set(MKL_LINK "static")
+set(ENV{MKL_THREADING} "gnu_thread")
+set(MKL_THREADING "gnu_thread")
+
 # set(MKL_INCLUDE "${MKLROOT}/include/")
 # 
-set(MKL_LIBRARY_FLAGS -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a) 
-set(MKL_LIBRARY_FLAGS ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a) 
-set(MKL_LIBRARY_FLAGS ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lgomp -fopenmp -openmp -lpthread -lm -ldl)
+# set(MKL_LIBRARY_FLAGS -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a) 
+# set(MKL_LIBRARY_FLAGS ${MKLROOT}/lib/intel64/libmkl_gnu_thread.a) 
+# set(MKL_LIBRARY_FLAGS ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lgomp -fopenmp -openmp -lpthread -lm -ldl)
 # 
 # target_include_directories(taco-bench PUBLIC ${MKLROOT}/include) 
 
@@ -31,7 +36,7 @@ add_executable(taco-bench ${TEST_SOURCES} bench.h)
 if(MKL_FOUND)
     # include_directories(${MKL_INCLUDE_DIRS})
     target_link_libraries(taco-bench "${MKL_CORE_LIBRARY}")
-    target_link_libraries(taco-bench "-Wl,--start-group" ${MKL_LIBRARIES} "-Wl,--end-group -lgomp -lpthread -lm -ldl -fopenmp -openmp")
+    target_link_libraries(taco-bench "-Wl,--start-group" ${MKL_LIBRARIES} "-Wl,--end-group -lgomp -lpthread -lm -ldl")
 else()
     message(WARNING "MKL libs not found")
 endif()
