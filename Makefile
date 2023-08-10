@@ -21,6 +21,7 @@ ifeq ($(GEN),)
 GEN := "OFF"
 endif
 
+
 benches_name := $(patsubst %.py,%,$(BENCHES))
 benches_name := $(subst /,_,$(benches_name))
 benches_name := $(subst *,_,$(benches_name))
@@ -46,7 +47,7 @@ else ifeq ("$(LANKA)", "ON")
 	# export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
 	# export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
 else
-	CMD := LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
+	CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
 endif
 
 guard-%:
@@ -89,7 +90,7 @@ else
 endif
 
 compiler/build/taco-bench: submodules compiler/benchmark/googletest
-	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) ../ && $(MAKE) taco-bench
+	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) $(CMAKE_FLAGS) ../ && $(MAKE) taco-bench -j8
 
 compiler/benchmark/googletest: submodules
 	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi

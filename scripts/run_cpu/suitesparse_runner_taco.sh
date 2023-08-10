@@ -4,7 +4,7 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
-# ./suitesparse_runner.sh  <tensor_names.txt> <machine>
+# ./suitesparse_runner.sh  <tensor_names.txt> <machine> <sched | unshed | mkl>
 # Arg1 <tensor_names.txt> - Textfile with names of suitesparse tensors to run
 # Arg2 <machine> - Which machine is being used (0:local, 1:Lanka, 2:Kiwi/Neva) 
 
@@ -36,7 +36,7 @@ while read line; do
 		matrix="$sspath/$line.mtx"
 	fi
 	csvout="$out/result-$line.csv"
-	SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse" NEVA=$neva LANKA=$lanka GEN=ON
+	SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" make -j8 taco-bench BENCHES="bench_suitesparse_$3" NEVA=$neva LANKA=$lanka GEN=ON
 done <$1
 
 # for path in $sspath/*; do

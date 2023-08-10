@@ -4,40 +4,20 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
-# ./frostt_runner.sh <machine> 
-# Arg1 <machine> - Which machine is being used (0:local, 1:Lanka, 2:Kiwi/Neva) 
+# ./frostt_runner.sh <tensor_names.txt> <sched | unsched> 
 
-DATASET_NAMES=(
-  fb1k
-  fb10k
-  facebook
-  nell-2
-  nell-1
-)
 
 cwd=$(pwd)
-# LANKA
-if [ $1 -eq 1 ]; then
-	sspath=/data/scratch/changwan/florida_all/.
-	lanka=ON
-	neva=OFF
-elif [ $1 -eq 2 ]; then
-	sspath=/nobackup/owhsu/sparse-datasets/suitesparse
-	lanka=OFF
-	neva=ON
-else
-	sspath=cwd/.
-	lanka=OFF
-	neva=OFF
-fi
 
 out=frostt-bench/taco
 
 mkdir -p "$out"
 
-for i in ${!DATASET_NAMES[@]}; do
-	name=${DATASET_NAMES[$i]} 
+while read line; do
+	name=$line
+	tensor_path="$FROSTT_PATH/$name.tns"
+
 	csvout="$out/result-$name.csv"
-	make -j8 taco-bench BENCHES="$name" NEVA=$neva LANKA=$lanka GEN=ON
-done
+	FROSTT_TENSOR_PATH=$tensor_path make -j8 taco-bench BENCHES="bench_frostt_$2" TACO_OUT="$csvout" GEN=ON
+done <$1
 
