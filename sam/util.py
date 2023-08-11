@@ -155,7 +155,7 @@ class PydataSparseTensorDumper:
 
     def dump(self, tensor, path, write_shape=False):
         assert isinstance(tensor, sparse.DOK), "The tensor needs to be a pydata/sparse DOK format"
-        self.dumper.dump_dict_to_file(tensor.shape, tensor.data, path)
+        self.dumper.dump_dict_to_file(tensor.shape, tensor.data, path, write_shape)
 
 
 #
