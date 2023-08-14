@@ -60,3 +60,6 @@ download_suitesparse_partial.sh
 
 # Network Filesystem 
 .nfs*
+
+# Cmake collateral
+CMakeFiles/

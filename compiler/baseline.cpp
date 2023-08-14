@@ -26,7 +26,7 @@ decltype(auto) get(Ts &&... ts) {
     return std::get<I>(std::forward_as_tuple(ts...));
 }
 
-const IndexVar i("i"), j("j"), k("k"), l("l"), m("m"), n("n");
+ const IndexVar i("i"), j("j"), k("k"), l("l"), m("m"), n("n");
 
 template<class ...ExtraArgs>
 void printTensor(TensorBase tensor, std::string location, std::string benchName, int dim, ExtraArgs &&... extra_args) {
@@ -51,11 +51,12 @@ static void applyBenchSizes(benchmark::internal::Benchmark *b) {
 // operate on a tensor loaded from disk and the same tensor shifted slightly. Since
 // these operations are run multiple times, we can save alot in benchmark startup
 // time from caching these inputs.
+template<typename T>
 struct TensorInputCache {
     template<typename U>
-    std::pair<taco::Tensor<int16_t>, taco::Tensor<int16_t>>
+    std::pair<taco::Tensor<T>, taco::Tensor<T>>
     getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
-                   bool includeVec = false, bool includeMat = false, bool genOther = false) {
+                   bool includeVec = false, bool includeMat = false, bool genOther = false, bool use_CSR_CSC=false) {
         // See if the paths match.
         if (this->lastPath == path and this->lastFormat == format) {
             // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
@@ -68,25 +69,31 @@ struct TensorInputCache {
         // We assign lastPath after lastLoaded so that if taco::read throws an exception
         // then lastPath isn't updated to the new path.
         this->lastPath = path;
-        this->inputTensor = castToType<int16_t>("B", this->lastLoaded);
-        this->otherTensor = shiftLastMode<int16_t, int16_t>("C", this->inputTensor);
+        this->inputTensor = castToType<T>("B", this->lastLoaded);
+        this->otherTensor = shiftLastMode<T, T>("C", this->inputTensor);
 
         if (countNNZ) {
             this->nnz = 0;
-            for (auto &it: iterate<int16_t>(this->inputTensor)) {
+            for (auto &it: iterate<T>(this->inputTensor)) {
                 this->nnz++;
             }
         }
         if (includeThird) {
-            this->thirdTensor = shiftLastMode<int16_t, int16_t>("D", this->otherTensor);
-            this->otherTensorTrans = this->otherTensor.transpose("C", {1, 0}, DCSC);
+            this->thirdTensor = shiftLastMode<T, T>("D", this->otherTensor);
+            taco::Tensor<T> oTT;
+            if (use_CSR_CSC) {
+               oTT = this->otherTensor.transpose("C", {1, 0}, CSC);
+            } else {
+              oTT = this->otherTensor.transpose("C", {1, 0}, DCSC);
+            }
+            this->otherTensorTrans = oTT;
 
         }
         if (includeVec and genOther) {
-	    std::cout << "Generating OTHER vector for " << datasetName << std::endl; 
-            this->otherVecFirstMode = genOtherVec<int16_t, int16_t>("C", datasetName, this->inputTensor);
+	          std::cout << "Generating OTHER vector for " << datasetName << std::endl;
+            this->otherVecFirstMode = genOtherVec<T, T>("C", datasetName, this->inputTensor);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = genOtherVec<int16_t, int16_t>("D", datasetName, this->inputTensor, lastMode);
+            this->otherVecLastMode = genOtherVec<T, T>("D", datasetName, this->inputTensor, lastMode);
         } else if (includeVec) {
             std::vector<int32_t> firstDim;
             std::vector<int32_t> lastDim;
@@ -98,25 +105,25 @@ struct TensorInputCache {
                 lastDim.push_back(this->inputTensor.getDimension(2));
             }
 
-            this->otherVecFirstMode = getOtherVec<int16_t, int16_t>("C", datasetName, this->inputTensor, firstDim);
+            this->otherVecFirstMode = getOtherVec<T, T>("C", datasetName, this->inputTensor, firstDim);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = getOtherVec<int16_t, int16_t>("D", datasetName, this->inputTensor, lastDim, lastMode);
+            this->otherVecLastMode = getOtherVec<T, T>("D", datasetName, this->inputTensor, lastDim, lastMode);
         }
 
         if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = genOtherMat<int16_t, int16_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
-            this->otherMatMode1MTTKRP = genOtherMat<int16_t, int16_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
-            this->otherMatMode2MTTKRP = genOtherMat<int16_t, int16_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
+            this->otherMatTTM = genOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+            this->otherMatMode1MTTKRP = genOtherMat<T, T>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+            this->otherMatMode2MTTKRP = genOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
         } else if (this->inputTensor.getOrder() > 2 and includeMat) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = getOtherMat<int16_t, int16_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
-            this->otherMatMode1MTTKRP = getOtherMat<int16_t, int16_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
-            this->otherMatMode2MTTKRP = getOtherMat<int16_t, int16_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
+            this->otherMatTTM = getOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+            this->otherMatMode1MTTKRP = getOtherMat<T, T>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+            this->otherMatMode2MTTKRP = getOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
         }
         return std::make_pair(this->inputTensor, this->otherTensor);
     }
@@ -125,22 +132,24 @@ struct TensorInputCache {
     std::string lastPath;
     taco::Format lastFormat;
 
-    taco::Tensor<int16_t> inputTensor;
-    taco::Tensor<int16_t> otherTensor;
-    taco::Tensor<int16_t> thirdTensor;
-    taco::Tensor<int16_t> otherTensorTrans;
-    taco::Tensor<int16_t> otherVecFirstMode;
-    taco::Tensor<int16_t> otherVecLastMode;
+    taco::Tensor<T> inputTensor;
+    taco::Tensor<T> otherTensor;
+    taco::Tensor<T> thirdTensor;
+    taco::Tensor<T> otherTensorTrans;
+    taco::Tensor<T> otherVecFirstMode;
+    taco::Tensor<T> otherVecLastMode;
 
     // FROSTT only
-    taco::Tensor<int16_t> otherMatTTM;
-    taco::Tensor<int16_t> otherMatMode1MTTKRP;
-    taco::Tensor<int16_t> otherMatMode2MTTKRP;
+    taco::Tensor<T> otherMatTTM;
+    taco::Tensor<T> otherMatMode1MTTKRP;
+    taco::Tensor<T> otherMatMode2MTTKRP;
 
     int64_t nnz;
 };
 
-TensorInputCache inputCache;
+TensorInputCache<int64_t> inputCacheInt64;
+TensorInputCache<int16_t> inputCacheInt16;
+TensorInputCache<float> inputCacheFloat;
 
 std::string cpuBenchKey(std::string tensorName, std::string funcName) {
     return tensorName + "-" + funcName + "-taco";
@@ -191,7 +200,7 @@ static void bench_frostt_unsched(benchmark::State &state, FrosttOp op, int fill_
     // TODO (rohany): What format do we want to do here?
     Tensor<int16_t> frosttTensor, otherShifted;
 
-    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(tnsPath, tensorName, Sparse,
+    std::tie(frosttTensor, otherShifted) = inputCacheInt16.getTensorInput(tnsPath, tensorName, Sparse,
                                                                      false, false, true, true, GEN_OTHER);
 
     // std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
@@ -207,7 +216,7 @@ static void bench_frostt_unsched(benchmark::State &state, FrosttOp op, int fill_
             case TTV: {
                 result = Tensor<int16_t>("result", {DIM0, DIM1}, DCSR, fill_value);
 
-                Tensor<int16_t> otherVec = inputCache.otherVecLastMode;
+                Tensor<int16_t> otherVec = inputCacheInt16.otherVecLastMode;
 
 //                IndexVar i, j, k;
                 result(i, j) = frosttTensor(i, j, k) * otherVec(k);
@@ -230,7 +239,7 @@ static void bench_frostt_unsched(benchmark::State &state, FrosttOp op, int fill_
             case TTM: {
                 // Assume otherMat(0) format is the same as frosttTensor(2)
                 result = Tensor<int16_t>("result", {DIM0, DIM1, DIM_EXTRA}, frosttTensor.getFormat(), fill_value);
-                Tensor<int16_t> otherMat = inputCache.otherMatTTM;
+                Tensor<int16_t> otherMat = inputCacheInt16.otherMatTTM;
 
 //                IndexVar i, j, k, l;
                 // TODO: (owhsu) need to pick things for this and MTTKRP...
@@ -240,8 +249,8 @@ static void bench_frostt_unsched(benchmark::State &state, FrosttOp op, int fill_
             case MTTKRP: {
                 result = Tensor<int16_t>("result", {DIM0, DIM_EXTRA}, DCSR, fill_value);
 
-                Tensor<int16_t> otherMat = inputCache.otherMatMode1MTTKRP;
-                Tensor<int16_t> otherMat1 = inputCache.otherMatMode2MTTKRP;
+                Tensor<int16_t> otherMat = inputCacheInt16.otherMatMode1MTTKRP;
+                Tensor<int16_t> otherMat1 = inputCacheInt16.otherMatMode2MTTKRP;
 
 //                IndexVar i, j, k, l;
                 result(i, j) = frosttTensor(i, k, l) * otherMat(j, k) * otherMat1(j, l);
@@ -444,8 +453,8 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
     // TODO (rohany): What format do we want to do here?
     Tensor<int16_t> frosttTensor, otherShifted;
 
-    std::tie(frosttTensor, otherShifted) = inputCache.getTensorInput(tnsPath, tensorName, Sparse,
-                                                                     false, false, true, true, GEN_OTHER);
+    std::tie(frosttTensor, otherShifted) = inputCacheInt16.getTensorInput(tnsPath, tensorName, Sparse,
+                                                                     false, false, true, true, GEN_OTHER, true);
 
     std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
 
@@ -459,15 +468,17 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
         IndexStmt stmt = IndexStmt();
         switch (op) {
             case TTV: {
-                result = Tensor<int16_t>("result", {DIM0, DIM1}, CSR, fill_value);
+                // TODO: Change this to have sparse outputs
+                result = Tensor<int16_t>("result", {DIM0, DIM1}, {Dense, Dense}, fill_value);
 
-                Tensor<int16_t> otherVec = inputCache.otherVecLastMode;
+                Tensor<int16_t> otherVec = inputCacheInt16.otherVecLastMode;
 
                 result(i, j) = frosttTensor(i, j, k) * otherVec(k);
 
                 stmt = result.getAssignment().concretize();
-                stmt = scheduleTTVCPUCSR(stmt);
-              std::cout << "Stmt: " << stmt << std::endl;
+                std::cout << "Stmt Before: " << stmt << std::endl;
+                stmt = scheduleTTVCPU(stmt, frosttTensor);
+                std::cout << "Stmt After: " << stmt << std::endl;
 
               break;
             }
@@ -482,7 +493,10 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
                 break;
             }
             case PLUS2: {
-                result = Tensor<int16_t>("result", frosttTensor.getDimensions(), frosttTensor.getFormat(), fill_value);
+
+//              Format ecsr({Dense, Compressed(ModeFormat::NOT_UNIQUE),
+//                           Singleton(ModeFormat::UNIQUE)});
+                result = Tensor<int16_t>("result", frosttTensor.getDimensions(), CSR, fill_value);
 
                 result(i, j, k) = frosttTensor(i, j, k) + otherShifted(i, j, k);
 
@@ -493,7 +507,7 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
             case TTM: {
                 // Assume otherMat(0) format is the same as frosttTensor(2)
                 result = Tensor<int16_t>("result", {DIM0, DIM1, DIM_EXTRA}, frosttTensor.getFormat(), fill_value);
-                Tensor<int16_t> otherMat = inputCache.otherMatTTM;
+                Tensor<int16_t> otherMat = inputCacheInt16.otherMatTTM;
 
                 // TODO: (owhsu) need to pick things for this and MTTKRP...
                 result(i, j, k) = frosttTensor(i, j, l) * otherMat(k, l);
@@ -505,8 +519,8 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
             case MTTKRP: {
                 result = Tensor<int16_t>("result", {DIM0, DIM_EXTRA}, DCSR, fill_value);
 
-                Tensor<int16_t> otherMat = inputCache.otherMatMode1MTTKRP;
-                Tensor<int16_t> otherMat1 = inputCache.otherMatMode2MTTKRP;
+                Tensor<int16_t> otherMat = inputCacheInt16.otherMatMode1MTTKRP;
+                Tensor<int16_t> otherMat1 = inputCacheInt16.otherMatMode2MTTKRP;
 
                 result(i, j) = frosttTensor(i, k, l) * otherMat(j, k) * otherMat1(j, l);
 
@@ -567,10 +581,10 @@ TACO_BENCH_ARGS(bench_frostt_unsched, name/tensor3_mttkrp, MTTKRP);
 
 //#define DECLARE_FROSTT_BENCH_SCHED(name, path)
 // TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttv, TTV);
-TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_innerprod, INNERPROD);
+// TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_innerprod, INNERPROD);
 TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_elemadd_plus2, PLUS2);
-TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttm, TTM);
-TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_mttkrp, MTTKRP);
+// TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttm, TTM);
+// TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_mttkrp, MTTKRP);
 
 
 //FOREACH_FROSTT_TENSOR(DECLARE_FROSTT_BENCH)
@@ -638,7 +652,7 @@ std::string opName(SuiteSparseOp op) {
     }
 }
 
-static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
+static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op, bool gen=true, int16_t fill_value = 0) {
 
     bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
 
@@ -661,10 +675,10 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
     auto tensorName = taco::util::split(filename, ".")[0];
     state.SetLabel(tensorName);
 
-    taco::Tensor<int64_t> ssTensor, otherShifted;
+    taco::Tensor<int16_t> ssTensor, otherShifted;
     try {
         taco::Format format = op == MATTRANSMUL ? DCSC : DCSR;
-        std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
+        std::tie(ssTensor, otherShifted) = inputCacheInt16.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
                                                                      true /* includeThird */, true, false, GEN_OTHER);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
@@ -679,47 +693,45 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
     
     state.counters["dimx"] = DIM0;
     state.counters["dimy"] = DIM1;
-    state.counters["nnz"] = inputCache.nnz;
+    state.counters["nnz"] = inputCacheInt16.nnz;
 
-    taco::Tensor<int64_t> denseMat1;
-    taco::Tensor<int64_t> denseMat2;
-    taco::Tensor<int64_t> s1("s1"), s2("s2");
-    s1.insert({}, int64_t(2));
-    s2.insert({}, int64_t(2));
+    taco::Tensor<int16_t> denseMat1;
+    taco::Tensor<int16_t> denseMat2;
+    taco::Tensor<int16_t> s1("s1"), s2("s2");
+    s1.insert({}, int16_t(2));
+    s2.insert({}, int16_t(2));
     if (op == SDDMM) {
-        denseMat1 = Tensor<int64_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
-        denseMat2 = Tensor<int64_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
+        denseMat1 = Tensor<int16_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
+        denseMat2 = Tensor<int16_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
 
         // (owhsu) Making this dense matrices of all 1's
         for (int kk = 0; kk < DIM_EXTRA; kk++) {
             for (int ii = 0; ii < DIM0; ii++) {
-                denseMat1.insert({ii, kk}, int64_t(1));
+                denseMat1.insert({ii, kk}, int16_t(2));
             }
             for (int jj = 0; jj < DIM1; jj++) {
-                denseMat2.insert({kk, jj}, int64_t(1));
+                denseMat2.insert({kk, jj}, int16_t(2));
             }
         }
     }
 
     for (auto _: state) {
         state.PauseTiming();
-        Tensor<int64_t> result;
+        Tensor<int16_t> result;
         IndexStmt stmt;
 
         switch (op) {
             case SPMV: {
-                result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
-                Tensor<int64_t> otherVec = inputCache.otherVecLastMode;
+                result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
+                Tensor<int16_t> otherVec = inputCacheInt16.otherVecFirstMode;
 
-                IndexVar i, j, k;
                 result(i) = ssTensor(i, j) * otherVec(j);
                 break;
             }
             case SPMM: {
-                result = Tensor<int64_t>("result", {DIM0, DIM0}, DCSR, fill_value);
-                Tensor<int64_t> otherShiftedTrans = inputCache.otherTensorTrans;
+                result = Tensor<int16_t>("result", {DIM0, DIM0}, DCSR, fill_value);
+                Tensor<int16_t> otherShiftedTrans = inputCacheInt16.otherTensorTrans;
 
-                IndexVar i, j, k;
                 result(i, j) = ssTensor(i, k) * otherShiftedTrans(k, j);
                 
                 stmt = result.getAssignment().concretize();
@@ -728,53 +740,47 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
                 break;
             }
             case PLUS3: {
-                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-                Tensor<int64_t> otherShifted2 = inputCache.thirdTensor;
+                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+                Tensor<int16_t> otherShifted2 = inputCacheInt16.thirdTensor;
 
-                IndexVar i, j, k, l;
                 result(i, j) = ssTensor(i, j) + otherShifted(i, j) + otherShifted2(i, j);
                 break;
             }
             case SDDMM: {
-                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
 
-                IndexVar i, j, k;
                 result(i, j) = ssTensor(i, j) * denseMat1(i, k) * denseMat2(k, j);
                 break;
             }
             case RESIDUAL: {
-                result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
+                result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
 
-                Tensor<int64_t> otherVeci = inputCache.otherVecFirstMode;
-                Tensor<int64_t> otherVecj = inputCache.otherVecLastMode;
+                Tensor<int16_t> otherVeci = inputCacheInt16.otherVecFirstMode;
+                Tensor<int16_t> otherVecj = inputCacheInt16.otherVecLastMode;
 
-                IndexVar i, j, k;
                 result(i) = otherVeci(i) - ssTensor(i, j) * otherVecj(j);
                 break;
             }
             case MMADD: {
-                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
 
-                IndexVar i, j, k;
                 result(i, j) = ssTensor(i, j) + otherShifted(i, j);
                 break;
             }
             case MMMUL: {
-                result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
 
-                IndexVar i, j, k;
                 result(i, j) = ssTensor(i, j) * otherShifted(i, j);
                 break;
             }
             case MATTRANSMUL: {
-                result = Tensor<int64_t>("result", {DIM1}, Format(Sparse), fill_value);
+                result = Tensor<int16_t>("result", {DIM1}, Format(Sparse), fill_value);
 
 
 
-                Tensor<int64_t> otherVeci = inputCache.otherVecLastMode;
-                    Tensor<int64_t> otherVecj = inputCache.otherVecFirstMode;
+                Tensor<int16_t> otherVeci = inputCacheInt16.otherVecLastMode;
+                    Tensor<int16_t> otherVecj = inputCacheInt16.otherVecFirstMode;
 
-                    IndexVar i, j;
                     result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
                     break;
                 }
@@ -810,15 +816,193 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
     // The first app is set to true to generate both mode0 and mode1 vector
     // generation.
     TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_mattransmul, MATTRANSMUL, true);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, vecmul_spmv, SPMV, false);
     TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemadd3_plus3, PLUS3, false);
     TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_sddmm, SDDMM, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_residual, RESIDUAL, false);
     TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemadd_mmadd, MMADD, false);
-    // TODO: need to fix for DCSC for this
     TACO_BENCH_ARGS(bench_suitesparse_unsched, matmul_spmm, SPMM, false);
     TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemmul, MMMUL, false);
+    TACO_BENCH_ARGS(bench_suitesparse_unsched, vecmul_spmv, SPMV, false);
+    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_residual, RESIDUAL, false);
 
+static void bench_suitesparse_sched(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
+
+  bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
+
+  // Counters must be present in every run to get reported to the CSV.
+  state.counters["dimx"] = 0;
+  state.counters["dimy"] = 0;
+  state.counters["nnz"] = 0;
+  state.counters["other_sparsity1"] = 0;
+  state.counters["other_sparsity1"] = 0;
+
+  auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
+  // std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
+  if (tensorPath == "") {
+    state.error_occurred();
+    return;
+  }
+
+  auto pathSplit = taco::util::split(tensorPath, "/");
+  auto filename = pathSplit[pathSplit.size() - 1];
+  auto tensorName = taco::util::split(filename, ".")[0];
+  state.SetLabel(tensorName);
+
+  taco::Tensor<int64_t> ssTensor, otherShifted;
+  try {
+    taco::Format format = op == MATTRANSMUL ? DCSC : DCSR;
+    std::tie(ssTensor, otherShifted) = inputCacheInt64.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
+                                                                 true /* includeThird */, true, false, GEN_OTHER);
+  } catch (TacoException &e) {
+    // Counters don't show up in the generated CSV if we used SkipWithError, so
+    // just add in the label that this run is skipped.
+    std::cout << e.what() << std::endl;
+    state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
+    return;
+  }
+
+  int DIM0 = ssTensor.getDimension(0);
+  int DIM1 = ssTensor.getDimension(1);
+
+  state.counters["dimx"] = DIM0;
+  state.counters["dimy"] = DIM1;
+  state.counters["nnz"] = inputCacheInt64.nnz;
+
+  taco::Tensor<int16_t> denseMat1;
+  taco::Tensor<int16_t> denseMat2;
+  taco::Tensor<int16_t> s1("s1"), s2("s2");
+  s1.insert({}, int16_t(2));
+  s2.insert({}, int16_t(2));
+  if (op == SDDMM) {
+    denseMat1 = Tensor<int16_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
+    denseMat2 = Tensor<int16_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
+
+    // (owhsu) Making this dense matrices of all 1's
+    for (int kk = 0; kk < DIM_EXTRA; kk++) {
+      for (int ii = 0; ii < DIM0; ii++) {
+        denseMat1.insert({ii, kk}, int16_t(1));
+      }
+      for (int jj = 0; jj < DIM1; jj++) {
+        denseMat2.insert({kk, jj}, int16_t(1));
+      }
+    }
+  }
+
+  for (auto _: state) {
+    state.PauseTiming();
+    Tensor<int16_t> result;
+    IndexStmt stmt;
+
+    switch (op) {
+      case SPMV: {
+        result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
+        Tensor<int64_t> otherVec = inputCacheInt64.otherVecLastMode;
+
+        result(i) = ssTensor(i, j) * otherVec(j);
+        break;
+      }
+      case SPMM: {
+        result = Tensor<int16_t>("result", {DIM0, DIM0}, DCSR, fill_value);
+        Tensor<int64_t> otherShiftedTrans = inputCacheInt64.otherTensorTrans;
+
+        result(i, k) = ssTensor(i, j) * otherShiftedTrans(j, k);
+
+        stmt = result.getAssignment().concretize();
+        stmt = scheduleSpMMCPU(stmt, ssTensor);
+        // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
+        break;
+      }
+      case PLUS3: {
+        result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+        Tensor<int64_t> otherShifted2 = inputCacheInt64.thirdTensor;
+
+        IndexVar i, j, k, l;
+        result(i, j) = ssTensor(i, j) + otherShifted(i, j) + otherShifted2(i, j);
+        break;
+      }
+      case SDDMM: {
+        result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+
+        IndexVar i, j, k;
+        result(i, j) = ssTensor(i, j) * denseMat1(i, k) * denseMat2(k, j);
+        break;
+      }
+      case RESIDUAL: {
+        result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
+
+        Tensor<int64_t> otherVeci = inputCacheInt64.otherVecFirstMode;
+        Tensor<int64_t> otherVecj = inputCacheInt64.otherVecLastMode;
+
+        IndexVar i, j, k;
+        result(i) = otherVeci(i) - ssTensor(i, j) * otherVecj(j);
+        break;
+      }
+      case MMADD: {
+        result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+
+        IndexVar i, j, k;
+        result(i, j) = ssTensor(i, j) + otherShifted(i, j);
+        break;
+      }
+      case MMMUL: {
+        result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+
+        IndexVar i, j, k;
+        result(i, j) = ssTensor(i, j) * otherShifted(i, j);
+        break;
+      }
+      case MATTRANSMUL: {
+        result = Tensor<int16_t>("result", {DIM1}, Format(Sparse), fill_value);
+
+
+
+        Tensor<int16_t> otherVeci = inputCacheInt64.otherVecLastMode;
+        Tensor<int16_t> otherVecj = inputCacheInt64.otherVecFirstMode;
+
+        IndexVar i, j;
+        result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
+        break;
+      }
+      default:
+        state.SkipWithError("invalid expression");
+        return;
+    }
+
+    result.compile(stmt);
+
+    state.ResumeTiming();
+    result.assemble();
+    result.compute();
+    state.PauseTiming();
+
+    if (auto validationPath = getValidationOutputPath(); validationPath != "") {
+      auto key = cpuBenchKey(tensorName, opName(op));
+      auto outpath = validationPath + key + ".tns";
+      taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
+    }
+    state.ResumeTiming();
+
+  }
+}
+
+// The first app is set to true to generate both mode0 and mode1 vector
+// generation.
+TACO_BENCH_ARGS(bench_suitesparse_sched, mat_mattransmul, MATTRANSMUL, true);
+TACO_BENCH_ARGS(bench_suitesparse_sched, vecmul_spmv, SPMV, false);
+TACO_BENCH_ARGS(bench_suitesparse_sched, mat_elemadd3_plus3, PLUS3, false);
+TACO_BENCH_ARGS(bench_suitesparse_sched, mat_sddmm, SDDMM, false);
+TACO_BENCH_ARGS(bench_suitesparse_sched, mat_residual, RESIDUAL, false);
+TACO_BENCH_ARGS(bench_suitesparse_sched, mat_elemadd_mmadd, MMADD, false);
+// TODO: need to fix for DCSC for this
+TACO_BENCH_ARGS(bench_suitesparse_sched, matmul_spmm, SPMM, false);
+TACO_BENCH_ARGS(bench_suitesparse_sched, mat_elemmul, MMMUL, false);
+
+template<typename T>
+static void print_array(T * array, int size) {
+  for (int i = 0; i < size; i++) {
+    std::cout << (T) array[i] << ", ";
+  }
+  std::cout << std::endl;
+}
 
 
 static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
@@ -845,11 +1029,11 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
   auto tensorName = taco::util::split(filename, ".")[0];
   state.SetLabel(tensorName);
 
-  taco::Tensor<int16_t> ssTensor, otherShifted;
+  taco::Tensor<float> ssTensor, otherShifted;
   try {
     taco::Format format = op == MATTRANSMUL ? CSC : CSR;
-    std::tie(ssTensor, otherShifted) = inputCache.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
-                                                                 true /* includeThird */, true, false, GEN_OTHER);
+    std::tie(ssTensor, otherShifted) = inputCacheFloat.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
+                                                                 true /* includeThird */, true, false, GEN_OTHER, true);
   } catch (TacoException &e) {
     // Counters don't show up in the generated CSV if we used SkipWithError, so
     // just add in the label that this run is skipped.
@@ -863,13 +1047,13 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
 
   state.counters["dimx"] = DIM0;
   state.counters["dimy"] = DIM1;
-  state.counters["nnz"] = inputCache.nnz;
+  state.counters["nnz"] = inputCacheFloat.nnz;
 
-  taco::Tensor<int16_t> denseMat1;
-  taco::Tensor<int16_t> denseMat2;
-  taco::Tensor<int16_t> s1("s1"), s2("s2");
-  s1.insert({}, int16_t(2));
-  s2.insert({}, int16_t(2));
+  taco::Tensor<float> denseMat1;
+  taco::Tensor<float> denseMat2;
+  taco::Tensor<float> s1("s1"), s2("s2");
+  s1.insert({}, float(2));
+  s2.insert({}, float(2));
   if (op == SDDMM) {
     denseMat1 = Tensor<int16_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
     denseMat2 = Tensor<int16_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
@@ -877,128 +1061,206 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
     // (owhsu) Making this dense matrices of all 1's
     for (int kk = 0; kk < DIM_EXTRA; kk++) {
       for (int ii = 0; ii < DIM0; ii++) {
-        denseMat1.insert({ii, kk}, int16_t(1));
+        denseMat1.insert({ii, kk}, float(2));
       }
       for (int jj = 0; jj < DIM1; jj++) {
-        denseMat2.insert({kk, jj}, int16_t(1));
+        denseMat2.insert({kk, jj}, float(2));
       }
     }
   }
 
-  MKL_INT NNZ = inputCache.nnz;
+  MKL_INT NNZ = inputCacheFloat.nnz;
 
-  int *ptr, *idx;
-  float* vals;
+//  int *ptrB = (int*)malloc(sizeof(int) * DIM0);
+//  int *idxB = (int*)malloc(sizeof(int) * NNZ);
+//  float* valsB = (float*)malloc(sizeof(float)*NNZ);
+
+  int *ptrB;
+  int *idxB;
+  float* valsB;
 
   std::cout << "GOT HERE" << std::endl;
-  getCSRArrays(ssTensor, &ptr, &idx, &vals);
+  getCSRArrays(ssTensor, &ptrB, &idxB, &valsB);
 
   sparse_matrix_t csrB;
   mkl_sparse_s_create_csr(&csrB, SPARSE_INDEX_BASE_ZERO, DIM0, DIM1,
-                          ptr, ptr + 1, idx, vals);
+                          ptrB, ptrB + 1, idxB, valsB);
 
+  print_array(ptrB, DIM0 + 1);
+  print_array(idxB, NNZ);
+  print_array(valsB, NNZ);
 
+  std::cout << "sparse_s_create_csr PASSED" << std::endl;
   matrix_descr descrB;
   descrB.type = SPARSE_MATRIX_TYPE_GENERAL;
 
+  int* ptrBCheck;
+  int* idxBCheck;
+  float* valsBCheck;
+  int rowsCheck, colsCheck;
+  sparse_index_base_t indextype;
+  mkl_sparse_s_export_csr(csrB, &indextype, &rowsCheck, &colsCheck, &ptrBCheck, &ptrBCheck + 1, &idxBCheck, &valsBCheck);
+  print_array(ptrBCheck, rowsCheck + 1);
+  print_array(idxBCheck, NNZ);
+  print_array(valsBCheck, NNZ);
+
+
+
   for (auto _: state) {
     state.PauseTiming();
-    Tensor<int16_t> result;
+    Tensor<float> result;
     IndexStmt stmt;
 
     switch (op) {
       case SPMV: {
 
-        std::cout << "Entered SPMV Case" << std::endl;
+        if (false) {
+          std::cout << "Entered SPMV Case" << std::endl;
 
-        Tensor<int16_t> otherVecj = inputCache.otherVecLastMode;
+          Tensor<float> otherVecj = inputCacheFloat.otherVecLastMode;
 
-        std::cout << "otherVecj: " << otherVecj << otherVecj.getStorage() << std::endl;
+          std::cout << "otherVecj: " << otherVecj << otherVecj.getStorage() << std::endl;
 
-        const float* x = (float *)otherVecj.getStorage().getValues().getData();
-        std::cout << "x: " << x << ", " << x << std::endl;
+//        const float* x = (float *)otherVecj.getStorage().getValues().getData();
+//        std::cout << "x: " << x << ", " << x << std::endl;
 
-        float y[DIM0];
-        std::fill(y, y+DIM0, 0.0);
+          auto x = (float *) malloc(sizeof(float) * DIM1);
 
-        std::cout << "y: " << y << std::endl;
-        std::cout << csrB << std::endl;
+          std::fill(x, x + DIM1, 0.0);
+          for (auto &value: taco::iterate<float>(otherVecj)) {
+            for (int i = 0; i < otherVecj.getOrder(); i++) {
+              std::cout << "x: (" << i << ", " << value.first[i] << ")" << std::endl;
+              x[i] = (float) value.first[i];
+            }
+          }
 
-        // mkl_sparse_optimize(csrB);
-        state.ResumeTiming();
-        mkl_sparse_s_mv(SPARSE_OPERATION_NON_TRANSPOSE, 1.0, csrB, descrB, x, 0.0, y);
-        state.PauseTiming();
-        std::cout << csrB << std::endl;
-        mkl_sparse_destroy(csrB);
+          float *y;
+          // = (float  *)malloc(sizeof(float) * DIM0);
+          std::fill(y, y + DIM0, 0.0);
+
+          std::cout << "y: " << y << std::endl;
+          print_array(y, DIM0);
+//        std::cout << csrB << std::endl;
+
+          std::cout << "mkl_sparse_optimize ENTERING" << std::endl;
+          // mkl_sparse_optimize(csrB);
+          std::cout << "mkl_sparse_optimize PASSED" << std::endl;
+          state.ResumeTiming();
+          auto mkl_code = mkl_sparse_s_mv(SPARSE_OPERATION_NON_TRANSPOSE, 1.0, csrB, descrB, x, 0.0, y);
+          state.PauseTiming();
+          std::cout << "mkl_sparse_s_mv PASSED" << std::endl;
+        } else {
+          // Since SpMV is seg faulting, do SpMM with a size jx1 matrix...
+          int *ptrC;
+          int *idxC;
+          float* valsC;
+
+          Tensor<float> otherVecj = inputCacheFloat.otherVecLastMode;
+
+          // FIXME: (owhsu) this isn't correct yet
+          ptrC[0] = 0;
+          ptrC[1] = otherVecj.getDimension(0);
+          idxC[0] = 0;
+
+          sparse_matrix_t csrC;
+          mkl_sparse_s_create_csc(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+                                  ptrC, ptrC + 1, idxC, valsC);
+          std::cout << "sparse_s_create_csc C PASSED" << std::endl;
+
+          auto result = (float *)malloc(sizeof(float) * DIM0 * DIM1);
+
+          state.ResumeTiming();
+          auto mkl_code = mkl_sparse_s_spmmd(SPARSE_OPERATION_NON_TRANSPOSE, csrB, csrC, SPARSE_LAYOUT_ROW_MAJOR, result, DIM0);
+          state.PauseTiming();
+
+          free(result);
+        }
+
+
       }
       case SPMM: {
-        result = Tensor<int64_t>("result", {DIM0, DIM0}, DCSR, fill_value);
-        Tensor<int64_t> otherShiftedTrans = inputCache.otherTensorTrans;
+        int *ptrC;
+        int *idxC;
+        float* valsC;
 
-        IndexVar i, j, k;
-        result(i, j) = ssTensor(i, k) * otherShiftedTrans(k, j);
+        getCSCArrays(inputCacheFloat.otherTensorTrans, &ptrC, &idxC, &valsC);
 
-        stmt = result.getAssignment().concretize();
-        stmt = reorderLoopsTopologically(stmt);
-        // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
+        sparse_matrix_t csrC;
+        mkl_sparse_s_create_csc(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+                                ptrC, ptrC + 1, idxC, valsC);
+
+        float * result; // = (float *)malloc(sizeof(float) * DIM0 * DIM1);
+
+        state.ResumeTiming();
+        auto mkl_code = mkl_sparse_s_spmmd(SPARSE_OPERATION_NON_TRANSPOSE, csrB, csrC, SPARSE_LAYOUT_ROW_MAJOR, result, DIM0);
+        std::cout << mkl_code << std::endl;
+        state.PauseTiming();
+
+        mkl_sparse_destroy(csrC);
         break;
       }
       case PLUS3: {
-        result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-        Tensor<int64_t> otherShifted2 = inputCache.thirdTensor;
+        // Turn C tensor into mkl CSR
+        int *ptrC;
+        int *idxC;
+        float* valsC;
 
-        IndexVar i, j, k, l;
-        result(i, j) = ssTensor(i, j) + otherShifted(i, j) + otherShifted2(i, j);
+        std::cout << "GOT HERE, Tensor C" << std::endl;
+        getCSRArrays(otherShifted, &ptrC, &idxC, &valsC);
+
+        sparse_matrix_t csrC;
+
+        mkl_sparse_s_create_csr(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+                                ptrC, ptrC + 1, idxC, valsC);
+
+//        int *ptrD = (int*)malloc(sizeof(int) * DIM0);
+//        int *idxD = (int*)malloc(sizeof(int) * NNZ);
+//        auto* valsD = (float*)malloc(sizeof(float)*NNZ);
+        int *ptrD;
+        int *idxD;
+        float* valsD;
+
+        // Turn D tensor into mkl CSR
+        std::cout << "GOT HERE, Tensor D" << std::endl;
+        getCSRArrays(inputCacheFloat.thirdTensor, &ptrD, &idxD, &valsD);
+
+        sparse_matrix_t csrD;
+        mkl_sparse_s_create_csr(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+                                ptrD, ptrD + 1, idxD, valsD);
+        std::cout << "mkl_sparse_s_create_csr, PASSED" << std::endl;
+
+        sparse_matrix_t csrBC;
+        sparse_matrix_t csrResult;
+
+        state.ResumeTiming();
+        auto mkl_code = mkl_sparse_s_add(SPARSE_OPERATION_NON_TRANSPOSE, csrB, 1.0, csrC, &csrBC);
+        std::cout << "First mkl_sparse_s_add call code: " <<  mkl_code << std::endl;
+        mkl_code = mkl_sparse_s_add(SPARSE_OPERATION_NON_TRANSPOSE, csrBC, 1.0, csrD, &csrResult);
+        std::cout << "Second mkl_sparse_s_add call code: " <<  mkl_code << std::endl;
+        state.PauseTiming();
+
+        mkl_sparse_destroy(csrC);
+        mkl_sparse_destroy(csrD);
+        mkl_sparse_destroy(csrBC);
+        mkl_sparse_destroy(csrResult);
         break;
       }
       case SDDMM: {
-        result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-
-        IndexVar i, j, k;
-        result(i, j) = ssTensor(i, j) * denseMat1(i, k) * denseMat2(k, j);
-        break;
       }
       case RESIDUAL: {
-        result = Tensor<int64_t>("result", {DIM0}, Format(Sparse), fill_value);
-
-        Tensor<int64_t> otherVeci = inputCache.otherVecFirstMode;
-        Tensor<int64_t> otherVecj = inputCache.otherVecLastMode;
-
-        IndexVar i, j, k;
-        result(i) = otherVeci(i) - ssTensor(i, j) * otherVecj(j);
-        break;
       }
       case MMADD: {
-        result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-
-        IndexVar i, j, k;
-        result(i, j) = ssTensor(i, j) + otherShifted(i, j);
-        break;
       }
       case MMMUL: {
-        result = Tensor<int64_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-
-        IndexVar i, j, k;
-        result(i, j) = ssTensor(i, j) * otherShifted(i, j);
-        break;
       }
       case MATTRANSMUL: {
-        result = Tensor<int64_t>("result", {DIM1}, Format(Sparse), fill_value);
-
-
-
-        Tensor<int64_t> otherVeci = inputCache.otherVecLastMode;
-        Tensor<int64_t> otherVecj = inputCache.otherVecFirstMode;
-
-        IndexVar i, j;
-        result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
-        break;
       }
       default:
         state.SkipWithError("invalid expression");
         return;
     }
 
+    mkl_sparse_destroy(csrB);
 
     if (auto validationPath = getValidationOutputPath(); validationPath != "") {
       auto key = cpuBenchKey(tensorName, opName(op));
@@ -1010,4 +1272,7 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
   }
 }
 
-TACO_BENCH_ARGS(bench_suitesparse_mkl, vecmul_spmv_mkl, SPMV, false)->UseRealTime();
+// SpMV seg faults in libmkl for some reason
+// TACO_BENCH_ARGS(bench_suitesparse_mkl, vecmul_spmv_mkl, SPMV, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_suitesparse_mkl, matmul_spmm_mkl, SPMM, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_suitesparse_mkl, mat_plus3_mkl, PLUS3, false)->UseRealTime();
