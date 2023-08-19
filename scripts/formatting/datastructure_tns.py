@@ -90,7 +90,7 @@ if args.format is not None:
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
             taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
-            parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
+            parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
             #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
             file1 = open(file_path_name, 'r')
@@ -122,7 +122,7 @@ if args.format is not None:
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
             taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
-            parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
+            parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
             #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
             file1 = open(file_path_name, 'r')
@@ -156,7 +156,7 @@ if args.format is not None:
             outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
             taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
-            parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
+            parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
             
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
             file1 = open(file_path_name, 'r')
@@ -201,7 +201,7 @@ if args.format is not None:
         outdir_orig_path.mkdir(parents=True, exist_ok=True)
 
         taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
-        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
+        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
 
         # Shifted
         if args.shift:
@@ -210,4 +210,4 @@ if args.format is not None:
             outdir_shift_path.mkdir(parents=True, exist_ok=True)
 
             taco_format_shift_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
-            parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)
+            parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format)

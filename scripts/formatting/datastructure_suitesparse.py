@@ -29,6 +29,8 @@ def write_datastructure_tiles(args, tensor, out_path, tile_name):
 
     coo = inputCache.load(tensor, False)
     formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=False)
+    # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=args.hw)
+
 
 
 def write_datastructure_bench(args, tensor, out_path, tiles=None):

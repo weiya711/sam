@@ -26,9 +26,10 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
-            "mat_mattransmul": "X(i,j)=C(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
-            "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
-            "tensor3_ttv": "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"}
+            "mat_mattransmul": "X(i,j)=B(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
+            "mat_vecmul_ij" : "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
+            "mat_residual": "X(i,j)=b(i)-C(i,j)*d(j) -f=X:ss -f=C:ss -f=b:ss:0 -f=d:ss:0  -s=reorder(i,j)",
+            "mat_sddmm": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss -s=reorder(i,j,k)"}
 
 
 def print_dict(dd):
@@ -87,9 +88,11 @@ def parse_sam_input(string):
 
     str_arr = sam_str.split(" ")
     dictionary = parse_all(str_arr, has_quotes=False)
+    print("dictionary is: ", dictionary)
 
     # Assume there are no repeat tensors...
     tensors = dictionary["rhs_tensors"]
+    print("tensors are: ", tensors)
     permutations = [list(map(int, dictionary[tensor]["perm"])) for tensor in tensors]
     ivars = get_ivars(tensors, str_arr[0])
     ivars = [ivars[tensor] for tensor in tensors]
@@ -250,6 +253,7 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
 
             print("dim is ", dim)
             print("tensor_format[dim:dim+1] is ", tensor_format[dim:dim + 1])
+            print("tensor name is ", tensor_name)
             lvl_permutation = tensor_format[dim:dim + 1][0]
             ivar = ivar_strs[i][dim]
             ivar_map[lvl_permutation] = ivar
@@ -290,7 +294,15 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         tensors.append(shifted)
 
     elif "mat_sddmm" in app_str:
-        pass
+        print("Writing other tensors, shifted...")
+        print("Writing shifted...")
+        shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
+
+        print("Writing  shifted2...")
+        shifted2 = ScipyTensorShifter().shiftLastMode(shifted)
+        tensors.append(shifted2)
+
     elif "mat_mattransmul" in app_str:
         print("Writing other tensors...")
         rows, cols = tensor.shape  # i,j
@@ -308,7 +320,18 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         tensors.append(tensor_d)
 
     elif "mat_residual" in app_str:
-        pass
+        print("Writing other tensors...")
+        rows, cols = tensor.shape
+        tensor_b = scipy.sparse.random(rows, 1, data_rvs=np.ones).toarray().flatten()
+        tensor_d = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
+
+        if other_nonempty:
+            tensor_b[0] = 1
+            tensor_d[0] = 1
+        
+        tensors.insert(0, tensor_b)
+        tensors.append(tensor_d)
+
     elif "mat_vecmul" in app_str:
         print("Writing other tensors...")
         rows, cols = tensor.shape
@@ -536,10 +559,11 @@ if __name__ == "__main__":
                         print(tile.shape)
                         print(tile)
                         tns_dumper.dump(tile, mtx_path_name)
-
                     # FIXME: (owhsu) Why did avb03 add this in?
                     elif len(tile.shape) == 1:
+                        real_shape = tile.shape[0]
                         # print(np.array(tile.todense()).reshape(1,-1))
+                        # scipy.io.mmwrite(mtx_path_name, scipy.sparse.coo_matrix(tile.todense()).reshape((real_shape,1)))
                         scipy.io.mmwrite(mtx_path_name, scipy.sparse.coo_matrix(tile.todense()))
                     else:
                         # print(tile.todense())
