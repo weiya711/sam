@@ -13,7 +13,7 @@ test = "qiulp"
 # app_name = "matmul_ijk"
 # app_name = "matmul_ijk"
 # app_name = "mat_mattransmul"
-app_name = "mat_elemmul"
+app_name = "mat_vecmul_ij"
 const_val = 2 # only for mat_mattransmul
 
 
@@ -434,4 +434,4 @@ print("tiles_accumulation: ", tiles_accumulation)
 with open("../tiles_accumulation.json", "w") as file:
     json.dump(tiles_accumulation, file)
 
-print("there are ", tile_str, " tiles")
+print("there are ", tile, " tiles")
