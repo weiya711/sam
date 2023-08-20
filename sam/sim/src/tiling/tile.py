@@ -29,8 +29,10 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_mattransmul": "X(i,j)=C(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
             "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
-            "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:2,1,0  -s=reorder(i,j,k)",
+            # "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:2,1,0  -s=reorder(i,j,k)",
             # "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:0  -s=reorder(i,j,k)",
+            "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss",
+            "tensor3_ttm": "X(i,j,k)=B(i,j,l)*C(k,l) -f=X:sss -f=B:sss -f=C:ss",
             "tensor3_ttv": "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"}
 
 
@@ -325,12 +327,29 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
     elif "tensor3_ttv" in app_str:
         print("Writing other tensors...")
         size_i, size_j, size_k = tensor.shape  # i,j,k
+        print("OTHER SIZES: ", size_i, size_j, size_k)
         tensor_c = scipy.sparse.random(size_k, 1, data_rvs=np.ones).toarray().flatten()
 
         if other_nonempty:
             tensor_c[0] = 1
 
         tensors.append(tensor_c)
+
+    elif "tensor3_ttm" in app_str:
+        print("IN TILE.PY NOW")
+        print("Writing other tensors...")
+        size_i, size_j, size_l = tensor.shape  # i,j,k
+        print("OTHER SIZES: ", size_i, size_j, size_l)
+        # dimension_k = random.randint(min(tensor.shape), 10)
+        dimension_k = 3
+        tensor_c = scipy.sparse.random(5, 5, density=0.25, data_rvs=np.ones).toarray()
+        # tensor_c = scipy.sparse.random(dimension_k, size_l, data_rvs=np.ones).toarray().flatten()
+
+        if other_nonempty:
+            tensor_c[0] = 1
+
+        tensors.append(tensor_c)
+
     elif "tensor3_elemadd" in app_str:
         print("Writing shifted...")
         # shifted = ScipyTensorShifter().shiftLastMode(tensor)

@@ -124,6 +124,7 @@ if args.format is not None:
             # formatWriter.writeout_separate_sparse_only(coo, out_path, tensorname, format_str="ss10")
             vec = scipy.sparse.random(shape[2], 1, density=args.density, data_rvs=np.ones)
             vec = vec.toarray().flatten()
+            #need to uncomment if running without tiling**
             # formatWriter.writeout_separate_vec(vec, outdir_other_path, tensorname)
 
             # vec = scipy.sparse.random(shape[2], 1, data_rvs=np.ones)
@@ -133,7 +134,7 @@ if args.format is not None:
             # formatWriter.writeout_separate_sparse_only()
 
         elif args.bench == "tensor3_ttm":
-
+            print("IN DATASTRUCTURE NOW")
             # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
             taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
@@ -154,7 +155,8 @@ if args.format is not None:
             # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             tensorname = 'C'
             matrix = scipy.sparse.random(dimension_k, dimension_l, density=args.density, data_rvs=np.ones).toarray()
-            formatWriter.writeout_separate_sparse_only(matrix, outdir_other_name, tensorname)
+            #NEED TO UNCOMMENT FOLLOWING LINE IF NOT RUNNING WITH TILING**
+            # formatWriter.writeout_separate_sparse_only(matrix, outdir_other_name, tensorname)
 
         elif args.bench == "tensor3_mttkrp":
 
@@ -193,19 +195,23 @@ if args.format is not None:
         # parse_taco_format(taco_format_orig_filename, outdir_other_name, tensorname, args.format, hw_filename=args.hw)
 
     else:
-        # this code is used for: tensor3_elemadd, tensor3_innerprod
-        taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
-        taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
+        taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
+        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
 
-        # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
-        taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + "/" + args.name + "_" + levels + '.txt'
-        parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
+        #COMMENTED OUT FOR TILING FLOW, WOULD NEED TO UNCOMMENT IF RUNNING WITHOUT TILING
+        # # this code is used for: tensor3_elemadd, tensor3_innerprod
+        # taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
+        # taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
 
-        # Shifted
-        if args.shift:
-            outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
-            outdir_shift_path = Path(outdir_shift_name)
-            outdir_shift_path.mkdir(parents=True, exist_ok=True)
-            # taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
-            taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
-            parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)
+        # # taco_format_orig_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
+        # taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + "/" + args.name + "_" + levels + '.txt'
+        # parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
+
+        # # Shifted
+        # if args.shift:
+        #     outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
+        #     outdir_shift_path = Path(outdir_shift_name)
+        #     outdir_shift_path.mkdir(parents=True, exist_ok=True)
+        #     # taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
+        #     taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
+        #     parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)
