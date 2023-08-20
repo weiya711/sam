@@ -9,13 +9,13 @@ from sam.util import SUITESPARSE_PATH
 ## PARAMS ######################################################################
 
 # 'rel5', 'mk9-b1', 
-data = ['rel5']
+data = ['west2021']
 # app_name = "mat_elemadd"
 # app_name = "mat_elemmul"
-app_name = "mat_sddmm"
+# app_name = "mat_sddmm"
 # app_name = "matmul_ijk"
 # app_name = "mat_elemmul"
-# app_name = "mat_vecmul_ij"
+app_name = "mat_vecmul_ij"
 # app_name = "mat_residual"
 # data_file = open("scripts/tensor_names/suitesparse_valid_mid50.txt")
 # data_file_lines = data_file.readlines()
