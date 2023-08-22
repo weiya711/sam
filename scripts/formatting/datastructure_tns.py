@@ -187,11 +187,11 @@ if args.format is not None:
             # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             tensorname = 'C'
             matrix = scipy.sparse.random(dimension_j, dimension_k, density=args.density, data_rvs=np.ones).toarray()
-            formatWriter.writeout_separate_sparse_only(matrix, outdir_other_name, tensorname)
+            # formatWriter.writeout_separate_sparse_only(matrix, outdir_other_name, tensorname)
 
             tensorname = 'D'
             matrix = scipy.sparse.random(dimension_j, dimension_l, density=args.density, data_rvs=np.ones).toarray()
-            formatWriter.writeout_separate_sparse_only(matrix, outdir_other_name, tensorname)
+            # formatWriter.writeout_separate_sparse_only(matrix, outdir_other_name, tensorname)
         else:
             raise NotImplementedError
 
