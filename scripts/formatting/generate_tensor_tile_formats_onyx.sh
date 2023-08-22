@@ -14,8 +14,13 @@ FORMATS=(
 BENCHMARKS=(
 #   tensor3_elemadd
   # tensor3_innerprod
+<<<<<<< HEAD
 #   tensor3_ttv
   tensor3_ttm
+=======
+  tensor3_ttm
+#   tensor3_ttm
+>>>>>>> 1ccc4df101aa7e0f8720bc08f77fceba6e9c4df9
   # tensor3_mttkrp
   # tensor3_elemmul
   # tensor3_mttkrp
@@ -24,8 +29,13 @@ BENCHMARKS=(
 OTHER_FORMATS=(
   # sss
   # sss
+<<<<<<< HEAD
 #   s
 	ss
+=======
+  #s
+  ss
+>>>>>>> 1ccc4df101aa7e0f8720bc08f77fceba6e9c4df9
   # ss
 #   sss
   # ss
@@ -70,7 +80,7 @@ run_format(){
 
 	$basedir/compiler/taco/build/bin/taco-test sam.pack_$format
 
-	python $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $bench_path/formatted/$name
+	python3 $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $bench_path/formatted/$name
     
     echo "Done processing $name" 
 }
@@ -92,7 +102,7 @@ for i in ${!FORMATS[@]}; do
 		tile_path=$bench_path/mtx
 		
 		echo "Tiling tns file"
-		python $basedir/sam/sim/src/tiling/tile.py --tensor_type frostt --input_tensor $line --cotile $bench --multilevel --hw_config $2 --higher_order --output_dir_path $bench_path
+		python3 $basedir/sam/sim/src/tiling/tile.py --tensor_type frostt --input_tensor $line --cotile $bench --multilevel --hw_config $2 --higher_order --output_dir_path $bench_path
 
 		mkdir -p $bench_path/taco
         mkdir -p $bench_path/formatted/$name

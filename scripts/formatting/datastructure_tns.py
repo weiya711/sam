@@ -149,7 +149,11 @@ if args.format is not None:
                 shape[count] = int(line)
                 count += 1
             # coo = inputCache.load(tensor, False)
-            dimension_k = random.randint(min(shape), 10)
+            print("SHAPE: ", shape)
+            if(min(shape) > 10):
+                dimension_k = random.randint(10, min(shape))
+            else:
+                dimension_k = random.randint(min(shape), 10)
             dimension_l = shape[2]
             dimension_j = shape[1]
             # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
