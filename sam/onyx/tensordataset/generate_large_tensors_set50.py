@@ -1,4 +1,4 @@
-#script to generate 5 random 3D tensors (seeded, produces same 50 each time)
+#script to generate 50 random 3D tensors (seeded, produces same 50 each time)
 #trying to produce medium size tensors (2700) with sparsity around 0.
 import numpy as np
 import random
@@ -11,8 +11,8 @@ random.seed(seed_value)
 np.random.seed(seed_value)
 
 
-#generating tensor dimensions and storing results in an array (array size is 15, 5 tensors and 3 dimensions for each tensor)
-#conditions which need to be met for each set of 3 tensor dimensions: no dimension can't be 0, and can't have a tensor with more than 2700 elements (meaning dimension1*dimension2*dimension3 <= 2700)
+#generating tensor dimensions and storing results in an array (array size is 150, 50 tensors and 3 dimensions for each tensor)
+#conditions which need to be met for each set of 3 tensor dimensions: no dimension can't be 0, and can't have a tensor with more than 81000 elements (meaning dimension1*dimension2*dimension3 <= 81000)
 #note try to make it so no dimension is 1 or 2 (gives slight issues later, esp 2nd and 3rd dimensions)
 dimensions = [0] * 150
 dimensions_onetensor = [0] * 3
@@ -22,7 +22,7 @@ for x in range(50):
     dimensions_onetensor[1] = random.randint(3,60)
     dimensions_onetensor[2] = random.randint(3,60)
 
-    while((dimensions_onetensor[0]*dimensions_onetensor[1]*dimensions_onetensor[2])>2701 or (dimensions_onetensor[0]*dimensions_onetensor[1]*dimensions_onetensor[2])<900):
+    while((dimensions_onetensor[0]*dimensions_onetensor[1]*dimensions_onetensor[2])>81001 or (dimensions_onetensor[0]*dimensions_onetensor[1]*dimensions_onetensor[2])<2700):
         dimensions_onetensor[0] = random.randint(1,60)
         dimensions_onetensor[1] = random.randint(3,60)
         dimensions_onetensor[2] = random.randint(3,60)
@@ -50,13 +50,13 @@ for x in range(50):
 
 
 #Generating tensor values based on the dimensions now stored in the dimensions (150 elem) array
-#i goes from 0 to 4
+#i goes from 0 to 49
 tensor_num = 1
 randomNumber = 0
 numToInsert = 0
 frostt_path = os.environ['FROSTT_PATH']
 for i in range(50):
-    filename = os.path.join(frostt_path, "rand_mid_tensor"+str(tensor_num)+".tns")
+    filename = os.path.join(frostt_path, "rand_large_tensor"+str(tensor_num)+".tns")
     f = open(filename, "w")
     lineToAddInFile = ""
     #f.write('dimensions:' + '\n')

@@ -12,10 +12,10 @@ FORMATS=(
 
 # using all tensor apps except elemmul here**
 BENCHMARKS=(
-  # tensor3_elemadd
+#   tensor3_elemadd
   # tensor3_innerprod
-  tensor3_ttv
-  # tensor3_ttm
+#   tensor3_ttv
+  tensor3_ttm
   # tensor3_mttkrp
   # tensor3_elemmul
   # tensor3_mttkrp
@@ -24,10 +24,10 @@ BENCHMARKS=(
 OTHER_FORMATS=(
   # sss
   # sss
-  s
+#   s
+	ss
   # ss
-  # ss
-  # sss
+#   sss
   # ss
 	)
 
