@@ -9,7 +9,7 @@ from sam.util import SUITESPARSE_PATH
 ## PARAMS ######################################################################
 
 # 'rel5', 'mk9-b1', 
-data = ['west2021']
+data = ['adder_trans_02']
 # app_name = "mat_elemadd"
 # app_name = "mat_elemmul"
 # app_name = "mat_sddmm"

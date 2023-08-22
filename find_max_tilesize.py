@@ -34,7 +34,7 @@ def check_keyword_in_output(command, keyword):
         return False
 
 
-tile_size = 450
+tile_size = 300
 step = 10
 
 for _ in range(20):
@@ -65,6 +65,9 @@ for _ in range(20):
         print("****************Tile broken!")
         tile_size -= step
         step //= 2
+
+    if tile_size == 450:
+        break
 
     if step == 0:
         if _ >= 15:
