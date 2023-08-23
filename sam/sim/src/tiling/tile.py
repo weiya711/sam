@@ -22,6 +22,7 @@ from sam.sim.src.tiling.process_expr import parse_all
 custom_path = '/nobackup/jadivara/sam'
 sys.path.append(custom_path)
 
+# TODO: tensor3_innerprod output X() vs X(i,j,k)
 SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)",
             "matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)",
             "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
@@ -33,7 +34,9 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             # "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:0  -s=reorder(i,j,k)",
             "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss",
             "tensor3_ttm": "X(i,j,k)=B(i,j,l)*C(k,l) -f=X:sss -f=B:sss -f=C:ss",
-            "tensor3_ttv": "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"}
+            "tensor3_ttv": "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s",
+            "tensor3_innerprod": "X(i,j,k)=B(i,j,k)*C(i,j,k) -f=X:sss -f=B:sss -f=C:sss",
+            "tensor3_mttkrp": "X(i,j)=B(i,k,l)*C(j,k)*D(j,l) -f=X:ss -f=B:sss -f=C:ss -f=D:ss"}
 
 
 def print_dict(dd):
@@ -342,7 +345,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("OTHER SIZES: ", size_i, size_j, size_l)
         # dimension_k = random.randint(min(tensor.shape), 10)
         dimension_k = 3
-        tensor_c = scipy.sparse.random(5, 5, density=0.25, data_rvs=np.ones).toarray()
+        tensor_c = scipy.sparse.random(dimension_k, size_l, density=0.25, data_rvs=np.ones).toarray()
         # tensor_c = scipy.sparse.random(dimension_k, size_l, data_rvs=np.ones).toarray().flatten()
 
         if other_nonempty:
@@ -355,6 +358,27 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         # shifted = ScipyTensorShifter().shiftLastMode(tensor)
         shifted = PydataTensorShifter().shiftLastMode(tensor)
         tensors.append(shifted)
+    elif "tensor3_innerprod" in app_str:
+        print("Writing shifted...")
+
+        print("Writing shifted...")
+        # shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        shifted = PydataTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
+    elif "tensor3_mttkrp" in app_str:
+        print("Writing shifted...")
+        size_i, size_j, size_l = tensor.shape  # i,j,k
+        size_k = random.randint(min(tensor.shape), 10)
+        # C & D are dense according to TACO documentation
+        matrix_c = scipy.sparse.random(size_j, size_k, density=1, data_rvs=np.ones).toarray()
+        matrix_d = scipy.sparse.random(size_j, size_l, density=1, data_rvs=np.ones).toarray()
+        
+        if other_nonempty:
+            matrix_c[0] = 1
+            matrix_d[0] = 1
+        
+        tensors.append(matrix_c)
+        tensors.append(matrix_d)
     else:
         # tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
         # tensors.append(tensor2)

@@ -13,30 +13,21 @@ FORMATS=(
 # using all tensor apps except elemmul here**
 BENCHMARKS=(
 #   tensor3_elemadd
-  # tensor3_innerprod
-<<<<<<< HEAD
+  tensor3_innerprod
+	# tensor3_mttkrp
 #   tensor3_ttv
-  tensor3_ttm
-=======
-  tensor3_ttm
 #   tensor3_ttm
->>>>>>> 1ccc4df101aa7e0f8720bc08f77fceba6e9c4df9
   # tensor3_mttkrp
   # tensor3_elemmul
   # tensor3_mttkrp
 )
 
 OTHER_FORMATS=(
-  # sss
-  # sss
-<<<<<<< HEAD
+#   sss
+  sss
 #   s
-	ss
-=======
-  #s
-  ss
->>>>>>> 1ccc4df101aa7e0f8720bc08f77fceba6e9c4df9
-  # ss
+	# ss
+#   ss
 #   sss
   # ss
 	)
