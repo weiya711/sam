@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter, \
-    FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor
+    FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor, constructOtherMatKey, constructOtherVecKey
 from sam.sim.src.tiling.process_expr import parse_all
 
 # FIXME: This should not be here... Set your SAM_HOME directory
@@ -274,7 +274,6 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
 def get_other_tensors(app_str, tensor, other_nonempty=True):
     tensors = [tensor]
 
-
     if "matmul" in app_str:
         print("Writing shifted...")
         shifted = ScipyTensorShifter().shiftLastMode(tensor)
@@ -335,8 +334,18 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
 
     elif "mat_vecmul" in app_str:
         print("Writing other tensors...")
-        rows, cols = tensor.shape
-        tensor_c = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
+        tensorName = args.input_tensor
+        # c(j) use mode1
+        variant = "mode1"
+        path = constructOtherVecKey(tensorName,variant)
+        tensor_c_from_path = FrosttTensor(path)
+        tensor_c = tensor_c_from_path.load().todense()
+
+        print("TENSOR SHAPE: ", tensor.shape)
+        print("TENSOR_C SHAPE: ", tensor_c.shape)
+ 
+        # rows, cols = tensor.shape
+        # tensor_c = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
 
         if other_nonempty:
             tensor_c[0] = 1

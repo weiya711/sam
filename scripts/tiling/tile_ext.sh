@@ -8,8 +8,10 @@ BENCHMARKS=(
 	# mat_mattransmul
 	# mat_sddmm
 	# mat_vecmul_ij
-	mat_vecmul_ij
+	# mat_vecmul_ij
 	# mat_residual
+	mat_elemadd3
+	# matmul_ijk
 )
 
 appname=$3

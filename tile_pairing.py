@@ -13,7 +13,7 @@ test = "qiulp"
 # app_name = "matmul_ijk"
 # app_name = "matmul_ijk"
 # app_name = "mat_mattransmul"
-app_name = "mat_vecmul_ij"
+app_name = "mat_elemadd3"
 const_val = 2 # only for mat_mattransmul
 
 
@@ -21,7 +21,7 @@ tiles_accumulation = {}
 
 b_tensors = glob.glob(f"/home/avb03/sam/tiles/{app_name}/formatted/tensor_B*")
 c_tensors = glob.glob(f"/home/avb03/sam/tiles/{app_name}/formatted/tensor_C*")
-d_tensors = glob.glob(f"/aha/garnet/tiles_{app_name}_{test}/{app_name}/formatted/tensor_D*")
+d_tensors = glob.glob(f"/home/avb03/sam/tiles/{app_name}/formatted/tensor_D*")
 
 print("b_tensors: ", b_tensors)
 print("c_tensors: ", c_tensors)
@@ -31,7 +31,8 @@ print("d_tensors: ", d_tensors)
 # c_tensors = glob.glob(f"/aha/garnet/tiles_{app_name}_{test}/formatted/tensor_C*")
 
 b_vec_tensors = glob.glob(f"/aha/garnet/tiles_{app_name}_{test}/{app_name}/formatted/tensor_b*")
-c_vec_tensors = glob.glob(f"/aha/garnet/tiles_{app_name}_{test}/{app_name}/formatted/tensor_c*")
+c_vec_tensors = glob.glob(f"/home/avb03/sam/tiles/{app_name}/formatted/tensor_c*")
+print("c_vec_tensors: ", c_vec_tensors)
 d_vec_tensors = glob.glob(f"/aha/garnet/tiles_{app_name}_{test}/{app_name}/formatted/tensor_d*")
 
 d_loc_paired = []
@@ -428,6 +429,69 @@ elif app_name == "mat_sddmm":
                     shutil.copy(f"{c}/C_shape.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_C_mode_shape")
 
                     tile = tile + 1
+
+elif app_name == "mat_elemadd3":
+    for b in b_tensors:
+        for c in c_tensors:
+            for d in d_tensors:
+                tile_str = "tile" + str(tile)
+                b_loc = b[-7:]
+                c_loc = c[-7:]
+                b_loc = b_loc.split("_")
+                c_loc = c_loc.split("_")
+                d_loc = d[-7:]
+                d_loc = d_loc.split("_")
+
+                # if(b_loc == c_loc and b_loc != d_loc):
+                #     b_equal_c_no_d += 1
+                # if(c_loc == d_loc and b_loc != c_loc):
+                #     c_equal_d_no_b += 1
+                # if(b_loc == d_loc and b_loc != c_loc):
+                #     b_equal_d_no_c += 1
+
+                if(b_loc == c_loc and b_loc == d_loc):
+                    print(b, c, d)
+                    if not os.path.exists(f"./MAT_TMP_DIR/{tile_str}"):
+                        os.mkdir(f"./MAT_TMP_DIR/{tile_str}")
+                    shutil.copy(f"{b}/B0_crd.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_B_mode_0_crd")
+                    shutil.copy(f"{b}/B0_seg.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_B_mode_0_seg")
+
+                    shutil.copy(f"{b}/B1_crd.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_B_mode_1_crd")
+                    shutil.copy(f"{b}/B1_seg.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_B_mode_1_seg")
+
+                    shutil.copy(f"{b}/B_vals.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_B_mode_vals")
+
+                    shutil.copy(f"{b}/B_shape.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_B_mode_shape")
+
+                    shutil.copy(f"{c}/C0_crd.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_C_mode_0_crd")
+                    shutil.copy(f"{c}/C0_seg.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_C_mode_0_seg")
+
+                    shutil.copy(f"{c}/C1_crd.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_C_mode_1_crd")
+                    shutil.copy(f"{c}/C1_seg.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_C_mode_1_seg")
+
+                    shutil.copy(f"{c}/C_vals.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_C_mode_vals")
+
+                    shutil.copy(f"{c}/C_shape.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_C_mode_shape")
+
+                    shutil.copy(f"{d}/D0_crd.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_D_mode_0_crd")
+                    shutil.copy(f"{d}/D0_seg.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_D_mode_0_seg")
+
+                    shutil.copy(f"{d}/D1_crd.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_D_mode_1_crd")
+                    shutil.copy(f"{d}/D1_seg.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_D_mode_1_seg")
+
+                    shutil.copy(f"{d}/D_vals.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_D_mode_vals")
+
+                    shutil.copy(f"{d}/D_shape.txt", f"./MAT_TMP_DIR/{tile_str}/tensor_D_mode_shape")
+
+                    # subprocess.call(["aha",
+                    #     "regress",
+                    #     "fast"],
+                    #     text=True)
+
+                    # shutil.copy("/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/output_gold.npy", "/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/bin")
+                    # shutil.copytree("/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/bin", f"/aha/garnet/SPARSE_TESTS/{tile_str}")
+                    tile = tile + 1
+                    # print("we are on tile ", tile)
 
 print("tiles_accumulation: ", tiles_accumulation)
 

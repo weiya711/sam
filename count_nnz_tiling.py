@@ -10,33 +10,29 @@ def count_nonzeros(matrix_values_file):
 
 tile_dirs = glob.glob("SPARSE_TESTS/MAT_TMP_DIR/tile*")
 num_tiles = len(tile_dirs)
+limit = 900
 print("there are ", num_tiles, "tiles")
-limit = 1000
 
-tot_num_nonzeros = 0
+
 for tile_num in range(0,num_tiles):
+    tot_num_nonzeros = 0
+
     tensor_C_values_file = f'SPARSE_TESTS/MAT_TMP_DIR/tile{tile_num}/tensor_C_mode_vals'
 
     num_nonzeros = count_nonzeros(tensor_C_values_file)
-    if num_nonzeros >= limit:
-        print("error! too many nonzeros in tensorC, tile", tile_num)
-        # raise Exception 
+    tot_num_nonzeros += num_nonzeros
 
-#     tot_num_nonzeros += num_nonzeros
-
-# average_num_nonzeros = tot_num_nonzeros / 9
-# print("for matrix C, the average number of non-zero values is", average_num_nonzeros)
-
-tot_num_nonzeros = 0
-
-for tile_num in range(0,num_tiles):
     tensor_C_values_file = f'SPARSE_TESTS/MAT_TMP_DIR/tile{tile_num}/tensor_B_mode_vals'
 
     num_nonzeros = count_nonzeros(tensor_C_values_file)
-    if num_nonzeros >= limit:
-        print("error! too many nonzeros in tensorB, tile", tile_num)
-        # raise Exception
-#     tot_num_nonzeros += num_nonzeros
+    tot_num_nonzeros += num_nonzeros
 
-# average_num_nonzeros = tot_num_nonzeros / 6
-# print("for matrix B, the average number of non-zero values is", average_num_nonzeros)
+    tensor_C_values_file = f'SPARSE_TESTS/MAT_TMP_DIR/tile{tile_num}/tensor_D_mode_vals'
+
+    num_nonzeros = count_nonzeros(tensor_C_values_file)
+    tot_num_nonzeros += tot_num_nonzeros
+    
+    if tot_num_nonzeros >= limit:
+        print("tot_num_nonzeros: ", tot_num_nonzeros)
+        print("error! too many nonzeros in matrices")
+        raise Exception
