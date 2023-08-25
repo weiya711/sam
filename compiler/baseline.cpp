@@ -400,7 +400,7 @@ IndexStmt scheduleTTMCPU(IndexStmt stmt, Tensor<T> B, int CHUNK_SIZE=16, int UNR
 
 template<typename T>
 IndexStmt scheduleMTTKRPCPU(IndexStmt stmt, Tensor<T> B, int CHUNK_SIZE=16, int UNROLL_FACTOR=8) {
-  int NUM_J = B.getDimensions().at(1);
+  int NUM_J = DIM_EXTRA;
   IndexVar i1("i1"), i2("i2");
 
   IndexExpr precomputeExpr = stmt.as<Forall>().getStmt().as<Forall>().getStmt()
@@ -450,13 +450,21 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
     auto tensorName = taco::util::split(filename, ".")[0];
     state.SetLabel(tensorName);
 
+    Format ecsr({Dense, Compressed(ModeFormat::NOT_UNIQUE),
+                                  Singleton(ModeFormat::UNIQUE)});
     // TODO (rohany): What format do we want to do here?
     Tensor<int16_t> frosttTensor, otherShifted;
+    Tensor<int16_t> frosttTensorEcsr, otherShiftedEcsr;
+    if (op == PLUS2) {
+        std::tie(frosttTensorEcsr, otherShiftedEcsr) = inputCacheInt16.getTensorInput(tnsPath, tensorName, ecsr,
+                                                                                    false, false, true, true, GEN_OTHER, true);
 
-    std::tie(frosttTensor, otherShifted) = inputCacheInt16.getTensorInput(tnsPath, tensorName, Sparse,
-                                                                     false, false, true, true, GEN_OTHER, true);
+    } else {
+      std::tie(frosttTensor, otherShifted) = inputCacheInt16.getTensorInput(tnsPath, tensorName, Sparse,
+                                                                            false, false, true, true, GEN_OTHER, true);
+    }
 
-    std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
+    // std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
 
     int DIM0 = frosttTensor.getDimension(0);
     int DIM1 = frosttTensor.getDimension(1);
@@ -476,9 +484,7 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
                 result(i, j) = frosttTensor(i, j, k) * otherVec(k);
 
                 stmt = result.getAssignment().concretize();
-                std::cout << "Stmt Before: " << stmt << std::endl;
                 stmt = scheduleTTVCPU(stmt, frosttTensor);
-                std::cout << "Stmt After: " << stmt << std::endl;
 
               break;
             }
@@ -488,17 +494,15 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
                 result() = frosttTensor(i, j, k) * otherShifted(i, j, k);
 
                 stmt = result.getAssignment().concretize();
-                std::cout << "Stmt: " << stmt << std::endl;
+
                 // TODO: Generate innerprod schedule
                 break;
             }
             case PLUS2: {
 
-//              Format ecsr({Dense, Compressed(ModeFormat::NOT_UNIQUE),
-//                           Singleton(ModeFormat::UNIQUE)});
-                result = Tensor<int16_t>("result", frosttTensor.getDimensions(), CSR, fill_value);
+                result = Tensor<int16_t>("result", frosttTensor.getDimensions(), ecsr, fill_value);
 
-                result(i, j, k) = frosttTensor(i, j, k) + otherShifted(i, j, k);
+                result(i, j, k) = frosttTensorEcsr(i, j, k) + otherShiftedEcsr(i, j, k);
 
                 stmt = result.getAssignment().concretize();
                 stmt = scheduleSpAddCPU(stmt);
@@ -506,23 +510,49 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
             }
             case TTM: {
                 // Assume otherMat(0) format is the same as frosttTensor(2)
-                result = Tensor<int16_t>("result", {DIM0, DIM1, DIM_EXTRA}, frosttTensor.getFormat(), fill_value);
+                result = Tensor<int16_t>("result", {DIM0, DIM1, DIM_EXTRA}, Dense, fill_value);
                 Tensor<int16_t> otherMat = inputCacheInt16.otherMatTTM;
 
-                // TODO: (owhsu) need to pick things for this and MTTKRP...
-                result(i, j, k) = frosttTensor(i, j, l) * otherMat(k, l);
+                Tensor<int16_t> otherMatTrans("C", {DIM2, DIM_EXTRA}, Dense, fill_value);
+                std::vector<int> coords(otherMatTrans.getOrder());
+                for (auto &value: taco::iterate<int16_t>(otherMat)) {
+                  for (int i = 0; i < otherMat.getOrder(); i++) {
+                    coords[otherMat.getOrder() - i - 1] = value.first[i];
+                  }
+                  otherMatTrans.insert(coords, (int16_t)value.second);
+                }
+                result(i, j, l) = frosttTensor(i, j, k) * otherMatTrans(k, l);
 
                 stmt = result.getAssignment().concretize();
                 stmt = scheduleTTMCPU(stmt, frosttTensor);
                 break;
             }
             case MTTKRP: {
-                result = Tensor<int16_t>("result", {DIM0, DIM_EXTRA}, DCSR, fill_value);
+                result = Tensor<int16_t>("result", {DIM0, DIM_EXTRA}, Dense, fill_value);
 
-                Tensor<int16_t> otherMat = inputCacheInt16.otherMatMode1MTTKRP;
-                Tensor<int16_t> otherMat1 = inputCacheInt16.otherMatMode2MTTKRP;
+                Tensor<int16_t> otherMat1 = inputCacheInt16.otherMatMode1MTTKRP;
+                Tensor<int16_t> otherMat2 = inputCacheInt16.otherMatMode2MTTKRP;
 
-                result(i, j) = frosttTensor(i, k, l) * otherMat(j, k) * otherMat1(j, l);
+                Tensor<int16_t> otherMat1Trans("C", {DIM1, DIM_EXTRA}, Dense, fill_value);
+
+                std::vector<int> coords1(otherMat1Trans.getOrder());
+                for (auto &value: taco::iterate<int16_t>(otherMat1)) {
+                  for (int i = 0; i < otherMat1.getOrder(); i++) {
+                    coords1[otherMat1.getOrder() - i - 1] = value.first[i];
+                  }
+                  otherMat1Trans.insert(coords1, (int16_t)value.second);
+                }
+
+                Tensor<int16_t> otherMat2Trans("D", {DIM2, DIM_EXTRA}, Dense, fill_value);
+                std::vector<int> coords2(otherMat1Trans.getOrder());
+                for (auto &value: taco::iterate<int16_t>(otherMat2)) {
+                  for (int i = 0; i < otherMat2.getOrder(); i++) {
+                    coords2[otherMat2.getOrder() - i - 1] = value.first[i];
+                  }
+                  otherMat2Trans.insert(coords2, (int16_t)value.second);
+                }
+
+                result(i, j) = frosttTensor(i, k, l) * otherMat1Trans(k, j) * otherMat2Trans(l, j);
 
                 stmt = result.getAssignment().concretize();
                 stmt = scheduleMTTKRPCPU(stmt, frosttTensor);
@@ -533,16 +563,14 @@ static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_va
                 state.SkipWithError("invalid expression");
                 return;
         }
-        result.setAssembleWhileCompute(true);
+        // result.setAssembleWhileCompute(true);
         taco_iassert(stmt != IndexStmt());
         result.compile(stmt);
-        std::cout << "Finished compiling" << std::endl;
         state.ResumeTiming();
-
+        result.assemble();
         result.compute();
 
         state.PauseTiming();
-        std::cout << "Finished computing" << std::endl;
 
         if (auto validationPath = getValidationOutputPath(); validationPath != "") {
             auto key = cpuBenchKey(tensorName, opName(op));
@@ -580,11 +608,13 @@ TACO_BENCH_ARGS(bench_frostt_unsched, name/tensor3_ttm, TTM);
 TACO_BENCH_ARGS(bench_frostt_unsched, name/tensor3_mttkrp, MTTKRP);
 
 //#define DECLARE_FROSTT_BENCH_SCHED(name, path)
+// Working:
 // TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttv, TTV);
 // TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_innerprod, INNERPROD);
-TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_elemadd_plus2, PLUS2);
+// TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_elemadd_plus2, PLUS2);
 // TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttm, TTM);
-// TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_mttkrp, MTTKRP);
+// TODO: (owhsu) in progress
+TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_mttkrp, MTTKRP);
 
 
 //FOREACH_FROSTT_TENSOR(DECLARE_FROSTT_BENCH)
@@ -1274,5 +1304,5 @@ static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, boo
 
 // SpMV seg faults in libmkl for some reason
 // TACO_BENCH_ARGS(bench_suitesparse_mkl, vecmul_spmv_mkl, SPMV, false)->UseRealTime();
-TACO_BENCH_ARGS(bench_suitesparse_mkl, matmul_spmm_mkl, SPMM, false)->UseRealTime();
-TACO_BENCH_ARGS(bench_suitesparse_mkl, mat_plus3_mkl, PLUS3, false)->UseRealTime();
+//TACO_BENCH_ARGS(bench_suitesparse_mkl, matmul_spmm_mkl, SPMM, false)->UseRealTime();
+//TACO_BENCH_ARGS(bench_suitesparse_mkl, mat_plus3_mkl, PLUS3, false)->UseRealTime();
