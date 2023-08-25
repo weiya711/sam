@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, PydataTensorShifter, ScipyTensorShifter, \
-    FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor
+    FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor, constructOtherMatKey, constructOtherVecKey
 from sam.sim.src.tiling.process_expr import parse_all
 
 # FIXME: This should not be here... Set your SAM_HOME directory
@@ -329,9 +329,16 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
 
     elif "tensor3_ttv" in app_str:
         print("Writing other tensors...")
-        size_i, size_j, size_k = tensor.shape  # i,j,k
-        print("OTHER SIZES: ", size_i, size_j, size_k)
-        tensor_c = scipy.sparse.random(size_k, 1, data_rvs=np.ones).toarray().flatten()
+
+        tensorName = args.input_tensor
+        variant="mode2" # k dimension is mode 2
+        path = constructOtherVecKey(tensorName,variant)
+        tensor_c_loader = FrosttTensor(path)
+        tensor_c = tensor_c_loader.load().todense()
+        print(tensor_c)
+        # size_i, size_j, size_k = tensor.shape  # i,j,k
+        # print("OTHER SIZES: ", size_i, size_j, size_k)
+        # tensor_c = scipy.sparse.random(size_k, 1, data_rvs=np.ones).toarray().flatten()
 
         if other_nonempty:
             tensor_c[0] = 1
@@ -341,17 +348,24 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
     elif "tensor3_ttm" in app_str:
         print("IN TILE.PY NOW")
         print("Writing other tensors...")
-        size_i, size_j, size_l = tensor.shape  # i,j,k
-        print("OTHER SIZES: ", size_i, size_j, size_l)
-        # dimension_k = random.randint(min(tensor.shape), 10)
-        dimension_k = 3
-        tensor_c = scipy.sparse.random(dimension_k, size_l, density=0.25, data_rvs=np.ones).toarray()
+
+        tensorName = args.input_tensor
+        variant="mode2_ttm"
+        path = constructOtherMatKey(tensorName, variant)
+        matrix_c_loader = FrosttTensor(path)
+        matrix_c = matrix_c_loader.load().todense()
+        print(matrix_c)
+        # size_i, size_j, size_l = tensor.shape  # i,j,k
+        # print("OTHER SIZES: ", size_i, size_j, size_l)
+        # # dimension_k = random.randint(min(tensor.shape), 10)
+        # dimension_k = 3
+        # tensor_c = scipy.sparse.random(dimension_k, size_l, density=0.25, data_rvs=np.ones).toarray()
         # tensor_c = scipy.sparse.random(dimension_k, size_l, data_rvs=np.ones).toarray().flatten()
 
         if other_nonempty:
-            tensor_c[0] = 1
+            matrix_c[0] = 1
 
-        tensors.append(tensor_c)
+        tensors.append(matrix_c)
 
     elif "tensor3_elemadd" in app_str:
         print("Writing shifted...")
@@ -368,10 +382,24 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
     elif "tensor3_mttkrp" in app_str:
         print("Writing shifted...")
         size_i, size_j, size_l = tensor.shape  # i,j,k
-        size_k = random.randint(min(tensor.shape), 10)
-        # C & D are dense according to TACO documentation
-        matrix_c = scipy.sparse.random(size_j, size_k, density=1, data_rvs=np.ones).toarray()
-        matrix_d = scipy.sparse.random(size_j, size_l, density=1, data_rvs=np.ones).toarray()
+
+        tensorName = args.input_tensor
+        variant="mode1_mttkrp"
+        path = constructOtherMatKey(tensorName, variant)
+        matrix_c_loader = FrosttTensor(path)
+        matrix_c = matrix_c_loader.load().todense()
+        print(matrix_c)
+
+        tensorName = args.input_tensor
+        variant="mode2_mttkrp"
+        path = constructOtherMatKey(tensorName, variant)
+        matrix_d_loader = FrosttTensor(path)
+        matrix_d = matrix_d_loader.load().todense()
+        print(matrix_d)
+        # size_k = random.randint(min(tensor.shape), 10)
+        # # C & D are dense according to TACO documentation
+        # matrix_c = scipy.sparse.random(size_j, size_k, density=1, data_rvs=np.ones).toarray()
+        # matrix_d = scipy.sparse.random(size_j, size_l, density=1, data_rvs=np.ones).toarray()
         
         if other_nonempty:
             matrix_c[0] = 1

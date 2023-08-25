@@ -17,7 +17,7 @@ BENCHMARKS=(
 	# tensor3_mttkrp
 #   tensor3_ttv
 #   tensor3_ttm
-  # tensor3_mttkrp
+#   tensor3_mttkrp
   # tensor3_elemmul
   # tensor3_mttkrp
 )

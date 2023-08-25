@@ -64,6 +64,15 @@ def round_sparse(x):
     else:
         return math.ceil(x - 0.5)
 
+def constructOtherVecKey(tensorName, variant, sparsity=0.001):
+    path = os.getenv('TACO_TENSOR_PATH')
+    return f"{path}/{tensorName}-vec_{variant}-{sparsity}.tns"
+
+def constructOtherMatKey(tensorName, variant, sparsity=0.001):
+    path = os.getenv('TACO_TENSOR_PATH')
+    filename = f"{path}/{tensorName}-mat_{variant}*"
+    dirlist = glob.glob(filename)
+    return dirlist[0]
 
 # TnsFileLoader loads a tensor stored in .tns format.
 class TnsFileLoader:
