@@ -45,10 +45,16 @@
 # comments to the code, the above Disclaimer and U.S. Government End
 # Users Notice.
 CUDA_TOOLKIT := $(shell dirname $$(command -v nvcc))/..
+$(info "$(CUDA_TOOLKIT)")
 # Assume that taco lib/headers are in the relative folder from sam
 TACO_INC := ../taco/include/
+BASELINE_INC := ../
+# BENCHMARK_INC := ../benchmark/include/
+# BENCHMARK2_INC := ../build/benchmark/include/
+# BENCHMARK_LINK := ../build/benchmark/lib/
 TACO_LIB := ../taco/build/lib/
-INC          := -I$(CUDA_TOOLKIT)/include -I$(TACO_INC) -L$(TACO_LIB)
+INC          := -I$(CUDA_TOOLKIT)/include -I$(TACO_INC) -L$(TACO_LIB) -I$(BASELINE_INC)
+# INC          := -I$(CUDA_TOOLKIT)/include -I$(TACO_INC) -L$(TACO_LIB) -I$(BASELINE_INC) -I$(BENCHMARK_INC) -I$(BENCHMARK2_INC) -L$(BENCHMARK_LINK)
 LIBS         := -lcusparse -lcudart -ltaco
 
 all: baseline_cusparse

@@ -60,6 +60,9 @@
 #include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
 #include <thrust/host_vector.h>
+#include "benchmark/benchmark.h"
+#include "../bench.h"
+#include <tuple>
 
 #define CHECK_CUDA(func)                                                       \
 {                                                                              \
@@ -93,21 +96,21 @@ bool float_compare(float f1, float f2, float pct){
     return percent_diff < pct;
 }
 
-int spgemm(std::string mat_path){
+int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
 
     std::cout << "Calculating SPGEMM" << std::endl;
-    taco::TensorBase tb = taco::readMTX(mat_path, taco::CSR);
+    // taco::TensorBase tb = taco::readMTX(mat_path, taco::CSR);
     // std::cout << tb << std::endl;
-    auto dims = tb.getDimensions();
+    auto dims = tensorA.getDimensions();
 
     // Get A and its arrays to analyze sizes/etc
     int * rowptrA;
     int * colidxA;
-    double * valsA_pre;
+    float * valsA;
 
-    taco::getCSRArrays(tb, &rowptrA, &colidxA, &valsA_pre);
+    taco::getCSRArrays(tensorA, &rowptrA, &colidxA, &valsA);
 
-    auto storage = tb.getStorage();
+    auto storage = tensorA.getStorage();
     auto index = storage.getIndex();
     auto rowptrArr = index.getModeIndex(1).getIndexArray(0);
     auto colidxArr = index.getModeIndex(1).getIndexArray(1);
@@ -116,30 +119,31 @@ int spgemm(std::string mat_path){
     auto coloffsetsize = colidxArr.getSize();
     auto valssize = coloffsetsize;
 
-    float * valsA = (float *) malloc(valssize * sizeof(float));
-    for(int i_ = 0; i_ < valssize; i_++){
-        valsA[i_] = (float) valsA_pre[i_];
-    }
+    // float * valsA = (float *) malloc(valssize * sizeof(float));
+    // for(int i_ = 0; i_ < valssize; i_++){
+    //     valsA[i_] = (float) valsA_pre[i_];
+    // }
 
     // Create the float version
-    taco::Tensor<float> tb_float = taco::makeCSR("tb_float", dims, rowptrA, colidxA, valsA);
+    // taco::Tensor<float> tb_float = taco::makeCSR("tb_float", dims, rowptrA, colidxA, valsA);
 
-    taco::Format formatcsc(taco::CSC);
-    taco::TensorBase tb_csc;
-    tb_csc = taco::read(mat_path, formatcsc);
+    // taco::Format formatcsc(taco::CSC);
+    // taco::TensorBase tb_csc;
+    // tb_csc = taco::read(mat_path, formatcsc);
 
     int NUM_I = dims[0];
     int NUM_K = dims[1];
     int NUM_J = dims[0];
 
-    taco::Tensor<float> tb_float_trans = tb_float.transpose("tb_float_trans", {1, 0}, taco::CSR);
-    taco::Tensor<float> tb_float_trans_csc = tb_float.transpose("tb_float_trans_csc", {1, 0}, taco::CSC);
+    // taco::Tensor<float> tb_float_trans = tb_float.transpose("tb_float_trans", {1, 0}, taco::CSR);
+    // tensorB is transposed in CSR
+    taco::Tensor<float> tensorB_csc = tensorB.transpose("tensorB_transposed", {0, 1}, taco::CSC);
 
-    int * rowptrA_trans;
-    int * colidxA_trans;
-    float * valsA_trans;
+    int * rowptrB;
+    int * colidxB;
+    float * valsB;
 
-    taco::getCSRArrays(tb_float_trans, &rowptrA_trans, &colidxA_trans, &valsA_trans);
+    taco::getCSRArrays(tensorB, &rowptrB, &colidxB, &valsB);
 
     /*
         Compute the output of spgemm
@@ -147,7 +151,7 @@ int spgemm(std::string mat_path){
     taco::IndexVar i, j, k;
 
     taco::Tensor<float> expected("expected", {NUM_I, NUM_J}, taco::CSR);
-    expected(i, k) = tb_float(i, j) * tb_float_trans_csc(j, k);
+    expected(i, k) = tensorA(i, j) * tensorB_csc(j, k);
     expected.compile();
     expected.assemble();
     expected.compute();
@@ -185,9 +189,9 @@ int spgemm(std::string mat_path){
     int  * hA_csrOffsets = rowptrA;
     int  * hA_columns    = colidxA;
     float* hA_values     = valsA;
-    int  * hB_csrOffsets = rowptrA_trans;
-    int  * hB_columns    = colidxA_trans;
-    float* hB_values     = valsA_trans;
+    int  * hB_csrOffsets = rowptrB;
+    int  * hB_columns    = colidxB;
+    float* hB_values     = valsB;
     int   *hC_csrOffsets = rowptrC;
     int   *hC_columns    = colidxC;
     float *hC_values     = valsC;
@@ -1413,10 +1417,23 @@ int main(int argc, char *argv[]) {
     std::string mat_path = mat_path_base + "/" + default_mat + "/" + default_mat + ".mtx";
     std::cout << "Using path: " << mat_path << std::endl;
 
+    taco::Tensor<float> tensorA, tensorB;
+
+    TensorInputCache inputCache;
+
+    std::tie(tensorA, tensorB) = inputCache.getTensorInput(mat_path, "mek", taco::CSR,
+                                                                     false, false, false, false, true);
+
+    std::cout << tensorA << std::endl;
+    std::cout << tensorB << std::endl;
+
+    // return 0;
+
     switch(default_op){
         // SPGEMM
         case 1:
-            return spgemm(mat_path);
+            // return spgemm(mat_path);
+            return spgemm(tensorA, tensorB);
         // SDDMM
         case 2:
             return sddmm(mat_path);

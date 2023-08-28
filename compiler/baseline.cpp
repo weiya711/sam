@@ -42,97 +42,97 @@ static void applyBenchSizes(benchmark::internal::Benchmark *b) {
     b->ArgsProduct({{10}});
 }
 
-// TensorInputCache is a cache for the input to ufunc benchmarks. These benchmarks
-// operate on a tensor loaded from disk and the same tensor shifted slightly. Since
-// these operations are run multiple times, we can save alot in benchmark startup
-// time from caching these inputs.
-struct TensorInputCache {
-    template<typename U>
-    std::pair<taco::Tensor<int64_t>, taco::Tensor<int64_t>>
-    getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
-                   bool includeVec = false, bool includeMat = false, bool genOther = false) {
-        // See if the paths match.
-        if (this->lastPath == path and this->lastFormat == format) {
-            // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
-            return std::make_pair(this->inputTensor, this->otherTensor);
-        }
+// // TensorInputCache is a cache for the input to ufunc benchmarks. These benchmarks
+// // operate on a tensor loaded from disk and the same tensor shifted slightly. Since
+// // these operations are run multiple times, we can save alot in benchmark startup
+// // time from caching these inputs.
+// struct TensorInputCache {
+//     template<typename U>
+//     std::pair<taco::Tensor<int64_t>, taco::Tensor<int64_t>>
+//     getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
+//                    bool includeVec = false, bool includeMat = false, bool genOther = false) {
+//         // See if the paths match.
+//         if (this->lastPath == path and this->lastFormat == format) {
+//             // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
+//             return std::make_pair(this->inputTensor, this->otherTensor);
+//         }
 
-        // Otherwise, we missed the cache. Load in the target tensor and process it.
-        this->lastLoaded = taco::read(path, format);
-        this->lastFormat = format;
-        // We assign lastPath after lastLoaded so that if taco::read throws an exception
-        // then lastPath isn't updated to the new path.
-        this->lastPath = path;
-        this->inputTensor = castToType<int64_t>("B", this->lastLoaded);
-        this->otherTensor = shiftLastMode<int64_t, int64_t>("C", this->inputTensor);
+//         // Otherwise, we missed the cache. Load in the target tensor and process it.
+//         this->lastLoaded = taco::read(path, format);
+//         this->lastFormat = format;
+//         // We assign lastPath after lastLoaded so that if taco::read throws an exception
+//         // then lastPath isn't updated to the new path.
+//         this->lastPath = path;
+//         this->inputTensor = castToType<int64_t>("B", this->lastLoaded);
+//         this->otherTensor = shiftLastMode<int64_t, int64_t>("C", this->inputTensor);
 
-        if (countNNZ) {
-            this->nnz = 0;
-            for (auto &it: iterate<int64_t>(this->inputTensor)) {
-                this->nnz++;
-            }
-        }
-        if (includeThird) {
-            this->thirdTensor = shiftLastMode<int64_t, int64_t>("D", this->otherTensor);
-            this->otherTensorTrans = this->otherTensor.transpose("C", {1, 0}, DCSC);
+//         if (countNNZ) {
+//             this->nnz = 0;
+//             for (auto &it: iterate<int64_t>(this->inputTensor)) {
+//                 this->nnz++;
+//             }
+//         }
+//         if (includeThird) {
+//             this->thirdTensor = shiftLastMode<int64_t, int64_t>("D", this->otherTensor);
+//             this->otherTensorTrans = this->otherTensor.transpose("C", {1, 0}, DCSC);
 
-        }
-        if (includeVec and genOther) {
-            this->otherVecFirstMode = genOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
-            auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
-        } else if (includeVec) {
-            std::vector<int32_t> firstDim;
-            std::vector<int32_t> lastDim;
-            if (this->inputTensor.getOrder() == 2) {
-                firstDim.push_back(this->inputTensor.getDimension(0));
-                lastDim.push_back(this->inputTensor.getDimension(1));
-            } else {
-                firstDim.push_back(this->inputTensor.getDimension(0));
-                lastDim.push_back(this->inputTensor.getDimension(2));
-            }
+//         }
+//         if (includeVec and genOther) {
+//             this->otherVecFirstMode = genOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
+//             auto lastMode = this->inputTensor.getDimensions().size() - 1;
+//             this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
+//         } else if (includeVec) {
+//             std::vector<int32_t> firstDim;
+//             std::vector<int32_t> lastDim;
+//             if (this->inputTensor.getOrder() == 2) {
+//                 firstDim.push_back(this->inputTensor.getDimension(0));
+//                 lastDim.push_back(this->inputTensor.getDimension(1));
+//             } else {
+//                 firstDim.push_back(this->inputTensor.getDimension(0));
+//                 lastDim.push_back(this->inputTensor.getDimension(2));
+//             }
 
-            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor, firstDim);
-            auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastDim, lastMode);
-        }
+//             this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor, firstDim);
+//             auto lastMode = this->inputTensor.getDimensions().size() - 1;
+//             this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastDim, lastMode);
+//         }
 
-        if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
-            int DIM1 = this->inputTensor.getDimension(1);
-            int DIM2 = this->inputTensor.getDimension(2);
+//         if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
+//             int DIM1 = this->inputTensor.getDimension(1);
+//             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
-            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
-            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
-        } else if (this->inputTensor.getOrder() > 2 and includeMat) {
-            int DIM1 = this->inputTensor.getDimension(1);
-            int DIM2 = this->inputTensor.getDimension(2);
+//             this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+//             this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+//             this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
+//         } else if (this->inputTensor.getOrder() > 2 and includeMat) {
+//             int DIM1 = this->inputTensor.getDimension(1);
+//             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
-            this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
-            this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
-        }
-        return std::make_pair(this->inputTensor, this->otherTensor);
-    }
+//             this->otherMatTTM = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+//             this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+//             this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
+//         }
+//         return std::make_pair(this->inputTensor, this->otherTensor);
+//     }
 
-    taco::Tensor<double> lastLoaded;
-    std::string lastPath;
-    taco::Format lastFormat;
+//     taco::Tensor<double> lastLoaded;
+//     std::string lastPath;
+//     taco::Format lastFormat;
 
-    taco::Tensor<int64_t> inputTensor;
-    taco::Tensor<int64_t> otherTensor;
-    taco::Tensor<int64_t> thirdTensor;
-    taco::Tensor<int64_t> otherTensorTrans;
-    taco::Tensor<int64_t> otherVecFirstMode;
-    taco::Tensor<int64_t> otherVecLastMode;
+//     taco::Tensor<int64_t> inputTensor;
+//     taco::Tensor<int64_t> otherTensor;
+//     taco::Tensor<int64_t> thirdTensor;
+//     taco::Tensor<int64_t> otherTensorTrans;
+//     taco::Tensor<int64_t> otherVecFirstMode;
+//     taco::Tensor<int64_t> otherVecLastMode;
 
-    // FROSTT only
-    taco::Tensor<int64_t> otherMatTTM;
-    taco::Tensor<int64_t> otherMatMode1MTTKRP;
-    taco::Tensor<int64_t> otherMatMode2MTTKRP;
+//     // FROSTT only
+//     taco::Tensor<int64_t> otherMatTTM;
+//     taco::Tensor<int64_t> otherMatMode1MTTKRP;
+//     taco::Tensor<int64_t> otherMatMode2MTTKRP;
 
-    int64_t nnz;
-};
+//     int64_t nnz;
+// };
 
 TensorInputCache inputCache;
 
