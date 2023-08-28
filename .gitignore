@@ -5,8 +5,13 @@ __pycache__/
 # Temporary output files
 *.swp
 *.swo
+*.swn
 *.txt
 *.out
+*.log
+
+# Generated Python Package files
+*.egg-info/
 
 # Files for MacOS and IDEs
 .DS_store
@@ -26,6 +31,13 @@ cmake-build-*/
 *.csv
 *.json
 
+# Tensor files
+*.mtx
+*.tns
+
+# Generated formatted tensor files
+tensor_*_mode_*
+
 # Generated folders
 build/
 logs/
@@ -35,22 +47,19 @@ suitesparse-bench/
 sam-outputs/
 compiler/benchmark/
 
+# Temporary or generated tensor directories 
+tmp_mat*/
+tiles/
+synthetic/
+
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
-*.gv
+# Temporary scripts
+download_suitesparse_partial.sh
 
-*.mtx
-*.tns
+# Network Filesystem 
+.nfs*
 
-# Temporary matrices
-tmp_mat*/
-
-# Jupyter notebook checkpoints
-.ipynb_checkpoints/
-
-# Generated formatted tensor files
-tensor_*_mode_*
-
-# Tensor files
-tiles/
+# Cmake collateral
+CMakeFiles/

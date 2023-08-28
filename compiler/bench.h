@@ -166,17 +166,25 @@ taco::Tensor<T> transposeTensor(std::string name, taco::Tensor<T2> original) {
 
 template<typename T, typename T2>
 taco::Tensor<T> genOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original, int mode = 0,
-                         float sparsity=0.001, taco::Format format=taco::sparse) {
+                         float sparsity=0.001, taco::Format format=taco::sparse, bool genNonEmpty = true) {
     int dimension = original.getDimensions().at(mode);
     taco::Tensor<T> result(name, {dimension}, format);
 
+    bool empty = true;
     for (int ii = 0; ii < dimension; ii++) {
         float rand_float = (float) rand() / (float) (RAND_MAX);
         if (rand_float < sparsity) {
-            // (owhsu) Setting this number to 1 for now
-            result.insert({ii}, T(1));
+            // (owhsu) Setting this number to 2 for now
+            result.insert({ii}, T(2));
+            empty = false;
         }
     }
+
+    // Insert at least one nonzero
+    if (genNonEmpty && empty) {
+        result.insert({0}, T(2));
+    }
+
     result.pack();
     taco::write(constructOtherVecKey(datasetName, "vec_mode"+std::to_string(mode), sparsity), result);
 
@@ -187,6 +195,7 @@ template<typename T, typename T2>
 taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Tensor<T2> original,
                             std::vector<int> dimensions, int mode = 0, float sparsity=0.001) {
     taco::Tensor<T> result;
+
     taco::Tensor<double> tensor = taco::readDim(constructOtherVecKey(datasetName,
                                                     "vec_mode" + std::to_string(mode), sparsity),
                                                 taco::Sparse, dimensions, true);
@@ -197,19 +206,27 @@ taco::Tensor<T> getOtherVec(std::string name, std::string datasetName, taco::Ten
 template<typename T, typename T2>
 taco::Tensor<T> genOtherMat(std::string name, std::string datasetName, taco::Tensor<T2> original,
                             std::vector<int> dimensions, std::string filestr, int mode = 0, float sparsity=0.001,
-                            taco::Format format = taco::DCSR) {
+                            taco::Format format = taco::DCSR, bool genNonEmpty = true) {
 
     taco::Tensor<T> result(name, dimensions, format);
 
+    bool empty = true;
     for (int ii = 0; ii < dimensions[0]; ii++) {
         for (int jj = 0; jj < dimensions[1]; jj++) {
             float rand_float = (float) rand() / (float) (RAND_MAX);
             if (rand_float < sparsity) {
-                // (owhsu) Setting this number to 1 for now
-                result.insert({ii, jj}, T(1));
+                // (owhsu) Setting this number to 2 for now
+                result.insert({ii, jj}, T(2));
+                empty = false;
             }
         }
     }
+
+    // Insert at least one nonzero
+    if (genNonEmpty && empty) {
+      result.insert({0, 0}, T(2));
+    }
+
     result.pack();
     taco::write(constructOtherMatKey(datasetName, "mat_mode"+std::to_string(mode)+"_"+filestr, dimensions, sparsity), result);
 
@@ -231,11 +248,12 @@ taco::Tensor<T> getOtherMat(std::string name, std::string datasetName, taco::Ten
 // operate on a tensor loaded from disk and the same tensor shifted slightly. Since
 // these operations are run multiple times, we can save alot in benchmark startup
 // time from caching these inputs.
+template<typename T>
 struct TensorInputCache {
     template<typename U>
-    std::pair<taco::Tensor<int64_t>, taco::Tensor<int64_t>>
+    std::pair<taco::Tensor<T>, taco::Tensor<T>>
     getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
-                   bool includeVec = false, bool includeMat = false, bool genOther = false) {
+                   bool includeVec = false, bool includeMat = false, bool genOther = false, bool use_CSR_CSC=false) {
         // See if the paths match.
         if (this->lastPath == path and this->lastFormat == format) {
             // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
@@ -248,24 +266,31 @@ struct TensorInputCache {
         // We assign lastPath after lastLoaded so that if taco::read throws an exception
         // then lastPath isn't updated to the new path.
         this->lastPath = path;
-        this->inputTensor = castToType<int64_t>("B", this->lastLoaded);
-        this->otherTensor = shiftLastMode<int64_t, int64_t>("C", this->inputTensor);
+        this->inputTensor = castToType<T>("B", this->lastLoaded);
+        this->otherTensor = shiftLastMode<T, T>("C", this->inputTensor);
 
         if (countNNZ) {
             this->nnz = 0;
-            for (auto &it: iterate<int64_t>(this->inputTensor)) {
+            for (auto &it: iterate<T>(this->inputTensor)) {
                 this->nnz++;
             }
         }
         if (includeThird) {
-            this->thirdTensor = shiftLastMode<int64_t, int64_t>("D", this->otherTensor);
-            this->otherTensorTrans = this->otherTensor.transpose("C", {1, 0}, DCSC);
+            this->thirdTensor = shiftLastMode<T, T>("D", this->otherTensor);
+            taco::Tensor<T> oTT;
+            if (use_CSR_CSC) {
+               oTT = this->otherTensor.transpose("C", {1, 0}, CSC);
+            } else {
+              oTT = this->otherTensor.transpose("C", {1, 0}, DCSC);
+            }
+            this->otherTensorTrans = oTT;
 
         }
         if (includeVec and genOther) {
-            this->otherVecFirstMode = genOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor);
+	          std::cout << "Generating OTHER vector for " << datasetName << std::endl;
+            this->otherVecFirstMode = genOtherVec<T, T>("C", datasetName, this->inputTensor);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = genOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastMode);
+            this->otherVecLastMode = genOtherVec<T, T>("D", datasetName, this->inputTensor, lastMode);
         } else if (includeVec) {
             std::vector<int32_t> firstDim;
             std::vector<int32_t> lastDim;
@@ -277,25 +302,25 @@ struct TensorInputCache {
                 lastDim.push_back(this->inputTensor.getDimension(2));
             }
 
-            this->otherVecFirstMode = getOtherVec<int64_t, int64_t>("C", datasetName, this->inputTensor, firstDim);
+            this->otherVecFirstMode = getOtherVec<T, T>("C", datasetName, this->inputTensor, firstDim);
             auto lastMode = this->inputTensor.getDimensions().size() - 1;
-            this->otherVecLastMode = getOtherVec<int64_t, int64_t>("D", datasetName, this->inputTensor, lastDim, lastMode);
+            this->otherVecLastMode = getOtherVec<T, T>("D", datasetName, this->inputTensor, lastDim, lastMode);
         }
 
         if (this->inputTensor.getOrder() > 2 and includeMat and genOther) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
-            this->otherMatMode1MTTKRP = genOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
-            this->otherMatMode2MTTKRP = genOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
+            this->otherMatTTM = genOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+            this->otherMatMode1MTTKRP = genOtherMat<T, T>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+            this->otherMatMode2MTTKRP = genOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
         } else if (this->inputTensor.getOrder() > 2 and includeMat) {
             int DIM1 = this->inputTensor.getDimension(1);
             int DIM2 = this->inputTensor.getDimension(2);
 
-            this->otherMatTTM = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
-            this->otherMatMode1MTTKRP = getOtherMat<int64_t, int64_t>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
-            this->otherMatMode2MTTKRP = getOtherMat<int64_t, int64_t>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
+            this->otherMatTTM = getOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
+            this->otherMatMode1MTTKRP = getOtherMat<T, T>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
+            this->otherMatMode2MTTKRP = getOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
         }
         return std::make_pair(this->inputTensor, this->otherTensor);
     }
@@ -304,20 +329,19 @@ struct TensorInputCache {
     std::string lastPath;
     taco::Format lastFormat;
 
-    taco::Tensor<int64_t> inputTensor;
-    taco::Tensor<int64_t> otherTensor;
-    taco::Tensor<int64_t> thirdTensor;
-    taco::Tensor<int64_t> otherTensorTrans;
-    taco::Tensor<int64_t> otherVecFirstMode;
-    taco::Tensor<int64_t> otherVecLastMode;
+    taco::Tensor<T> inputTensor;
+    taco::Tensor<T> otherTensor;
+    taco::Tensor<T> thirdTensor;
+    taco::Tensor<T> otherTensorTrans;
+    taco::Tensor<T> otherVecFirstMode;
+    taco::Tensor<T> otherVecLastMode;
 
     // FROSTT only
-    taco::Tensor<int64_t> otherMatTTM;
-    taco::Tensor<int64_t> otherMatMode1MTTKRP;
-    taco::Tensor<int64_t> otherMatMode2MTTKRP;
+    taco::Tensor<T> otherMatTTM;
+    taco::Tensor<T> otherMatMode1MTTKRP;
+    taco::Tensor<T> otherMatMode2MTTKRP;
 
     int64_t nnz;
 };
-
 
 #endif //TACO_BENCH_BENCH_H

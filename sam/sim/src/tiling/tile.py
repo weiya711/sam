@@ -12,8 +12,9 @@ from pathlib import Path
 from sam.util import SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 from sam.sim.src.tiling.process_expr import parse_all, update_dict
 
-SAM_STRS = {"matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)"}
-
+SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)", 
+            "matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)",
+            "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)"}
 
 def print_dict(dd):
     for k, v in dd.items():
@@ -275,7 +276,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Tile matrices')
     parser.add_argument("--input_tensor", type=str, default=None)
     parser.add_argument("--gen_tensor", action="store_true")
-    parser.add_argument("--cotile", type=str, default=None)
+    parser.add_argument("--cotile", type=str, default=None, description="Name of kernel if it needs to be cotiled")
     parser.add_argument("--output_dir_path", type=str, default="./tiles")
     parser.add_argument("--hw_config", type=str, default=None)
     parser.add_argument("--multilevel", action="store_true")

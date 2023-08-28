@@ -21,6 +21,7 @@ ifeq ($(GEN),)
 GEN := "OFF"
 endif
 
+
 benches_name := $(patsubst %.py,%,$(BENCHES))
 benches_name := $(subst /,_,$(benches_name))
 benches_name := $(subst *,_,$(benches_name))
@@ -31,22 +32,22 @@ endif
 
 ifeq ("$(NEVA)","ON")
 	CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
-	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
-	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
-	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
-	export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
+	# export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
+	# export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
+	# export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+	# export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
+	# export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
+	# export TACO_TENSOR_PATH=/nobackup/owhsu/sparse-datasets
 else ifeq ("$(LANKA)", "ON")
 	CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) numactl -C 0,2,4,6,8,10,24,26,28,30,32,34 -m 0 compiler/build/taco-bench $(BENCHFLAGS)
-	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
-	export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
-	export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
-	export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
+	# export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
+	# export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
+	# export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
+	# export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
+	# export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
+	# export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
 else
-	CMD := LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
+	CMD := OMP_PROC_BIND=true LD_LIBRARY_PATH=compiler/build/lib/:$(LD_LIBRARY_PATH) compiler/build/taco-bench $(BENCHFLAGS)
 endif
 
 guard-%:
@@ -57,16 +58,16 @@ guard-%:
 
 # ---- Run SAM python simulator stuff ----
 csv: 
-	scripts/pytest_suitesparse_with_benchmarks.sh
+	scripts/run_sam_sim/pytest_suitesparse_with_benchmarks.sh
 run-final: submodules
-	./scripts/run_suitesparse_final.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
+	./scripts/run_sam_sim/run_suitesparse_final.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
 
 run-gen: submodules
-	./scripts/run_suitesparse_generated.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
+	./scripts/run_sam_sim/run_suitesparse_generated.sh $(realpath ./scripts/tensor_names/$(TENSOR_TXT)) 
 
 tests: sam 
 	mkdir -p sam/sim/test/apps
-	python scripts/test_generating_code.py
+	python scripts/gen_sam_apps/test_generating_code.py
 
 # ---- Build taco and make sam graphs ----
 .PHONY: sam
@@ -89,7 +90,7 @@ else
 endif
 
 compiler/build/taco-bench: submodules compiler/benchmark/googletest
-	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) ../ && $(MAKE) taco-bench
+	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) $(CMAKE_FLAGS) ../ && $(MAKE) taco-bench -j8
 
 compiler/benchmark/googletest: submodules
 	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
@@ -109,18 +110,10 @@ endif
 # ---- Setup proper environment stuff ----
 suitesparse-formats: guard-SUITESPARSE_FORMATTED_PATH guard-SUITESPARSE_PATH
 	rm -rf ${SUITESPARSE_FORMATTED_PATH}/*
-	set -e && ./scripts/generate_suitesparse_formats.sh
+	set -e && ./scripts/formatting/generate_suitesparse_formats.sh
 
 frostt-formats: taco/build guard-FROSTT_FORMATTED_PATH guard-FROSTT_PATH
-	./scripts/generate_frostt_formats.sh
-
-.PHONY: env
-env:
-	export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
-	export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
-	export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
+	./scripts/formatting/generate_frostt_formats.sh
 
 .PHONY: pydepends
 pydepends:
