@@ -14,9 +14,7 @@ cwd=$(pwd)
 sspath=/home/max/Documents/SPARSE/GPU/mats
 
 out=suitesparse-bench/taco
-
 mkdir -p "$out"
-make -j cusparsething
 
 while read line; do
 	# if [ $2 -eq 1 ]; then
@@ -25,9 +23,5 @@ while read line; do
     matrix="$sspath/$line/$line.mtx"
 	# fi
 	csvout="$out/result-$line.csv"
-	export SUITESPARSE_TENSOR_PATH="$matrix"
-    export TACO_OUT="$csvout"
-    export BENCHES="cusparse_benchmark"
-    export GEN=OFF
-    ./cusparsething
+    SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" BENCHES="" make -j cusparse-bench  GEN=OFF
 done <$1

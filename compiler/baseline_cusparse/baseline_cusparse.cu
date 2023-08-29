@@ -103,7 +103,7 @@ int spgemm(taco::Tensor<float> & tensorA, taco::Tensor<float> & tensorB, benchma
 
     if(benching) {state->PauseTiming();}
 
-    std::cout << "Calculating SPGEMM" << std::endl;
+    // std::cout << "Calculating SPGEMM" << std::endl;
     auto dims = tensorA.getDimensions();
 
     // Get A and its arrays to analyze sizes/etc
@@ -360,12 +360,18 @@ int spgemm(taco::Tensor<float> & tensorA, taco::Tensor<float> & tensorB, benchma
             break;
         }
     }
-    if (correct)
-        printf("spgemm_example test PASSED\n");
-    else {
-        printf("spgemm_example test FAILED: wrong result\n");
+
+    if (correct == 0) {
+        // printf("plus3 test PASSED\n");
         return EXIT_FAILURE;
     }
+
+    // if (correct)
+    //     printf("spgemm_example test PASSED\n");
+    // else {
+    //     printf("spgemm_example test FAILED: wrong result\n");
+    //     return EXIT_FAILURE;
+    // }
     //--------------------------------------------------------------------------
     // device memory deallocation
     CHECK_CUDA( cudaFree(dBuffer1) )
@@ -384,7 +390,7 @@ int spgemm(taco::Tensor<float> & tensorA, taco::Tensor<float> & tensorB, benchma
 
 int sddmm(std::string mat_path){
 
-    std::cout << "Calculating SDDMM" << std::endl;
+    // std::cout << "Calculating SDDMM" << std::endl;
     taco::TensorBase tb_denseA_double = taco::readMTX(mat_path, {taco::Dense, taco::Dense});
     auto dims = tb_denseA_double.getDimensions();
 
@@ -607,7 +613,7 @@ int spmv(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB_csr, benchmark
 
     if(benching) {state->PauseTiming();}
 
-    std::cout << "Calculating SPMv" << std::endl;
+    // std::cout << "Calculating SPMv" << std::endl;
     auto dims = tensorA.getDimensions();
 
     // Get A and its arrays to analyze sizes/etc
@@ -732,10 +738,16 @@ int spmv(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB_csr, benchmark
             break;
         }
     }
-    if (correct)
-        printf("spmv_csr_example test PASSED\n");
-    else
-        printf("spmv_csr_example test FAILED: wrong result\n");
+
+    if (correct == 0) {
+        // printf("plus3 test PASSED\n");
+        return EXIT_FAILURE;
+    }
+
+    // if (correct)
+    //     printf("spmv_csr_example test PASSED\n");
+    // else
+    //     printf("spmv_csr_example test FAILED: wrong result\n");
     //--------------------------------------------------------------------------
     // device memory deallocation
     CHECK_CUDA( cudaFree(dBuffer) )
@@ -1015,7 +1027,7 @@ int plus3(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB, taco::Tensor
 
     if(benching) {state->PauseTiming();}
 
-    std::cout << "Calculating PLUS3" << std::endl;
+    // std::cout << "Calculating PLUS3" << std::endl;
     auto dims = tensorA.getDimensions();
 
     // Get A and its arrays to analyze sizes/etc
@@ -1330,12 +1342,13 @@ int plus3(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB, taco::Tensor
             break;
         }
     }
-    if (correct)
-        printf("plus3 test PASSED\n");
-    else {
-        printf("plus3 test FAILED: wrong result\n");
+    if (correct == 0) {
+        // printf("plus3 test PASSED\n");
         return EXIT_FAILURE;
     }
+    // else {
+        // printf("plus3 test FAILED: wrong result\n");
+    // }
     //--------------------------------------------------------------------------
     // device memory deallocation
     CHECK_CUDA( cudaFree(dBuffer1) )

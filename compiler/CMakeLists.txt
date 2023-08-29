@@ -62,7 +62,7 @@ else()
   message("Using INTERACTIVE version of cusparse")
 endif()
 # I went insane
-target_link_libraries(cusparsething /usr/local/cuda-12.2/lib64/libcusparse_static.a)
+target_link_libraries(cusparsething /usr/local/cuda/lib64/libcusparse_static.a)
 target_link_libraries(cusparsething taco)
 target_link_libraries(cusparsething cudart)
 target_link_libraries(cusparsething benchmark::benchmark)

@@ -89,8 +89,20 @@ else
 	$(CMD) --benchmark_filter="$(BENCHES)" --benchmark_out_format="csv" --benchmark_out="$(TACO_OUT)" --benchmark_repetitions=10 --benchmark_counters_tabular=true
 endif
 
+cusparse-bench: compiler/build/cusparsething
+	export GEN=$(GEN)
+	mkdir -p results-cusparse
+ifeq ($(BENCHES),"")
+	compiler/build/cusparsething --benchmark_out_format="csv" --benchmark_out="$(TACO_OUT)" --benchmark_repetitions=10 --benchmark_counters_tabular=true
+else
+	compiler/build/cusparsething --benchmark_filter="$(BENCHES)" --benchmark_out_format="csv" --benchmark_out="$(TACO_OUT)" --benchmark_repetitions=10 --benchmark_counters_tabular=true
+endif
+
 compiler/build/taco-bench: submodules compiler/benchmark/googletest
 	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) $(CMAKE_FLAGS) ../ && $(MAKE) taco-bench -j8
+
+compiler/build/cusparsething: submodules compiler/benchmark/googletest
+	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) -DBENCH_CUSPARSE_OP=ON $(CMAKE_FLAGS) ../ && $(MAKE) cusparsething -j8
 
 compiler/benchmark/googletest: submodules
 	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
