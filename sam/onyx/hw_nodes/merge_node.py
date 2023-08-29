@@ -56,9 +56,6 @@ class MergeNode(HWNode):
             new_conns = {
                 f'merge_{conn}_to_wr_scan': [
                     ([(merge, f"cmrg_coord_out_{conn}"), (wr_scan, f"data_in")], 17),
-                    # ([(merge, f"cmrg_eos_out_{conn}"), (wr_scan, f"eos_in_0")], 1),
-                    # ([(wr_scan, f"ready_out_0"), (merge, f"cmrg_ready_in_{conn}")], 1),
-                    # ([(merge, f"cmrg_valid_out_{conn}"), (wr_scan, f"valid_in_0")], 1),
                 ]
             }
 
@@ -66,7 +63,15 @@ class MergeNode(HWNode):
         elif other_type == IntersectNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == ReduceNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            # raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            other_red = other.get_name()
+            new_conns = {
+                f'merge_to_reduce_inner': [
+                    ([(merge, f"cmrg_coord_out_{0}"), (other_red, f"data_in")], 17),
+                ]
+            }
+
+            return new_conns
         elif other_type == LookupNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == MergeNode:
@@ -88,11 +93,7 @@ class MergeNode(HWNode):
 
             new_conns = {
                 f'merger_to_merger_{out_conn}_to_{in_conn}': [
-                    # Send isect row and isect col to merger inside isect_col
                     ([(merge, f"cmrg_coord_out_{out_conn}"), (other_merge, f"cmrg_coord_in_{in_conn}")], 17),
-                    # ([(isect, "eos_out_0"), (merge, f"cmrg_eos_in_{conn}")], 1),
-                    # ([(merge, f"cmrg_ready_out_{conn}"), (isect, "ready_in_0")], 1),
-                    # ([(isect, "valid_out_0"), (merge, f"cmrg_valid_in_{conn}")], 1),
                 ]
             }
 

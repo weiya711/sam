@@ -54,8 +54,6 @@ class ReadScannerNode(HWNode):
             other_valid = other.get_valid()
             new_conns = {
                 'rd_scan_to_glb': [
-                    # send output to rd scanner
-                    # ([(rd_scan, "coord_out"), (other_data, "f2io_17")], 17),
                     ([(rd_scan, "block_rd_out"), (other_data, "f2io_17")], 17),
                 ]
             }
@@ -82,11 +80,7 @@ class ReadScannerNode(HWNode):
             other_rd_scan = other.get_name()
             new_conns = {
                 'rd_scan_to_rd_scan': [
-                    # send output to rd scanner
                     ([(rd_scan, "pos_out"), (other_rd_scan, "us_pos_in")], 17),
-                    # ([(rd_scan, "eos_out_1"), (other_rd_scan, "us_eos_in")], 1),
-                    # ([(other_rd_scan, "us_ready_out"), (rd_scan, "pos_out_ready")], 1),
-                    # ([(rd_scan, "pos_out_valid"), (other_rd_scan, "us_valid_in")], 1),
                 ]
             }
             return new_conns
@@ -101,11 +95,7 @@ class ReadScannerNode(HWNode):
 
             new_conns = {
                 'rd_scan_to_wr_scan': [
-                    # send output to rd scanner
                     ([(rd_scan, out_conn), (wr_scan, "data_in")], 17),
-                    # ([(rd_scan, "eos_out_0"), (wr_scan, "eos_in_0")], 1),
-                    # ([(wr_scan, "data_in_ready"), (rd_scan, "coord_out_ready")], 1),
-                    # ([(rd_scan, "coord_out_valid"), (wr_scan, "data_in_valid")], 1),
                 ]
             }
             return new_conns
@@ -205,8 +195,6 @@ class ReadScannerNode(HWNode):
 
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [
-                    # send output to rd scanner
-                    # ([(rd_scan, "coord_out"), (compute, f"data_in_{compute_conn}")], 17),
                     ([(rd_scan, "coord_out"), (compute, f"data{compute_conn}")], 17),
                 ]
             }
@@ -292,21 +280,6 @@ class ReadScannerNode(HWNode):
             # stop_lvl = 0
             lookup = 0
         else:
-            # stop_lvl = int(attributes['mode'].strip('"'))
-
-            # Do some hex
-            # tensor = attributes['tensor'].strip('"')
-            # index = attributes['index'].strip('"')
-
-            # if tensor == 'B' and index == 'i':
-            #     stop_lvl = 0
-            # elif tensor == 'B' and index == 'k':
-            #     stop_lvl = 2
-            # elif tensor == 'C' and index == 'j':
-            #     stop_lvl = 1
-            # elif tensor == 'C' and index == 'k':
-            #     stop_lvl = 2
-
             lookup = 0
         block_mode = int(attributes['type'].strip('"') == 'fiberwrite')
 
