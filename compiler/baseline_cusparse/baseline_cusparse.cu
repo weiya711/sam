@@ -1371,7 +1371,7 @@ static void cusparse_benchmark(benchmark::State &state, SuiteSparseOp op, bool g
   state.counters["other_sparsity1"] = 0;
   state.counters["other_sparsity1"] = 0;
 
-  auto tensorPath = getEnvVar("TACO_TENSOR_PATH");
+  auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
   // std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
   if (tensorPath == "") {
     state.error_occurred();
@@ -1421,8 +1421,8 @@ static void cusparse_benchmark(benchmark::State &state, SuiteSparseOp op, bool g
 //       }
 //     }
 //   }
-    tensorPath = "/home/max/Documents/SPARSE/GPU/mats/relat3/relat3.mtx";
-    tensorName = "relat3";
+    // tensorPath = "/home/max/Documents/SPARSE/GPU/mats/relat3/relat3.mtx";
+    // tensorName = "relat3";
     // tensorPath = "/home/max/Documents/SPARSE/GPU/mats/Zhao1/Zhao1.mtx";
     // tensorName = "Zhao1";
 
