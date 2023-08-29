@@ -376,6 +376,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("Writing shifted...")
 
         print("Writing shifted...")
+        print("tensor.shape = ", tensor.shape)
         # shifted = ScipyTensorShifter().shiftLastMode(tensor)
         shifted = PydataTensorShifter().shiftLastMode(tensor)
         tensors.append(shifted)
