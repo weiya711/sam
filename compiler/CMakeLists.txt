@@ -4,12 +4,12 @@ set(CMAKE_BUILD_TYPE "Release")
 option(NEVA "Build benchmarks for the neva or kiwi clusters." OFF)
 option(LANKA "Build benchmarks for the lanka cluster." OFF)
 
-set(ENV{MKLROOT} "/opt/intel/oneapi/mkl/2023.2.0/")
-set(ENV{MKL_INCLUDE} "${MKLROOT}/include/")
-set(ENV{MKL_LINK} "static")
-set(MKL_LINK "static")
-set(ENV{MKL_THREADING} "gnu_thread")
-set(MKL_THREADING "gnu_thread")
+# set(ENV{MKLROOT} "/opt/intel/oneapi/mkl/2023.2.0/")
+# set(ENV{MKL_INCLUDE} "${MKLROOT}/include/")
+# set(ENV{MKL_LINK} "static")
+# set(MKL_LINK "static")
+# set(ENV{MKL_THREADING} "gnu_thread")
+# set(MKL_THREADING "gnu_thread")
 
 # set(MKL_INCLUDE "${MKLROOT}/include/")
 # 
@@ -19,17 +19,19 @@ set(MKL_THREADING "gnu_thread")
 # 
 # target_include_directories(taco-bench PUBLIC ${MKLROOT}/include) 
 
-find_package(MKL REQUIRED)
-find_package(OpenMP REQUIRED)
+# find_package(MKL REQUIRED)
+# find_package(OpenMP REQUIRED)
 
 add_subdirectory(taco)
 add_subdirectory(benchmark)
 
-include_directories(taco taco/include benchmark/include taco/src ${MKL_INCLUDE_DIRS} ${MKL_INCLUDE})
+include_directories(taco taco/include benchmark/include taco/src) 
+# include_directories(${MKL_INCLUDE_DIRS} ${MKL_INCLUDE})
 
 file(GLOB TEST_SOURCES *.cpp *.h)
 
-set(CMAKE_CXX_FLAGS "${C_CXX_FLAGS} -std=c++14 -openmp -fopenmp")
+# set(CMAKE_CXX_FLAGS "${C_CXX_FLAGS} -std=c++14 -openmp -fopenmp")
+set(CMAKE_CXX_FLAGS "${C_CXX_FLAGS} -std=c++14")
 
 add_executable(taco-bench ${TEST_SOURCES} bench.h)
 

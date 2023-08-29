@@ -28,6 +28,16 @@ Goodwin_054
 rail516
 stat96v4
 lp_nug20
+rand_large_sp98_1
+rand_large_sp98_2
+rand_large_sp98_3
+rand_large_sp98_4
+rand_large_sp98_5
+rand_large_sp98_6
+rand_large_sp98_7
+rand_large_sp98_8
+rand_large_sp98_9
+rand_large_sp98_10
 rand_small_tensor1
 rand_small_tensor2
 rand_small_tensor3
