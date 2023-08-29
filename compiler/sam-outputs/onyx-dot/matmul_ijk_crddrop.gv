@@ -20,8 +20,6 @@ digraph SAM {
     9 [comment="type=fiberlookup,index=k,tensor=C,mode=0,format=compressed,src=true,root=false" label="FiberLookup k: C0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="k" tensor="C" mode="0" format="compressed" src="true" root="false"]
     18 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
     19 [comment="type=crddrop,outer=j,inner=k" label="CrdDrop j,k" color=orange shape=box style=filled type="crddrop" outer="j" inner="k"]
-    20 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop Val i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
-    21 [comment="type=crddrop,outer=j,inner=k" label="CrdDrop Val j,k" color=orange shape=box style=filled type="crddrop" outer="j" inner="k"]
 
     17 -> 16 [label="crd" style=dashed type="crd" comment=""]
     # 16 -> 2 [label="crd" style=dashed type="crd"]
@@ -46,15 +44,12 @@ digraph SAM {
     9 -> 7 [label="ref_in-C" style=bold type="ref" comment="in-C"]
     17 -> 10 [label="ref" style=bold type="ref" comment=""]
     
-    7 -> 19 [label="crd_inner-k" style=dashed type="crd" comment="inner-k"]
-    12 -> 19 [label="crd_inner-k" style=dashed type="crd" comment="outer-j"]
-    19 -> 1 [label="crd_outer-j" style=dashed type="crd" comment="outer-j"]
-    
+    4 -> 19 [label="val_inner-k" type="val" comment="inner-k"]
+    12 -> 19 [label="crd_outer-j" style=dashed type="crd" comment="outer-j"]
+    18 -> 1 [label="crd_inner-j" style=dashed type="crd" comment="inner-j"]
+    19 -> 3 [label="val_inner-k" type="val" comment="inner-k"]
+
     19 -> 18 [label="crd_inner-j" style=dashed type="crd" comment="inner-j"] 
     16 -> 18 [label="crd_outer-i" style=dashed type="crd" comment="outer-i"] 
     18 -> 2 [label="crd_outer-i" style=dashed type="crd" comment="outer-i"] 
-    
-    4 -> 21 [label="val_inner-k" type="val" comment="inner-k"]
-    12 -> 21 [label="crd_inner-k" style=dashed type="crd" comment="outer-j"]
-    21 -> 3 [label="val_inner-k" type="val" comment="inner-k"]
 }
