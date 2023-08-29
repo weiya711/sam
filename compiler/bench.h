@@ -17,6 +17,48 @@
 
 using namespace taco;
 
+enum SuiteSparseOp {
+    SPMV = 1,
+    SPMM = 2,
+    PLUS3 = 3,
+    SDDMM = 4,
+    MATTRANSMUL = 5,
+    RESIDUAL = 6,
+    MMADD = 7,
+    MMMUL = 8
+};
+
+// std::string opName(SuiteSparseOp op) {
+//     switch (op) {
+//         case SPMV: {
+//             return "spmv";
+//         }
+//         case SPMM: {
+//             return "spmm";
+//         }
+//         case PLUS3: {
+//             return "plus3";
+//         }
+//         case SDDMM: {
+//             return "sddmm";
+//         }
+//         case MATTRANSMUL: {
+//             return "mattransmul";
+//         }
+//         case RESIDUAL: {
+//             return "residual";
+//         }
+//         case MMADD: {
+//             return "mmadd";
+//         }
+//         case MMMUL: {
+//             return "mmmul";
+//         }
+//         default:
+//             return "";
+//     }
+// }
+
 // Register a benchmark with the following options:
 // * Millisecond output display
 // * 10 data points
@@ -255,10 +297,10 @@ struct TensorInputCache {
     getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
                    bool includeVec = false, bool includeMat = false, bool genOther = false, bool use_CSR_CSC=false) {
         // See if the paths match.
-        if (this->lastPath == path and this->lastFormat == format) {
-            // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
-            return std::make_pair(this->inputTensor, this->otherTensor);
-        }
+        // if (this->lastPath == path and this->lastFormat == format) {
+        //     // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
+        //     return std::make_pair(this->inputTensor, this->otherTensor);
+        // }
 
         // Otherwise, we missed the cache. Load in the target tensor and process it.
         this->lastLoaded = taco::read(path, format);

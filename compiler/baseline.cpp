@@ -15,7 +15,7 @@
 #include "taco/index_notation/tensor_operator.h"
 #include "taco/index_notation/transformations.h"
 
-#include "mkl.h"
+// #include "mkl.h"
 
 using namespace taco;
 
@@ -640,48 +640,6 @@ struct SuiteSparseTensors {
 
 SuiteSparseTensors ssTensors;
 
-enum SuiteSparseOp {
-    SPMV = 1,
-    SPMM = 2,
-    PLUS3 = 3,
-    SDDMM = 4,
-    MATTRANSMUL = 5,
-    RESIDUAL = 6,
-    MMADD = 7,
-    MMMUL = 8
-};
-
-std::string opName(SuiteSparseOp op) {
-    switch (op) {
-        case SPMV: {
-            return "spmv";
-        }
-        case SPMM: {
-            return "spmm";
-        }
-        case PLUS3: {
-            return "plus3";
-        }
-        case SDDMM: {
-            return "sddmm";
-        }
-        case MATTRANSMUL: {
-            return "mattransmul";
-        }
-        case RESIDUAL: {
-            return "residual";
-        }
-        case MMADD: {
-            return "mmadd";
-        }
-        case MMMUL: {
-            return "mmmul";
-        }
-        default:
-            return "";
-    }
-}
-
 static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op, bool gen=true, int16_t fill_value = 0) {
 
     bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
@@ -1035,272 +993,272 @@ static void print_array(T * array, int size) {
 }
 
 
-static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
-  std::cout << "START BENCHMARK" << std::endl;
-  bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
+// static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
+//   std::cout << "START BENCHMARK" << std::endl;
+//   bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
 
-  // Counters must be present in every run to get reported to the CSV.
-  state.counters["dimx"] = 0;
-  state.counters["dimy"] = 0;
-  state.counters["nnz"] = 0;
-  state.counters["other_sparsity1"] = 0;
-  state.counters["other_sparsity1"] = 0;
+//   // Counters must be present in every run to get reported to the CSV.
+//   state.counters["dimx"] = 0;
+//   state.counters["dimy"] = 0;
+//   state.counters["nnz"] = 0;
+//   state.counters["other_sparsity1"] = 0;
+//   state.counters["other_sparsity1"] = 0;
 
-  auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
-  // std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
-  if (tensorPath == "") {
-    std::cout << "BENCHMARK ERROR" << std::endl;
-    state.error_occurred();
-    return;
-  }
+//   auto tensorPath = getEnvVar("SUITESPARSE_TENSOR_PATH");
+//   // std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
+//   if (tensorPath == "") {
+//     std::cout << "BENCHMARK ERROR" << std::endl;
+//     state.error_occurred();
+//     return;
+//   }
 
-  auto pathSplit = taco::util::split(tensorPath, "/");
-  auto filename = pathSplit[pathSplit.size() - 1];
-  auto tensorName = taco::util::split(filename, ".")[0];
-  state.SetLabel(tensorName);
+//   auto pathSplit = taco::util::split(tensorPath, "/");
+//   auto filename = pathSplit[pathSplit.size() - 1];
+//   auto tensorName = taco::util::split(filename, ".")[0];
+//   state.SetLabel(tensorName);
 
-  taco::Tensor<float> ssTensor, otherShifted;
-  try {
-    taco::Format format = op == MATTRANSMUL ? CSC : CSR;
-    std::tie(ssTensor, otherShifted) = inputCacheFloat.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
-                                                                 true /* includeThird */, true, false, GEN_OTHER, true);
-  } catch (TacoException &e) {
-    // Counters don't show up in the generated CSV if we used SkipWithError, so
-    // just add in the label that this run is skipped.
-    std::cout << e.what() << std::endl;
-    state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
-    return;
-  }
+//   taco::Tensor<float> ssTensor, otherShifted;
+//   try {
+//     taco::Format format = op == MATTRANSMUL ? CSC : CSR;
+//     std::tie(ssTensor, otherShifted) = inputCacheFloat.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
+//                                                                  true /* includeThird */, true, false, GEN_OTHER, true);
+//   } catch (TacoException &e) {
+//     // Counters don't show up in the generated CSV if we used SkipWithError, so
+//     // just add in the label that this run is skipped.
+//     std::cout << e.what() << std::endl;
+//     state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
+//     return;
+//   }
 
-  int DIM0 = ssTensor.getDimension(0);
-  int DIM1 = ssTensor.getDimension(1);
+//   int DIM0 = ssTensor.getDimension(0);
+//   int DIM1 = ssTensor.getDimension(1);
 
-  state.counters["dimx"] = DIM0;
-  state.counters["dimy"] = DIM1;
-  state.counters["nnz"] = inputCacheFloat.nnz;
+//   state.counters["dimx"] = DIM0;
+//   state.counters["dimy"] = DIM1;
+//   state.counters["nnz"] = inputCacheFloat.nnz;
 
-  taco::Tensor<float> denseMat1;
-  taco::Tensor<float> denseMat2;
-  taco::Tensor<float> s1("s1"), s2("s2");
-  s1.insert({}, float(2));
-  s2.insert({}, float(2));
-  if (op == SDDMM) {
-    denseMat1 = Tensor<int16_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
-    denseMat2 = Tensor<int16_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
+//   taco::Tensor<float> denseMat1;
+//   taco::Tensor<float> denseMat2;
+//   taco::Tensor<float> s1("s1"), s2("s2");
+//   s1.insert({}, float(2));
+//   s2.insert({}, float(2));
+//   if (op == SDDMM) {
+//     denseMat1 = Tensor<int16_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
+//     denseMat2 = Tensor<int16_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
 
-    // (owhsu) Making this dense matrices of all 1's
-    for (int kk = 0; kk < DIM_EXTRA; kk++) {
-      for (int ii = 0; ii < DIM0; ii++) {
-        denseMat1.insert({ii, kk}, float(2));
-      }
-      for (int jj = 0; jj < DIM1; jj++) {
-        denseMat2.insert({kk, jj}, float(2));
-      }
-    }
-  }
+//     // (owhsu) Making this dense matrices of all 1's
+//     for (int kk = 0; kk < DIM_EXTRA; kk++) {
+//       for (int ii = 0; ii < DIM0; ii++) {
+//         denseMat1.insert({ii, kk}, float(2));
+//       }
+//       for (int jj = 0; jj < DIM1; jj++) {
+//         denseMat2.insert({kk, jj}, float(2));
+//       }
+//     }
+//   }
 
-  MKL_INT NNZ = inputCacheFloat.nnz;
+//   MKL_INT NNZ = inputCacheFloat.nnz;
 
-//  int *ptrB = (int*)malloc(sizeof(int) * DIM0);
-//  int *idxB = (int*)malloc(sizeof(int) * NNZ);
-//  float* valsB = (float*)malloc(sizeof(float)*NNZ);
+// //  int *ptrB = (int*)malloc(sizeof(int) * DIM0);
+// //  int *idxB = (int*)malloc(sizeof(int) * NNZ);
+// //  float* valsB = (float*)malloc(sizeof(float)*NNZ);
 
-  int *ptrB;
-  int *idxB;
-  float* valsB;
+//   int *ptrB;
+//   int *idxB;
+//   float* valsB;
 
-  std::cout << "GOT HERE" << std::endl;
-  getCSRArrays(ssTensor, &ptrB, &idxB, &valsB);
+//   std::cout << "GOT HERE" << std::endl;
+//   getCSRArrays(ssTensor, &ptrB, &idxB, &valsB);
 
-  sparse_matrix_t csrB;
-  mkl_sparse_s_create_csr(&csrB, SPARSE_INDEX_BASE_ZERO, DIM0, DIM1,
-                          ptrB, ptrB + 1, idxB, valsB);
+//   sparse_matrix_t csrB;
+//   mkl_sparse_s_create_csr(&csrB, SPARSE_INDEX_BASE_ZERO, DIM0, DIM1,
+//                           ptrB, ptrB + 1, idxB, valsB);
 
-  print_array(ptrB, DIM0 + 1);
-  print_array(idxB, NNZ);
-  print_array(valsB, NNZ);
+//   print_array(ptrB, DIM0 + 1);
+//   print_array(idxB, NNZ);
+//   print_array(valsB, NNZ);
 
-  std::cout << "sparse_s_create_csr PASSED" << std::endl;
-  matrix_descr descrB;
-  descrB.type = SPARSE_MATRIX_TYPE_GENERAL;
+//   std::cout << "sparse_s_create_csr PASSED" << std::endl;
+//   matrix_descr descrB;
+//   descrB.type = SPARSE_MATRIX_TYPE_GENERAL;
 
-  int* ptrBCheck;
-  int* idxBCheck;
-  float* valsBCheck;
-  int rowsCheck, colsCheck;
-  sparse_index_base_t indextype;
-  mkl_sparse_s_export_csr(csrB, &indextype, &rowsCheck, &colsCheck, &ptrBCheck, &ptrBCheck + 1, &idxBCheck, &valsBCheck);
-  print_array(ptrBCheck, rowsCheck + 1);
-  print_array(idxBCheck, NNZ);
-  print_array(valsBCheck, NNZ);
-
-
-
-  for (auto _: state) {
-    state.PauseTiming();
-    Tensor<float> result;
-    IndexStmt stmt;
-
-    switch (op) {
-      case SPMV: {
-
-        if (false) {
-          std::cout << "Entered SPMV Case" << std::endl;
-
-          Tensor<float> otherVecj = inputCacheFloat.otherVecLastMode;
-
-          std::cout << "otherVecj: " << otherVecj << otherVecj.getStorage() << std::endl;
-
-//        const float* x = (float *)otherVecj.getStorage().getValues().getData();
-//        std::cout << "x: " << x << ", " << x << std::endl;
-
-          auto x = (float *) malloc(sizeof(float) * DIM1);
-
-          std::fill(x, x + DIM1, 0.0);
-          for (auto &value: taco::iterate<float>(otherVecj)) {
-            for (int i = 0; i < otherVecj.getOrder(); i++) {
-              std::cout << "x: (" << i << ", " << value.first[i] << ")" << std::endl;
-              x[i] = (float) value.first[i];
-            }
-          }
-
-          float *y;
-          // = (float  *)malloc(sizeof(float) * DIM0);
-          std::fill(y, y + DIM0, 0.0);
-
-          std::cout << "y: " << y << std::endl;
-          print_array(y, DIM0);
-//        std::cout << csrB << std::endl;
-
-          std::cout << "mkl_sparse_optimize ENTERING" << std::endl;
-          // mkl_sparse_optimize(csrB);
-          std::cout << "mkl_sparse_optimize PASSED" << std::endl;
-          state.ResumeTiming();
-          auto mkl_code = mkl_sparse_s_mv(SPARSE_OPERATION_NON_TRANSPOSE, 1.0, csrB, descrB, x, 0.0, y);
-          state.PauseTiming();
-          std::cout << "mkl_sparse_s_mv PASSED" << std::endl;
-        } else {
-          // Since SpMV is seg faulting, do SpMM with a size jx1 matrix...
-          int *ptrC;
-          int *idxC;
-          float* valsC;
-
-          Tensor<float> otherVecj = inputCacheFloat.otherVecLastMode;
-
-          // FIXME: (owhsu) this isn't correct yet
-          ptrC[0] = 0;
-          ptrC[1] = otherVecj.getDimension(0);
-          idxC[0] = 0;
-
-          sparse_matrix_t csrC;
-          mkl_sparse_s_create_csc(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
-                                  ptrC, ptrC + 1, idxC, valsC);
-          std::cout << "sparse_s_create_csc C PASSED" << std::endl;
-
-          auto result = (float *)malloc(sizeof(float) * DIM0 * DIM1);
-
-          state.ResumeTiming();
-          auto mkl_code = mkl_sparse_s_spmmd(SPARSE_OPERATION_NON_TRANSPOSE, csrB, csrC, SPARSE_LAYOUT_ROW_MAJOR, result, DIM0);
-          state.PauseTiming();
-
-          free(result);
-        }
+//   int* ptrBCheck;
+//   int* idxBCheck;
+//   float* valsBCheck;
+//   int rowsCheck, colsCheck;
+//   sparse_index_base_t indextype;
+//   mkl_sparse_s_export_csr(csrB, &indextype, &rowsCheck, &colsCheck, &ptrBCheck, &ptrBCheck + 1, &idxBCheck, &valsBCheck);
+//   print_array(ptrBCheck, rowsCheck + 1);
+//   print_array(idxBCheck, NNZ);
+//   print_array(valsBCheck, NNZ);
 
 
-      }
-      case SPMM: {
-        int *ptrC;
-        int *idxC;
-        float* valsC;
 
-        getCSCArrays(inputCacheFloat.otherTensorTrans, &ptrC, &idxC, &valsC);
+//   for (auto _: state) {
+//     state.PauseTiming();
+//     Tensor<float> result;
+//     IndexStmt stmt;
 
-        sparse_matrix_t csrC;
-        mkl_sparse_s_create_csc(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
-                                ptrC, ptrC + 1, idxC, valsC);
+//     switch (op) {
+//       case SPMV: {
 
-        float * result; // = (float *)malloc(sizeof(float) * DIM0 * DIM1);
+//         if (false) {
+//           std::cout << "Entered SPMV Case" << std::endl;
 
-        state.ResumeTiming();
-        auto mkl_code = mkl_sparse_s_spmmd(SPARSE_OPERATION_NON_TRANSPOSE, csrB, csrC, SPARSE_LAYOUT_ROW_MAJOR, result, DIM0);
-        std::cout << mkl_code << std::endl;
-        state.PauseTiming();
+//           Tensor<float> otherVecj = inputCacheFloat.otherVecLastMode;
 
-        mkl_sparse_destroy(csrC);
-        break;
-      }
-      case PLUS3: {
-        // Turn C tensor into mkl CSR
-        int *ptrC;
-        int *idxC;
-        float* valsC;
+//           std::cout << "otherVecj: " << otherVecj << otherVecj.getStorage() << std::endl;
 
-        std::cout << "GOT HERE, Tensor C" << std::endl;
-        getCSRArrays(otherShifted, &ptrC, &idxC, &valsC);
+// //        const float* x = (float *)otherVecj.getStorage().getValues().getData();
+// //        std::cout << "x: " << x << ", " << x << std::endl;
 
-        sparse_matrix_t csrC;
+//           auto x = (float *) malloc(sizeof(float) * DIM1);
 
-        mkl_sparse_s_create_csr(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
-                                ptrC, ptrC + 1, idxC, valsC);
+//           std::fill(x, x + DIM1, 0.0);
+//           for (auto &value: taco::iterate<float>(otherVecj)) {
+//             for (int i = 0; i < otherVecj.getOrder(); i++) {
+//               std::cout << "x: (" << i << ", " << value.first[i] << ")" << std::endl;
+//               x[i] = (float) value.first[i];
+//             }
+//           }
 
-//        int *ptrD = (int*)malloc(sizeof(int) * DIM0);
-//        int *idxD = (int*)malloc(sizeof(int) * NNZ);
-//        auto* valsD = (float*)malloc(sizeof(float)*NNZ);
-        int *ptrD;
-        int *idxD;
-        float* valsD;
+//           float *y;
+//           // = (float  *)malloc(sizeof(float) * DIM0);
+//           std::fill(y, y + DIM0, 0.0);
 
-        // Turn D tensor into mkl CSR
-        std::cout << "GOT HERE, Tensor D" << std::endl;
-        getCSRArrays(inputCacheFloat.thirdTensor, &ptrD, &idxD, &valsD);
+//           std::cout << "y: " << y << std::endl;
+//           print_array(y, DIM0);
+// //        std::cout << csrB << std::endl;
 
-        sparse_matrix_t csrD;
-        mkl_sparse_s_create_csr(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
-                                ptrD, ptrD + 1, idxD, valsD);
-        std::cout << "mkl_sparse_s_create_csr, PASSED" << std::endl;
+//           std::cout << "mkl_sparse_optimize ENTERING" << std::endl;
+//           // mkl_sparse_optimize(csrB);
+//           std::cout << "mkl_sparse_optimize PASSED" << std::endl;
+//           state.ResumeTiming();
+//           auto mkl_code = mkl_sparse_s_mv(SPARSE_OPERATION_NON_TRANSPOSE, 1.0, csrB, descrB, x, 0.0, y);
+//           state.PauseTiming();
+//           std::cout << "mkl_sparse_s_mv PASSED" << std::endl;
+//         } else {
+//           // Since SpMV is seg faulting, do SpMM with a size jx1 matrix...
+//           int *ptrC;
+//           int *idxC;
+//           float* valsC;
 
-        sparse_matrix_t csrBC;
-        sparse_matrix_t csrResult;
+//           Tensor<float> otherVecj = inputCacheFloat.otherVecLastMode;
 
-        state.ResumeTiming();
-        auto mkl_code = mkl_sparse_s_add(SPARSE_OPERATION_NON_TRANSPOSE, csrB, 1.0, csrC, &csrBC);
-        std::cout << "First mkl_sparse_s_add call code: " <<  mkl_code << std::endl;
-        mkl_code = mkl_sparse_s_add(SPARSE_OPERATION_NON_TRANSPOSE, csrBC, 1.0, csrD, &csrResult);
-        std::cout << "Second mkl_sparse_s_add call code: " <<  mkl_code << std::endl;
-        state.PauseTiming();
+//           // FIXME: (owhsu) this isn't correct yet
+//           ptrC[0] = 0;
+//           ptrC[1] = otherVecj.getDimension(0);
+//           idxC[0] = 0;
 
-        mkl_sparse_destroy(csrC);
-        mkl_sparse_destroy(csrD);
-        mkl_sparse_destroy(csrBC);
-        mkl_sparse_destroy(csrResult);
-        break;
-      }
-      case SDDMM: {
-      }
-      case RESIDUAL: {
-      }
-      case MMADD: {
-      }
-      case MMMUL: {
-      }
-      case MATTRANSMUL: {
-      }
-      default:
-        state.SkipWithError("invalid expression");
-        return;
-    }
+//           sparse_matrix_t csrC;
+//           mkl_sparse_s_create_csc(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+//                                   ptrC, ptrC + 1, idxC, valsC);
+//           std::cout << "sparse_s_create_csc C PASSED" << std::endl;
 
-    mkl_sparse_destroy(csrB);
+//           auto result = (float *)malloc(sizeof(float) * DIM0 * DIM1);
 
-    if (auto validationPath = getValidationOutputPath(); validationPath != "") {
-      auto key = cpuBenchKey(tensorName, opName(op));
-      auto outpath = validationPath + key + ".tns";
-      taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
-    }
-    state.ResumeTiming();
+//           state.ResumeTiming();
+//           auto mkl_code = mkl_sparse_s_spmmd(SPARSE_OPERATION_NON_TRANSPOSE, csrB, csrC, SPARSE_LAYOUT_ROW_MAJOR, result, DIM0);
+//           state.PauseTiming();
 
-  }
-}
+//           free(result);
+//         }
+
+
+//       }
+//       case SPMM: {
+//         int *ptrC;
+//         int *idxC;
+//         float* valsC;
+
+//         getCSCArrays(inputCacheFloat.otherTensorTrans, &ptrC, &idxC, &valsC);
+
+//         sparse_matrix_t csrC;
+//         mkl_sparse_s_create_csc(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+//                                 ptrC, ptrC + 1, idxC, valsC);
+
+//         float * result; // = (float *)malloc(sizeof(float) * DIM0 * DIM1);
+
+//         state.ResumeTiming();
+//         auto mkl_code = mkl_sparse_s_spmmd(SPARSE_OPERATION_NON_TRANSPOSE, csrB, csrC, SPARSE_LAYOUT_ROW_MAJOR, result, DIM0);
+//         std::cout << mkl_code << std::endl;
+//         state.PauseTiming();
+
+//         mkl_sparse_destroy(csrC);
+//         break;
+//       }
+//       case PLUS3: {
+//         // Turn C tensor into mkl CSR
+//         int *ptrC;
+//         int *idxC;
+//         float* valsC;
+
+//         std::cout << "GOT HERE, Tensor C" << std::endl;
+//         getCSRArrays(otherShifted, &ptrC, &idxC, &valsC);
+
+//         sparse_matrix_t csrC;
+
+//         mkl_sparse_s_create_csr(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+//                                 ptrC, ptrC + 1, idxC, valsC);
+
+// //        int *ptrD = (int*)malloc(sizeof(int) * DIM0);
+// //        int *idxD = (int*)malloc(sizeof(int) * NNZ);
+// //        auto* valsD = (float*)malloc(sizeof(float)*NNZ);
+//         int *ptrD;
+//         int *idxD;
+//         float* valsD;
+
+//         // Turn D tensor into mkl CSR
+//         std::cout << "GOT HERE, Tensor D" << std::endl;
+//         getCSRArrays(inputCacheFloat.thirdTensor, &ptrD, &idxD, &valsD);
+
+//         sparse_matrix_t csrD;
+//         mkl_sparse_s_create_csr(&csrC, SPARSE_INDEX_BASE_ZERO, DIM1, DIM0,
+//                                 ptrD, ptrD + 1, idxD, valsD);
+//         std::cout << "mkl_sparse_s_create_csr, PASSED" << std::endl;
+
+//         sparse_matrix_t csrBC;
+//         sparse_matrix_t csrResult;
+
+//         state.ResumeTiming();
+//         auto mkl_code = mkl_sparse_s_add(SPARSE_OPERATION_NON_TRANSPOSE, csrB, 1.0, csrC, &csrBC);
+//         std::cout << "First mkl_sparse_s_add call code: " <<  mkl_code << std::endl;
+//         mkl_code = mkl_sparse_s_add(SPARSE_OPERATION_NON_TRANSPOSE, csrBC, 1.0, csrD, &csrResult);
+//         std::cout << "Second mkl_sparse_s_add call code: " <<  mkl_code << std::endl;
+//         state.PauseTiming();
+
+//         mkl_sparse_destroy(csrC);
+//         mkl_sparse_destroy(csrD);
+//         mkl_sparse_destroy(csrBC);
+//         mkl_sparse_destroy(csrResult);
+//         break;
+//       }
+//       case SDDMM: {
+//       }
+//       case RESIDUAL: {
+//       }
+//       case MMADD: {
+//       }
+//       case MMMUL: {
+//       }
+//       case MATTRANSMUL: {
+//       }
+//       default:
+//         state.SkipWithError("invalid expression");
+//         return;
+//     }
+
+//     mkl_sparse_destroy(csrB);
+
+//     if (auto validationPath = getValidationOutputPath(); validationPath != "") {
+//       auto key = cpuBenchKey(tensorName, opName(op));
+//       auto outpath = validationPath + key + ".tns";
+//       taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
+//     }
+//     state.ResumeTiming();
+
+//   }
+// }
 
 // SpMV seg faults in libmkl for some reason
 // TACO_BENCH_ARGS(bench_suitesparse_mkl, vecmul_spmv_mkl, SPMV, false)->UseRealTime();

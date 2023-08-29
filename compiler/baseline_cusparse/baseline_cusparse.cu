@@ -63,6 +63,7 @@
 #include "benchmark/benchmark.h"
 #include "../bench.h"
 #include <tuple>
+// #include "benchmark/include/benchmark/benchmark.h"
 
 #define CHECK_CUDA(func)                                                       \
 {                                                                              \
@@ -96,11 +97,13 @@ bool float_compare(float f1, float f2, float pct){
     return percent_diff < pct;
 }
 
-int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
+int spgemm(taco::Tensor<float> & tensorA, taco::Tensor<float> & tensorB, benchmark::State * state){
+
+    bool benching = (state != nullptr);
+
+    if(benching) {state->PauseTiming();}
 
     std::cout << "Calculating SPGEMM" << std::endl;
-    // taco::TensorBase tb = taco::readMTX(mat_path, taco::CSR);
-    // std::cout << tb << std::endl;
     auto dims = tensorA.getDimensions();
 
     // Get A and its arrays to analyze sizes/etc
@@ -119,25 +122,12 @@ int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
     auto coloffsetsize = colidxArr.getSize();
     auto valssize = coloffsetsize;
 
-    // float * valsA = (float *) malloc(valssize * sizeof(float));
-    // for(int i_ = 0; i_ < valssize; i_++){
-    //     valsA[i_] = (float) valsA_pre[i_];
-    // }
-
-    // Create the float version
-    // taco::Tensor<float> tb_float = taco::makeCSR("tb_float", dims, rowptrA, colidxA, valsA);
-
-    // taco::Format formatcsc(taco::CSC);
-    // taco::TensorBase tb_csc;
-    // tb_csc = taco::read(mat_path, formatcsc);
-
     int NUM_I = dims[0];
     int NUM_K = dims[1];
     int NUM_J = dims[0];
 
-    // taco::Tensor<float> tb_float_trans = tb_float.transpose("tb_float_trans", {1, 0}, taco::CSR);
     // tensorB is transposed in CSR
-    taco::Tensor<float> tensorB_csc = tensorB.transpose("tensorB_transposed", {0, 1}, taco::CSC);
+    taco::Tensor<float> tensorB_csc = tensorB.transpose("tensorB_transposed_csc", {0, 1}, taco::CSC);
 
     int * rowptrB;
     int * colidxB;
@@ -157,6 +147,7 @@ int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
     expected.compute();
 
     // Remove 0's or else the GPU stuff doesn't work due to mismatches in allocs.
+    // auto expected_no_zeros = expected.removeExplicitZeros(taco::CSR);
     auto expected_no_zeros = expected.removeExplicitZeros(taco::CSR);
 
     // Get the information/ptrs from C for comparison and GPU calls
@@ -178,7 +169,6 @@ int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
 
     // Host problem definition
     #define   A_NUM_ROWS dims[0]   // C compatibility
-    // #define   A_NUM_ROWS dims[0]   // C compatibility
     const int A_num_rows = dims[0];
     const int A_num_cols = dims[1];
     const int A_nnz      = valssize;
@@ -227,20 +217,15 @@ int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
                         (A_num_rows + 1) * sizeof(int),
                         cudaMemcpyHostToDevice) )
     CHECK_CUDA( cudaMemcpy(dA_columns, hA_columns, A_nnz * sizeof(int),
-    // CHECK_CUDA( cudaMemcpy(dA_columns, &hA_columns, A_nnz * sizeof(int),
                         cudaMemcpyHostToDevice) )
     CHECK_CUDA( cudaMemcpy(dA_values, hA_values,
-    // CHECK_CUDA( cudaMemcpy(dA_values, &hA_values,
                         A_nnz * sizeof(float), cudaMemcpyHostToDevice) )
     // copy B
     CHECK_CUDA( cudaMemcpy(dB_csrOffsets, hB_csrOffsets,
-    // CHECK_CUDA( cudaMemcpy(dB_csrOffsets, &hB_csrOffsets,
                         (B_num_rows + 1) * sizeof(int),
                         cudaMemcpyHostToDevice) )
-    // CHECK_CUDA( cudaMemcpy(dB_columns, &hB_columns, B_nnz * sizeof(int),
     CHECK_CUDA( cudaMemcpy(dB_columns, hB_columns, B_nnz * sizeof(int),
                         cudaMemcpyHostToDevice) )
-    // CHECK_CUDA( cudaMemcpy(dB_values, &hB_values,
     CHECK_CUDA( cudaMemcpy(dB_values, hB_values,
                         B_nnz * sizeof(float), cudaMemcpyHostToDevice) )
     //--------------------------------------------------------------------------
@@ -267,6 +252,8 @@ int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
     // SpGEMM Computation
     cusparseSpGEMMDescr_t spgemmDesc;
     CHECK_CUSPARSE( cusparseSpGEMM_createDescr(&spgemmDesc) )
+
+    if(benching) {state->ResumeTiming();}
 
     // ask bufferSize1 bytes for external memory
     CHECK_CUSPARSE(
@@ -339,25 +326,36 @@ int spgemm(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB){
     CHECK_CUDA( cudaMemcpy(hC_values_tmp, dC_values, C_nnz1 * sizeof(float),
                         cudaMemcpyDeviceToHost) )
 
+    if(benching) {state->PauseTiming();}
+
+    taco::Tensor<float> out_gpu = taco::makeCSR("output_from_gpu", {dims[0], dims[0]}, &hC_csrOffsets_tmp[0], &hC_columns_tmp[0], &hC_values_tmp[0]);
+
+    // Need to squeeze out some zeros
+    auto out_gpu_no_zeros = out_gpu.removeExplicitZeros(taco::CSR);
+
+    int * rowptr_out;
+    int * colidx_out;
+    float * vals_out;
+
+    taco::getCSRArrays(out_gpu_no_zeros, &rowptr_out, &colidx_out, &vals_out);
+
     int correct = 1;
     for (int i = 0; i < A_num_rows + 1; i++) {
-        if (hC_csrOffsets_tmp[i] != hC_csrOffsets[i]) {
-            std::cout << "ROWS GPU: " << hC_csrOffsets_tmp[i] << " COMPARED TO CPU: " << hC_csrOffsets[i] << std::endl;
+        if (rowptr_out[i] != hC_csrOffsets[i]) {
+            std::cout << "ROWS GPU: " << rowptr_out[i] << " COMPARED TO CPU: " << hC_csrOffsets[i] << std::endl;
             correct = 0;
             break;
         }
     }
 
-    for (int i = 0; i < C_nnz; i++) {
-        if (hC_columns_tmp[i] != hC_columns[i]){
-            std::cout << "COL GPU: " << hC_columns_tmp[i] << " COMPARED TO CPU: " << hC_columns[i] << std::endl;
+    for (int i = 0; i < C_nnz1; i++) {
+        if (colidx_out[i] != hC_columns[i]){
+            std::cout << "COL GPU: " << colidx_out[i] << " COMPARED TO CPU: " << hC_columns[i] << std::endl;
             correct = 0;
             break;
         }
-        else if(!float_compare(hC_values_tmp[i], hC_values[i], 0.01f)) { // direct floating point
-            std::cout << "VAL GPU: " << hC_values_tmp[i] << " COMPARED TO CPU: " << hC_values[i] << std::endl;
-            std::cout << fabs(hC_values_tmp[i] - hC_values[i]) << std::endl;
-            // std::cout << percent_diff << std::endl;
+        else if(!float_compare(vals_out[i], hC_values[i], 0.01f)) { // direct floating point
+            std::cout << "VAL GPU: " << vals_out[i] << " COMPARED TO CPU: " << hC_values[i] << std::endl;
             correct = 0;                         // comparison is not reliable
             break;
         }
@@ -603,21 +601,23 @@ int sddmm(std::string mat_path){
     return EXIT_SUCCESS;
 }
 
-int spmv(std::string mat_path){
+int spmv(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB_csr, benchmark::State * state){
+
+    bool benching = (state != nullptr);
+
+    if(benching) {state->PauseTiming();}
 
     std::cout << "Calculating SPMv" << std::endl;
-    taco::TensorBase tb = taco::readMTX(mat_path, taco::CSR);
-    // std::cout << tb << std::endl;
-    auto dims = tb.getDimensions();
+    auto dims = tensorA.getDimensions();
 
     // Get A and its arrays to analyze sizes/etc
     int * rowptrA;
     int * colidxA;
-    double * valsA_pre;
+    float * valsA;
 
-    taco::getCSRArrays(tb, &rowptrA, &colidxA, &valsA_pre);
+    taco::getCSRArrays(tensorA, &rowptrA, &colidxA, &valsA);
 
-    auto storage = tb.getStorage();
+    auto storage = tensorA.getStorage();
     auto index = storage.getIndex();
     auto rowptrArr = index.getModeIndex(1).getIndexArray(0);
     auto colidxArr = index.getModeIndex(1).getIndexArray(1);
@@ -625,46 +625,26 @@ int spmv(std::string mat_path){
     auto numrowsA = rowptrsize - 1;
     auto coloffsetsize = colidxArr.getSize();
     auto valssize = coloffsetsize;
-
-    float * valsA = (float *) malloc(valssize * sizeof(float));
-    for(int i_ = 0; i_ < valssize; i_++){
-        valsA[i_] = (float) valsA_pre[i_];
-    }
-
     // Create the float version
-    taco::Tensor<float> tb_float = taco::makeCSR("tb_float", dims, rowptrA, colidxA, valsA);
-    taco::Tensor<float> dense_vec({dims[1]}, {taco::Dense}, 0);
-    dense_vec.setName("dense_vec");
+    taco::Tensor<float> tensorB = tensorB_csr.transpose("tensorB_dense", {0}, taco::Dense);
 
     // Create random vector and zero vector
-    float * randVec = (float *) malloc(dims[1] * sizeof(float));
     float * zeroVec = (float *) malloc(dims[0] * sizeof(float));
-
-    for(auto i = 0; i < dims[1]; i++){
-        randVec[i] = (float) i;
-    }
-
     for(auto i = 0; i < dims[0]; i++){
         zeroVec[i] = 0.0f;
-    }
-
-    for(int x = 0; x < dims[1]; x++){
-        dense_vec.insert({x}, randVec[x]);
     }
 
     taco::IndexVar i, j;
     // Use taco to compute result
     taco::Tensor<float> expected("expected", {dims[0]}, {taco::Dense});
-    expected(i) = tb_float(i, j) * dense_vec(j);
+    expected(i) = tensorA(i, j) * tensorB(j);
     expected.compile();
     expected.assemble();
     expected.compute();
 
     auto vals_expected = (float *) expected.getStorage().getValues().getData();
 
-    // std::cout << tb_float << std::endl;
-    // std::cout << dense_vec << std::endl;
-    // std::cout << expected << std::endl;
+    auto vec_vals = (float *) tensorB.getStorage().getValues().getData();
 
    // Host problem definition
     const int A_num_rows      = dims[0];
@@ -673,19 +653,9 @@ int spmv(std::string mat_path){
     int       *hA_csrOffsets = rowptrA;
     int       *hA_columns    = colidxA;
     float     *hA_values     = valsA;
-    float     *hX            = randVec;
+    float     *hX            = vec_vals;
     float     *hY            = zeroVec;
     float     *hY_result     = vals_expected;
-    // const int A_num_rows      = 4;
-    // const int A_num_cols      = 4;
-    // const int A_nnz           = 9;
-    // int       hA_csrOffsets[] = { 0, 3, 4, 7, 9 };
-    // int       hA_columns[]    = { 0, 2, 3, 1, 0, 2, 3, 1, 3 };
-    // float     hA_values[]     = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f,
-    //                               6.0f, 7.0f, 8.0f, 9.0f };
-    // float     hX[]            = { 1.0f, 2.0f, 3.0f, 4.0f };
-    // float     hY[]            = { 0.0f, 0.0f, 0.0f, 0.0f };
-    // float     hY_result[]     = { 19.0f, 8.0f, 51.0f, 52.0f };
 
     float     alpha           = 1.0f;
     float     beta            = 0.0f;
@@ -728,6 +698,9 @@ int spmv(std::string mat_path){
     CHECK_CUSPARSE( cusparseCreateDnVec(&vecX, A_num_cols, dX, CUDA_R_32F) )
     // Create dense vector y
     CHECK_CUSPARSE( cusparseCreateDnVec(&vecY, A_num_rows, dY, CUDA_R_32F) )
+
+    if(benching) {state->ResumeTiming();}
+
     // allocate an external buffer if needed
     CHECK_CUSPARSE( cusparseSpMV_bufferSize(
                                  handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
@@ -749,10 +722,11 @@ int spmv(std::string mat_path){
     // device result check
     CHECK_CUDA( cudaMemcpy(hY, dY, A_num_rows * sizeof(float),
                            cudaMemcpyDeviceToHost) )
+
+    if(benching) {state->PauseTiming();}
+
     int correct = 1;
     for (int i = 0; i < A_num_rows; i++) {
-        // auto abs_diff = fabs(hY[i] - hY_result[i]);
-        // if (hY[i] != hY_result[i]) { // direct floating point comparison is not
         if (!float_compare(hY[i], hY_result[i], 0.01f)) { // direct floating point comparison is not
             correct = 0;             // reliable
             break;
@@ -1035,19 +1009,23 @@ int mmadd(std::string mat_path){
     return EXIT_SUCCESS;
 }
 
-int plus3(std::string mat_path){
+int plus3(taco::Tensor<float> tensorA, taco::Tensor<float> tensorB, taco::Tensor<float> tensorD, benchmark::State * state){
+
+    bool benching = (state != nullptr);
+
+    if(benching) {state->PauseTiming();}
+
     std::cout << "Calculating PLUS3" << std::endl;
-    taco::TensorBase tb = taco::readMTX(mat_path, taco::CSR);
-    auto dims = tb.getDimensions();
+    auto dims = tensorA.getDimensions();
 
     // Get A and its arrays to analyze sizes/etc
     int * rowptrA;
     int * colidxA;
-    double * valsA_pre;
+    float * valsA;
 
-    taco::getCSRArrays(tb, &rowptrA, &colidxA, &valsA_pre);
+    taco::getCSRArrays(tensorA, &rowptrA, &colidxA, &valsA);
 
-    auto storage = tb.getStorage();
+    auto storage = tensorA.getStorage();
     auto index = storage.getIndex();
     auto rowptrArr = index.getModeIndex(1).getIndexArray(0);
     auto colidxArr = index.getModeIndex(1).getIndexArray(1);
@@ -1056,25 +1034,15 @@ int plus3(std::string mat_path){
     auto coloffsetsize = colidxArr.getSize();
     auto valssize = coloffsetsize;
 
-    float * valsA = (float *) malloc(valssize * sizeof(float));
-    for(int i_ = 0; i_ < valssize; i_++){
-        valsA[i_] = (float) valsA_pre[i_];
-    }
-
-    // Create the float version
-    taco::Tensor<float> tb_floatA = taco::makeCSR("tb_float", dims, rowptrA, colidxA, valsA);
-    taco::Tensor<float> tb_floatB = tb_floatA.transpose("tb_floatB", {0, 1}, taco::CSR);
-    taco::Tensor<float> tb_floatD = tb_floatA.transpose("tb_floatD", {0, 1}, taco::CSR);
-
     int * rowptrB;
     int * colidxB;
     float * valsB;
-    taco::getCSRArrays(tb_floatB, &rowptrB, &colidxB, &valsB);
+    taco::getCSRArrays(tensorB, &rowptrB, &colidxB, &valsB);
 
     int * rowptrD;
     int * colidxD;
     float * valsD;
-    taco::getCSRArrays(tb_floatD, &rowptrD, &colidxD, &valsD);
+    taco::getCSRArrays(tensorD, &rowptrD, &colidxD, &valsD);
 
     int NUM_I = dims[0];
     int NUM_K = dims[1];
@@ -1085,7 +1053,7 @@ int plus3(std::string mat_path){
     taco::IndexVar i, k;
 
     taco::Tensor<float> expected("expected", {NUM_I, NUM_K}, taco::CSR);
-    expected(i, k) = tb_floatA(i, k) + tb_floatB(i, k) + tb_floatD(i, k);
+    expected(i, k) = tensorA(i, k) + tensorB(i, k) + tensorD(i, k);
     expected.compile();
     expected.assemble();
     expected.compute();
@@ -1114,11 +1082,11 @@ int plus3(std::string mat_path){
     const int A_num_rows = dims[0];
     const int A_num_cols = dims[1];
     const int A_nnz      = valssize;
-    const int B_num_rows = dims[1];
-    const int B_num_cols = dims[0];
+    const int B_num_rows = dims[0];
+    const int B_num_cols = dims[1];
     const int B_nnz      = valssize;
-    const int D_num_rows = dims[1];
-    const int D_num_cols = dims[0];
+    const int D_num_rows = dims[0];
+    const int D_num_cols = dims[1];
     const int D_nnz      = valssize;
 
     int  * hA_csrOffsets = rowptrA;
@@ -1134,15 +1102,10 @@ int plus3(std::string mat_path){
     int   *hC_columns    = colidxC;
     float *hC_values     = valsC;
 
-    // const int C_nnz       = valssizeC;
-    // #define   C_NUM_NNZ valssizeC   // C compatibility
     float               alpha       = 1.0f;
     float               beta        = 1.0f;
-    // cusparseOperation_t opA         = CUSPARSE_OPERATION_NON_TRANSPOSE;
-    // cusparseOperation_t opB         = CUSPARSE_OPERATION_NON_TRANSPOSE;
-    // cudaDataType        computeType = CUDA_R_32F;
     // //--------------------------------------------------------------------------
-    // // Device memory management: Allocate and copy A, B
+    // // Device memory management: Allocate and copy A, B, C, D, E
     int   *dA_csrOffsets, *dA_columns, *dB_csrOffsets, *dB_columns,
         *dC_csrOffsets, *dC_columns, *dD_csrOffsets, *dD_columns, *dE_csrOffsets, *dE_columns;
     float *dA_values, *dB_values, *dC_values, *dD_values, *dE_values;
@@ -1230,6 +1193,8 @@ int plus3(std::string mat_path){
     CHECK_CUSPARSE( cusparseCreateMatDescr( &matD_nosp) )
     CHECK_CUSPARSE( cusparseCreateMatDescr( &matE_nosp) )
 
+    if(benching) {state->ResumeTiming();}
+
     // First computation...C = A + B
     CHECK_CUSPARSE( cusparseScsrgeam2_bufferSizeExt(handle, dims[0], dims[1],
                                                     &alpha,
@@ -1242,7 +1207,6 @@ int plus3(std::string mat_path){
                                                     dC_values, dC_csrOffsets, dC_columns,
                                                     &bufferSize1) )
 
-    std::cout << "This many in outputs for C " << bufferSize1 << std::endl;
     CHECK_CUDA( cudaMalloc((void**) &dBuffer1, bufferSize1) )
 
     int nnzC;
@@ -1255,8 +1219,6 @@ int plus3(std::string mat_path){
             dBuffer1);
 
     nnzC = *nnzptr;
-
-    std::cout << "Number nonzeros in output according to cuda land..." << nnzC << std::endl;
 
     // // allocate matrix C
     CHECK_CUDA( cudaMalloc((void**) &dC_columns, nnzC * sizeof(int))   )
@@ -1285,7 +1247,6 @@ int plus3(std::string mat_path){
                                                     dE_values, dE_csrOffsets, dE_columns,
                                                     &bufferSize2) )
 
-    std::cout << "This many in outputs for E " << bufferSize2 << std::endl;
     CHECK_CUDA( cudaMalloc((void**) &dBuffer2, bufferSize2) )
 
     int nnzE;
@@ -1298,8 +1259,6 @@ int plus3(std::string mat_path){
             dBuffer2);
 
     nnzE = *nnzptrE;
-
-    std::cout << "Number nonzeros in output according to cuda land (E)..." << nnzE << std::endl;
 
     // // allocate matrix C
     CHECK_CUDA( cudaMalloc((void**) &dE_columns, nnzE * sizeof(int))   )
@@ -1326,8 +1285,8 @@ int plus3(std::string mat_path){
     // //--------------------------------------------------------------------------
     // // device result check
     int   hE_csrOffsets_tmp[dims[0] + 1];
-    int   hE_columns_tmp[nnzC];
-    float hE_values_tmp[nnzC];
+    int   hE_columns_tmp[nnzE];
+    float hE_values_tmp[nnzE];
     CHECK_CUDA( cudaMemcpy(hE_csrOffsets_tmp, dE_csrOffsets,
                         (A_num_rows + 1) * sizeof(int),
                         cudaMemcpyDeviceToHost) )
@@ -1336,32 +1295,45 @@ int plus3(std::string mat_path){
     CHECK_CUDA( cudaMemcpy(hE_values_tmp, dE_values, nnzE * sizeof(float),
                         cudaMemcpyDeviceToHost) )
 
+    if(benching) {state->PauseTiming();}
+
+    taco::Tensor<float> out_gpu = taco::makeCSR("output_from_gpu", {dims[0], dims[1]}, &hE_csrOffsets_tmp[0], &hE_columns_tmp[0], &hE_values_tmp[0]);
+
+    // Need to squeeze out some zeros
+    auto out_gpu_no_zeros = out_gpu.removeExplicitZeros(taco::CSR);
+
+    int * rowptr_out;
+    int * colidx_out;
+    float * vals_out;
+
+    taco::getCSRArrays(out_gpu_no_zeros, &rowptr_out, &colidx_out, &vals_out);
+
     int correct = 1;
     for (int i = 0; i < A_num_rows + 1; i++) {
-        if (hE_csrOffsets_tmp[i] != hC_csrOffsets[i]) {
-            std::cout << "ROWS GPU: " << hE_csrOffsets_tmp[i] << " COMPARED TO CPU: " << hC_csrOffsets[i] << std::endl;
+        if (rowptr_out[i] != hC_csrOffsets[i]) {
+            std::cout << "ROWS GPU: " << rowptr_out[i] << " COMPARED TO CPU: " << hC_csrOffsets[i] << std::endl;
             correct = 0;
             break;
         }
     }
 
     for (int i = 0; i < nnzE; i++) {
-        if (hE_columns_tmp[i] != hC_columns[i]){
-            std::cout << "COL GPU: " << hE_columns_tmp[i] << " COMPARED TO CPU: " << hC_columns[i] << std::endl;
+        if (colidx_out[i] != hC_columns[i]){
+            std::cout << "COL GPU: " << colidx_out[i] << " COMPARED TO CPU: " << hC_columns[i] << std::endl;
             correct = 0;
             break;
         }
-        else if(!float_compare(hE_values_tmp[i], hC_values[i], 0.01f)) { // direct floating point
-            std::cout << "VAL GPU: " << hE_values_tmp[i] << " COMPARED TO CPU: " << hC_values[i] << std::endl;
-            std::cout << fabs(hE_values_tmp[i] - hC_values[i]) << std::endl;
+        else if(!float_compare(vals_out[i], hC_values[i], 0.01f)) { // direct floating point
+            std::cout << "VAL GPU: " << vals_out[i] << " COMPARED TO CPU: " << hC_values[i] << std::endl;
+            std::cout << fabs(vals_out[i] - hC_values[i]) << std::endl;
             correct = 0;                         // comparison is not reliable
             break;
         }
     }
     if (correct)
-        printf("spgemm_example test PASSED\n");
+        printf("plus3 test PASSED\n");
     else {
-        printf("spgemm_example test FAILED: wrong result\n");
+        printf("plus3 test FAILED: wrong result\n");
         return EXIT_FAILURE;
     }
     //--------------------------------------------------------------------------
@@ -1385,6 +1357,165 @@ int plus3(std::string mat_path){
     CHECK_CUDA( cudaFree(dE_values) )
     return EXIT_SUCCESS;
 }
+
+TensorInputCache<float> inputCacheFloat;
+
+static void cusparse_benchmark(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
+
+  bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
+
+  // Counters must be present in every run to get reported to the CSV.
+  state.counters["dimx"] = 0;
+  state.counters["dimy"] = 0;
+  state.counters["nnz"] = 0;
+  state.counters["other_sparsity1"] = 0;
+  state.counters["other_sparsity1"] = 0;
+
+  auto tensorPath = getEnvVar("TACO_TENSOR_PATH");
+  // std::cout << "Running " << opName(op) << " " << tensorPath << std::endl;
+  if (tensorPath == "") {
+    state.error_occurred();
+    return;
+  }
+
+  auto pathSplit = taco::util::split(tensorPath, "/");
+  auto filename = pathSplit[pathSplit.size() - 1];
+  auto tensorName = taco::util::split(filename, ".")[0];
+  state.SetLabel(tensorName);
+
+  taco::Tensor<float> tensorA, tensorB, tensorB_pre, tensorC;
+//   try {
+//     // taco::Format format = op == MATTRANSMUL ? DCSC : DCSR;
+//     // std::tie(ssTensor, otherShifted) = inputCacheFloat.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
+//                                                                 //  true /* includeThird */, true, false, GEN_OTHER);
+//     // std::string mat_path = "/home/max/Documents/SPARSE/GPU/mats/Zhao1/Zhao1.mtx";
+//     // std::string mat_path = "/home/max/Documents/SPARSE/GPU/mats/fake/fake.mtx";
+//     std::tie(tensorA, tensorB_pre) = inputCacheFloat.getTensorInput(mat_path, Zhao1, taco::CSR,
+//                                                                        false, false, false, false, true);
+//     tensorB = tensorB_pre.transpose("tensorB_transposed", {1, 0}, taco::CSR);
+
+//   } catch (TacoException &e) {
+//     // Counters don't show up in the generated CSV if we used SkipWithError, so
+//     // just add in the label that this run is skipped.
+//     std::cout << e.what() << std::endl;
+//     state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
+//     return;
+//   }
+
+//   taco::Tensor<int16_t> denseMat1;
+//   taco::Tensor<int16_t> denseMat2;
+//   taco::Tensor<int16_t> s1("s1"), s2("s2");
+//   s1.insert({}, int16_t(2));
+//   s2.insert({}, int16_t(2));
+//   if (op == SDDMM) {
+//     denseMat1 = Tensor<int16_t>("denseMat1", {DIM0, DIM_EXTRA}, Format({dense, dense}));
+//     denseMat2 = Tensor<int16_t>("denseMat2", {DIM_EXTRA, DIM1}, Format({dense, dense}, {1, 0}));
+
+//     // (owhsu) Making this dense matrices of all 1's
+//     for (int kk = 0; kk < DIM_EXTRA; kk++) {
+//       for (int ii = 0; ii < DIM0; ii++) {
+//         denseMat1.insert({ii, kk}, int16_t(1));
+//       }
+//       for (int jj = 0; jj < DIM1; jj++) {
+//         denseMat2.insert({kk, jj}, int16_t(1));
+//       }
+//     }
+//   }
+    tensorPath = "/home/max/Documents/SPARSE/GPU/mats/relat3/relat3.mtx";
+    tensorName = "relat3";
+    // tensorPath = "/home/max/Documents/SPARSE/GPU/mats/Zhao1/Zhao1.mtx";
+    // tensorName = "Zhao1";
+
+  for (auto _: state) {
+    state.PauseTiming();
+    switch (op) {
+      case SPMV: {
+        state.PauseTiming();
+        std::tie(tensorA, tensorB_pre) = inputCacheFloat.getTensorInput(tensorPath, tensorName, taco::CSR,
+                                                                       false, false, /* Include vec*/true,
+                                                                       false, false);
+        tensorB = inputCacheFloat.otherVecLastMode;
+        int DIM0 = tensorA.getDimensions()[0];
+        int DIM1 = tensorA.getDimensions()[1];
+
+        state.counters["dimx"] = DIM0;
+        state.counters["dimy"] = DIM1;
+        state.counters["nnz"] = inputCacheFloat.nnz;
+
+        state.ResumeTiming();
+        spmv(tensorA, tensorB, &state);
+        state.PauseTiming();
+        break;
+      }
+      case SPMM: {
+        state.PauseTiming();
+        std::tie(tensorA, tensorB_pre) = inputCacheFloat.getTensorInput(tensorPath, tensorName, taco::CSR,
+                                                                        false, false, false, false, true);
+        tensorB = tensorB_pre.transpose("tensorB_transposed_csr", {1, 0}, taco::CSR);
+
+        int DIM0 = tensorA.getDimensions()[0];
+        int DIM1 = tensorA.getDimensions()[1];
+
+        state.counters["dimx"] = DIM0;
+        state.counters["dimy"] = DIM1;
+        state.counters["nnz"] = inputCacheFloat.nnz;
+        state.ResumeTiming();
+        spgemm(tensorA, tensorB, &state);
+        state.PauseTiming();
+        // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
+        break;
+      }
+      case PLUS3: {
+        state.PauseTiming();
+        std::tie(tensorA, tensorB) = inputCacheFloat.getTensorInput(tensorPath, tensorName, taco::CSR,
+                                                                    false, true, /* Include vec*/false,
+                                                                    false, false);
+        tensorC = inputCacheFloat.thirdTensor;
+
+        int DIM0 = tensorA.getDimensions()[0];
+        int DIM1 = tensorA.getDimensions()[1];
+
+        state.counters["dimx"] = DIM0;
+        state.counters["dimy"] = DIM1;
+        state.counters["nnz"] = inputCacheFloat.nnz;
+
+        state.ResumeTiming();
+        plus3(tensorA, tensorB, tensorC, nullptr);
+        state.PauseTiming();
+        break;
+      }
+      default:
+        state.SkipWithError("invalid expression");
+        return;
+    }
+
+    // result.compile(stmt);
+
+    // state.ResumeTiming();
+    // result.assemble();
+    // result.compute();
+    // state.PauseTiming();
+
+    // if (auto validationPath = getValidationOutputPath(); validationPath != "") {
+    //   auto key = cpuBenchKey(tensorName, opName(op));
+    //   auto outpath = validationPath + key + ".tns";
+    //   taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
+    // }
+    // state.ResumeTiming();
+
+  }
+}
+
+TACO_BENCH_ARGS(cusparse_benchmark, spmm_ , SPMM, true);
+TACO_BENCH_ARGS(cusparse_benchmark, spmv_ , SPMV, true);
+TACO_BENCH_ARGS(cusparse_benchmark, plus3_ , PLUS3, true);
+
+
+#ifdef BENCH_CUSPARSE
+
+BENCHMARK_MAIN();
+
+#else
 
 int main(int argc, char *argv[]) {
 
@@ -1417,35 +1548,40 @@ int main(int argc, char *argv[]) {
     std::string mat_path = mat_path_base + "/" + default_mat + "/" + default_mat + ".mtx";
     std::cout << "Using path: " << mat_path << std::endl;
 
-    taco::Tensor<float> tensorA, tensorB;
-
-    TensorInputCache inputCache;
-
-    std::tie(tensorA, tensorB) = inputCache.getTensorInput(mat_path, "mek", taco::CSR,
-                                                                     false, false, false, false, true);
-
-    std::cout << tensorA << std::endl;
-    std::cout << tensorB << std::endl;
+    TensorInputCache<float> inputCache;
+    taco::Tensor<float> tensorA, tensorB_pre, tensorB, tensorC;
 
     // return 0;
 
     switch(default_op){
         // SPGEMM
         case 1:
-            // return spgemm(mat_path);
-            return spgemm(tensorA, tensorB);
+            std::tie(tensorA, tensorB_pre) = inputCache.getTensorInput(mat_path, default_mat, taco::CSR,
+                                                                       false, false, false, false, true);
+            tensorB = tensorB_pre.transpose("tensorB_transposed_csr", {1, 0}, taco::CSR);
+            return spgemm(tensorA, tensorB, nullptr);
         // SDDMM
         case 2:
             return sddmm(mat_path);
         // SPMV
         case 3:
-            return spmv(mat_path);
+            std::tie(tensorA, tensorB_pre) = inputCache.getTensorInput(mat_path, default_mat, taco::CSR,
+                                                                       false, false, /* Include vec*/true,
+                                                                       false, false);
+            tensorB = inputCache.otherVecLastMode;
+
+            return spmv(tensorA, tensorB, nullptr);
         // MMADD
         case 4:
             return mmadd(mat_path);
         // PLUS3
         case 5:
-            return plus3(mat_path);
+            std::tie(tensorA, tensorB) = inputCache.getTensorInput(mat_path, default_mat, taco::CSR,
+                                                                       false, true, /* Include vec*/false,
+                                                                       false, true);
+            tensorC = inputCache.thirdTensor;
+            // std::cout << tensorC << std::endl;
+            return plus3(tensorA, tensorB, tensorC, nullptr);
         default:
             std::cout << "Invalid OP selected..." << std::endl;
     }
@@ -1453,3 +1589,5 @@ int main(int argc, char *argv[]) {
     return 0;
 
 }
+
+#endif
