@@ -19,6 +19,7 @@
 
 using namespace taco;
 
+int WARP_SIZE = 32;
 #define DIM_EXTRA 10 
 
 template<int I, class...Ts>
@@ -610,7 +611,7 @@ TACO_BENCH_ARGS(bench_frostt_unsched, name/tensor3_mttkrp, MTTKRP);
 //#define DECLARE_FROSTT_BENCH_SCHED(name, path)
 // Working:
 TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttv, TTV);
-// TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_innerprod, INNERPROD);
+// TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_innerprod, INNERPROD);vim
 TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttm, TTM);
 TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_mttkrp, MTTKRP);
 // Kind of broken:
@@ -1034,6 +1035,195 @@ static void print_array(T * array, int size) {
   std::cout << std::endl;
 }
 
+IndexStmt scheduleTTMGPU(IndexStmt stmt, Tensor<double> B, int NNZ_PER_WARP=8*32, int BLOCK_SIZE=256, int CO_FACTOR=4) {
+  int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
+  IndexVar jk("jk"), f("f"), fpos("fpos"), block("block"), fpos1("fpos1"), warp("warp"), nnz("nnz"), dense_val_unbounded("dense_val_unbounded"), dense_val("dense_val"), thread("thread");
+
+  return stmt.reorder({i, j, k, l})
+          .fuse(j, k, jk)
+          .fuse(i, jk, f)
+          .pos(f, fpos, B(i, j, k))
+          .split(fpos, block, fpos1, NNZ_PER_TB)
+          .split(fpos1, warp, nnz, NNZ_PER_WARP)
+          .split(l, dense_val_unbounded, thread, WARP_SIZE)
+          .bound(dense_val_unbounded, dense_val, CO_FACTOR, BoundType::MaxExact)
+          .reorder({block, warp, nnz, thread, dense_val})
+          .unroll(dense_val, CO_FACTOR)
+          .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+          .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+          .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics);
+}
+
+IndexStmt scheduleTTVGPU(IndexStmt stmt, Tensor<double> B, IndexExpr precomputedExpr, int NNZ_PER_WARP=8*32, int BLOCK_SIZE=256) {
+  int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
+  IndexVar jk("jk"), f("f"), fpos("fpos"), block("block"), fpos1("fpos1"), warp("warp"), fpos2("fpos2"), thread("thread"), thread_nz("thread_nz"), thread_nz_pre("thread_nz_pre");
+  TensorVar precomputed("precomputed", Type(Float64, {Dimension(thread_nz)}), taco::dense);
+
+  return stmt.fuse(j, k, jk)
+          .fuse(i, jk, f)
+          .pos(f, fpos, B(i,j,k))
+          .split(fpos, block, fpos1, NNZ_PER_TB)
+          .split(fpos1, warp, fpos2, NNZ_PER_WARP)
+          .split(fpos2, thread, thread_nz, NNZ_PER_WARP/WARP_SIZE)
+          .reorder({block, warp, thread, thread_nz})
+          .precompute(precomputedExpr, thread_nz, thread_nz_pre, precomputed)
+          .unroll(thread_nz_pre, NNZ_PER_WARP/WARP_SIZE)
+          .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+          .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+          .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics);
+}
+
+IndexStmt scheduleMTTKRPGPU(IndexStmt stmt, Tensor<double> B, int NNZ_PER_WARP=16, int BLOCK_SIZE=256) {
+  int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
+  IndexVar kl("kl"), f("f"), fpos("fpos"), block("block"), fpos1("fpos1"), warp("warp"), nnz("nnz"), dense_val_unbounded("dense_val_unbounded"), dense_val("dense_val"), thread("thread");
+  return stmt.reorder({i,k,l,j})
+          .fuse(k, l, kl)
+          .fuse(i, kl, f)
+          .pos(f, fpos, B(i, k, l))
+          .split(fpos, block, fpos1, NNZ_PER_TB)
+          .split(fpos1, warp, nnz, NNZ_PER_WARP)
+          .split(j, dense_val_unbounded, thread, WARP_SIZE)
+          .bound(dense_val_unbounded, dense_val, 1, BoundType::MaxExact)
+          .reorder({block, warp, dense_val, thread, nnz})
+          .parallelize(block, ParallelUnit::GPUBlock, OutputRaceStrategy::IgnoreRaces)
+          .parallelize(warp, ParallelUnit::GPUWarp, OutputRaceStrategy::IgnoreRaces)
+          .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics);
+}
+
+static void bench_frostt_sched_gpu(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
+
+  if (!should_use_CUDA_codegen()) {
+    return;
+  }
+
+  bool GEN_OTHER = getEnvVar("GEN") == "ON";
+  auto tnsPath = getEnvVar("FROSTT_TENSOR_PATH");
+
+  std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
+
+  auto pathSplit = taco::util::split(tnsPath, "/");
+  auto filename = pathSplit[pathSplit.size() - 1];
+  auto tensorName = taco::util::split(filename, ".")[0];
+  state.SetLabel(tensorName);
+
+  Format ecsr({Dense, Compressed(ModeFormat::NOT_UNIQUE),
+               Singleton(ModeFormat::UNIQUE)});
+  // TODO (rohany): What format do we want to do here?
+  Tensor<int16_t> frosttTensor, otherShifted;
+  Tensor<int16_t> frosttTensorEcsr, otherShiftedEcsr;
+  if (op == PLUS2) {
+    std::tie(frosttTensorEcsr, otherShiftedEcsr) = inputCacheInt16.getTensorInput(tnsPath, tensorName, ecsr,
+                                                                                  false, false, true, true, GEN_OTHER, true);
+
+  } else {
+    std::tie(frosttTensor, otherShifted) = inputCacheInt16.getTensorInput(tnsPath, tensorName, Sparse,
+                                                                          false, false, true, true, GEN_OTHER, true);
+  }
+
+  // std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
+
+  int DIM0 = frosttTensor.getDimension(0);
+  int DIM1 = frosttTensor.getDimension(1);
+  int DIM2 = frosttTensor.getDimension(2);
+
+  for (auto _: state) {
+    state.PauseTiming();
+    Tensor<int16_t> result;
+    IndexStmt stmt = IndexStmt();
+    switch (op) {
+      case TTV: {
+        // TODO: Change this to have sparse outputs
+        result = Tensor<int16_t>("result", {DIM0, DIM1}, {Dense, Dense}, fill_value);
+
+        Tensor<int16_t> otherVec = inputCacheInt16.otherVecLastMode;
+
+        auto precomputedExpr =  frosttTensor(i, j, k) * otherVec(k);
+        result(i, j) = precomputedExpr;
+
+        stmt = result.getAssignment().concretize();
+        stmt = scheduleTTVGPU(stmt, frosttTensor, precomputedExpr);
+
+        break;
+      }
+      case TTM: {
+        result = Tensor<int16_t>("result", {DIM0, DIM1, DIM_EXTRA}, Dense, fill_value);
+        Tensor<int16_t> otherMat = inputCacheInt16.otherMatTTM;
+
+        Tensor<int16_t> otherMatTrans("C", {DIM2, DIM_EXTRA}, Dense, fill_value);
+        std::vector<int> coords(otherMatTrans.getOrder());
+        for (auto &value: taco::iterate<int16_t>(otherMat)) {
+          for (int i = 0; i < otherMat.getOrder(); i++) {
+            coords[otherMat.getOrder() - i - 1] = value.first[i];
+          }
+          otherMatTrans.insert(coords, (int16_t)value.second);
+        }
+        result(i, j, l) = frosttTensor(i, j, k) * otherMatTrans(k, l);
+
+        stmt = result.getAssignment().concretize();
+        stmt = scheduleTTMGPU(stmt, frosttTensor);
+        break;
+      }
+      case MTTKRP: {
+        result = Tensor<int16_t>("result", {DIM0, DIM_EXTRA}, Dense, fill_value);
+
+        Tensor<int16_t> otherMat1 = inputCacheInt16.otherMatMode1MTTKRP;
+        Tensor<int16_t> otherMat2 = inputCacheInt16.otherMatMode2MTTKRP;
+
+        Tensor<int16_t> otherMat1Trans("C", {DIM1, DIM_EXTRA}, Dense, fill_value);
+
+        std::vector<int> coords1(otherMat1Trans.getOrder());
+        for (auto &value: taco::iterate<int16_t>(otherMat1)) {
+          for (int i = 0; i < otherMat1.getOrder(); i++) {
+            coords1[otherMat1.getOrder() - i - 1] = value.first[i];
+          }
+          otherMat1Trans.insert(coords1, (int16_t)value.second);
+        }
+
+        Tensor<int16_t> otherMat2Trans("D", {DIM2, DIM_EXTRA}, Dense, fill_value);
+        std::vector<int> coords2(otherMat1Trans.getOrder());
+        for (auto &value: taco::iterate<int16_t>(otherMat2)) {
+          for (int i = 0; i < otherMat2.getOrder(); i++) {
+            coords2[otherMat2.getOrder() - i - 1] = value.first[i];
+          }
+          otherMat2Trans.insert(coords2, (int16_t)value.second);
+        }
+
+        result(i, j) = frosttTensor(i, k, l) * otherMat1Trans(k, j) * otherMat2Trans(l, j);
+
+        stmt = result.getAssignment().concretize();
+        stmt = scheduleMTTKRPGPU(stmt, frosttTensor);
+
+        break;
+      }
+      default:
+        state.SkipWithError("invalid expression");
+        return;
+    }
+    // result.setAssembleWhileCompute(true);
+
+    taco_iassert(stmt != IndexStmt());
+    result.compile(stmt);
+    state.ResumeTiming();
+    result.assemble();
+    result.compute();
+
+    state.PauseTiming();
+
+    if (auto validationPath = getValidationOutputPath(); validationPath != "") {
+      auto key = cpuBenchKey(tensorName, opName(op));
+      auto outpath = validationPath + key + ".tns";
+      taco::write(outpath, result.removeExplicitZeros(result.getFormat()));
+    }
+    state.ResumeTiming();
+
+  }
+}
+
+// The first app is set to true to generate both mode0 and mode1 vector
+// generation.
+TACO_BENCH_ARGS(bench_frostt_sched_gpu, tensor3_ttv, TTV, false);
+TACO_BENCH_ARGS(bench_frostt_sched_gpu, tensor3_ttm, TTM, false);
+TACO_BENCH_ARGS(bench_frostt_sched_gpu, tensor3_mttkrp, MTTKRP, false);
 
 // static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 //   std::cout << "START BENCHMARK" << std::endl;
