@@ -11,7 +11,8 @@
 set -u
 
 cwd=$(pwd)
-sspath=/home/max/Documents/SPARSE/GPU/mats
+sspath=$TACO_TENSOR_PATH
+# sspath=/home/max/Documents/SPARSE/GPU/mats
 
 out=suitesparse-bench/taco
 mkdir -p "$out"
@@ -23,5 +24,6 @@ while read line; do
     matrix="$sspath/$line/$line.mtx"
 	# fi
 	csvout="$out/result-$line.csv"
+	echo "RUNNING $line"
     SUITESPARSE_TENSOR_PATH="$matrix" TACO_OUT="$csvout" BENCHES="" make -j cusparse-bench  GEN=OFF
 done <$1
