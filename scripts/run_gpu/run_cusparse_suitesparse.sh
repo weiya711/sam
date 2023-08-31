@@ -14,7 +14,7 @@ cwd=$(pwd)
 sspath=$TACO_TENSOR_PATH
 # sspath=/home/max/Documents/SPARSE/GPU/mats
 
-out=suitesparse-bench/taco
+out=suitesparse-bench/cusparse
 mkdir -p "$out"
 
 while read line; do
