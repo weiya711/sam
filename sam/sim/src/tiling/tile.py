@@ -12,9 +12,10 @@ from pathlib import Path
 from sam.util import SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter
 from sam.sim.src.tiling.process_expr import parse_all, update_dict
 
-SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)", 
+SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)",
             "matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)",
             "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)"}
+
 
 def print_dict(dd):
     for k, v in dd.items():
