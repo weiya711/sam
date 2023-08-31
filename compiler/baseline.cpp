@@ -148,6 +148,7 @@ struct TensorInputCache {
     int64_t nnz;
 };
 
+TensorInputCache<double> inputCacheDouble;
 TensorInputCache<int64_t> inputCacheInt64;
 TensorInputCache<int16_t> inputCacheInt16;
 TensorInputCache<float> inputCacheFloat;
@@ -1035,7 +1036,7 @@ static void print_array(T * array, int size) {
   std::cout << std::endl;
 }
 
-IndexStmt scheduleTTMGPU(IndexStmt stmt, Tensor<double> B, int NNZ_PER_WARP=8*32, int BLOCK_SIZE=256, int CO_FACTOR=4) {
+IndexStmt scheduleTTMGPU(IndexStmt stmt, Tensor<float> B, int NNZ_PER_WARP=8*32, int BLOCK_SIZE=256, int CO_FACTOR=4) {
   int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
   IndexVar jk("jk"), f("f"), fpos("fpos"), block("block"), fpos1("fpos1"), warp("warp"), nnz("nnz"), dense_val_unbounded("dense_val_unbounded"), dense_val("dense_val"), thread("thread");
 
@@ -1054,7 +1055,7 @@ IndexStmt scheduleTTMGPU(IndexStmt stmt, Tensor<double> B, int NNZ_PER_WARP=8*32
           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics);
 }
 
-IndexStmt scheduleTTVGPU(IndexStmt stmt, Tensor<double> B, IndexExpr precomputedExpr, int NNZ_PER_WARP=8*32, int BLOCK_SIZE=256) {
+IndexStmt scheduleTTVGPU(IndexStmt stmt, Tensor<float> B, IndexExpr precomputedExpr, int NNZ_PER_WARP=8*32, int BLOCK_SIZE=256) {
   int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
   IndexVar jk("jk"), f("f"), fpos("fpos"), block("block"), fpos1("fpos1"), warp("warp"), fpos2("fpos2"), thread("thread"), thread_nz("thread_nz"), thread_nz_pre("thread_nz_pre");
   TensorVar precomputed("precomputed", Type(Float64, {Dimension(thread_nz)}), taco::dense);
@@ -1073,7 +1074,7 @@ IndexStmt scheduleTTVGPU(IndexStmt stmt, Tensor<double> B, IndexExpr precomputed
           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics);
 }
 
-IndexStmt scheduleMTTKRPGPU(IndexStmt stmt, Tensor<double> B, int NNZ_PER_WARP=16, int BLOCK_SIZE=256) {
+IndexStmt scheduleMTTKRPGPU(IndexStmt stmt, Tensor<float> B, int NNZ_PER_WARP=16, int BLOCK_SIZE=256) {
   int NNZ_PER_TB = NNZ_PER_WARP * (BLOCK_SIZE / WARP_SIZE);
   IndexVar kl("kl"), f("f"), fpos("fpos"), block("block"), fpos1("fpos1"), warp("warp"), nnz("nnz"), dense_val_unbounded("dense_val_unbounded"), dense_val("dense_val"), thread("thread");
   return stmt.reorder({i,k,l,j})
@@ -1090,13 +1091,13 @@ IndexStmt scheduleMTTKRPGPU(IndexStmt stmt, Tensor<double> B, int NNZ_PER_WARP=1
           .parallelize(thread, ParallelUnit::GPUThread, OutputRaceStrategy::Atomics);
 }
 
-static void bench_frostt_sched_gpu(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
+static void bench_frostt_gpu(benchmark::State &state, FrosttOp op, bool gen=true, int fill_value = 0) {
 
   if (!should_use_CUDA_codegen()) {
     return;
   }
 
-  bool GEN_OTHER = getEnvVar("GEN") == "ON";
+  bool GEN_OTHER = getEnvVar("GEN") == "ON" && gen;
   auto tnsPath = getEnvVar("FROSTT_TENSOR_PATH");
 
   std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
@@ -1109,14 +1110,14 @@ static void bench_frostt_sched_gpu(benchmark::State &state, SuiteSparseOp op, bo
   Format ecsr({Dense, Compressed(ModeFormat::NOT_UNIQUE),
                Singleton(ModeFormat::UNIQUE)});
   // TODO (rohany): What format do we want to do here?
-  Tensor<int16_t> frosttTensor, otherShifted;
-  Tensor<int16_t> frosttTensorEcsr, otherShiftedEcsr;
+  Tensor<float> frosttTensor, otherShifted;
+  Tensor<float> frosttTensorEcsr, otherShiftedEcsr;
   if (op == PLUS2) {
-    std::tie(frosttTensorEcsr, otherShiftedEcsr) = inputCacheInt16.getTensorInput(tnsPath, tensorName, ecsr,
+    std::tie(frosttTensorEcsr, otherShiftedEcsr) = inputCacheFloat.getTensorInput(tnsPath, tensorName, ecsr,
                                                                                   false, false, true, true, GEN_OTHER, true);
 
   } else {
-    std::tie(frosttTensor, otherShifted) = inputCacheInt16.getTensorInput(tnsPath, tensorName, Sparse,
+    std::tie(frosttTensor, otherShifted) = inputCacheFloat.getTensorInput(tnsPath, tensorName, Sparse,
                                                                           false, false, true, true, GEN_OTHER, true);
   }
 
@@ -1128,14 +1129,14 @@ static void bench_frostt_sched_gpu(benchmark::State &state, SuiteSparseOp op, bo
 
   for (auto _: state) {
     state.PauseTiming();
-    Tensor<int16_t> result;
+    Tensor<float> result;
     IndexStmt stmt = IndexStmt();
     switch (op) {
       case TTV: {
         // TODO: Change this to have sparse outputs
-        result = Tensor<int16_t>("result", {DIM0, DIM1}, {Dense, Dense}, fill_value);
+        result = Tensor<float>("result", {DIM0, DIM1}, {Dense, Dense}, fill_value);
 
-        Tensor<int16_t> otherVec = inputCacheInt16.otherVecLastMode;
+        Tensor<float> otherVec = inputCacheFloat.otherVecLastMode;
 
         auto precomputedExpr =  frosttTensor(i, j, k) * otherVec(k);
         result(i, j) = precomputedExpr;
@@ -1146,16 +1147,16 @@ static void bench_frostt_sched_gpu(benchmark::State &state, SuiteSparseOp op, bo
         break;
       }
       case TTM: {
-        result = Tensor<int16_t>("result", {DIM0, DIM1, DIM_EXTRA}, Dense, fill_value);
-        Tensor<int16_t> otherMat = inputCacheInt16.otherMatTTM;
+        result = Tensor<float>("result", {DIM0, DIM1, DIM_EXTRA}, Dense, fill_value);
+        Tensor<float> otherMat = inputCacheFloat.otherMatTTM;
 
-        Tensor<int16_t> otherMatTrans("C", {DIM2, DIM_EXTRA}, Dense, fill_value);
+        Tensor<float> otherMatTrans("C", {DIM2, DIM_EXTRA}, Dense, fill_value);
         std::vector<int> coords(otherMatTrans.getOrder());
-        for (auto &value: taco::iterate<int16_t>(otherMat)) {
+        for (auto &value: taco::iterate<float>(otherMat)) {
           for (int i = 0; i < otherMat.getOrder(); i++) {
             coords[otherMat.getOrder() - i - 1] = value.first[i];
           }
-          otherMatTrans.insert(coords, (int16_t)value.second);
+          otherMatTrans.insert(coords, (float)value.second);
         }
         result(i, j, l) = frosttTensor(i, j, k) * otherMatTrans(k, l);
 
@@ -1164,28 +1165,28 @@ static void bench_frostt_sched_gpu(benchmark::State &state, SuiteSparseOp op, bo
         break;
       }
       case MTTKRP: {
-        result = Tensor<int16_t>("result", {DIM0, DIM_EXTRA}, Dense, fill_value);
+        result = Tensor<float>("result", {DIM0, DIM_EXTRA}, Dense, fill_value);
 
-        Tensor<int16_t> otherMat1 = inputCacheInt16.otherMatMode1MTTKRP;
-        Tensor<int16_t> otherMat2 = inputCacheInt16.otherMatMode2MTTKRP;
+        Tensor<float> otherMat1 = inputCacheFloat.otherMatMode1MTTKRP;
+        Tensor<float> otherMat2 = inputCacheFloat.otherMatMode2MTTKRP;
 
-        Tensor<int16_t> otherMat1Trans("C", {DIM1, DIM_EXTRA}, Dense, fill_value);
+        Tensor<float> otherMat1Trans("C", {DIM1, DIM_EXTRA}, Dense, fill_value);
 
         std::vector<int> coords1(otherMat1Trans.getOrder());
-        for (auto &value: taco::iterate<int16_t>(otherMat1)) {
+        for (auto &value: taco::iterate<float>(otherMat1)) {
           for (int i = 0; i < otherMat1.getOrder(); i++) {
             coords1[otherMat1.getOrder() - i - 1] = value.first[i];
           }
-          otherMat1Trans.insert(coords1, (int16_t)value.second);
+          otherMat1Trans.insert(coords1, (float)value.second);
         }
 
-        Tensor<int16_t> otherMat2Trans("D", {DIM2, DIM_EXTRA}, Dense, fill_value);
+        Tensor<float> otherMat2Trans("D", {DIM2, DIM_EXTRA}, Dense, fill_value);
         std::vector<int> coords2(otherMat1Trans.getOrder());
-        for (auto &value: taco::iterate<int16_t>(otherMat2)) {
+        for (auto &value: taco::iterate<float>(otherMat2)) {
           for (int i = 0; i < otherMat2.getOrder(); i++) {
             coords2[otherMat2.getOrder() - i - 1] = value.first[i];
           }
-          otherMat2Trans.insert(coords2, (int16_t)value.second);
+          otherMat2Trans.insert(coords2, (float)value.second);
         }
 
         result(i, j) = frosttTensor(i, k, l) * otherMat1Trans(k, j) * otherMat2Trans(l, j);
@@ -1221,9 +1222,9 @@ static void bench_frostt_sched_gpu(benchmark::State &state, SuiteSparseOp op, bo
 
 // The first app is set to true to generate both mode0 and mode1 vector
 // generation.
-TACO_BENCH_ARGS(bench_frostt_sched_gpu, tensor3_ttv, TTV, false);
-TACO_BENCH_ARGS(bench_frostt_sched_gpu, tensor3_ttm, TTM, false);
-TACO_BENCH_ARGS(bench_frostt_sched_gpu, tensor3_mttkrp, MTTKRP, false);
+// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false);
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
 
 // static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 //   std::cout << "START BENCHMARK" << std::endl;

@@ -8,6 +8,10 @@ endif
 ifeq ($(OPENMP),)
 OPENMP := "OFF"
 endif
+# Set CUDA=ON if compiling TACO with CUDA support.
+ifeq ($(CUDA),)
+CUDA := "OFF"
+endif
 # Set NEVA=ON if compiling on the Stanford cluster (Neva or Kiwi).
 ifeq ($(NEVA),)
 NEVA := "OFF"
@@ -90,7 +94,7 @@ else
 endif
 
 compiler/build/taco-bench: submodules compiler/benchmark/googletest
-	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) $(CMAKE_FLAGS) ../ && $(MAKE) taco-bench -j8
+	mkdir -p compiler/build/ && cd compiler/build/ && cmake -DOPENMP=$(OPENMP) -DNEVA=$(NEVA) -DCUDA=$(CUDA) $(CMAKE_FLAGS) ../ && $(MAKE) taco-bench -j8
 
 compiler/benchmark/googletest: submodules
 	if [ ! -d "compiler/benchmark/googletest" ] ; then git clone https://github.com/google/googletest compiler/benchmark/googletest; fi
