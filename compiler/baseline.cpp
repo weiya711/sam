@@ -1232,8 +1232,8 @@ static void bench_frostt_gpu(benchmark::State &state, FrosttOp op, bool gen=true
 // The first app is set to true to generate both mode0 and mode1 vector
 // generation.
 TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false)->UseRealTime();
-// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
-// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
 
 // static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 //   std::cout << "START BENCHMARK" << std::endl;
