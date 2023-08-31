@@ -1138,7 +1138,16 @@ static void bench_frostt_gpu(benchmark::State &state, FrosttOp op, bool gen=true
 
         Tensor<float> otherVec = inputCacheFloat.otherVecLastMode;
 
-        auto precomputedExpr =  frosttTensor(i, j, k) * otherVec(k);
+        Tensor<float> otherVecDense("c", {DIM2}, Dense, fill_value);
+        std::vector<int> coords(otherVec.getOrder());
+        for (auto &value: taco::iterate<float>(otherVec)) {
+  		for (int i = 0; i < otherVec.getOrder(); i++) {
+	        	coords[otherVec.getOrder() - i - 1] = value.first[i];
+		}
+        	otherVecDense.insert(coords, (float)value.second);
+	}
+
+        auto precomputedExpr =  frosttTensor(i, j, k) * otherVecDense(k);
         result(i, j) = precomputedExpr;
 
         stmt = result.getAssignment().concretize();
@@ -1222,9 +1231,9 @@ static void bench_frostt_gpu(benchmark::State &state, FrosttOp op, bool gen=true
 
 // The first app is set to true to generate both mode0 and mode1 vector
 // generation.
-// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false);
-TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
-TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false)->UseRealTime();
+// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
+// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
 
 // static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 //   std::cout << "START BENCHMARK" << std::endl;

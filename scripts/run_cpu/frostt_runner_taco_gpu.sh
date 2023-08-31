@@ -32,7 +32,7 @@ while read line; do
 	tensor_path="$FROSTT_PATH/$name.tns"
 
 	csvout="$out/result-$name.csv"
-	CUDA_VISIBLE_DEVICES=2 FROSTT_TENSOR_PATH=$tensor_path GEN=OFF OMP_PROC_BIND=true  compiler/build/taco-bench --benchmark_filter="bench_frostt_sched_gpu" --benchmark_out_format="csv" --benchmark_out="$csvout" --benchmark_repetitions=10 --benchmark_counters_tabular=true
+	CUDA_VISIBLE_DEVICES=2 FROSTT_TENSOR_PATH=$tensor_path GEN=OFF OMP_PROC_BIND=true  compiler/build/taco-bench --benchmark_filter="bench_frostt_gpu" --benchmark_out_format="csv" --benchmark_out="$csvout" --benchmark_repetitions=10 --benchmark_counters_tabular=true
 
 done <$1
 
