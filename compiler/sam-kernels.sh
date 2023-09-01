@@ -41,6 +41,7 @@ GEN_KERNEL_NAMES=(
   mat_spacc_simple
   vec_sd_compression_WRONG
   vec_ds_compression_WRONG
+  mat_mask_tri
 )
 
 HAND_KERNEL_NAMES=(
@@ -83,6 +84,7 @@ TACO_ARGS=(
   "X(j,k)=B(i,j,k) -f=X:ss -f=B:sss"
   "x(i)=b(i) -f=b:s -f=x:d"
   "x(i)=b(i) -f=b:d -f=x:s"
+  "x=B(i,j)*C(i,k)*D(k,j) -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)"
 )
 
 mkdir -p $dir
