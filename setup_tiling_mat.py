@@ -3,6 +3,7 @@ import glob
 import shutil
 import os
 import re
+import sys
 
 from sam.util import SUITESPARSE_PATH
 
@@ -10,13 +11,13 @@ from sam.util import SUITESPARSE_PATH
 
 # data = ['rajat12']
 
-data = ['adder_trans_02']
-tilesizes = [30]
+data = [sys.argv[2]]
+tilesizes = [int(sys.argv[3])]
 # app_name = "mat_elemadd"
 # app_name = "mat_elemmul"
 # app_name = "mat_sddmm"
 # app_name = "matmul_ijk"           
-app_name = "mat_elemadd3"
+app_name = sys.argv[1]
 # app_name = "mat_elemmul"
 # app_name = "mat_residual"
 
