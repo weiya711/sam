@@ -19,8 +19,6 @@ option(LANKA "Build benchmarks for the lanka cluster." OFF)
 # 
 # target_include_directories(taco-bench PUBLIC ${MKLROOT}/include) 
 
-# find_package(MKL REQUIRED)
-# find_package(OpenMP REQUIRED)
 
 add_subdirectory(taco)
 add_subdirectory(benchmark)
@@ -30,8 +28,8 @@ include_directories(taco taco/include benchmark/include taco/src)
 
 file(GLOB TEST_SOURCES *.cpp *.h)
 
-# set(CMAKE_CXX_FLAGS "${C_CXX_FLAGS} -std=c++14 -openmp -fopenmp")
 set(CMAKE_CXX_FLAGS "${C_CXX_FLAGS} -std=c++14")
+# find_package(MKL REQUIRED)
 
 add_executable(taco-bench ${TEST_SOURCES} bench.h)
 

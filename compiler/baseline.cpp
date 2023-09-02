@@ -441,11 +441,15 @@ IndexStmt scheduleMTTKRP5CPU(IndexStmt stmt, Tensor<T> B, int CHUNK_SIZE=16, int
           .parallelize(i1, ParallelUnit::CPUThread, OutputRaceStrategy::NoRaces);
 }
 
-static void bench_frostt_sched(benchmark::State &state, FrosttOp op, int fill_value = 0) {
-    bool GEN_OTHER = getEnvVar("GEN") == "ON";
+static void bench_frostt_sched(benchmark::State &state, FrosttOp op, bool gen=false, int fill_value = 0) {
+    bool GEN_OTHER = getEnvVar("GEN") == "ON" && gen;
     auto tnsPath = getEnvVar("FROSTT_TENSOR_PATH");
 
     std::cout << "Running benchmark tensor " << tnsPath << " on expression " << opName(op) << std::endl;
+
+    #if USE_OPENMP
+        std::cout << "OPENMP ON" << std::endl;
+    #endif
 
     auto pathSplit = taco::util::split(tnsPath, "/");
     auto filename = pathSplit[pathSplit.size() - 1];
@@ -611,10 +615,10 @@ TACO_BENCH_ARGS(bench_frostt_unsched, name/tensor3_mttkrp, MTTKRP);
 
 //#define DECLARE_FROSTT_BENCH_SCHED(name, path)
 // Working:
-TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttv, TTV);
+TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttv, TTV, false);
 // TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_innerprod, INNERPROD);vim
-TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttm, TTM);
-TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_mttkrp, MTTKRP);
+TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_ttm, TTM, false);
+TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_mttkrp, MTTKRP, false);
 // Kind of broken:
 // TACO_BENCH_ARGS(bench_frostt_sched, name/tensor3_elemadd_plus2, PLUS2);
 
@@ -650,7 +654,8 @@ enum SuiteSparseOp {
     MATTRANSMUL = 5,
     RESIDUAL = 6,
     MMADD = 7,
-    MMMUL = 8
+    MMMUL = 8,
+    SPMM_ikj = 9
 };
 
 std::string opName(SuiteSparseOp op) {
@@ -660,6 +665,9 @@ std::string opName(SuiteSparseOp op) {
         }
         case SPMM: {
             return "spmm";
+        }
+        case SPMM_ikj: {
+            return "spmm_ikj";
         }
         case PLUS3: {
             return "plus3";
@@ -767,10 +775,33 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
                 result(i, j) = ssTensor(i, k) * otherShiftedTrans(k, j);
                 
                 stmt = result.getAssignment().concretize();
-                stmt = reorderLoopsTopologically(stmt);
+                // stmt = reorderLoopsTopologically(stmt);
+                stmt = stmt.reorder({i, j, k});
                 // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
                 break;
             }
+            case SPMM_ikj: {
+                result = Tensor<int16_t>("result", {DIM0, DIM0}, CSR, fill_value);
+                Tensor<int16_t> otherShiftedTrans = inputCacheInt16.otherTensorTrans;
+
+                Tensor<int16_t> otherShiftTransDCSR("C", {DIM1, DIM0}, DCSR, fill_value);
+                std::vector<int> coords(otherShiftTransDCSR.getOrder());
+                for (auto &value: taco::iterate<int16_t>(otherShiftedTrans)) {
+                  for (int i = 0; i < otherShiftedTrans.getOrder(); i++) {
+                    coords[i] = value.first[i];
+                  }
+                  otherShiftTransDCSR.insert(coords, (int16_t)value.second);
+                }
+
+                result(i, j) = ssTensor(i, k) * otherShiftTransDCSR(k, j);
+                
+                stmt = result.getAssignment().concretize();
+                stmt = reorderLoopsTopologically(stmt);
+                // stmt = stmt.reorder({i, k, j});
+                // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
+                break;
+            }
+
             case PLUS3: {
                 result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
                 Tensor<int16_t> otherShifted2 = inputCacheInt16.thirdTensor;
@@ -821,7 +852,7 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
                     return;
             }
             
-            if (op == SPMM) {
+            if (op == SPMM || op == SPMM_ikj) {
                 result.compile(stmt);
                 state.ResumeTiming();
                 result.assemble();
@@ -847,14 +878,15 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
 
     // The first app is set to true to generate both mode0 and mode1 vector
     // generation.
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_mattransmul, MATTRANSMUL, true);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemadd3_plus3, PLUS3, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_sddmm, SDDMM, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemadd_mmadd, MMADD, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, matmul_spmm, SPMM, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemmul, MMMUL, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, vecmul_spmv, SPMV, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_residual, RESIDUAL, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_mattransmul, MATTRANSMUL, true);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemadd3_plus3, PLUS3, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_sddmm, SDDMM, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemadd_mmadd, MMADD, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, matmul_spmm, SPMM, false);
+    TACO_BENCH_ARGS(bench_suitesparse_unsched, matmul_spmm, SPMM_ikj, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemmul, MMMUL, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, vecmul_spmv, SPMV, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_residual, RESIDUAL, false);
 
 static void bench_suitesparse_sched(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 
