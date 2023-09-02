@@ -91,7 +91,7 @@ TACO_ARGS=(
   "x(i)=b(i)-c(i) -f=b:s -f=c:s"
   "x=B(i,j)*C(i,k)*D(k,j) -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)"
   "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)"
-  "x(i)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) -f=x:s -f=B:ss -f=C:ss -f=D:ss -f=E:ss -s=reorder(i,j,k,l,m)"
+  "x(i)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) -f=x:s -f=B:ss -f=C:ss -f=D:ss -f=E:ss -f=f:s -s=reorder(i,j,k,l,m)"
   "x=B(i)*C(j)*D(i,j,k)*E(j,l)*F(l,m,n) -f=B:s -f=C:s -f=D:sss -f=E:ss -f=F:sss -s=reorder(i,j,k,l,m,n)"
 )
 

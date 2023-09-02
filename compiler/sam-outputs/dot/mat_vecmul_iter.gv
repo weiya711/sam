@@ -1,5 +1,5 @@
 digraph SAM {
-    comment="x=s0,B=ss01,C=ss01,D=ss01,E=ss01,f=d0"
+    comment="x=s0,B=ss01,C=ss01,D=ss01,E=ss01,f=s0"
     54 [comment="type=fiberlookup,index=i,tensor=B,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: B0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="B" mode="0" format="compressed" src="true" root="true"]
     53 [comment="type=broadcast" shape=point style=invis type="broadcast"]
     1 [comment="type=fiberwrite,index=i,tensor=x,mode=0,format=compressed,segsize=2,crdsize=B0_dim,sink=true" label="FiberWrite i: x0\ncompressed" color=green3 shape=box style=filled type="fiberwrite" index="i" tensor="x" mode="0" format="compressed" segsize="2" crdsize="B0_dim" sink="true"]
@@ -37,7 +37,7 @@ digraph SAM {
     16 [comment="type=repeat,index=m,tensor=C,root=false" label="Repeat m: C" color=cyan2 shape=box style=filled type="repeat" index="m" tensor="C" root="false"]
     11 [comment="type=arrayvals,tensor=C" label="Array Vals: C" color=green2 shape=box style=filled type="arrayvals" tensor="C"]
     25 [comment="type=repeat,index=l,tensor=f,root=false" label="Repeat l: f" color=cyan2 shape=box style=filled type="repeat" index="l" tensor="f" root="false"]
-    22 [comment="type=fiberlookup,index=m,tensor=f,mode=0,format=dense,src=true,root=false" label="FiberLookup m: f0\ndense" color=green4 shape=box style=filled type="fiberlookup" index="m" tensor="f" mode="0" format="dense" src="true" root="false"]
+    22 [comment="type=fiberlookup,index=m,tensor=f,mode=0,format=compressed,src=true,root=false" label="FiberLookup m: f0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="m" tensor="f" mode="0" format="compressed" src="true" root="false"]
     20 [comment="type=intersect,index=m" label="intersect m" color=purple shape=box style=filled type="intersect" index="m"]
     19 [comment="type=repsiggen,index=m" label="RepeatSignalGenerator m" color=cyan3 shape=box style=filled type="repsiggen" index="m"]
     18 [comment="type=broadcast" shape=point style=invis type="broadcast"]
