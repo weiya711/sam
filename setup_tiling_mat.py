@@ -31,8 +31,8 @@ app_name = sys.argv[1]
 #     lines = file.readlines()
 
 # tilesizes = [int(line.strip()) for line in lines]
-print("TILESIZES: ", tilesizes)
-print("DATA: ", data)
+# print("TILESIZES: ", tilesizes)
+# print("DATA: ", data)
 
 mode_to_exclude = 0
 addition_vector_name = "d" #mattransmul (d) and residual (b) only
