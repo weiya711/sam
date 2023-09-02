@@ -12,8 +12,8 @@ test = "qiulp"
 # app_name = "mat_residual"
 # app_name = "matmul_ijk"
 # app_name = "matmul_ijk"
-# app_name = "mat_mattransmul"
-app_name = "mat_elemadd3"
+# app_name = "mat_mattrpython3ansmul"
+app_name = "mat_elemmul"
 const_val = 2 # only for mat_mattransmul
 
 
