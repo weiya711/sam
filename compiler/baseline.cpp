@@ -708,13 +708,13 @@ std::string opName(SuiteSparseOp op) {
             return "mmmul";
         }
         case MASKTRI: {
-            return "masktri"
+            return "masktri";
         }
         case SPMVITER: {
-            return "spmviter"
+            return "spmviter";
         }
         case TACOWEB: {
-            return "tacoweb"
+            return "tacoweb";
         }
         default:
             return "";
@@ -790,104 +790,105 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
         IndexStmt stmt;
 
         switch (op) {
-            case SPMV: {
-                result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
-                Tensor<int16_t> otherVec = inputCacheInt16.otherVecFirstMode;
+          case SPMV: {
+            result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
+            Tensor<int16_t> otherVec = inputCacheInt16.otherVecFirstMode;
 
-                result(i) = ssTensor(i, j) * otherVec(j);
-                break;
-            }
-            case SPMM: {
-                result = Tensor<int16_t>("result", {DIM0, DIM0}, DCSR, fill_value);
-                Tensor<int16_t> otherShiftedTrans = inputCacheInt16.otherTensorTrans;
+            result(i) = ssTensor(i, j) * otherVec(j);
+            break;
+          }
+          case SPMM: {
+            result = Tensor<int16_t>("result", {DIM0, DIM0}, DCSR, fill_value);
+            Tensor<int16_t> otherShiftedTrans = inputCacheInt16.otherTensorTrans;
 
-                result(i, j) = ssTensor(i, k) * otherShiftedTrans(k, j);
-                
-                stmt = result.getAssignment().concretize();
-                // stmt = reorderLoopsTopologically(stmt);
-                stmt = stmt.reorder({i, j, k});
-                // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
-                break;
-            }
-            case SPMM_ikj: {
-                result = Tensor<int16_t>("result", {DIM0, DIM0}, CSR, fill_value);
-                Tensor<int16_t> otherShiftedTrans = inputCacheInt16.otherTensorTrans;
+            result(i, j) = ssTensor(i, k) * otherShiftedTrans(k, j);
 
-                Tensor<int16_t> otherShiftTransDCSR("C", {DIM1, DIM0}, DCSR, fill_value);
-                std::vector<int> coords(otherShiftTransDCSR.getOrder());
-                for (auto &value: taco::iterate<int16_t>(otherShiftedTrans)) {
-                  for (int i = 0; i < otherShiftedTrans.getOrder(); i++) {
-                    coords[i] = value.first[i];
-                  }
-                  otherShiftTransDCSR.insert(coords, (int16_t)value.second);
-                }
+            stmt = result.getAssignment().concretize();
+            // stmt = reorderLoopsTopologically(stmt);
+            stmt = stmt.reorder({i, j, k});
+            // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
+            break;
+          }
+          case SPMM_ikj: {
+            result = Tensor<int16_t>("result", {DIM0, DIM0}, CSR, fill_value);
+            Tensor<int16_t> otherShiftedTrans = inputCacheInt16.otherTensorTrans;
 
-                result(i, j) = ssTensor(i, k) * otherShiftTransDCSR(k, j);
-                
-                stmt = result.getAssignment().concretize();
-                stmt = reorderLoopsTopologically(stmt);
-                // stmt = stmt.reorder({i, k, j});
-                // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
-                break;
+            Tensor<int16_t> otherShiftTransDCSR("C", {DIM1, DIM0}, DCSR, fill_value);
+            std::vector<int> coords(otherShiftTransDCSR.getOrder());
+            for (auto &value: taco::iterate<int16_t>(otherShiftedTrans)) {
+              for (int i = 0; i < otherShiftedTrans.getOrder(); i++) {
+                coords[i] = value.first[i];
+              }
+              otherShiftTransDCSR.insert(coords, (int16_t) value.second);
             }
 
-            case PLUS3: {
-                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
-                Tensor<int16_t> otherShifted2 = inputCacheInt16.thirdTensor;
+            result(i, j) = ssTensor(i, k) * otherShiftTransDCSR(k, j);
 
-                result(i, j) = ssTensor(i, j) + otherShifted(i, j) + otherShifted2(i, j);
-                break;
-            }
-            case SDDMM: {
-                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+            stmt = result.getAssignment().concretize();
+            stmt = reorderLoopsTopologically(stmt);
+            // stmt = stmt.reorder({i, k, j});
+            // stmt = stmt.assemble(result.getAssignment().getLhs().getTensorVar(), taco::AssembleStrategy::Append);
+            break;
+          }
 
-                result(i, j) = ssTensor(i, j) * denseMat1(i, k) * denseMat2(k, j);
-                break;
-            }
-            case RESIDUAL: {
-                result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
+          case PLUS3: {
+            result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+            Tensor<int16_t> otherShifted2 = inputCacheInt16.thirdTensor;
 
-                Tensor<int16_t> otherVeci = inputCacheInt16.otherVecFirstMode;
-                Tensor<int16_t> otherVecj = inputCacheInt16.otherVecLastMode;
+            result(i, j) = ssTensor(i, j) + otherShifted(i, j) + otherShifted2(i, j);
+            break;
+          }
+          case SDDMM: {
+            result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
 
-                result(i) = otherVeci(i) - ssTensor(i, j) * otherVecj(j);
-                break;
-            }
-            case MMADD: {
-                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+            result(i, j) = ssTensor(i, j) * denseMat1(i, k) * denseMat2(k, j);
+            break;
+          }
+          case RESIDUAL: {
+            result = Tensor<int16_t>("result", {DIM0}, Format(Sparse), fill_value);
 
-                result(i, j) = ssTensor(i, j) + otherShifted(i, j);
-                break;
-            }
-            case MMMUL: {
-                result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+            Tensor<int16_t> otherVeci = inputCacheInt16.otherVecFirstMode;
+            Tensor<int16_t> otherVecj = inputCacheInt16.otherVecLastMode;
 
-                result(i, j) = ssTensor(i, j) * otherShifted(i, j);
-                break;
-            }
-            case MATTRANSMUL: {
-                result = Tensor<int16_t>("result", {DIM1}, Format(Sparse), fill_value);
+            result(i) = otherVeci(i) - ssTensor(i, j) * otherVecj(j);
+            break;
+          }
+          case MMADD: {
+            result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+
+            result(i, j) = ssTensor(i, j) + otherShifted(i, j);
+            break;
+          }
+          case MMMUL: {
+            result = Tensor<int16_t>("result", ssTensor.getDimensions(), ssTensor.getFormat(), fill_value);
+
+            result(i, j) = ssTensor(i, j) * otherShifted(i, j);
+            break;
+          }
+          case MATTRANSMUL: {
+            result = Tensor<int16_t>("result", {DIM1}, Format(Sparse), fill_value);
 
 
+            Tensor<int16_t> otherVeci = inputCacheInt16.otherVecLastMode;
+            Tensor<int16_t> otherVecj = inputCacheInt16.otherVecFirstMode;
 
-                Tensor<int16_t> otherVeci = inputCacheInt16.otherVecLastMode;
-                    Tensor<int16_t> otherVecj = inputCacheInt16.otherVecFirstMode;
+            result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
+            break;
+          }
+          case MASKTRI: {
+            result = Tensor<int16_t>("result");
 
-                    result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
-                    break;
-            }
-            case MASKTRI: {
-                result = Tensor<int16_t>("result");
-                
-                Tensor<int16_t> otherMat = inputCacheInt16.otherMat;
-                
-                result() = otherMat(i, j) * ssTensor(i, k) * otherTrans(k, j);
-                break;
-            }
-            default: {
-                    state.SkipWithError("invalid expression");
-                    return;
-            }
+            Tensor<int16_t> otherMat = inputCacheInt16.otherMatMaskTri;
+            Tensor<int16_t> otherTrans = inputCacheInt16.otherTrans;
+
+            result() = otherMat(i, j) * ssTensor(i, k) * otherTrans(k, j);
+            break;
+          }
+          default: {
+            state.SkipWithError("invalid expression");
+            return;
+          }
+        }
             
             if (op == SPMM || op == SPMM_ikj) {
                 result.compile(stmt);
@@ -1301,9 +1302,9 @@ static void bench_frostt_gpu(benchmark::State &state, FrosttOp op, bool gen=true
 
 // The first app is set to true to generate both mode0 and mode1 vector
 // generation.
-// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false)->UseRealTime();
-// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
-// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
+TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
 
 // static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 //   std::cout << "START BENCHMARK" << std::endl;
