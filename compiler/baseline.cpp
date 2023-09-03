@@ -748,7 +748,7 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
     try {
         taco::Format format = op == MATTRANSMUL ? DCSC : DCSR;
         std::tie(ssTensor, otherShifted) = inputCacheInt16.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
-                                                                     true /* includeThird */, true, false, GEN_OTHER);
+                                                                     true /* includeThird */, true, true, GEN_OTHER, false);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
         // just add in the label that this run is skipped.
