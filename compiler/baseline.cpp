@@ -57,7 +57,7 @@ struct TensorInputCache {
     template<typename U>
     std::pair<taco::Tensor<T>, taco::Tensor<T>>
     getTensorInput(std::string path, std::string datasetName, U format, bool countNNZ = false, bool includeThird = false,
-                   bool includeVec = false, bool includeMat = false, bool genOther = false, bool use_CSR_CSC=false) {
+                   bool includeVec = false, bool includeMat = false,  bool genOther = false, bool use_CSR_CSC=false, bool includeTrans = false) {
         // See if the paths match.
         if (this->lastPath == path and this->lastFormat == format) {
             // TODO (rohany): Not worrying about whether the format was the same as what was asked for.
@@ -89,6 +89,13 @@ struct TensorInputCache {
             }
             this->otherTensorTrans = oTT;
 
+        }
+        if (includeTrans) {
+            if (use_CSR_CSC) {
+                this->otherTrans = this->inputTensor.transpose("D", {1, 0}, CSC);
+            } else {
+                this->otherTrans = this->inputTensor.transpose("D", {1, 0}, DCSC);
+            }
         }
         if (includeVec and genOther) {
 	          std::cout << "Generating OTHER vector for " << datasetName << std::endl;
@@ -125,6 +132,12 @@ struct TensorInputCache {
             this->otherMatTTM = getOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "ttm", 2);
             this->otherMatMode1MTTKRP = getOtherMat<T, T>("D", datasetName, this->inputTensor, {DIM_EXTRA, DIM1}, "mttkrp", 1);
             this->otherMatMode2MTTKRP = getOtherMat<T, T>("C", datasetName, this->inputTensor, {DIM_EXTRA, DIM2}, "mttkrp", 2);
+        } else if (this->inputTensor.getOrder() == 2 and includeMat and genOther) {
+            int DIM0 = this->inputTensor.getDimension(0);
+            this->otherMatMaskTri = genOtherMat<T, T>("B", datasetName, this->inputTensor, {DIM0, DIM0}, "masktri", 0);
+        } else if (this->inputTensor.getOrder() == 2 and includeMat) {
+            int DIM0 = this->inputTensor.getDimension(0);
+            this->otherMatMaskTri = getOtherMat<T, T>("B", datasetName, this->inputTensor, {DIM0, DIM0}, "masktri", 0);
         }
         return std::make_pair(this->inputTensor, this->otherTensor);
     }
@@ -144,6 +157,10 @@ struct TensorInputCache {
     taco::Tensor<T> otherMatTTM;
     taco::Tensor<T> otherMatMode1MTTKRP;
     taco::Tensor<T> otherMatMode2MTTKRP;
+
+    // SUITESPARSE only
+    taco::Tensor<T> otherMatMaskTri;
+    taco::Tensor<T> otherTrans;
 
     int64_t nnz;
 };
@@ -655,7 +672,10 @@ enum SuiteSparseOp {
     RESIDUAL = 6,
     MMADD = 7,
     MMMUL = 8,
-    SPMM_ikj = 9
+    SPMM_ikj = 9,
+    MASKTRI = 10,
+    SPMVITER = 11,
+    TACOWEB = 12
 };
 
 std::string opName(SuiteSparseOp op) {
@@ -686,6 +706,15 @@ std::string opName(SuiteSparseOp op) {
         }
         case MMMUL: {
             return "mmmul";
+        }
+        case MASKTRI: {
+            return "masktri"
+        }
+        case SPMVITER: {
+            return "spmviter"
+        }
+        case TACOWEB: {
+            return "tacoweb"
         }
         default:
             return "";
@@ -846,8 +875,16 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
 
                     result(i) = s1() * ssTensor(j, i) * otherVecj(j) + s2() * otherVeci(i);
                     break;
-                }
-                default:
+            }
+            case MASKTRI: {
+                result = Tensor<int16_t>("result");
+                
+                Tensor<int16_t> otherMat = inputCacheInt16.otherMat;
+                
+                result() = otherMat(i, j) * ssTensor(i, k) * otherTrans(k, j);
+                break;
+            }
+            default: {
                     state.SkipWithError("invalid expression");
                     return;
             }
@@ -883,11 +920,12 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
     // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_sddmm, SDDMM, false);
     // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemadd_mmadd, MMADD, false);
     // TACO_BENCH_ARGS(bench_suitesparse_unsched, matmul_spmm, SPMM, false);
-    TACO_BENCH_ARGS(bench_suitesparse_unsched, matmul_spmm, SPMM_ikj, false);
+    // TACO_BENCH_ARGS(bench_suitesparse_unsched, matmul_spmm, SPMM_ikj, false);
     // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_elemmul, MMMUL, false);
     // TACO_BENCH_ARGS(bench_suitesparse_unsched, vecmul_spmv, SPMV, false);
     // TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_residual, RESIDUAL, false);
-
+    TACO_BENCH_ARGS(bench_suitesparse_unsched, mat_mask_tri, MASKTRI, true);
+ 
 static void bench_suitesparse_sched(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 
   bool GEN_OTHER = (getEnvVar("GEN") == "ON" && gen);
@@ -1263,9 +1301,9 @@ static void bench_frostt_gpu(benchmark::State &state, FrosttOp op, bool gen=true
 
 // The first app is set to true to generate both mode0 and mode1 vector
 // generation.
-TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false)->UseRealTime();
-TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
-TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
+// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttv, TTV, false)->UseRealTime();
+// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_mttkrp, MTTKRP, false)->UseRealTime();
+// TACO_BENCH_ARGS(bench_frostt_gpu, tensor3_ttm, TTM, false)->UseRealTime();
 
 // static void bench_suitesparse_mkl(benchmark::State &state, SuiteSparseOp op, bool gen=true, int fill_value = 0) {
 //   std::cout << "START BENCHMARK" << std::endl;
