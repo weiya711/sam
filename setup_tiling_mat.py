@@ -11,8 +11,8 @@ from sam.util import SUITESPARSE_PATH
 
 # data = ['rajat12']
 
-data = [sys.argv[2]]
-tilesizes = [int(sys.argv[3])]
+# data = [sys.argv[2]]
+# tilesizes = [int(sys.argv[3])]
 # app_name = "mat_elemadd"
 # app_name = "mat_elemmul"
 # app_name = "mat_sddmm"
@@ -21,18 +21,18 @@ app_name = sys.argv[1]
 # app_name = "mat_elemmul"
 # app_name = "mat_residual"
 
-# data = []
-# data_file = open("onyx_final_eval_mid50_tensor_names.txt")
-# data_file_lines = data_file.readlines()
-# for line in data_file_lines:
-#    data.append(line[:-1])
+data = []
+data_file = open("onyx_final_eval_mid50_tensor_names.txt")
+data_file_lines = data_file.readlines()
+for line in data_file_lines:
+   data.append(line[:-1])
 
-# with open('matmul_tilesize_list.txt', 'r') as file:
-#     lines = file.readlines()
+with open('matmul_tilesize_list.txt', 'r') as file:
+    lines = file.readlines()
 
-# tilesizes = [int(line.strip()) for line in lines]
-# print("TILESIZES: ", tilesizes)
-# print("DATA: ", data)
+tilesizes = [int(line.strip()) for line in lines]
+print("TILESIZES: ", tilesizes)
+print("DATA: ", data)
 
 mode_to_exclude = 0
 addition_vector_name = "d" #mattransmul (d) and residual (b) only

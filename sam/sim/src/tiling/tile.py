@@ -30,7 +30,9 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             "mat_vecmul_ij" : "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
             "mat_residual": "X(i,j)=b(i)-C(i,j)*d(j) -f=X:ss -f=C:ss -f=b:ss:0 -f=d:ss:0  -s=reorder(i,j)",
             "mat_sddmm": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:dd -f=D:dd:1,0 -s=reorder(i,j,k)",
-            "mat_elemadd3": "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss"}
+            "mat_elemadd3": "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss",
+            "mat_mask_tri": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)",
+            "mat_vecmul_iter": "X(i,j)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) -f=X:ss -f=B:ss -f=C:ss -f=D:ss -f=E:ss -f=f:s -s=reorder(i,j,k,l,m)"}
 
 
 def print_dict(dd):
@@ -302,6 +304,30 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("Writing  shifted2...")
         shifted2 = ScipyTensorShifter().shiftLastMode(shifted)
         tensors.append(shifted2)
+
+    elif "mat_mask_tri" in app_str:
+        print("Writing other tensor 1...")
+        shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
+
+        print("Writing  shifted2...")
+        shifted2 = ScipyTensorShifter().shiftLastMode(shifted)
+        tensors.append(shifted2)
+    elif "mat_vecmul_iter" in app_str:
+        print("Writing other tensor 1...")
+        tensors.append(tensor)
+        tensors.append(tensor)
+        tensors.append(tensor)
+
+        print("writing other vector...")
+        tensorName = args.input_tensor
+        variant = "mode1"
+        path = constructOtherVecKey(tensorName,variant)
+        tensor_c_from_path = FrosttTensor(path)
+        tensor_c = tensor_c_from_path.load().todense()
+
+        # breakpoint()
+        tensors.append(tensor_c)
 
     elif "mat_mattransmul" in app_str:
         print("Writing other tensors...")

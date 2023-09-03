@@ -11,7 +11,9 @@ BENCHMARKS=(
 	# mat_vecmul_ij
 	# mat_residual
 	# mat_elemadd3
-	matmul_ijk
+	# matmul_ijk
+	# mat_mask_tri
+	mat_vecmul_iter
 	# mat_elemmul
 )
 
