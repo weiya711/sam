@@ -748,14 +748,14 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
     try {
         taco::Format format = op == MATTRANSMUL ? DCSC : DCSR;
         std::tie(ssTensor, otherShifted) = inputCacheInt16.getTensorInput(tensorPath, tensorName, format, true /* countNNZ */,
-                                                                     true /* includeThird */, true, true, GEN_OTHER, false);
+                                                                     true /* includeThird */, true, true, GEN_OTHER, false, true);
     } catch (TacoException &e) {
         // Counters don't show up in the generated CSV if we used SkipWithError, so
         // just add in the label that this run is skipped.
         std::cout << e.what() << std::endl;
         state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
         return;
-    }
+    }MASKTRI
 
     int DIM0 = ssTensor.getDimension(0);
     int DIM1 = ssTensor.getDimension(1);
