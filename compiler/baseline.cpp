@@ -755,7 +755,7 @@ static void bench_suitesparse_unsched(benchmark::State &state, SuiteSparseOp op,
         std::cout << e.what() << std::endl;
         state.SetLabel(tensorName + "/SKIPPED-FAILED-READ");
         return;
-    }MASKTRI
+    }
 
     int DIM0 = ssTensor.getDimension(0);
     int DIM1 = ssTensor.getDimension(1);
