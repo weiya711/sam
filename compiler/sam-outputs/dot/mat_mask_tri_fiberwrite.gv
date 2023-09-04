@@ -1,5 +1,5 @@
 digraph SAM {
-    comment="x=none,B=ss01,C=ss01,D=ss10"
+    comment="x=none,B=ss01,C=ss01,D=ss10,T=ss01"
     22 [comment="type=fiberlookup,index=i,tensor=B,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: B0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="B" mode="0" format="compressed" src="true" root="true"]
     21 [comment="type=intersect,index=i" label="intersect i" color=purple shape=box style=filled type="intersect" index="i"]
     20 [comment="type=repsiggen,index=i" label="RepeatSignalGenerator i" color=cyan3 shape=box style=filled type="repsiggen" index="i"]
