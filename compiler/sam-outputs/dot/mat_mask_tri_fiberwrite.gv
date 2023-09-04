@@ -26,8 +26,8 @@ digraph SAM {
     23 [comment="type=fiberlookup,index=i,tensor=C,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: C0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="C" mode="0" format="compressed" src="true" root="true"]
     
     24 [comment="type=fiberwrite,mode=0,index=i,tensor=T,format=compressed,segsize=2,crdsize=B0_dim,sink=true" label="FiberWrite i: T0" color=green3 shape=box style=filled type="fiberwrite" index="i" tensor="T" mode="0" format="compressed" segsize="2" crdsize="B0_dim" sink="true"]
-    25 [comment="type=fiberwrite,mode=1,index=j,tensor=T,format=compressed,segsize=B0_dim+1,crdsize=B0_dim*B1_dim,sink=true" label="FiberWrite j: T1" color=green3 shape=box style=filled type="fiberwrite" index="j" tensor="T" mode="1" segsize="B0_dim+1" crdsize="B0_dim*B1_dim" sink="true"]
-    26 [comment="type=fiberwrite,mode=2,index=k,tensor=T,format=compressed,segsize=B0_dim*B1_dim+1,crdsize=B0_dim*B1_dim*C1_dim,sink=true" label="FiberWrite k: T2" color=green3 shape=box style=filled type="fiberwrite" index="k" tensor="T" mode="2" segsize="B0_dim*B1_dim+1" crdsize="B0_dim*B1_dim*C1_dim" sink="true"]
+    25 [comment="type=fiberwrite,mode=1,index=j,tensor=T,format=compressed,segsize=B0_dim+1,crdsize=B0_dim*B1_dim,sink=true" label="FiberWrite j: T1" color=green3 shape=box style=filled type="fiberwrite" index="j" tensor="T" mode="1" format="compressed" segsize="B0_dim+1" crdsize="B0_dim*B1_dim" sink="true"]
+    26 [comment="type=fiberwrite,mode=2,index=k,tensor=T,format=compressed,segsize=B0_dim*B1_dim+1,crdsize=B0_dim*B1_dim*C1_dim,sink=true" label="FiberWrite k: T2" color=green3 shape=box style=filled type="fiberwrite" index="k" tensor="T" mode="2" format="compressed" segsize="B0_dim*B1_dim+1" crdsize="B0_dim*B1_dim*C1_dim" sink="true"]
     30 [comment="type=fiberwrite,mode=vals,tensor=T,size=B0_dim*B1_dim*C1_dim,sink=true" label="FiberWrite Vals: T" color=green3 shape=box style=filled type="fiberwrite" tensor="T" mode="vals" size="B0_dim*B1_dim*C1_dim" sink="true"]
 
     27 [comment="type=broadcast" shape=point style=invis type="broadcast"]
