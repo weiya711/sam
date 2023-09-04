@@ -59,8 +59,8 @@ digraph SAM {
     6 -> 5 [label="val" type="val"]
     5 -> 4 [label="val" type="val"]
     4 -> 31 [label="val" type="val"]
-    31 -> 3
-    31 -> 30
+    31 -> 3 [label="val" type="val"]
+    31 -> 30 [label="val" type="val"]
     
     3 -> 2 [label="val" type="val"]
     2 -> 1 [label="val" type="val"]
