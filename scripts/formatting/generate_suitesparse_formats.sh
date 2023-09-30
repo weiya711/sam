@@ -22,7 +22,7 @@ OTHERBENCHES='["mat_residual", "mat_mattransmul", "mat_vecmul"]'
 # THIS FILE MUST BE RUN FROM sam/ location
 outdir=${SUITESPARSE_FORMATTED_PATH} 
 basedir=$(pwd)
-textfile=$basedir/scripts/tensor_names/$1
+textfile=$basedir/$1
 
 mkdir -p $outdir
 cd $outdir
