@@ -16,9 +16,9 @@ import os
 import csv
 from sam.sim.test.gen_gantt import gen_gantt
 
-
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+
 
 # csv file path
 
@@ -63,7 +63,8 @@ def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, bac
     fiberlookup_Ci_11 = CompressedCrdRdScan(crd_arr=C_crd0, seg_arr=C_seg0, debug=debug_sim, statistics=report_stats,
                                             back_en=backpressure, depth=int(depth))
     unioni_9 = Union2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim, statistics=report_stats,
+    fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=2 * len(B_crd0), fill=fill, debug=debug_sim,
+                                     statistics=report_stats,
                                      back_en=backpressure, depth=int(depth))
     fiberlookup_Bj_7 = CompressedCrdRdScan(crd_arr=B_crd1, seg_arr=B_seg1, debug=debug_sim, statistics=report_stats,
                                            back_en=backpressure, depth=int(depth))
@@ -72,8 +73,10 @@ def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, bac
     unionj_6 = Union2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_X1_1 = CompressWrScan(seg_size=2 * len(B_crd0) + 1, size=2 * len(B_vals), fill=fill,
                                      debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
-    arrayvals_C_5 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
+    arrayvals_B_4 = Array(init_arr=B_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure,
+                          depth=int(depth))
+    arrayvals_C_5 = Array(init_arr=C_vals, debug=debug_sim, statistics=report_stats, back_en=backpressure,
+                          depth=int(depth))
     add_3 = Add2(debug=debug_sim, statistics=report_stats, back_en=backpressure, depth=int(depth))
     fiberwrite_Xvals_0 = ValsWrScan(size=2 * len(B_vals), fill=fill, debug=debug_sim, statistics=report_stats,
                                     back_en=backpressure, depth=int(depth))
@@ -197,12 +200,11 @@ def test_mat_elemadd_FINAL(samBench, ssname, cast, check_gold, report_stats, bac
     sample_dict = fiberwrite_Xvals_0.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberwrite_Xvals_0" + "/" + k] = sample_dict[k]
-    
-    # code for generating csv, gantt chart, txt file
-    extra_info["backpressure"]=backpressure
-    extra_info["depth"]=depth
-    gen_gantt(extra_info, "mat_elemadd")
 
+    # code for generating csv, gantt chart, txt file
+    extra_info["backpressure"] = backpressure
+    extra_info["depth"] = depth
+    gen_gantt(extra_info, "mat_elemadd")
 
     if check_gold:
         print("Checking gold...")

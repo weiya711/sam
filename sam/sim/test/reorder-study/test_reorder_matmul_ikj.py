@@ -20,7 +20,7 @@ from sam.sim.test.gen_gantt import gen_gantt
 
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
-#formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+# formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic'))
 
@@ -33,7 +33,6 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.synth
 # @pytest.mark.parametrize("sparsity", [0.95])
 def test_reorder_matmul_ikj(samBench, ssname, check_gold, report_stats, debug_sim, cast, backpressure, depth, fill=0):
-    
     B_dirname = os.path.join(formatted_dir, ssname, "matmul_kij")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
@@ -267,7 +266,7 @@ def test_reorder_matmul_ikj(samBench, ssname, check_gold, report_stats, debug_si
     sample_dict = arrayvals_C_8.return_statistics()
     for k in sample_dict.keys():
         extra_info["arrayvals_C_8" + "_" + k] = sample_dict[k]
-    
+
     gen_gantt(extra_info, "matmul_ikj")
 
     if check_gold:

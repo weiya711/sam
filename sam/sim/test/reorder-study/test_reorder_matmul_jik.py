@@ -249,7 +249,7 @@ def test_reorder_matmul_jik(samBench, sparsity, check_gold, debug_sim, backpress
     sample_dict = arrayvals_C_6.return_statistics()
     for k in sample_dict.keys():
         extra_info["arrayvals_C_6" + "_" + k] = sample_dict[k]
-    
+
     gen_gantt(extra_info, "matmul_jik")
 
     if check_gold:

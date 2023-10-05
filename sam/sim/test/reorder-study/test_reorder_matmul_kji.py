@@ -33,7 +33,6 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
 def test_reorder_matmul_kji(samBench, sparsity, check_gold, debug_sim, backpressure, depth, fill=0):
-
     # DCSC
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSC/B_random_sp_{sparsity}/")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
@@ -233,7 +232,6 @@ def test_reorder_matmul_kji(samBench, sparsity, check_gold, debug_sim, backpress
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
 
-    
     sample_dict = intersectk_16.return_statistics()
     for k in sample_dict.keys():
         extra_info["intersectk_16" + "_" + k] = sample_dict[k]
@@ -269,7 +267,7 @@ def test_reorder_matmul_kji(samBench, sparsity, check_gold, debug_sim, backpress
     sample_dict = arrayvals_B_6.return_statistics()
     for k in sample_dict.keys():
         extra_info["arrayvals_B_6" + "_" + k] = sample_dict[k]
-    
+
     gen_gantt(extra_info, "matmul_kji")
 
     if check_gold:

@@ -37,26 +37,25 @@ def gen_gantt(extra_info, testname):
                 start_list.insert(0, start_c)
                 duration_list.insert(0, finish_c - start_c)
 
-
-    back_depth = 'N' # assume there is no back pressure for default
+    back_depth = 'N'  # assume there is no back pressure for default
     if "backpressure" in extra_info.keys() and extra_info["backpressure"]:
         back_depth = extra_info["depth"]
-    
+
     # Writing cycle info to csv file
-    with open(testname + '_' + extra_info["dataset"] + '_back_'+back_depth+'.csv', 'w', newline='') as file:
+    with open(testname + '_' + extra_info["dataset"] + '_back_' + back_depth + '.csv', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["block","start","finish","duration","valid_ops"])
+        writer.writerow(["block", "start", "finish", "duration", "valid_ops"])
         for idx, block in reversed(list(enumerate(block_list))):
-            writer.writerow([block, start_list[idx], finish_list[idx], duration_list[idx],'-'])
-    
+            writer.writerow([block, start_list[idx], finish_list[idx], duration_list[idx], '-'])
+
     # Print all the statistics to a text file
-    text_file = open(testname + '_' + extra_info["dataset"] + '_back_'+back_depth+".txt","w")
+    text_file = open(testname + '_' + extra_info["dataset"] + '_back_' + back_depth + ".txt", "w")
     for k in extra_info.keys():
         if "/" in k:
-            text_file.write(k+": "+str(extra_info[k])+"\n")
+            text_file.write(k + ": " + str(extra_info[k]) + "\n")
     text_file.close()
 
     # Creating gantt chart
     plt.barh(y=block_list, width=duration_list, left=start_list)
-    file_name = testname + '_' + extra_info["dataset"] + "_back_"+back_depth+".png"
+    file_name = testname + '_' + extra_info["dataset"] + "_back_" + back_depth + ".png"
     plt.savefig(file_name, bbox_inches="tight")
