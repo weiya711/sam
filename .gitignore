@@ -60,13 +60,5 @@ synthetic/
 # Temporary scripts
 download_suitesparse_partial.sh
 
-# Other files from gen_gantt_master (FIXME (owhsu): check this)
-setenv.sh
-parse_nnz.py
-scripts/small50_script.sh
-scripts/gen_cycle_csv.py
-scripts/data_gen_suitesparse_g.sh
-sam/sim/test/reorder-study-gina/*
-
 # Network Filesystem 
 .nfs*
