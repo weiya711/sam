@@ -39,7 +39,7 @@ def gen_gantt(extra_info, testname):
 
 
     back_depth = 'N' # assume there is no back pressure for default
-    if extra_info["backpressure"]:
+    if "backpressure" in extra_info.keys() and extra_info["backpressure"]:
         back_depth = extra_info["depth"]
     
     # Writing cycle info to csv file
