@@ -249,22 +249,22 @@ def find_optimal_tilesize(app_name, datum, initial=30, step_size=10):
 if __name__ == "__main__":
     max_list = {}
     # for i in range(1, 11):
-    app_name = "mat_vecmul_iter"
-    datum = "qiulp"
+    app_name = "matmul_ijk"
+    datum = "N_biocarta"
 
-    tile_pairing = pair_tiles(app_name)
-    compute_outputs(tile_pairing, app_name)
+    # tile_pairing = pair_tiles(app_name)
+    # compute_outputs(tile_pairing, app_name)
 
-    # max_tile_size, tile_pairing = find_optimal_tilesize(app_name, datum, initial=20, step_size=10)
-    # print("-"*20)
-    # print(f"MAX TILESIZE for {app_name}, {datum}: {max_tile_size}")
-    # print(f"NUMBER OF TILES: {len(tile_pairing.keys())}")
-    # print("-"*20)
+    max_tile_size, tile_pairing = find_optimal_tilesize(app_name, datum, initial=40, step_size=10)
+    print("-"*20)
+    print(f"MAX TILESIZE for {app_name}, {datum}: {max_tile_size}")
+    print(f"NUMBER OF TILES: {len(tile_pairing.keys())}")
+    print("-"*20)
 
-    # # max_list[datum] = [max_tile_size, len(tile_pairing.keys())]
+    max_list[datum] = [max_tile_size, len(tile_pairing.keys())]
 
-    # call_tiling = f"python3 setup_tiling_mat.py {app_name} {datum} {max_tile_size} > temp.txt"
-    # os.system(call_tiling)
-    # print(call_tiling)
+    call_tiling = f"python3 setup_tiling_mat.py {app_name} {datum} {max_tile_size} > temp.txt"
+    os.system(call_tiling)
+    print(call_tiling)
 
     # print(max_list)

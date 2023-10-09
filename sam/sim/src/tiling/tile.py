@@ -362,16 +362,17 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("Writing other tensors...")
         tensorName = args.input_tensor
         # c(j) use mode1
-        variant = "mode1"
-        path = constructOtherVecKey(tensorName,variant)
-        tensor_c_from_path = FrosttTensor(path)
-        tensor_c = tensor_c_from_path.load().todense()
+        
+        # variant = "mode1"
+        # path = constructOtherVecKey(tensorName,variant)
+        # tensor_c_from_path = FrosttTensor(path)
+        # tensor_c = tensor_c_from_path.load().todense()
 
-        print("TENSOR SHAPE: ", tensor.shape)
-        print("TENSOR_C SHAPE: ", tensor_c.shape)
+        # print("TENSOR SHAPE: ", tensor.shape)
+        # print("TENSOR_C SHAPE: ", tensor_c.shape)
  
-        # rows, cols = tensor.shape
-        # tensor_c = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
+        rows, cols = tensor.shape
+        tensor_c = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
 
         if other_nonempty:
             tensor_c[0] = 1

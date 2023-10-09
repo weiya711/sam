@@ -6,7 +6,11 @@ import numpy as np
 
 from pathlib import Path
 
-from scripts.util.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
+import sys
+# the mock-0.3.1 dir contains testcase.py, testutils.py & mock.py
+sys.path.append('/home/avb03/sam/scripts')
+
+from util.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 from sam.util import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
 
 all_formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]

@@ -6,16 +6,16 @@
 
 BENCHMARKS=(
 #  matmul_ikj
-#  matmul_ijk
+ matmul_ijk
 #  matmul_kij
-#  mat_elemmul
-#  mat_elemadd
-#  mat_elemadd3
+ mat_elemmul
+ mat_elemadd
+ mat_elemadd3
   mat_residual
   mat_mattransmul
   mat_vecmul
 #  mat_identity
-#  mat_sddmm
+ mat_sddmm
 )
 
 # This is a list of benchmarks that have "other" tensors that are generated
@@ -36,10 +36,10 @@ for b in ${!BENCHMARKS[@]}; do
 		sspath=${SUITESPARSE_PATH}/$name
 		echo "Generating input format files for $name..."
 
-		SUITESPARSE_TENSOR_PATH=$sspath python $basedir/scripts/formatting/datastructure_suitesparse.py -n $name -hw -b $bench 
+		SUITESPARSE_TENSOR_PATH=$sspath python3 $basedir/scripts/formatting/datastructure_suitesparse.py -n $name -hw -b $bench 
 		if [[ $OTHERBENCHES =~ "$bench" ]]; then
 			echo "Generating format of 'other' tensor"
-			python $basedir/scripts/formatting/datastructure_tns.py -n $line -f ss01 --other -ss -b $bench -hw
+			python3 $basedir/scripts/formatting/datastructure_tns.py -n $line -f ss01 --other -ss -b $bench -hw
 		fi
 	
 	done <$textfile

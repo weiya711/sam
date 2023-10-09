@@ -11,8 +11,8 @@ from sam.util import SUITESPARSE_PATH
 
 # data = ['rajat12']
 
-# data = [sys.argv[2]]
-# tilesizes = [int(sys.argv[3])]
+data = [sys.argv[2]]
+tilesizes = [int(sys.argv[3])]
 # app_name = "mat_elemadd"
 # app_name = "mat_elemmul"
 # app_name = "mat_sddmm"
@@ -21,16 +21,23 @@ app_name = sys.argv[1]
 # app_name = "mat_elemmul"
 # app_name = "mat_residual"
 
-data = []
-data_file = open("onyx_final_eval_mid50_tensor_names.txt")
-data_file_lines = data_file.readlines()
-for line in data_file_lines:
-   data.append(line[:-1])
+# data = []
+# tilesizes = []
+# sparsities = [60, 80, 90, 95, 98]
+# for sparsity in sparsities:
+#     for i in range(5):
+#         data.append(f"matrix_sp{str(sparsity)}_sm_{i+1}")
+#         tilesizes.append(30)
 
-with open('matmul_tilesize_list.txt', 'r') as file:
-    lines = file.readlines()
+# data_file = open("onyx_final_eval_mid50_tensor_names.txt")
+# data_file_lines = data_file.readlines()
+# for line in data_file_lines:
+#    data.append(line[:-1])
 
-tilesizes = [int(line.strip()) for line in lines]
+# with open('matmul_tilesize_list.txt', 'r') as file:
+#     lines = file.readlines()
+
+# tilesizes = [int(line.strip()) for line in lines]
 print("TILESIZES: ", tilesizes)
 print("DATA: ", data)
 
@@ -83,7 +90,8 @@ for datum in data:
 
    rmdir = f"rm -rf tiles/{app_name}"
    os.system(rmdir)
-
+   
+   print(f"{SUITESPARSE_PATH}/{datum}.mtx")
    mtx_file = glob.glob(f"{SUITESPARSE_PATH}/{datum}.mtx")[0]
    os.makedirs("extensor_mtx", exist_ok=True)
    shutil.copy(mtx_file,f"extensor_mtx/{datum}.mtx")
