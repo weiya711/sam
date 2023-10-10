@@ -73,11 +73,6 @@ if __name__ == "__main__":
     outpath = Path(outdir)
     outpath.mkdir(parents=True, exist_ok=True)
 
-    # generate_gold_matmul_tiled([0, 1, 2, 9], [1, 0, 9, 0], outdir)
-
-    # generate_gold_matmul_tiled([0, 1, 0, 7], [1, 0, 7, 0], outdir)
-    # quit()    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
-
     with open("./tiles/matmul_ikj/tensor_sizes", "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)
 
