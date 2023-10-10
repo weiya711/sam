@@ -111,7 +111,7 @@ class CrdDrop(Primitive):
                     self.get_next_ocrd = True
                     self.get_next_icrd = False
                     self.get_stkn = False
-                if isinstance(icrd, int):
+                if isinstance(icrd, int) or isinstance(icrd, float):
                     self.has_crd = True
                     self.curr_crd = ''
                     self.get_next_ocrd = False
@@ -125,6 +125,7 @@ class CrdDrop(Primitive):
                 elif is_stkn(icrd):
                     self.get_next_ocrd = True
                     self.curr_crd = self.curr_ocrd if self.has_crd else ''
+                    self.curr_inner_crd = self.curr_inner_crd if self.has_crd else ''
                     self.get_next_icrd = False
                 elif self.done:
                     assert (icrd == 'D')
