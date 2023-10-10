@@ -15,18 +15,16 @@ DATASET_NAMES=(
   nell-1
 )
 
+sspath=$SUITESPARSE_PATH
 cwd=$(pwd)
 # LANKA
 if [ $1 -eq 1 ]; then
-	sspath=/data/scratch/changwan/florida_all/.
 	lanka=ON
 	neva=OFF
 elif [ $1 -eq 2 ]; then
-	sspath=/nobackup/owhsu/sparse-datasets/suitesparse
 	lanka=OFF
 	neva=ON
 else
-	sspath=cwd/.
 	lanka=OFF
 	neva=OFF
 fi

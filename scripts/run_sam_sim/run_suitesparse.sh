@@ -8,15 +8,13 @@
 # ./scripts/run_sam_sim/run_suitesparse.sh <tensor_names.txt>
 
 # THIS FILE MUST BE RUN FROM sam/ location
-outdir=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
+outdir=$SUITESPARSE_FORMATTED_PATH
 basedir=$(pwd)
 
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse
-export SUITESPARSE_FORMATTED_PATH=$outdir
 
 mkdir -p $outdir
 

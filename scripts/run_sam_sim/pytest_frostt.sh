@@ -7,14 +7,11 @@
 
 # Script that runs ALL test_tensor* pytest tests under sam/sim/test
 
-outdir=/nobackup/owhsu/sparse-datasets/frostt-formatted
+outdir=$FROSTT_FORMATTED_PATH
 
 errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
-
-export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt
-export FROSTT_FORMATTED_PATH=$outdir
 
 mkdir -p $outdir
 cd ./sam/sim

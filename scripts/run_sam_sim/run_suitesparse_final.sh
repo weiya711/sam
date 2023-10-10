@@ -4,7 +4,7 @@
 #SBATCH -p lanka-v3
 #SBATCH --exclusive
 
-# ./scripts/run_sam_sim/run
+# ./scripts/run_sam_sim/run_suitesparse_final.sh <tensor_names.txt>
 
 pushd .
 cd sam/sim
