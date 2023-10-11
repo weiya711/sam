@@ -282,7 +282,6 @@ class Max(UnaryALU):
             self.count_to_delay = 0
 
         if len(self.in1) > 0:
-            print(self.in1)
             if self.get1:
                 self.curr_in1 = self.in1.pop(0)
             # if self.get2:
