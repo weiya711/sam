@@ -13,7 +13,6 @@ def gen_gantt(extra_info, testname):
     sam_name = ''
 
     for k in extra_info.keys():
-        print(k, sam_name)
         if "done_cycles" in k:
             sam_name = k.split('/')[0]
             finish_c = extra_info[k]
@@ -41,8 +40,6 @@ def gen_gantt(extra_info, testname):
     back_depth = 'N'  # assume there is no back pressure for default
     if "backpressure" in extra_info.keys() and extra_info["backpressure"]:
         back_depth = extra_info["depth"]
-
-    print(finish_list, block_list, start_list, duration_list)
 
     # Writing cycle info to csv file
     with open(testname + '_' + extra_info["dataset"] + '_back_' + back_depth + '.csv', 'w', newline='') as file:
