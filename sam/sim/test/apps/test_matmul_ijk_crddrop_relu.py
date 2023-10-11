@@ -28,7 +28,7 @@ formatted_dir = os.getenv('CUSTOM_FORMATTED_PATH', default=os.path.join(cwd, 'mo
 )
 @pytest.mark.suitesparse
 def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, report_stats, fill=0):
-    B_dirname = os.path.join(formatted_dir, ssname, "matmul_ijk_crddrop")
+    B_dirname = os.path.join(formatted_dir, ssname, "matmul_ijk_crddrop_relu")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
     B_shape = read_inputs(B_shape_filename)
 
@@ -45,7 +45,7 @@ def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, repor
     B_vals_filename = os.path.join(B_dirname, "tensor_B_mode_vals")
     B_vals = read_inputs(B_vals_filename, float)
 
-    C_dirname = os.path.join(formatted_dir, ssname, "matmul_ijk_crddrop")
+    C_dirname = os.path.join(formatted_dir, ssname, "matmul_ijk_crddrop_relu")
     C_shape_filename = os.path.join(C_dirname, "tensor_C_mode_shape")
     C_shape = read_inputs(C_shape_filename)
 
@@ -61,6 +61,7 @@ def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, repor
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
+    print(C_vals)
 
 
     fiberlookup_Bi_17 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
@@ -81,14 +82,17 @@ def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, repor
     fiberwrite_Xvals_0 = ValsWrScan(size=1 * B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
     fiberwrite_X1_1 = CompressWrScan(seg_size=B_shape[0] + 1, size=B_shape[0] * C_shape[1], fill=fill, debug=debug_sim, statistics=report_stats)
     fiberwrite_X0_2 = CompressWrScan(seg_size=2, size=B_shape[0], fill=fill, debug=debug_sim, statistics=report_stats)
-    stkndrop_20 = EmptyFiberStknDrop(debug=debug_sim, statistics=report_stats)
-    stkndrop_21 = EmptyFiberStknDrop(debug=debug_sim, statistics=report_stats)
+    max_20 = Max(debug=debug_sim, statistics=report_stats)
+    valdrop_21 = ValDropper(debug=debug_sim, statistics=report_stats)
+    crddrop_22 = CrdDrop(debug=debug_sim, statistics=report_stats)
+    stkndrop_23 = EmptyFiberStknDrop(debug=debug_sim, statistics=report_stats)
+    stkndrop_24 = EmptyFiberStknDrop(debug=debug_sim, statistics=report_stats)
     in_ref_B = [0, 'D']
     in_ref_C = [0, 'D']
     done = False
     time_cnt = 0
 
-    while not done and time_cnt < TIMEOUT:
+    while not done and time_cnt < 1000:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_17.set_in_ref(in_ref_B.pop(0))
         repsiggen_i_15.set_istream(fiberlookup_Bi_17.out_crd())
@@ -109,14 +113,20 @@ def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, repor
         mul_4.set_in2(arrayvals_C_6.out_val())
         crddrop_19.set_outer_crd(fiberlookup_Cj_13.out_crd())
         crddrop_19.set_inner_crd(mul_4.out_val())
-        stkndrop_20.set_in_val(crddrop_19.out_crd_inner())
-        reduce_3.set_in_val(stkndrop_20.out_val())
+        stkndrop_23.set_in_val(crddrop_19.out_crd_inner())
         crddrop_18.set_outer_crd(fiberlookup_Bi_17.out_crd())
         crddrop_18.set_inner_crd(crddrop_19.out_crd_outer())
-        stkndrop_21.set_in_val(crddrop_18.out_crd_inner())
-        fiberwrite_Xvals_0.set_input(reduce_3.out_val())
-        fiberwrite_X1_1.set_input(stkndrop_21.out_val())
-        fiberwrite_X0_2.set_input(crddrop_18.out_crd_outer())
+        stkndrop_24.set_in_val(crddrop_18.out_crd_inner())
+
+        reduce_3.set_in_val(stkndrop_23.out_val())
+        max_20.set_in1(reduce_3.out_val())
+        valdrop_21.set_val(max_20.out_val())
+        valdrop_21.set_crd(stkndrop_24.out_val())
+        crddrop_22.set_inner_crd(valdrop_21.out_crd())
+        crddrop_22.set_outer_crd(crddrop_18.out_crd_outer())
+        fiberwrite_Xvals_0.set_input(valdrop_21.out_val())
+        fiberwrite_X1_1.set_input(crddrop_22.out_crd_inner())
+        fiberwrite_X0_2.set_input(crddrop_22.out_crd_outer())
         fiberlookup_Bi_17.update()
 
         repsiggen_i_15.update()
@@ -136,8 +146,11 @@ def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, repor
         fiberwrite_Xvals_0.update()
         fiberwrite_X1_1.update()
         fiberwrite_X0_2.update()
-        stkndrop_20.update()
-        stkndrop_21.update()
+        valdrop_21.update()
+        max_20.update()
+        crddrop_22.update()
+        stkndrop_23.update()
+        stkndrop_24.update()
 
         done = fiberwrite_X0_2.out_done() and fiberwrite_X1_1.out_done() and fiberwrite_Xvals_0.out_done()
         time_cnt += 1

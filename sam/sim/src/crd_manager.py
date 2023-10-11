@@ -125,7 +125,6 @@ class CrdDrop(Primitive):
                 elif is_stkn(icrd):
                     self.get_next_ocrd = True
                     self.curr_crd = self.curr_ocrd if self.has_crd else ''
-                    self.curr_inner_crd = self.curr_inner_crd if self.has_crd else ''
                     self.get_next_icrd = False
                 elif self.done:
                     assert (icrd == 'D')

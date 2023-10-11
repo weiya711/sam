@@ -78,7 +78,7 @@ class ValDropper(Primitive):
                 self.out_vals = ''
                 if self.drop_refs:
                     self.out_refs = ''
-            elif len(self.in_val) > 0 and len(self.in_crd) > 0 and len(self.in_ref) > 0:
+            elif len(self.in_val) > 0 and len(self.in_crd) > 0:
                 ival = self.in_val.pop(0)
                 icrd = self.in_crd.pop(0)
                 iref = ''
@@ -124,23 +124,23 @@ class ValDropper(Primitive):
                     if self.drop_refs:
                         self.curr_ref = iref
 
-                if self.curr_crd == self.out_crds or icrd == self.out_crds:
-                    self.out_crds = ''
-                    self.out_vals = ''
-                    self.out_refs = ''
-                else:
-                    self.val_stkn_dropper.set_in_val(self.curr_val)
-                    self.crd_stkn_dropper.set_in_val(self.curr_crd)
-                    self.val_stkn_dropper.update()
-                    self.crd_stkn_dropper.update()
-                    # self.out_crds = self.crd_stkn_dropper.out_val()
-                    # self.out_vals = self.val_stkn_dropper.out_val()
-                    self.out_crds = self.curr_crd
-                    self.out_vals = self.curr_val
-                    if self.drop_refs:
-                        self.ref_stkn_dropper.set_in_val(self.curr_ref)
-                        self.ref_stkn_dropper.update()
-                        self.out_refs = self.curr_ref
+                # if self.curr_crd == self.out_crds or icrd == self.out_crds:
+                #     self.out_crds = ''
+                #     self.out_vals = ''
+                #     self.out_refs = ''
+                # else:
+                self.val_stkn_dropper.set_in_val(self.curr_val)
+                self.crd_stkn_dropper.set_in_val(self.curr_crd)
+                self.val_stkn_dropper.update()
+                self.crd_stkn_dropper.update()
+                # self.out_crds = self.crd_stkn_dropper.out_val()
+                # self.out_vals = self.val_stkn_dropper.out_val()
+                self.out_crds = self.curr_crd
+                self.out_vals = self.curr_val
+                if self.drop_refs:
+                    self.ref_stkn_dropper.set_in_val(self.curr_ref)
+                    self.ref_stkn_dropper.update()
+                    self.out_refs = self.curr_ref
 
             if self.debug:
                 print("Curr OuterCrd:", self.curr_ocrd, "\tCurr InnerCrd:", icrd, "\t Curr OutputCrd:", self.curr_crd,
