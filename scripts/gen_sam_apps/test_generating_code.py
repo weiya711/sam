@@ -151,8 +151,11 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
     f.write("from sam.sim.test.gold import *\n")
+    f.write("from sam.sim.test.gen_gantt import gen_gantt\n")
+    f.write("\n")
     f.write("import os\n")
     f.write("import csv\n")
+    f.write("\n")
     f.write("cwd = os.getcwd()\n")
     if out_name in suitesparse_list:
         f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
@@ -402,8 +405,12 @@ def finish_outputs(f, elements, nodes_completed):
 
 
 def generate_benchmarking_code(f, tensor_format_parse, test_name):
-    f.write("\n" + tab(1) + "def bench():\n")
+    f.write("\n")
+    f.write(tab(1) + "# Print out cycle count for pytest output\n")
+    f.write(tab(1) + "print(time_cnt)\n")
+    f.write(tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
+    f.write("\n")
     f.write(tab(1) + "extra_info = dict()\n")
     f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name) + "\n")
     f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
@@ -422,7 +429,10 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
         if d[u]["type"] in statistic_available:
             f.write(tab(1) + "sample_dict = " + d[u]["object"] + ".return_statistics()\n")
             f.write(tab(1) + "for k in sample_dict.keys():\n")
-            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] = sample_dict[k]\n\n")
+            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"/\" + k] = sample_dict[k]\n\n")
+
+    f.write(tab(1) + "gen_gantt(extra_info, \"" + test_name + "\")\n")
+    f.write("\n")
 
 
 def generate_check_against_gold_code(f, tensor_format_parse, test_name):
