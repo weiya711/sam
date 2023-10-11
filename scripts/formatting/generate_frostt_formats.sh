@@ -22,12 +22,6 @@ FORMATS=(
   sss012
 )
 
-#export SUITESPARSE_PATH=/nobackup/owhsu/sparse-datasets/suitesparse/
-#export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt/
-#export SUITESPARSE_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/suitesparse-formatted
-#export FROSTT_FORMATTED_TACO_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted/taco-tensor
-#export FROSTT_FORMATTED_PATH=/nobackup/owhsu/sparse-datasets/frostt-formatted
-
 basedir=$(pwd)
 
 for i in ${!FORMATS[@]}; do

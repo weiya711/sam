@@ -64,9 +64,9 @@ for b in ${!BENCHMARKS[@]}; do
 			line=random_sparsity
 			cd $basedir/sam/sim
 			if [ $2 -eq 1 ]; then
-				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
+				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --memory-model --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
 			else
-				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --skip-empty --nbuffer --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
+				pytest test/advanced-simulator/test_$bench.py --ssname $line -s --skip-empty --nbuffer --memory-model --yaml_name=$1 --nnz-value=${NNZ[$nnz]} --benchmark-json=$path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json 
 			fi
 			python $basedir/scripts/util/converter.py --json_name $path/${line}_${NNZ[$nnz]}_${DIMENSIONS[$dim]}.json	
 			    

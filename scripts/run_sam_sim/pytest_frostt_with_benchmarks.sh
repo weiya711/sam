@@ -14,11 +14,7 @@ BENCHMARKS=(
   tensor_mttkrp
 )
 
-outdir=/nobackup/owhsu/sparse-datasets/frostt-formatted
-
-export FROSTT_PATH=/nobackup/owhsu/sparse-datasets/frostt
-export FROSTT_FORMATTED_PATH=$outdir
-
+outdir=$FROSTT_FORMATTED_PATH
 
 errors=()
 RED='\033[0;31m'

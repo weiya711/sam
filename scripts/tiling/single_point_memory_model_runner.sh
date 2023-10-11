@@ -36,7 +36,7 @@ rm -rf $basedir/tiles/*
 ./scripts/tiling/prepare_files.sh $fname 
 
 cd $basedir/sam/sim
-pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$yaml_fname --nnz-value=$nnz --benchmark-json=$path/${line}_${nnz}_${dim}.json 
+pytest test/advanced-simulator/test_$bench.py --ssname $line -s --check-gold --skip-empty --nbuffer --yaml_name=$yaml_fname --memory-model --nnz-value=$nnz --benchmark-json=$path/${line}_${nnz}_${dim}.json 
 
 python $basedir/scripts/util/converter.py --json_name $path/${line}_${nnz}_${dim}.json	
 

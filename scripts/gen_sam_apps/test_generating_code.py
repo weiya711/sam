@@ -151,8 +151,11 @@ def generate_header(f, out_name):
     f.write("from sam.sim.src.token import *\n")
     f.write("from sam.sim.test.test import *\n")
     f.write("from sam.sim.test.gold import *\n")
+    f.write("from sam.sim.test.gen_gantt import gen_gantt\n")
+    f.write("\n")
     f.write("import os\n")
     f.write("import csv\n")
+    f.write("\n")
     f.write("cwd = os.getcwd()\n")
     if out_name in suitesparse_list:
         f.write("formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))\n")
@@ -193,6 +196,19 @@ def get_common_test_name(test_name):
         return test_name[:-4]
     else:
         return test_name
+
+
+def get_out_crd_str(d, u_, index_value):
+    # By default, the input primitive connected to a crddrop will be a level scanner
+    out_crd_str = "out_crd"
+    # However, if the input primitive is another crddrop, we need to make sure it's reading from
+    # the correct input crddrop output.
+    if d[u_]["type"] == "crddrop":
+        if index_value == d[u_]["inner"]:
+            out_crd_str += "_inner"
+        elif index_value == d[u_]["outer"]:
+            out_crd_str += "_outer"
+    return out_crd_str
 
 
 def generate_datasets_code(f, tensor_formats, scope_lvl, tensor_info, tensor_format_parse, test_name):
@@ -402,8 +418,12 @@ def finish_outputs(f, elements, nodes_completed):
 
 
 def generate_benchmarking_code(f, tensor_format_parse, test_name):
-    f.write("\n" + tab(1) + "def bench():\n")
+    f.write("\n")
+    f.write(tab(1) + "# Print out cycle count for pytest output\n")
+    f.write(tab(1) + "print(time_cnt)\n")
+    f.write(tab(1) + "def bench():\n")
     f.write(tab(2) + "time.sleep(0.01)\n\n")
+    f.write("\n")
     f.write(tab(1) + "extra_info = dict()\n")
     f.write(tab(1) + "extra_info[\"dataset\"] = " + get_dataset_name(test_name) + "\n")
     f.write(tab(1) + "extra_info[\"cycles\"] = time_cnt\n")
@@ -422,7 +442,10 @@ def generate_benchmarking_code(f, tensor_format_parse, test_name):
         if d[u]["type"] in statistic_available:
             f.write(tab(1) + "sample_dict = " + d[u]["object"] + ".return_statistics()\n")
             f.write(tab(1) + "for k in sample_dict.keys():\n")
-            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"_\" + k] = sample_dict[k]\n\n")
+            f.write(tab(2) + "extra_info[\"" + d[u]["object"] + "\" + \"/\" + k] = sample_dict[k]\n\n")
+
+    f.write(tab(1) + "gen_gantt(extra_info, \"" + test_name + "\")\n")
+    f.write("\n")
 
 
 def generate_check_against_gold_code(f, tensor_format_parse, test_name):
@@ -529,7 +552,7 @@ def get_all_files(directory_path):
             continue
         out_name.append(filename[0:-3])
         # checking if it is a file
-        print(out_name[-1])
+        print("Test Name:", out_name[-1])
         if os.path.isfile(f):
             file_paths.append(f)
     return file_paths, out_name
@@ -800,9 +823,13 @@ for apath in file_paths:
                 for u_ in data.get_parents()[v]:
                     index_value = data.get_edge_data()[v][data.get_parents()[v].index(u_)][-1]
                     if index_value == d[v]["inner"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                        out_crd_str = get_out_crd_str(d, u_, index_value)
+                        f.write(tab(2) + d[v]["object"] + ".set_inner_crd" + "(" + d[u_]["object"] + "." +
+                                out_crd_str + "())\n")
                     if index_value == d[v]["outer"]:
-                        f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + ".out_crd())\n")
+                        out_crd_str = get_out_crd_str(d, u_, index_value)
+                        f.write(tab(2) + d[v]["object"] + ".set_outer_crd" + "(" + d[u_]["object"] + "." +
+                                out_crd_str + "())\n")
                 nodes_updating_list.append(tab(2) + d[v]["object"] + ".update()\n")
                 # f.write(tab(2) + d[v]["object"] + ".update()\n\n")
                 data.add_done(v)
@@ -923,7 +950,6 @@ for apath in file_paths:
                     if "val" not in data.get_edge_data()[v][i] and "spaccumulator" \
                             in d[u_]["object"]:
                         local_index = data.get_edge_data()[v][i][-1]
-                        print(d[u_], " ", local_index, " ", apath)
                         if d[u_]["in0"] == local_index:
                             local_cord = "_inner"
                         else:

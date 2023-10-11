@@ -29,25 +29,20 @@ errors=()
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+mkdir -p $TACO_TENSOR_PATH
+mkdir -p $SUITESPARSE_FORMATTED_PATH
+mkdir -p $FROSTT_FORMATTED_TACO_PATH
+mkdir -p $FROSTT_FORMATTED_PATH
+
 # LANKA
 if [ $2 -eq 1 ]; then
-	export SUITESPARSE_PATH=/data/scratch/changwan/florida_all
-	export FROSTT_PATH=/data/scratch/owhsu/datasets/frostt
-	export TACO_TENSOR_PATH=/data/scratch/owhsu/datasets
-	export SUITESPARSE_FORMATTED_PATH=/data/scratch/owhsu/datasets/suitesparse-formatted
-	export FROSTT_FORMATTED_TACO_PATH=/data/scratch/owhsu/datasets/frostt-formatted/taco-tensor
-	export FROSTT_FORMATTED_PATH=/data/scratch/owhsu/datasets/frostt-formatted
-	
-	mkdir -p $TACO_TENSOR_PATH
-	mkdir -p $SUITESPARSE_FORMATTED_PATH
-	mkdir -p $FROSTT_FORMATTED_TACO_PATH
-	mkdir -p $FROSTT_FORMATTED_PATH
-
 	lanka=ON
 	neva=OFF
+# KIWI/NEVA
 elif [ $2 -eq 2 ]; then
 	lanka=OFF
 	neva=ON
+# Local Machine
 else
 	lanka=OFF
 	neva=OFF

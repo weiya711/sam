@@ -67,16 +67,11 @@ def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate tiled output gold")
-    parser.add_argument("--yaml_name", type=str, default="memory_config_real.yaml")
+    parser.add_argument("--yaml_name", type=str, default="memory_config_onyx.yaml")
     args = parser.parse_args()
     outdir = "./tiles/matmul_ikj/output/"
     outpath = Path(outdir)
     outpath.mkdir(parents=True, exist_ok=True)
-
-    # generate_gold_matmul_tiled([0, 1, 2, 9], [1, 0, 9, 0], outdir)
-
-    # generate_gold_matmul_tiled([0, 1, 0, 7], [1, 0, 7, 0], outdir)
-    # quit()    with open("/nobackup/rsharma3/Sparsity/simulator/old_sam/sam/tiles/matmul_ikj/tensor_sizes", "rb") as ff:
 
     with open("./tiles/matmul_ikj/tensor_sizes", "rb") as ff:
         sizes_dict_level_full = pickle.load(ff)

@@ -22,6 +22,8 @@ cmake-build-*/
 # Generated SAM Graphs
 *.gv
 
+venv/
+
 # Generated images
 *.svg
 *.png

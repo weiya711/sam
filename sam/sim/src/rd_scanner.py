@@ -44,18 +44,6 @@ class CrdRdScan(Primitive, ABC):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.curr_crd
 
-    def add_child(self, child, branch=""):
-        if self.backpressure_en and child is not None:
-            self.backpressure.append(child)
-            self.branches.append(branch)
-
-    def fifo_available(self, br=""):
-        if self.backpressure_en:
-            return self.fifo_avail
-            # and len(self.in_ref) > self.depth:
-            # return False
-        return True
-
     def update_ready(self):
         if self.backpressure_en:
             if len(self.in_ref) > self.depth:
@@ -92,11 +80,11 @@ class UncompressCrdRdScan(CrdRdScan):
     def update(self):
         self.update_done()
         self.update_ready()
-        if len(self.in_ref) > 0:
-            self.block_start = False
         if self.backpressure_en:
             self.data_valid = False
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
+            if len(self.in_ref) > 0:
+                self.block_start = False
             if self.backpressure_en:
                 self.data_valid = True
             if self.emit_tkn and len(self.in_ref) > 0:
@@ -246,6 +234,7 @@ class CompressedCrdRdScan(CrdRdScan):
         if fifo is not None:
             self.set_fifo(fifo)
 
+    # FIXME (Ritvik): Use reinitialize array isntead of redeclaring the rd scanner
     def reinitialize_arrs(self, seg_arr, crd_arr, fifo):
         # assert False
         self.start_addr = 0
@@ -280,11 +269,6 @@ class CompressedCrdRdScan(CrdRdScan):
 
     def get_fifo(self):
         return self.in_ref
-
-    def fifo_available(self, br=""):
-        if self.backpressure_en and len(self.in_ref) > self.depth:
-            return False
-        return True
 
     def set_in_ref(self, in_ref, parent=None):
         if in_ref != '' and in_ref is not None:
@@ -366,6 +350,9 @@ class CompressedCrdRdScan(CrdRdScan):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
+            if len(self.in_ref) > 0:
+                self.block_start = False
+
             # Process skip token first and save
             if len(self.in_crd_skip) > 0 and self.skip_processed:
                 self.curr_skip = self.in_crd_skip.pop(0)

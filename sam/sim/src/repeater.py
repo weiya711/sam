@@ -52,11 +52,6 @@ class Repeat(Primitive):
             else:
                 self.fifo_avail_repeat = True
 
-    def add_child(self, child=None, branch=""):
-        if self.backpressure_en:
-            self.backpressure.append(child)
-            self.branches.append(branch)
-
     def update(self):
         self.update_done()
         self.update_ready()
@@ -358,11 +353,6 @@ class RepeatSigGen(Primitive):
                 self.fifo_avail = False
             else:
                 self.fifo_avail = True
-
-    def add_child(self, child=None, branch=""):
-        if self.backpressure_en:
-            self.backpressure.append(child)
-            self.branches.append(branch)
 
     # input can either be coordinates or references
     def set_istream(self, istream, parent=None):
