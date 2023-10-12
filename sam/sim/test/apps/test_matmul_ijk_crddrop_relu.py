@@ -18,7 +18,7 @@ from sam.sim.test.gold import *
 import os
 import csv
 cwd = os.getcwd()
-formatted_dir = os.getenv('CUSTOM_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
+formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 
 
 # FIXME: Figureout formats
@@ -61,8 +61,6 @@ def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, repor
 
     C_vals_filename = os.path.join(C_dirname, "tensor_C_mode_vals")
     C_vals = read_inputs(C_vals_filename, float)
-    print(C_vals)
-
 
     fiberlookup_Bi_17 = CompressedCrdRdScan(crd_arr=B_crd0, seg_arr=B_seg0, debug=debug_sim, statistics=report_stats)
     repsiggen_i_15 = RepeatSigGen(debug=debug_sim, statistics=report_stats)
@@ -92,7 +90,7 @@ def test_matmul_ijk_crddrop(samBench, ssname, cast, check_gold, debug_sim, repor
     done = False
     time_cnt = 0
 
-    while not done and time_cnt < 1000:
+    while not done and time_cnt < TIMEOUT:
         if len(in_ref_B) > 0:
             fiberlookup_Bi_17.set_in_ref(in_ref_B.pop(0))
         repsiggen_i_15.set_istream(fiberlookup_Bi_17.out_crd())
