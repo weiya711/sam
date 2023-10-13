@@ -20,7 +20,7 @@ digraph SAM {
     9 [comment="type=fiberlookup,index=k,tensor=C,mode=0,format=compressed,src=true,root=false" label="FiberLookup k: C0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="k" tensor="C" mode="0" format="compressed" src="true" root="false"]
     18 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
     19 [comment="type=crddrop,outer=j,inner=k" label="CrdDrop j,k" color=orange shape=box style=filled type="crddrop" outer="j" inner="k"]
-    20 [comment="type=max" label="Max 0" color=orange shape=box style=filled type="max"]
+    20 [comment="type=max" label="Max 0" color=brown shape=box style=filled type="max"]
     17 -> 16 [label="crd" style=dashed type="crd" comment=""]
     16 -> 15 [label="crd" style=dashed type="crd"]
     15 -> 14 [label="repsig" style=dotted type="repsig"]
