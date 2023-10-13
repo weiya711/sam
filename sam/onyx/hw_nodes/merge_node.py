@@ -126,9 +126,12 @@ class MergeNode(HWNode):
         # TODO what is this supposed to be?
         cmrg_stop_lvl = 1
         op = 0
+        # force this to be 1 to perfrom crddrop instead of valdrop
+        cmrg_mode = 1
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
-            'op': op
+            'op': op,
+            'cmrg_mode': cmrg_mode
         }
-        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op, cmrg_mode), cfg_kwargs
