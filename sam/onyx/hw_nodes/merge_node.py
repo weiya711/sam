@@ -127,9 +127,11 @@ class MergeNode(HWNode):
         # TODO what is this supposed to be?
         cmrg_stop_lvl = 1
         op = 0
+        cmrg_mode = 1 # forced to 1 to peform crddrop instead of compression 
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
-            'op': op
+            'op': op,
+            'cmrg_mode': cmrg_mode
         }
-        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op, cmrg_mode), cfg_kwargs
