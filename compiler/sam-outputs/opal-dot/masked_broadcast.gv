@@ -2,7 +2,7 @@ digraph SAM {
     comment="X=ss01,B=ss01,C=ss10"
     0 [comment="type=fiberlookup,index=i,tensor=mask,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: Mask\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="mask" mode="0" format="compressed" src="true" root="true"]
     1 [comment="type=repsiggen,index=i" label="RepeatSignalGenerator i" color=cyan3 shape=box style=filled type="repsiggen" index="i"]
-    2 [comment="type=repeat,index=i,tensor=mask,root=true" label="Repeat i: Mask" color=cyan2 shape=box style=filled type="repeat" index="i" tensor="mask" root="true"]
+    2 [comment="type=repeat,index=i,tensor=vec,root=true" label="Repeat i: Mask" color=cyan2 shape=box style=filled type="repeat" index="i" tensor="vec" root="true"]
     3 [comment="type=fiberlookup,index=i,tensor=vec,mode=0,format=compressed,src=true,root=false" label="FiberLookup i: vec\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="vec" mode="0" format="compressed" src="true" root="false"]
     4 [comment="type=fiberlookup,index=j,tensor=mask,mode=1,format=compressed,src=true,root=false" label="FiberLookup j: Mask\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="j" tensor="mask" mode="1" format="compressed" src="true" root="false"]
     5 [comment="type=intersect,index=j" label="intersect j" color=purple shape=box style=filled type="intersect" index="j"]
