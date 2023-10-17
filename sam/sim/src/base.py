@@ -4,6 +4,7 @@ import warnings
 
 # warnings.simplefilter(action='ignore', category=FutureWarning)
 
+
 def gen_stkns(dim=10):
     return ['S' + str(i) for i in range(dim)]
 
@@ -39,9 +40,11 @@ def is_valid_val(elem, dim=10):
 def is_0tkn(elem):
     return elem == 'N'
 
+
 # Checks if a token is a non-control (numerical) token
 def is_nc_tkn(elem, datatype=int):
     return isinstance(elem, datatype)
+
 
 def is_stkn(elem):
     if isinstance(elem, str):

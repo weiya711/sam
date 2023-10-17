@@ -73,7 +73,9 @@ class ValDropper(Primitive):
                     self.curr_ref = ''
                     self.out_refs = ''
                 return
-            elif (len(self.in_val) > 0 and len(self.in_crd) == 0) or (len(self.in_crd) > 0 and len(self.in_val) == 0) or (len(self.in_val) == 0 and len(self.in_crd) == 0):
+            elif (len(self.in_val) > 0 and len(self.in_crd) == 0) \
+                    or (len(self.in_crd) > 0 and len(self.in_val) == 0) \
+                        or (len(self.in_val) == 0 and len(self.in_crd) == 0):
                 self.out_crds = ''
                 self.out_vals = ''
                 if self.drop_refs:
@@ -168,7 +170,7 @@ class ValDropper(Primitive):
     def out_crd(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.out_crds
-            
+
     def out_ref(self):
         if (self.backpressure_en and self.data_valid) or not self.backpressure_en:
             return self.out_refs
