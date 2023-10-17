@@ -21,7 +21,7 @@ digraph SAM {
     18 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
     19 [comment="type=crddrop,outer=j,inner=k" label="CrdDrop j,k" color=orange shape=box style=filled type="crddrop" outer="j" inner="k"]
     20 [comment="type=max" label="Max 0" color=orange shape=box style=filled type="max"]
-    21 [comment="type=valdrop,outer=j,inner=val" label="ValDropper j,val" color=purple shape=box style=filled type="valdrop" outer="j" inner="val"]
+    21 [comment="type=crddrop,outer=j,inner=val,mode=0" label="CrdDrop Compression j,val" color=orange shape=box style=filled type="crddrop" outer="j" inner="val" mode="1"]
     22 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
     17 -> 16 [label="crd" style=dashed type="crd" comment=""]
     16 -> 15 [label="crd" style=dashed type="crd"]
