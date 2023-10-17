@@ -3,7 +3,7 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class MergeNode(HWNode):
-    def __init__(self, name=None, outer=None, inner=None, mode=False) -> None:
+    def __init__(self, name=None, outer=None, inner=None, mode=None) -> None:
         super().__init__(name=name)
         self.outer = outer
         self.inner = inner
