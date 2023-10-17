@@ -75,7 +75,7 @@ class ValDropper(Primitive):
                 return
             elif (len(self.in_val) > 0 and len(self.in_crd) == 0) \
                     or (len(self.in_crd) > 0 and len(self.in_val) == 0) \
-                        or (len(self.in_val) == 0 and len(self.in_crd) == 0):
+                    or (len(self.in_val) == 0 and len(self.in_crd) == 0):
                 self.out_crds = ''
                 self.out_vals = ''
                 if self.drop_refs:

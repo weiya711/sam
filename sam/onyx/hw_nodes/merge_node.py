@@ -129,7 +129,7 @@ class MergeNode(HWNode):
         cmrg_stop_lvl = 1
         op = 0
         # 0 for compression, 1 for crddrop
-        cmrg_mode = self.mode 
+        cmrg_mode = self.mode
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
