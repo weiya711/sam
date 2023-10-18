@@ -3,10 +3,11 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class MergeNode(HWNode):
-    def __init__(self, name=None, outer=None, inner=None) -> None:
+    def __init__(self, name=None, outer=None, inner=None, mode=None) -> None:
         super().__init__(name=name)
         self.outer = outer
         self.inner = inner
+        self.mode = mode
 
     def get_outer(self):
         return self.outer
@@ -127,9 +128,12 @@ class MergeNode(HWNode):
         # TODO what is this supposed to be?
         cmrg_stop_lvl = 1
         op = 0
+        # 0 for compression, 1 for crddrop
+        cmrg_mode = self.mode
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
-            'op': op
+            'op': op,
+            'cmrg_mode': cmrg_mode
         }
-        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op, cmrg_mode), cfg_kwargs
