@@ -3,7 +3,7 @@ from lake.modules.intersect import JoinerOp
 
 
 class IntersectNode(HWNode):
-    def __init__(self, name=None, conn_to_tensor=None) -> None:
+    def __init__(self, name=None, conn_to_tensor=None, drop_empty_fiber=None) -> None:
         super().__init__(name=name)
         self.num_inputs = 2
         self.num_inputs_connected = 0
@@ -15,6 +15,8 @@ class IntersectNode(HWNode):
         self.tensor_to_conn = {}
         for conn, tensor in self.conn_to_tensor.items():
             self.tensor_to_conn[tensor] = conn
+        assert drop_empty_fiber is not None
+        self.drop_empty_fiber = drop_empty_fiber
 
     def connect(self, other, edge, kwargs=None):
 
@@ -254,9 +256,12 @@ class IntersectNode(HWNode):
             op = JoinerOp.UNION.value
         else:
             raise ValueError
+        # drop empty fiber if set to 1
+        drop_empty_fiber = self.drop_empty_fiber
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
-            'op': op
+            'op': op,
+            'drop_empty_fiber': drop_empty_fiber
         }
-        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op, drop_empty_fiber), cfg_kwargs
