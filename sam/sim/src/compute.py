@@ -335,3 +335,73 @@ class Divide2(Compute2):
                       "Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1, "\t Curr In2:", self.curr_in2)
         else:
             self.curr_out = ''
+
+class Max2(Compute2):
+    def __init__(self, block_size=1, delay=0, **kwargs):
+        super().__init__(delay=delay, **kwargs)
+        self.fill_value = 0
+        self.get1 = True
+        self.get2 = True
+
+        self.curr_in1 = ''
+        self.curr_in2 = ''
+        self.block_size = block_size
+
+    # def add(self, a, b):
+    #     if self.block_size == 1:
+    #         return self.neg1 *
+
+    def update(self):
+        self.update_done()
+        self.update_ready()
+        if len(self.in1) > 0 or len(self.in2) > 0:
+            self.block_start = False
+
+        if self.count_to_delay != self.delay:
+            self.count_to_delay += 1
+            return
+        else:
+            self.count_to_delay = 0
+
+        if len(self.in1) > 0 and len(self.in2) > 0:
+            if self.get1:
+                self.curr_in1 = self.in1.pop(0)
+            if self.get2:
+                self.curr_in2 = self.in2.pop(0)
+
+            if self.curr_in1 == 'D' or self.curr_in2 == 'D':
+                # Inputs are both the same and done tokens
+                assert (self.curr_in1 == self.curr_in2)
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                self.get2 = True
+                self.done = True
+            elif is_stkn(self.curr_in1) and isinstance(self.curr_in2, int):
+                # FIXME: Patch for union for b(i)+C(i,j)*d(j)
+                self.curr_out = max(self.curr_in2, self.fill_value)
+                self.get1 = False
+                self.get2 = True
+            elif is_stkn(self.curr_in2) and isinstance(self.curr_in1, int):
+                # FIXME: Patch for union for b(i)+C(i,j)*d(j)
+                self.curr_out = max(self.curr_in1, self.fill_value)
+                self.get1 = True
+                self.get2 = False
+            elif is_stkn(self.curr_in1) and is_stkn(self.curr_in2):
+                # Inputs are both the same and stop tokens
+                assert self.curr_in1 == self.curr_in2, "Both must be the same stop token: " + str(self.curr_in1) + \
+                                                       " != " + str(self.curr_in2)
+                self.curr_out = self.curr_in1
+                self.get1 = True
+                self.get2 = True
+            else:
+                # Both inputs are values
+                self.curr_out = max(self.curr_in1, self.curr_in2)
+                if self.get_stats:
+                    self.cycles_operated += 1
+                self.get1 = True
+                self.get2 = True
+            self.compute_fifos()
+            if self.debug:
+                print("DEBUG: Curr Out:", self.curr_out, "\t Curr In1:", self.curr_in1, "\t Curr In2:", self.curr_in2)
+        else:
+            self.curr_out = ''
