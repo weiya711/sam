@@ -90,6 +90,7 @@ def check_gold_matmul(ssname, debug_sim, cast, out_crds, out_segs, out_val, out_
         gold_nd = gold_nd.transpose()
 
     gold_tup = convert_ndarr_point_tuple(gold_nd)
+    print(gold_tup)
 
     if debug_sim:
         print("Out segs:", out_segs)
@@ -491,6 +492,49 @@ def check_gold_tensor3_elemadd(frosttname, debug_sim, out_crds, out_segs, out_va
     dims, coordinates, vals = tnsLoader.load(validation_path)
     coordinates.append(vals)
     gold_tup = convert_point_tuple(coordinates)
+    if not out_val:
+        assert out_val == gold_tup
+    elif not gold_tup:
+        assert all([v == 0 for v in out_val])
+    else:
+        out_tup = convert_point_tuple(get_point_list(out_crds, out_segs, out_val))
+        out_tup = remove_zeros(out_tup)
+        assert (check_point_tuple(out_tup, gold_tup))
+
+def check_gold_mat_elemadd_leakyrelu_exp(ssname, debug_sim, cast, out_crds, out_segs, out_val, format_str):
+    # MTX
+    B_tensor = scipy.io.mmread(os.path.join(ss_dir, ssname + ".mtx")).tocsr()
+    if cast:
+        data = [round_sparse(x) for x in B_tensor.data]
+        B_tensor = scipy.sparse.csr_matrix((data, B_tensor.indices, B_tensor.indptr), dtype=int)
+
+    shifter = ScipyTensorShifter()
+    B_scipy = B_tensor
+    C_scipy = shifter.shiftLastMode(B_scipy)
+
+    gold_nd = (B_scipy + C_scipy).toarray()
+    transpose = format_str[-2:] == "10"
+    if transpose:
+        gold_nd = gold_nd.transpose()
+    
+    for i in range(gold_nd.shape[0]):
+        for j in range(gold_nd.shape[1]):
+            if gold_nd[i][j] < 0:
+                gold_nd[i][j] = gold_nd[i][j] * 0.2
+            if gold_nd[i][j] != 0:
+                gold_nd[i][j] = np.exp(gold_nd[i][j])
+    
+    gold_tup = convert_ndarr_point_tuple(gold_nd)
+
+    if debug_sim:
+        print("Out segs:", out_segs)
+        print("Out crds:", out_crds)
+        print("Out vals:", out_val)
+        print("Dense Mat1:\n", B_scipy.toarray())
+        print("Dense Mat2:\n", C_scipy.toarray())
+        print("Dense Gold:", gold_nd)
+        print("Gold:", gold_tup)
+
     if not out_val:
         assert out_val == gold_tup
     elif not gold_tup:
