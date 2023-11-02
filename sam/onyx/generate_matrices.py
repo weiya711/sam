@@ -54,7 +54,7 @@ class MatrixGenerator:
         '''
         Routine to create the actual matrix from the dimension/shape
         '''
-        self.array = numpy.random.randint(low=-1*value_cap/2, high=value_cap/2, size=self.shape)
+        self.array = numpy.random.randint(low=-1 * value_cap / 2, high=value_cap / 2, size=self.shape)
         for idx, x in numpy.ndenumerate(self.array):
             if random.random() < self.sparsity:
                 self.array[idx] = 0
