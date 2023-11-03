@@ -444,8 +444,8 @@ class memory_block():
             assert len(self.tile_ptrs_fifo) == len(self.tile_ptrs_size)
             if self.done_received and len(self.tile_ptrs) > 0:  # and not self.done_processed:
                 assert self.curr_size == sum(self.tile_sizes) or \
-                    self.curr_size == (sum(self.tile_sizes) + self.load_size) or \
-                    self.curr_size == (sum(self.tile_sizes) + self.load_size + self.remove_size)
+                       self.curr_size == (sum(self.tile_sizes) + self.load_size) or \
+                       self.curr_size == (sum(self.tile_sizes) + self.load_size + self.remove_size)
                 self.outputed = False
                 self.done_processed = True
                 self.valid = False

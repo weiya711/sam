@@ -383,11 +383,11 @@ class BVDrop(BVDropSuper):
             if len(self.inner_bv) > 0:
                 ibv = self.inner_bv.pop(0)
                 self.bv_drop.set_inner_bv(ibv)
-                self.inner_stkn_drop.set_in_stream(ibv)
+                self.inner_stkn_drop.set_in_val(ibv)
 
             self.bv_drop.update()
 
-            self.outer_stkn_drop.set_in_stream(self.bv_drop.out_bv_outer())
+            self.outer_stkn_drop.set_in_val(self.bv_drop.out_bv_outer())
             self.outer_stkn_drop.update()
 
             self.inner_stkn_drop.update()

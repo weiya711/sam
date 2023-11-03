@@ -187,7 +187,7 @@ class CrdDrop(Primitive):
 
 # Converts coordinate streams to point streams
 class CrdHold(Primitive):
-    def __init__(self, depth=1, **kwargs):
+    def __init__(self, depth=1, fifos=None, **kwargs):
         super().__init__(**kwargs)
 
         self.outer_crd = []
@@ -206,6 +206,10 @@ class CrdHold(Primitive):
             self.data_valid = True
             self.fifo_avail_inner = True
             self.fifo_avail_outer = True
+
+        if fifos is not None:
+            self.outer_crd = fifos[0]
+            self.inner_crd = fifos[1]
 
     def set_backpressure(self, backpressure):
         if not backpressure:
@@ -232,6 +236,9 @@ class CrdHold(Primitive):
                 # return False
         return True
 
+    def return_fifo(self):
+        return self.outer_crd, self.inner_crd
+
     def update_ready(self):
         if self.backpressure_en:
             if len(self.inner_crd) > self.depth:
@@ -251,30 +258,23 @@ class CrdHold(Primitive):
         if (self.backpressure_en and self.check_backpressure()) or not self.backpressure_en:
             if self.backpressure_en:
                 self.data_valid = True
-            if (len(self.outer_crd) > 0 or len(self.inner_crd) > 0):
+
+            # Denotes the start of the block (when nonempty tokens are input)
+            if len(self.outer_crd) > 0 or len(self.inner_crd) > 0:
                 self.block_start = False
 
+            # If the done signal is set, the block is done
             if self.done:
                 self.curr_crd = ''
-                # self.done = False
-                # return
-                # print("-")
-                # print(self.RSG.print_debug())
-                # print(self.repeat.print_debug())
-                # print(self.RSG.done, self.repeat.done)
-                # print("-")
-                # self.RSG = RepeatSigGen(debug=self.debug, fifo=)
-                # self.repeat = Repeat(debug=self.debug)
-                # return
 
+            # If the block is not done and
             if len(self.inner_crd) > 0:
                 icrd = self.inner_crd.pop(0)
                 self.RSG.set_istream(icrd)
                 self.curr_inner_crd = icrd
             else:
                 self.curr_inner_crd = ''
-            if self.debug:
-                print("crdManager:")
+
             self.repsig.append(self.RSG.out_repeat())
             if len(self.outer_crd) > 0:
                 ocrd = self.outer_crd.pop(0)
@@ -285,8 +285,6 @@ class CrdHold(Primitive):
             self.RSG.update()
             self.repeat.update()
 
-            if self.debug:
-                print("+++++++")
             self.curr_crd = self.repeat.out_ref()
 
             self.done = self.RSG.done and self.repeat.done
@@ -336,6 +334,7 @@ class CrdPtConverter(Primitive):
         self.waiting_next = False
 
         self.inner_last_level = last_level
+
         if fifos is not None:
             self.outer_crdpt = fifos[0]
             self.inner_crdpt = fifos[1]

@@ -1,9 +1,4 @@
 from abc import ABC, abstractmethod
-import numpy as np
-import warnings
-
-# warnings.simplefilter(action='ignore', category=FutureWarning)
-
 
 def gen_stkns(dim=10):
     return ['S' + str(i) for i in range(dim)]
@@ -28,10 +23,6 @@ def is_valid_crdpt(elem):
     return isinstance(elem, int) or elem in valid_tkns
 
 
-def is_valid_num(elem, dim=10):
-    return isinstance(elem, int) or isinstance(elem, float)
-
-
 def is_valid_val(elem, dim=10):
     valid_tkns = ['', 'D'] + gen_stkns(dim)
     return isinstance(elem, int) or isinstance(elem, float) or elem in valid_tkns
@@ -40,11 +31,9 @@ def is_valid_val(elem, dim=10):
 def is_0tkn(elem):
     return elem == 'N'
 
-
 # Checks if a token is a non-control (numerical) token
 def is_nc_tkn(elem, datatype=int):
     return isinstance(elem, datatype)
-
 
 def is_stkn(elem):
     if isinstance(elem, str):
