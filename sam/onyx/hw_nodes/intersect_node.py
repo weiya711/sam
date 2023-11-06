@@ -257,6 +257,7 @@ class IntersectNode(HWNode):
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
-            'op': op
+            'op': op,
+            'vr_mode': 0
         }
-        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op, 0), cfg_kwargs
