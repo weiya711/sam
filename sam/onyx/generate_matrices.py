@@ -15,7 +15,7 @@ from sam.sim.test.test import *
 
 class MatrixGenerator:
     def __init__(self, name='B', shape=None, sparsity=0.6, format='CSF', dump_dir=None,
-                 tensor=None, value_cap=None, clean=True) -> None:
+                 tensor=None, value_cap=None, clean=True, use_fp=False) -> None:
 
         # assert dimension is not None
         # self.dimension = dimension
@@ -24,6 +24,7 @@ class MatrixGenerator:
         self.sparsity = sparsity
         self.format = format
         self.name = name
+        self.use_fp = use_fp
         if value_cap is None:
             self.value_cap = int(math.pow(2, 8)) - 1
         else:
@@ -54,7 +55,11 @@ class MatrixGenerator:
         '''
         Routine to create the actual matrix from the dimension/shape
         '''
-        self.array = numpy.random.randint(low=-1 * value_cap / 2, high=value_cap / 2, size=self.shape)
+        self.array = numpy.random.uniform(low=-1 * value_cap / 2, high=value_cap / 2, size=self.shape)
+        if not self.use_fp:
+            self.array = self.array.astype(int)
+            print(self.array.dtype)
+            breakpoint()
         for idx, x in numpy.ndenumerate(self.array):
             if random.random() < self.sparsity:
                 self.array[idx] = 0

@@ -8,7 +8,6 @@ class ComputeNode(HWNode):
         self.num_outputs = 1
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
-
         self.op = op
 
     def connect(self, other, edge, kwargs=None):
@@ -161,6 +160,8 @@ class ComputeNode(HWNode):
             op_code = 2
         elif c_op == 'max':
             op_code = 4
+        elif c_op == 'fp_mul':
+            op_code = 5
         cfg_kwargs = {
             'op': op_code
         }

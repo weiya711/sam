@@ -101,11 +101,11 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.Repeat"
                 elif n_type == "mul" or n_type == "add" or n_type == "max":
                     hw_nt = f"HWNodeType.Compute"
+                elif n_type == "fp_mul":
+                    hw_nt = f"HWNodeType.Compute"
                 elif n_type == "reduce":
                     hw_nt = f"HWNodeType.Reduce"
                 elif n_type == "intersect" or n_type == "union":
-                    if n_type == "union":
-                        print("UNION BLOCK")
                     hw_nt = f"HWNodeType.Intersect"
                 elif n_type == "crddrop":
                     hw_nt = f"HWNodeType.Merge"
