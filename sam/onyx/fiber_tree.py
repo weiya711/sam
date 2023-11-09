@@ -38,7 +38,6 @@ class FiberTree():
         return self.root_fiber
 
     def populate_fiber(self, fiber, sub_tensor):
-
         # Last level detection
         if len(sub_tensor.shape) == 1:
             # Finally have just a row, this is the base case...(could be a scalar)
