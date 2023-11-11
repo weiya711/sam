@@ -124,8 +124,16 @@ class BuffetNode(HWNode):
         cap0 = kratos.clog2(capacity_0) - fetch_width_log
         cap1 = kratos.clog2(capacity_1) - fetch_width_log
 
+        if 'vector_reduce_mode' in attributes:
+            is_in_vr_mode = attributes['vector_reduce_mode'].strip('"')
+            if is_in_vr_mode == "true":
+                vr_mode = 1
+        else:
+            vr_mode = 0
+
         cfg_kwargs = {
             'capacity_0': cap0,
-            'capacity_1': cap1
+            'capacity_1': cap1,
+            'vr_mode': vr_mode
         }
-        return (capacity_0, capacity_1), cfg_kwargs
+        return (capacity_0, capacity_1, vr_mode), cfg_kwargs
