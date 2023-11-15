@@ -108,7 +108,7 @@ class ReduceNode(HWNode):
         pe_connected_to_reduce = True
         # data I/O to and from the PE should be internal with the reduce
         pe_in_external = 0
-        # op is set to integer add for the PE TODO: make this configurable in the sam graph 
+        # op is set to integer add for the PE TODO: make this configurable in the sam graph
         op = 0
         cfg_kwargs = {
             'stop_lvl': stop_lvl,
