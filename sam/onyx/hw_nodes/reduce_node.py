@@ -39,7 +39,7 @@ class ReduceNode(HWNode):
             new_conns = {
                 'reduce_to_wr_scan': [
                     # send output to rd scanner
-                    ([(red, "data_out"), (wr_scan, "data_in")], 17),
+                    ([(red, "reduce_data_out"), (wr_scan, "data_in")], 17),
                     # ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
                     # ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
                     # ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
@@ -102,7 +102,19 @@ class ReduceNode(HWNode):
     def configure(self, attributes):
         # TODO
         stop_lvl = 2
+        # configuring via sam, it is a sparse app
+        use_dense = False
+        # configuring both the pe and the reduce
+        pe_only = False
+        # data I/O to and from the PE should be internal with the reduce
+        pe_in_external = False
+        # op is set to integer add for the PE TODO: make this configurable in the sam graph 
+        op = 0
         cfg_kwargs = {
-            'stop_lvl': stop_lvl
+            'stop_lvl': stop_lvl,
+            'use_dense': use_dense,
+            'pe_only': pe_only,
+            'pe_in_external': pe_in_external,
+            'op': op
         }
-        return stop_lvl, cfg_kwargs
+        return (stop_lvl, use_dense, pe_only, pe_in_external, op), cfg_kwargs

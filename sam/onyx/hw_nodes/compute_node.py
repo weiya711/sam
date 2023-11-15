@@ -151,6 +151,12 @@ class ComputeNode(HWNode):
         comment = attributes['comment'].strip('"')
         print(c_op)
         op_code = 0
+        # configuring via sam, it is a sparse app
+        use_dense = False
+        # mapping to pe only, configuring only the pe, ignore the reduce
+        pe_only = True
+        # data I/O should interface with other primitive outside of the cluster
+        pe_in_external = True
         if c_op == 'mul':
             op_code = 1
         elif c_op == 'add' and 'sub=1' not in comment:
@@ -158,6 +164,9 @@ class ComputeNode(HWNode):
         elif c_op == 'add' and 'sub=1' in comment:
             op_code = 2
         cfg_kwargs = {
-            'op': op_code
+            'op': op_code,
+            'use_dense': use_dense,
+            'pe_only': pe_only,
+            'pe_in_external': pe_in_external
         }
-        return op_code, cfg_kwargs
+        return (op_code, use_dense, pe_only, pe_in_external), cfg_kwargs
