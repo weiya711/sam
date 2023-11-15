@@ -53,7 +53,7 @@ class ReduceNode(HWNode):
             new_conns = {
                 'reduce_to_reduce': [
                     # send output to rd scanner
-                    ([(red, "data_out"), (other_red, "data_in")], 17),
+                    ([(red, "reduce_data_out"), (other_red, "reduce_data_in")], 17),
                     # ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
                     # ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
                     # ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
@@ -72,7 +72,7 @@ class ReduceNode(HWNode):
             new_conns = {
                 f'reduce_to_pe_{other_conn}': [
                     # send output to rd scanner
-                    ([(red, "data_out"), (pe, f"data{other_conn}")], 17),
+                    ([(red, "reduce_data_out"), (pe, f"data{other_conn}")], 17),
                     # ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
                     # ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
                     # ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
@@ -102,19 +102,19 @@ class ReduceNode(HWNode):
     def configure(self, attributes):
         # TODO
         stop_lvl = 2
-        # configuring via sam, it is a sparse app
-        use_dense = False
-        # configuring both the pe and the reduce
+        # bypassing the fifos in the pe, get result in a single cycle
         pe_only = False
+        # configuring both the pe and the reduce
+        pe_connected_to_reduce = True
         # data I/O to and from the PE should be internal with the reduce
-        pe_in_external = False
+        pe_in_external = 0
         # op is set to integer add for the PE TODO: make this configurable in the sam graph 
         op = 0
         cfg_kwargs = {
             'stop_lvl': stop_lvl,
-            'use_dense': use_dense,
+            'pe_connected_to_reduce': pe_connected_to_reduce,
             'pe_only': pe_only,
             'pe_in_external': pe_in_external,
             'op': op
         }
-        return (stop_lvl, use_dense, pe_only, pe_in_external, op), cfg_kwargs
+        return (stop_lvl, pe_connected_to_reduce, pe_only, pe_in_external, op), cfg_kwargs

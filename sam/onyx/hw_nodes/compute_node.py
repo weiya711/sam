@@ -81,7 +81,7 @@ class ComputeNode(HWNode):
             pe = self.get_name()
             new_conns = {
                 f'pe_to_reduce': [
-                    ([(pe, "res"), (other_red, f"data_in")], 17),
+                    ([(pe, "res"), (other_red, f"reduce_data_in")], 17),
                 ]
             }
             return new_conns
@@ -156,7 +156,7 @@ class ComputeNode(HWNode):
         # mapping to pe only, configuring only the pe, ignore the reduce
         pe_only = True
         # data I/O should interface with other primitive outside of the cluster
-        pe_in_external = True
+        pe_in_external = 1
         if c_op == 'mul':
             op_code = 1
         elif c_op == 'add' and 'sub=1' not in comment:
