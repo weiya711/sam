@@ -77,7 +77,7 @@ class MergeNode(HWNode):
             other_red = other.get_name()
             new_conns = {
                 f'merge_to_reduce_inner': [
-                    ([(merge, f"cmrg_coord_out_{0}"), (other_red, f"data_in")], 17),
+                    ([(merge, f"cmrg_coord_out_{0}"), (other_red, f"reduce_data_in")], 17),
                 ]
             }
 
