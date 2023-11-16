@@ -154,7 +154,7 @@ class Reduce(Primitive):
 
 
 # NEW VERSION: Accumulation into a vector
-class SpAcc1(Primitive):
+class SparseAccumulator1(Primitive):
     def __init__(self, maxdim=100, valtype=float, last_level=True, val_stkn=False, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.kwargs = kwargs
@@ -421,7 +421,7 @@ class SpAcc1(Primitive):
 
 
 # NEW VERSION: Accumulation into a matrix
-class SpAcc2(Primitive):
+class SparseAccumulator2(Primitive):
     def __init__(self, maxdim=100, valtype=float, last_level=True, val_stkn=False, depth=1, **kwargs):
         super().__init__(**kwargs)
         self.kwargs = kwargs
