@@ -62,12 +62,16 @@ class ComputeNode(HWNode):
             pe = self.get_name()
             # isect_conn = other.get_num_inputs()
 
-            if 'tensor' not in edge.get_attributes():
-                # Taking some liberties here - but technically this is the combo val
-                # isect_conn = other.get_connection_from_tensor('B')
-                isect_conn = other.get_connection_from_tensor('C')
+            if 'vector_reduce_mode' in edge.get_attributes():
+                if edge.get_attributes()['vector_reduce_mode'] == True: 
+                    isect_conn = 0
             else:
-                isect_conn = other.get_connection_from_tensor(edge.get_tensor())
+                if 'tensor' not in edge.get_attributes():
+                    # Taking some liberties here - but technically this is the combo val
+                    # isect_conn = other.get_connection_from_tensor('B')
+                    isect_conn = other.get_connection_from_tensor('C')
+                else:
+                    isect_conn = other.get_connection_from_tensor(edge.get_tensor())
 
             new_conns = {
                 f'pe_to_isect_{in_str}_{isect_conn}': [
