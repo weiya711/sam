@@ -90,8 +90,9 @@ class ReadScannerNode(HWNode):
             edge_attr = edge.get_attributes()
             if 'use_alt_out_port' in edge_attr:
                 out_conn = 'block_rd_out'
-            elif (edge.get_comment() is not None) and ('vector_reduce_mode' in edge.get_comment()):
-                out_conn = 'pos_out'
+            elif ('vector_reduce_mode' in edge_attr):
+                if (edge_attr['vector_reduce_mode'] == True):
+                    out_conn = 'pos_out'
             else:
                 out_conn = 'coord_out'
 
@@ -104,8 +105,11 @@ class ReadScannerNode(HWNode):
         elif other_type == IntersectNode:
             # Send both....
             isect = other.get_name()
-            if 'vector_reduce_mode' in edge.get_comment():
-                isect_conn = 1
+            if 'vector_reduce_mode' in edge.get_attributes():
+                if edge.get_attributes()['vector_reduce_mode'] == True:
+                    isect_conn = 1
+            elif 'special' in edge.get_attributes():
+                isect_conn = 0
             else:
                 isect_conn = other.get_connection_from_tensor(self.get_tensor())
 

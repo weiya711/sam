@@ -180,6 +180,7 @@ class IntersectNode(HWNode):
             print(edge.get_attributes())
             edge_comment = edge.get_attributes()['comment'].strip('"')
             tensor = edge_comment.split('-')[1]
+            print(self.tensor_to_conn)
             out_conn = self.tensor_to_conn[tensor]
             compute_conn = compute.get_num_inputs()
             new_conns = {

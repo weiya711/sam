@@ -62,8 +62,9 @@ class ComputeNode(HWNode):
             pe = self.get_name()
             # isect_conn = other.get_num_inputs()
 
-            if 'vector_reduce_mode' in edge.get_comment():
-                isect_conn = 0
+            if 'vector_reduce_mode' in edge.get_attributes():
+                if edge.get_attributes()['vector_reduce_mode'] == True: 
+                    isect_conn = 0
             else:
                 if 'tensor' not in edge.get_attributes():
                     # Taking some liberties here - but technically this is the combo val

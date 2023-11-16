@@ -1,6 +1,6 @@
 digraph SAM {
     comment="X=ss01,B=ss01,C=ss01"
-    20 [comment="type=vectorreducer,index=j" label="VectorReducer j" color=brown shape=box style=filled type="vectorreducer" index="j"]
+    20 [comment="type=vectorreducer,index=j" label="VectorReducer j" color=brown shape=box style=filled type="vectorreducer" accum_index="j"]
     0 [comment="type=fiberwrite,mode=vals,tensor=X,size=1*B0_dim*C1_dim,sink=true" label="FiberWrite Vals: X" color=green3 shape=box style=filled type="fiberwrite" tensor="X" mode="vals" size="1*B0_dim*C1_dim" sink="true"]
     1 [comment="type=fiberwrite,index=j,tensor=X,mode=1,format=compressed,segsize=B0_dim+1,crdsize=B0_dim*C1_dim,sink=true" label="FiberWrite j: X1\ncompressed" color=green3 shape=box style=filled type="fiberwrite" index="j" tensor="X" mode="1" format="compressed" segsize="B0_dim+1" crdsize="B0_dim*C1_dim" sink="true"]
     19 [comment="type=fiberlookup,index=i,tensor=B,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: B0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="B" mode="0" format="compressed" src="true" root="true"]
@@ -30,7 +30,7 @@ digraph SAM {
     7 -> 6 [label="val" type="val"]
     13 -> 12 [label="ref_out-C" style=bold type="ref" comment="out-C"]
     12 -> 11 [label="crd" style=dashed type="crd" comment=""]
-    16 -> 4 [label="crd_i" style=dashed type="crd" comment="i"]
+    19 -> 4 [label="crd_i" style=dashed type="crd" comment="i"]
     11 -> 4 [label="crd_j" style=dashed type="crd" comment="j"]
     11 -> 10 [label="crd" style=dashed type="crd" comment=""]
     10 -> 9 [label="repsig" style=dotted type="repsig"]
