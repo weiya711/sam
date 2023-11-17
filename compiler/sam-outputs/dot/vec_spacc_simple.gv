@@ -1,0 +1,17 @@
+digraph SAM {
+    comment="x=s0,B=ss01"
+    5 [comment="type=fiberlookup,index=i,tensor=B,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: B0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="B" mode="0" format="compressed" src="true" root="true"]
+    2 [comment="type=spaccumulator,order=1,in0=j" label="SparseAccumulator 1 
+0=j " color=brown shape=box style=filled type="spaccumulator" order="1" in0="j"]
+    0 [comment="type=fiberwrite,mode=vals,tensor=x,size=1*B1_dim,sink=true" label="FiberWrite Vals: x" color=green3 shape=box style=filled type="fiberwrite" tensor="x" mode="vals" size="1*B1_dim" sink="true"]
+    1 [comment="type=fiberwrite,index=j,tensor=x,mode=0,format=compressed,segsize=2,crdsize=B1_dim,sink=true" label="FiberWrite j: x0\ncompressed" color=green3 shape=box style=filled type="fiberwrite" index="j" tensor="x" mode="0" format="compressed" segsize="2" crdsize="B1_dim" sink="true"]
+    4 [comment="type=fiberlookup,index=j,tensor=B,mode=1,format=compressed,src=true,root=false" label="FiberLookup j: B1\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="j" tensor="B" mode="1" format="compressed" src="true" root="false"]
+    3 [comment="type=arrayvals,tensor=B" label="Array Vals: B" color=green2 shape=box style=filled type="arrayvals" tensor="B"]
+    5 -> 2 [label="crd_i" style=dashed type="crd" comment="i"]
+    2 -> 0 [label="val" type="val"]
+    2 -> 1 [label="crd_out-j" style=dashed type="crd" comment="out-j"]
+    5 -> 4 [label="ref" style=bold type="ref" comment=""]
+    4 -> 2 [label="crd_j" style=dashed type="crd" comment="j"]
+    4 -> 3 [label="ref" style=bold type="ref" comment=""]
+    3 -> 2 [label="val" type="val"]
+}

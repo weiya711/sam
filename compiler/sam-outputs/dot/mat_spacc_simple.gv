@@ -1,0 +1,26 @@
+digraph SAM {
+    comment="X=ss01,B=sss012"
+    8 [comment="type=fiberlookup,index=i,tensor=B,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: B0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="B" mode="0" format="compressed" src="true" root="true"]
+    3 [comment="type=spaccumulator,order=2,in0=k,in1=j" label="SparseAccumulator 2 
+0=k 1=j " color=brown shape=box style=filled type="spaccumulator" order="2" in0="k" in1="j"]
+    0 [comment="type=fiberwrite,mode=vals,tensor=X,size=1*B1_dim*B2_dim,sink=true" label="FiberWrite Vals: X" color=green3 shape=box style=filled type="fiberwrite" tensor="X" mode="vals" size="1*B1_dim*B2_dim" sink="true"]
+    1 [comment="type=fiberwrite,index=k,tensor=X,mode=1,format=compressed,segsize=B1_dim+1,crdsize=B1_dim*B2_dim,sink=true" label="FiberWrite k: X1\ncompressed" color=green3 shape=box style=filled type="fiberwrite" index="k" tensor="X" mode="1" format="compressed" segsize="B1_dim+1" crdsize="B1_dim*B2_dim" sink="true"]
+    2 [comment="type=fiberwrite,index=j,tensor=X,mode=0,format=compressed,segsize=2,crdsize=B1_dim,sink=true" label="FiberWrite j: X0\ncompressed" color=green3 shape=box style=filled type="fiberwrite" index="j" tensor="X" mode="0" format="compressed" segsize="2" crdsize="B1_dim" sink="true"]
+    7 [comment="type=fiberlookup,index=j,tensor=B,mode=1,format=compressed,src=true,root=false" label="FiberLookup j: B1\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="j" tensor="B" mode="1" format="compressed" src="true" root="false"]
+    4 [comment="type=crdhold,outer=j,inner=k" label="CrdHold j,k
+outer=j,inner=k" color=orange shape=box style=filled type="crdhold" outer="j" inner="k"]
+    6 [comment="type=fiberlookup,index=k,tensor=B,mode=2,format=compressed,src=true,root=false" label="FiberLookup k: B2\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="k" tensor="B" mode="2" format="compressed" src="true" root="false"]
+    5 [comment="type=arrayvals,tensor=B" label="Array Vals: B" color=green2 shape=box style=filled type="arrayvals" tensor="B"]
+    8 -> 3 [label="crd_i" style=dashed type="crd" comment="i"]
+    3 -> 0 [label="val" type="val"]
+    3 -> 1 [label="crd_out-k" style=dashed type="crd" comment="out-k"]
+    3 -> 2 [label="crd_out-j" style=dashed type="crd" comment="out-j"]
+    8 -> 7 [label="ref" style=bold type="ref" comment=""]
+    7 -> 4 [label="crd_j" style=dashed type="crd" comment="j"]
+    4 -> 3 [label="crd_outer-j" style=dashed type="crd" comment="outer-j"]
+    4 -> 3 [label="crd_inner-k" style=dashed type="crd" comment="inner-k"]
+    7 -> 6 [label="ref" style=bold type="ref" comment=""]
+    6 -> 4 [label="crd_k" style=dashed type="crd" comment="k"]
+    6 -> 5 [label="ref" style=bold type="ref" comment=""]
+    5 -> 3 [label="val" type="val"]
+}
