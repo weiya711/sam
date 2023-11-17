@@ -148,14 +148,14 @@ class SAMDotGraph():
 
             # TODO: Get redux crd
             output_crd = attrs['accum_index'].strip('"')
-            #input_crd = None
+            # input_crd = None
 
             incoming_edges = [edge for edge in self.graph.get_edges() if edge.get_destination() == vr_node.get_name()]
             outgoing_edges = [edge for edge in self.graph.get_edges() if edge.get_source() == vr_node.get_name()]
 
             in_val_node = None
             in_crd_node = None
-            #in_input_node = None
+            # in_input_node = None
 
             # Keep these for the edges
             in_edge_attrs = {}
@@ -167,11 +167,11 @@ class SAMDotGraph():
                     in_val_node = incoming_edge_.get_source()
                     in_edge_attrs[in_val_node] = edge_attr
                 elif edge_attr['type'].strip('"') == 'crd':
-                    #edge_comment = edge_attr['comment'].strip('"')
-                    #if output_crd in edge_comment:
+                    # edge_comment = edge_attr['comment'].strip('"')
+                    # if output_crd in edge_comment:
                     in_crd_node = incoming_edge_.get_source()
                     in_edge_attrs[in_crd_node] = edge_attr
-                    #else:
+                    # else:
                     #    input_crd = edge_comment
                     #    in_input_node = incoming_edge_.get_source()
                     #    in_edge_attrs[in_input_node] = edge_attr
@@ -190,16 +190,22 @@ class SAMDotGraph():
             og_type = attrs['type']
             del attrs['type']
 
-            #rsg = pydot.Node(f"vr_rsg_{self.get_next_seq()}",
+            # rsg = pydot.Node(f"vr_rsg_{self.get_next_seq()}",
             #                 **attrs, label=f"{og_label}_rsg", hwnode=f"{HWNodeType.RepSigGen}",
             #                 type=og_type)
 
-            #repeat = pydot.Node(f"vr_repeat_{self.get_next_seq()}",
+            # repeat = pydot.Node(f"vr_repeat_{self.get_next_seq()}",
             #                    **attrs, label=f"{og_label}_repeat", hwnode=f"{HWNodeType.Repeat}",
             #                    root="true", type=og_type, spacc="true")
 
-            union = pydot.Node(f"vr_union_{self.get_next_seq()}", label=f"{og_label}_union", hwnode=f"{HWNodeType.Intersect}",
-                               type="union", vector_reduce_mode="true", comment=f"type=union,index={output_crd}", index=output_crd)
+            union = pydot.Node(
+                f"vr_union_{self.get_next_seq()}",
+                label=f"{og_label}_union",
+                hwnode=f"{HWNodeType.Intersect}",
+                type="union",
+                vector_reduce_mode="true",
+                comment=f"type=union,index={output_crd}",
+                index=output_crd)
 
             add = pydot.Node(f"vr_add_{self.get_next_seq()}", label=f"{og_label}_Add", hwnode=f"{HWNodeType.Compute}",
                              type="add", sub="0", comment="type=add,sub=0")
@@ -208,14 +214,30 @@ class SAMDotGraph():
                                     label=f"{og_label}_crd_buffet", hwnode=f"{HWNodeType.Buffet}",
                                     type="buffet", vector_reduce_mode="true", fa_color=self.fa_color, comment="crd_buffet")
 
-            crd_rd_scanner = pydot.Node(f"vr_crd_rd_scanner_{self.get_next_seq()}",
-                                        label=f"{og_label}_crd_rd_scanner", hwnode=f"{HWNodeType.ReadScanner}",
-                                        tensor="X", type="fiberlookup", root="false", format="compressed",
-                                        mode="0", index=f"{output_crd}", vector_reduce_mode="true", fa_color=self.fa_color, comment="crd_rd_scanner")
+            crd_rd_scanner = pydot.Node(
+                f"vr_crd_rd_scanner_{self.get_next_seq()}",
+                label=f"{og_label}_crd_rd_scanner",
+                hwnode=f"{HWNodeType.ReadScanner}",
+                tensor="X",
+                type="fiberlookup",
+                root="false",
+                format="compressed",
+                mode="0",
+                index=f"{output_crd}",
+                vector_reduce_mode="true",
+                fa_color=self.fa_color,
+                comment="crd_rd_scanner")
 
-            crd_wr_scanner = pydot.Node(f"vr_crd_wr_scanner_{self.get_next_seq()}",
-                                        label=f"{og_label}_crd_wr_scanner", hwnode=f"{HWNodeType.WriteScanner}",
-                                        type="fiberwrite", mode="0", format="compressed", vector_reduce_mode="true", fa_color=self.fa_color, comment="crd_wr_scanner")
+            crd_wr_scanner = pydot.Node(
+                f"vr_crd_wr_scanner_{self.get_next_seq()}",
+                label=f"{og_label}_crd_wr_scanner",
+                hwnode=f"{HWNodeType.WriteScanner}",
+                type="fiberwrite",
+                mode="0",
+                format="compressed",
+                vector_reduce_mode="true",
+                fa_color=self.fa_color,
+                comment="crd_wr_scanner")
 
             self.fa_color += 1
 
@@ -227,25 +249,40 @@ class SAMDotGraph():
                                      label=f"{og_label}_vals_buffet", hwnode=f"{HWNodeType.Buffet}",
                                      type="buffet", vector_reduce_mode="true", fa_color=self.fa_color, comment="vals_buffet")
 
-            #vals_rd_scanner = pydot.Node(f"vr_vals_rd_scanner_{self.get_next_seq()}",
+            # vals_rd_scanner = pydot.Node(f"vr_vals_rd_scanner_{self.get_next_seq()}",
             #                            label=f"{og_label}_vals_rd_scanner", hwnode=f"{HWNodeType.ReadScanner}",
             #                           tensor="X", type="arrayvals", root="false", format="vals",
-            #                          mode="vals", vector_reduce_mode="true", fa_color=self.fa_color, comment="vals_rd_scanner")
-            
-            vals_rd_scanner = pydot.Node(f"vr_vals_rd_scanner_{self.get_next_seq()}",
-                                        label=f"{og_label}_vals_rd_scanner", hwnode=f"{HWNodeType.ReadScanner}",
-                                        tensor="X", type="fiberlookup", root="false", format="compressed",
-                                        mode="1", vector_reduce_mode="true", fa_color=self.fa_color, comment="vals_rd_scanner")
-            
-            #vals_wr_scanner = pydot.Node(f"vr_vals_wr_scanner_{self.get_next_seq()}",
+            # mode="vals", vector_reduce_mode="true", fa_color=self.fa_color,
+            # comment="vals_rd_scanner")
+
+            vals_rd_scanner = pydot.Node(
+                f"vr_vals_rd_scanner_{self.get_next_seq()}",
+                label=f"{og_label}_vals_rd_scanner",
+                hwnode=f"{HWNodeType.ReadScanner}",
+                tensor="X",
+                type="fiberlookup",
+                root="false",
+                format="compressed",
+                mode="1",
+                vector_reduce_mode="true",
+                fa_color=self.fa_color,
+                comment="vals_rd_scanner")
+
+            # vals_wr_scanner = pydot.Node(f"vr_vals_wr_scanner_{self.get_next_seq()}",
             #                            label=f"{og_label}_vals_wr_scanner", hwnode=f"{HWNodeType.WriteScanner}",
-            #                             type="fiberwrite", mode="vals", vector_reduce_mode="true", fa_color=self.fa_color, comment="vals_wr_scanner")
-            
+            # type="fiberwrite", mode="vals", vector_reduce_mode="true",
+            # fa_color=self.fa_color, comment="vals_wr_scanner")
 
-            vals_wr_scanner = pydot.Node(f"vr_vals_wr_scanner_{self.get_next_seq()}",
-                                        label=f"{og_label}_vals_wr_scanner", hwnode=f"{HWNodeType.WriteScanner}",
-                                         type="fiberwrite", mode="1", format="compressed", vector_reduce_mode="true", fa_color=self.fa_color, comment="vals_wr_scanner")
-
+            vals_wr_scanner = pydot.Node(
+                f"vr_vals_wr_scanner_{self.get_next_seq()}",
+                label=f"{og_label}_vals_wr_scanner",
+                hwnode=f"{HWNodeType.WriteScanner}",
+                type="fiberwrite",
+                mode="1",
+                format="compressed",
+                vector_reduce_mode="true",
+                fa_color=self.fa_color,
+                comment="vals_wr_scanner")
 
             # glb_vals = pydot.Node(f"vr_crd_vals_{self.get_next_seq()}", **attrs,
             #                       label=f"{og_label}_glb_vals_read", hwnode=f"{HWNodeType.GLB}",
@@ -253,7 +290,6 @@ class SAMDotGraph():
 
             self.fa_color += 1
 
-           
             self.graph.add_node(union)
             self.graph.add_node(add)
             self.graph.add_node(crd_buffet)
@@ -263,7 +299,7 @@ class SAMDotGraph():
             self.graph.add_node(vals_rd_scanner)
             self.graph.add_node(vals_wr_scanner)
 
-            #print(in_edge_attrs[in_input_node])
+            # print(in_edge_attrs[in_input_node])
             print(in_edge_attrs[in_crd_node])
             print(in_edge_attrs[in_val_node])
 
@@ -272,17 +308,24 @@ class SAMDotGraph():
             del in_edge_attrs[in_crd_node]['type']
 
             # Edges
-            #input_to_rsg_edge = pydot.Edge(src=in_input_node, dst=rsg, **in_edge_attrs[in_input_node])
-            #rsg_to_repeat = pydot.Edge(src=rsg, dst=repeat)
-            #repeat_to_crd_rd_scan = pydot.Edge(src=repeat, dst=crd_rd_scanner)
-            #crd_rd_scan_to_val_rd_scan = pydot.Edge(src=crd_rd_scanner, dst=vals_rd_scanner)
+            # input_to_rsg_edge = pydot.Edge(src=in_input_node, dst=rsg, **in_edge_attrs[in_input_node])
+            # rsg_to_repeat = pydot.Edge(src=rsg, dst=repeat)
+            # repeat_to_crd_rd_scan = pydot.Edge(src=repeat, dst=crd_rd_scanner)
+            # crd_rd_scan_to_val_rd_scan = pydot.Edge(src=crd_rd_scanner, dst=vals_rd_scanner)
             in_crd_to_union = pydot.Edge(src=in_crd_node, dst=union,
-                                              **in_edge_attrs[in_crd_node], type="crd", comment=f"in-B")
+                                         **in_edge_attrs[in_crd_node], type="crd", comment=f"in-B")
             in_val_to_union = pydot.Edge(src=in_val_node, dst=union, **in_edge_attrs[in_val_node],
-                                      type="ref", comment=f"in-B", val="true", vector_reduce_mode=True)
+                                         type="ref", comment=f"in-B", val="true", vector_reduce_mode=True)
             #   type="ref", comment=f"in-C", val="true")
-            crd_rd_scan_to_union = pydot.Edge(src=crd_rd_scanner, dst=union, type="crd", comment="in-x", vector_reduce_mode=True)
-            val_rd_scan_to_union = pydot.Edge(src=vals_rd_scanner, dst=union, type="ref", comment="in-x", val="true", vector_reduce_mode=True)
+            crd_rd_scan_to_union = pydot.Edge(src=crd_rd_scanner, dst=union, type="crd",
+                                              comment="in-x", vector_reduce_mode=True)
+            val_rd_scan_to_union = pydot.Edge(
+                src=vals_rd_scanner,
+                dst=union,
+                type="ref",
+                comment="in-x",
+                val="true",
+                vector_reduce_mode=True)
             union_crd_to_crd_wr_scan = pydot.Edge(src=union, dst=crd_wr_scanner, type="crd")
             union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-B')
             # union_val0_to_alu = pydot.Edge(src=union, dst=add, comment='out-C')
@@ -315,16 +358,26 @@ class SAMDotGraph():
             print(val_edge_attr)
             del crd_edge_attr['comment']
 
-            #crd_rd_scan_to_glb = pydot.Edge(src=crd_rd_scanner, dst=dst_crd, **crd_edge_attr, use_alt_out_port="1")
-            #val_rd_scan_to_glb = pydot.Edge(src=vals_rd_scanner, dst=dst_vals, **val_edge_attr, use_alt_out_port="1")
+            # crd_rd_scan_to_glb = pydot.Edge(src=crd_rd_scanner, dst=dst_crd, **crd_edge_attr, use_alt_out_port="1")
+            # val_rd_scan_to_glb = pydot.Edge(src=vals_rd_scanner, dst=dst_vals, **val_edge_attr, use_alt_out_port="1")
 
-            crd_rd_scan_to_ds = pydot.Edge(src=crd_rd_scanner, dst=dst_crd, **crd_edge_attr, comment="final-crd", vector_reduce_mode=True)
-            val_rd_scan_to_ds = pydot.Edge(src=vals_rd_scanner, dst=dst_vals, **val_edge_attr, comment="final-val", vector_reduce_mode=True)
+            crd_rd_scan_to_ds = pydot.Edge(
+                src=crd_rd_scanner,
+                dst=dst_crd,
+                **crd_edge_attr,
+                comment="final-crd",
+                vector_reduce_mode=True)
+            val_rd_scan_to_ds = pydot.Edge(
+                src=vals_rd_scanner,
+                dst=dst_vals,
+                **val_edge_attr,
+                comment="final-val",
+                vector_reduce_mode=True)
 
-            #self.graph.add_edge(input_to_rsg_edge)
-            #self.graph.add_edge(rsg_to_repeat)
-            #self.graph.add_edge(repeat_to_crd_rd_scan)
-            #self.graph.add_edge(crd_rd_scan_to_val_rd_scan)
+            # self.graph.add_edge(input_to_rsg_edge)
+            # self.graph.add_edge(rsg_to_repeat)
+            # self.graph.add_edge(repeat_to_crd_rd_scan)
+            # self.graph.add_edge(crd_rd_scan_to_val_rd_scan)
             self.graph.add_edge(in_crd_to_union)
             self.graph.add_edge(in_val_to_union)
             self.graph.add_edge(crd_rd_scan_to_union)

@@ -250,7 +250,6 @@ class IntersectNode(HWNode):
         cmrg_stop_lvl = 0
         type_op = attributes['type'].strip('"')
 
-
         if 'vector_reduce_mode' in attributes:
             is_in_vr_mode = attributes['vector_reduce_mode'].strip('"')
             if is_in_vr_mode == "true":

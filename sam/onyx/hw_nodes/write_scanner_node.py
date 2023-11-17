@@ -90,12 +90,12 @@ class WriteScannerNode(HWNode):
         else:
             compressed = 1
 
-        #if 'spacc' in attributes:
+        # if 'spacc' in attributes:
         #    spacc_mode = 1
         #    init_blank = 1
         #    assert 'stop_lvl' in attributes
         #    stop_lvl = int(attributes['stop_lvl'].strip('"'))
-        #else:
+        # else:
         #    spacc_mode = 0
         #    init_blank = 0
 
@@ -112,7 +112,7 @@ class WriteScannerNode(HWNode):
             block_mode = 1
         else:
             block_mode = 0
-        
+
         if 'vector_reduce_mode' in attributes:
             is_in_vr_mode = attributes['vector_reduce_mode'].strip('"')
             if is_in_vr_mode == "true":
@@ -131,6 +131,6 @@ class WriteScannerNode(HWNode):
             'block_mode': block_mode,
             'vr_mode': vr_mode,
             'init_blank': init_blank
-            #'spacc_mode': spacc_mode
+            # 'spacc_mode': spacc_mode
         }
         return cfg_tuple, cfg_kwargs

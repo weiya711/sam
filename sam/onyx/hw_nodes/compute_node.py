@@ -63,7 +63,7 @@ class ComputeNode(HWNode):
             # isect_conn = other.get_num_inputs()
 
             if 'vector_reduce_mode' in edge.get_attributes():
-                if edge.get_attributes()['vector_reduce_mode'] == True: 
+                if edge.get_attributes()['vector_reduce_mode']:
                     isect_conn = 0
             else:
                 if 'tensor' not in edge.get_attributes():

@@ -71,7 +71,7 @@ class MergeNode(HWNode):
             }
 
             return new_conns
-            #raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            # raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == ReduceNode:
             # raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
             other_red = other.get_name()
