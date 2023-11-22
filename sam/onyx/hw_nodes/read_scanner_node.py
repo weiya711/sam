@@ -169,6 +169,9 @@ class ReadScannerNode(HWNode):
 
             if 'use_alt_out_port' in edge_attr:
                 out_conn = 'block_rd_out'
+            elif ('vector_reduce_mode' in edge_attr):
+                if (edge_attr['vector_reduce_mode']):
+                    out_conn = 'pos_out'
             else:
                 out_conn = 'coord_out'
 
