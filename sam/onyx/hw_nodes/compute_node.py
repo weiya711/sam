@@ -64,12 +64,16 @@ class ComputeNode(HWNode):
             pe = self.get_name()
             # isect_conn = other.get_num_inputs()
 
-            if 'tensor' not in edge.get_attributes():
-                # Taking some liberties here - but technically this is the combo val
-                # isect_conn = other.get_connection_from_tensor('B')
-                isect_conn = other.get_connection_from_tensor('C')
+            if 'vector_reduce_mode' in edge.get_attributes():
+                if edge.get_attributes()['vector_reduce_mode']:
+                    isect_conn = 0
             else:
-                isect_conn = other.get_connection_from_tensor(edge.get_tensor())
+                if 'tensor' not in edge.get_attributes():
+                    # Taking some liberties here - but technically this is the combo val
+                    # isect_conn = other.get_connection_from_tensor('B')
+                    isect_conn = other.get_connection_from_tensor('C')
+                else:
+                    isect_conn = other.get_connection_from_tensor(edge.get_tensor())
 
             new_conns = {
                 f'pe_to_isect_{in_str}_{isect_conn}': [
@@ -83,7 +87,7 @@ class ComputeNode(HWNode):
             pe = self.get_name()
             new_conns = {
                 f'pe_to_reduce': [
-                    ([(pe, "res"), (other_red, f"data_in")], 17),
+                    ([(pe, "res"), (other_red, f"reduce_data_in")], 17),
                 ]
             }
             return new_conns
@@ -153,6 +157,12 @@ class ComputeNode(HWNode):
         comment = attributes['comment'].strip('"')
         print(c_op)
         op_code = 0
+        # configuring via sam, it is a sparse app
+        use_dense = False
+        # mapping to pe only, configuring only the pe, ignore the reduce
+        pe_only = True
+        # data I/O should interface with other primitive outside of the cluster
+        pe_in_external = 1
         if c_op == 'mul':
             op_code = 1
         elif c_op == 'add' and 'sub=1' not in comment:
@@ -162,6 +172,9 @@ class ComputeNode(HWNode):
         elif c_op == 'max':
             op_code = 4
         cfg_kwargs = {
-            'op': op_code
+            'op': op_code,
+            'use_dense': use_dense,
+            'pe_only': pe_only,
+            'pe_in_external': pe_in_external
         }
-        return op_code, cfg_kwargs
+        return (op_code, use_dense, pe_only, pe_in_external), cfg_kwargs

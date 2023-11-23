@@ -180,6 +180,7 @@ class IntersectNode(HWNode):
             print(edge.get_attributes())
             edge_comment = edge.get_attributes()['comment'].strip('"')
             tensor = edge_comment.split('-')[1]
+            print(self.tensor_to_conn)
             out_conn = self.tensor_to_conn[tensor]
             compute_conn = compute.get_num_inputs()
             new_conns = {
@@ -248,6 +249,14 @@ class IntersectNode(HWNode):
         cmrg_enable = 0
         cmrg_stop_lvl = 0
         type_op = attributes['type'].strip('"')
+
+        if 'vector_reduce_mode' in attributes:
+            is_in_vr_mode = attributes['vector_reduce_mode'].strip('"')
+            if is_in_vr_mode == "true":
+                vr_mode = 1
+        else:
+            vr_mode = 0
+
         if type_op == "intersect":
             op = JoinerOp.INTERSECT.value
         elif type_op == "union":
@@ -257,6 +266,7 @@ class IntersectNode(HWNode):
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
-            'op': op
+            'op': op,
+            'vr_mode': vr_mode
         }
-        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op, vr_mode), cfg_kwargs

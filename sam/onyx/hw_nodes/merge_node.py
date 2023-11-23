@@ -62,13 +62,22 @@ class MergeNode(HWNode):
 
             return new_conns
         elif other_type == IntersectNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            isect = other.get_name()
+            print("MERGE TO UNION FOR VECTOR REDUCE")
+            new_conns = {
+                f'merge_to_union_inner': [
+                    ([(merge, f"cmrg_coord_out_{0}"), (isect, f"coord_in_{0}")], 17),
+                ]
+            }
+
+            return new_conns
+            # raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == ReduceNode:
             # raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
             other_red = other.get_name()
             new_conns = {
                 f'merge_to_reduce_inner': [
-                    ([(merge, f"cmrg_coord_out_{0}"), (other_red, f"data_in")], 17),
+                    ([(merge, f"cmrg_coord_out_{0}"), (other_red, f"reduce_data_in")], 17),
                 ]
             }
 
