@@ -62,13 +62,22 @@ class MergeNode(HWNode):
 
             return new_conns
         elif other_type == IntersectNode:
+            e_attr = edge.get_attributes()
+            e_type = e_attr['type'].strip('"')
             isect = other.get_name()
             print("MERGE TO UNION FOR VECTOR REDUCE")
-            new_conns = {
-                f'merge_to_union_inner': [
-                    ([(merge, f"cmrg_coord_out_{0}"), (isect, f"coord_in_{0}")], 17),
-                ]
-            }
+            if "crd" in e_type:
+                new_conns = {
+                    f'merge_to_union_inner': [
+                        ([(merge, f"cmrg_coord_out_{0}"), (isect, f"coord_in_{0}")], 17),
+                    ]
+                }
+            elif "val" in e_type:
+                new_conns = {
+                    f'merge_to_union_inner': [
+                        ([(merge, f"cmrg_coord_out_{0}"), (isect, f"pos_in_{0}")], 17),
+                    ]
+                }
 
             return new_conns
             # raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
