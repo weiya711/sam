@@ -118,6 +118,11 @@ class ComputeNode(HWNode):
             other_pe = other.get_name()
             other_conn = other.get_num_inputs()
             pe = self.get_name()
+            # TODO: remove hack eventually
+            if 'Max' in other.op:
+                other_conn = 1
+            else:
+                other_conn = other.get_num_inputs()
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
                     ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
