@@ -360,18 +360,18 @@ class SAMDotGraph():
             # crd_rd_scan_to_glb = pydot.Edge(src=crd_rd_scanner, dst=dst_crd, **crd_edge_attr, use_alt_out_port="1")
             # val_rd_scan_to_glb = pydot.Edge(src=vals_rd_scanner, dst=dst_vals, **val_edge_attr, use_alt_out_port="1")
 
-            # CRDDROP SUPPORT: TOOK OUT COMMENT ATTRIBUTE FROM BOTH OF THESE 
+            # CRDDROP SUPPORT: TOOK OUT COMMENT ATTRIBUTE FROM BOTH OF THESE
             crd_rd_scan_to_ds = pydot.Edge(
                 src=crd_rd_scanner,
                 dst=dst_crd,
                 **crd_edge_attr,
-                #comment="final-crd",
+                # comment="final-crd",
                 vector_reduce_mode=True)
             val_rd_scan_to_ds = pydot.Edge(
                 src=vals_rd_scanner,
                 dst=dst_vals,
                 **val_edge_attr,
-                #comment="final-val",
+                # comment="final-val",
                 vector_reduce_mode=True)
 
             # self.graph.add_edge(input_to_rsg_edge)
