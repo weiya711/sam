@@ -2,12 +2,14 @@ from sam.onyx.hw_nodes.hw_node import *
 
 
 class ComputeNode(HWNode):
-    def __init__(self, name=None) -> None:
+    def __init__(self, name=None, op=None) -> None:
         super().__init__(name=name)
         self.num_inputs = 2
         self.num_outputs = 1
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
+
+        self.op = op
 
     def connect(self, other, edge, kwargs=None):
 
@@ -116,6 +118,11 @@ class ComputeNode(HWNode):
             other_pe = other.get_name()
             other_conn = other.get_num_inputs()
             pe = self.get_name()
+            # TODO: remove hack eventually
+            if 'Max' in other.op:
+                other_conn = 1
+            else:
+                other_conn = other.get_num_inputs()
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
                     ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
@@ -167,6 +174,8 @@ class ComputeNode(HWNode):
             op_code = 0
         elif c_op == 'add' and 'sub=1' in comment:
             op_code = 2
+        elif c_op == 'max':
+            op_code = 4
         cfg_kwargs = {
             'op': op_code,
             'use_dense': use_dense,
