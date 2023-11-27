@@ -99,7 +99,7 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.RepSigGen"
                 elif n_type == "repeat":
                     hw_nt = f"HWNodeType.Repeat"
-                elif n_type == "mul" or n_type == "add":
+                elif n_type == "mul" or n_type == "add" or n_type == "max":
                     hw_nt = f"HWNodeType.Compute"
                 elif n_type == "reduce":
                     hw_nt = f"HWNodeType.Reduce"
@@ -356,22 +356,22 @@ class SAMDotGraph():
 
             print(crd_edge_attr)
             print(val_edge_attr)
-            del crd_edge_attr['comment']
 
             # crd_rd_scan_to_glb = pydot.Edge(src=crd_rd_scanner, dst=dst_crd, **crd_edge_attr, use_alt_out_port="1")
             # val_rd_scan_to_glb = pydot.Edge(src=vals_rd_scanner, dst=dst_vals, **val_edge_attr, use_alt_out_port="1")
 
+            # CRDDROP SUPPORT: TOOK OUT COMMENT ATTRIBUTE FROM BOTH OF THESE
             crd_rd_scan_to_ds = pydot.Edge(
                 src=crd_rd_scanner,
                 dst=dst_crd,
                 **crd_edge_attr,
-                comment="final-crd",
+                # comment="final-crd",
                 vector_reduce_mode=True)
             val_rd_scan_to_ds = pydot.Edge(
                 src=vals_rd_scanner,
                 dst=dst_vals,
                 **val_edge_attr,
-                comment="final-val",
+                # comment="final-val",
                 vector_reduce_mode=True)
 
             # self.graph.add_edge(input_to_rsg_edge)

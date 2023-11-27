@@ -169,6 +169,9 @@ class ReadScannerNode(HWNode):
 
             if 'use_alt_out_port' in edge_attr:
                 out_conn = 'block_rd_out'
+            elif ('vector_reduce_mode' in edge_attr):
+                if (edge_attr['vector_reduce_mode']):
+                    out_conn = 'pos_out'
             else:
                 out_conn = 'coord_out'
 
@@ -216,11 +219,19 @@ class ReadScannerNode(HWNode):
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == RepSigGenNode:
             rsg = other.get_name()
-            new_conns = {
-                f'rd_scan_to_rsg': [
-                    ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 17),
-                ]
-            }
+            edge_attr = edge.get_attributes()
+            if 'vr_special' in edge_attr:
+                new_conns = {
+                    f'rd_scan_to_rsg': [
+                        ([(rd_scan, "pos_out"), (rsg, f"base_data_in")], 17),
+                    ]
+                }
+            else:
+                new_conns = {
+                    f'rd_scan_to_rsg': [
+                        ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 17),
+                    ]
+                }
             return new_conns
         elif other_type == CrdHoldNode:
             crdhold = other.get_name()
