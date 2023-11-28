@@ -453,7 +453,7 @@ def run_statistics(name, seed, shape, dump_dir, sparsity):
     return (avg1, avg2)
 
 
-def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
+def create_matrix_from_point_list(name, pt_list, shape, use_fp=False) -> MatrixGenerator:
     mat_base = numpy.zeros(shape)
     dims = len(shape)
     for pt_idx in range(len(pt_list[0])):
@@ -461,6 +461,16 @@ def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
         for i in range(dims):
             pt_base.append(pt_list[i][pt_idx])
         mat_base[tuple(pt_base)] = pt_list[dims][pt_idx]
+
+    # Convert the input matrix to MatrixGenerator according to specified use_fp
+    if use_fp:
+        mat_base = mat_base.astype(numpy.float32)
+        for idx, x in numpy.ndenumerate(mat_base):
+            # Convert the input from int to bfloat16
+            tmp_x = bin(int(x))[2:].zfill(16)
+            mat_base[idx] = bfbin2float(tmp_x)
+    else:
+        mat_base = mat_base.astype(numpy.uint16, casting='unsafe')
 
     mg = MatrixGenerator(name=f"{name}", shape=shape, sparsity=0.7, format='CSF', dump_dir=None, tensor=mat_base)
     return mg
@@ -503,7 +513,7 @@ def convert_aha_glb_output_file(glbfile, output_dir):
 
 def get_tensor_from_files(name, files_dir, shape, base=10,
                           format='CSF', early_terminate=None, tensor_ordering=None,
-                          suffix="", positive_only=True) -> MatrixGenerator:
+                          suffix="", positive_only=True, use_fp=False) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
 
@@ -545,7 +555,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
             segs.append(seg_t_)
             # Empty matrix...
             if len(seg_t_) == 2 and seg_t_[0] == 0 and seg_t_[1] == 0:
-                mg = MatrixGenerator(name=name, shape=shape, sparsity=1.0)
+                mg = MatrixGenerator(name=name, shape=shape, sparsity=1.0, use_fp=use_fp)
                 created_empty = True
                 break
             crd_t_ = read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate,
@@ -553,7 +563,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
             crds.append(crd_t_)
         if not created_empty:
             pt_list = get_point_list(crds, segs, val_arr=vals)
-            mg = create_matrix_from_point_list(name, pt_list, shape_reordered)
+            mg = create_matrix_from_point_list(name, pt_list, shape_reordered, use_fp=use_fp)
     elif format == 'COO':
         crds = []
         for mode in range(dims):
