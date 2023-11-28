@@ -1,4 +1,5 @@
 from sam.onyx.hw_nodes.hw_node import *
+from lassen.utils import float2bfbin
 
 
 class ComputeNode(HWNode):
@@ -184,11 +185,24 @@ class ComputeNode(HWNode):
         elif c_op == 'fgetffrac':
             op_code = 8
         elif c_op == 'faddiexp':
-            op_code = 9 
+            op_code = 9
+
+        rb_const = None
+        if "rb_const" in attributes:
+            # the b operand of the op is a constant
+            rb_const = attributes["rb_const"].strip('"')
+            if "." in rb_const:
+                # constant is a floating point 
+                rb_const = float2bfbin(float(rb_const))
+            else:
+                # it is a int
+                rb_const = int(rb_const)
+
         cfg_kwargs = {
             'op': op_code,
             'use_dense': use_dense,
             'pe_only': pe_only,
-            'pe_in_external': pe_in_external
+            'pe_in_external': pe_in_external,
+            'rb_const': rb_const
         }
-        return (op_code, use_dense, pe_only, pe_in_external), cfg_kwargs
+        return (op_code, use_dense, pe_only, pe_in_external, rb_const), cfg_kwargs
