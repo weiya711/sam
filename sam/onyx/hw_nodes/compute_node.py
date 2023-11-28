@@ -8,7 +8,6 @@ class ComputeNode(HWNode):
         self.num_outputs = 1
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
-
         self.op = op
 
     def connect(self, other, edge, kwargs=None):
