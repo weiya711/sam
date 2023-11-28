@@ -176,6 +176,16 @@ class ComputeNode(HWNode):
             op_code = 2
         elif c_op == 'max':
             op_code = 4
+        elif c_op == 'and':
+            op_code = 5
+        elif c_op == 'fp_mul':
+            op_code = 6
+        elif c_op == 'fgetfint':
+            op_code = 7
+        elif c_op == 'fgetffrac':
+            op_code = 8
+        elif c_op == 'faddiexp':
+            op_code = 9 
         cfg_kwargs = {
             'op': op_code,
             'use_dense': use_dense,

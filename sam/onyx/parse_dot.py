@@ -101,6 +101,8 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.Repeat"
                 elif n_type == "mul" or n_type == "add" or n_type == "max":
                     hw_nt = f"HWNodeType.Compute"
+                elif n_type == "fgetfint" or n_type == "fgetffrac" or n_type == "faddiexp":
+                    hw_nt = f"HWNodeType.Compute"
                 elif n_type == "reduce":
                     hw_nt = f"HWNodeType.Reduce"
                 elif n_type == "intersect" or n_type == "union":
