@@ -90,6 +90,9 @@ class ReadScannerNode(HWNode):
             edge_attr = edge.get_attributes()
             if 'use_alt_out_port' in edge_attr:
                 out_conn = 'block_rd_out'
+            elif ('vector_reduce_mode' in edge_attr):
+                if (edge_attr['vector_reduce_mode']):
+                    out_conn = 'pos_out'
             else:
                 out_conn = 'coord_out'
 
@@ -102,7 +105,13 @@ class ReadScannerNode(HWNode):
         elif other_type == IntersectNode:
             # Send both....
             isect = other.get_name()
-            isect_conn = other.get_connection_from_tensor(self.get_tensor())
+            if 'vector_reduce_mode' in edge.get_attributes():
+                if edge.get_attributes()['vector_reduce_mode']:
+                    isect_conn = 1
+            elif 'special' in edge.get_attributes():
+                isect_conn = 0
+            else:
+                isect_conn = other.get_connection_from_tensor(self.get_tensor())
 
             e_attr = edge.get_attributes()
             # isect_conn = 0
@@ -160,6 +169,9 @@ class ReadScannerNode(HWNode):
 
             if 'use_alt_out_port' in edge_attr:
                 out_conn = 'block_rd_out'
+            elif ('vector_reduce_mode' in edge_attr):
+                if (edge_attr['vector_reduce_mode']):
+                    out_conn = 'pos_out'
             else:
                 out_conn = 'coord_out'
 
@@ -207,11 +219,19 @@ class ReadScannerNode(HWNode):
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
         elif other_type == RepSigGenNode:
             rsg = other.get_name()
-            new_conns = {
-                f'rd_scan_to_rsg': [
-                    ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 17),
-                ]
-            }
+            edge_attr = edge.get_attributes()
+            if 'vr_special' in edge_attr:
+                new_conns = {
+                    f'rd_scan_to_rsg': [
+                        ([(rd_scan, "pos_out"), (rsg, f"base_data_in")], 17),
+                    ]
+                }
+            else:
+                new_conns = {
+                    f'rd_scan_to_rsg': [
+                        ([(rd_scan, "coord_out"), (rsg, f"base_data_in")], 17),
+                    ]
+                }
             return new_conns
         elif other_type == CrdHoldNode:
             crdhold = other.get_name()
@@ -247,12 +267,12 @@ class ReadScannerNode(HWNode):
         dim_size = 1
         stop_lvl = 0
 
-        if 'spacc' in attributes:
-            spacc_mode = 1
-            assert 'stop_lvl' in attributes
-            stop_lvl = int(attributes['stop_lvl'].strip('"'))
-        else:
-            spacc_mode = 0
+        # if 'spacc' in attributes:
+        #    spacc_mode = 1
+        #    assert 'stop_lvl' in attributes
+        #    stop_lvl = int(attributes['stop_lvl'].strip('"'))
+        # else:
+        #    spacc_mode = 0
 
         # This is a fiberwrite's opposing read scanner for comms with GLB
         if attributes['type'].strip('"') == 'fiberwrite':
@@ -283,6 +303,13 @@ class ReadScannerNode(HWNode):
             lookup = 0
         block_mode = int(attributes['type'].strip('"') == 'fiberwrite')
 
+        if 'vector_reduce_mode' in attributes:
+            is_in_vr_mode = attributes['vector_reduce_mode'].strip('"')
+            if is_in_vr_mode == "true":
+                vr_mode = 1
+        else:
+            vr_mode = 0
+
         cfg_kwargs = {
             'dense': dense,
             'dim_size': dim_size,
@@ -294,11 +321,12 @@ class ReadScannerNode(HWNode):
             'do_repeat': do_repeat,
             'repeat_outer': repeat_outer,
             'repeat_factor': repeat_factor,
-            'stop_lvl': stop_lvl,
+            # 'stop_lvl': stop_lvl,
             'block_mode': block_mode,
             'lookup': lookup,
-            'spacc_mode': spacc_mode
+            # 'spacc_mode': spacc_mode
+            'vr_mode': vr_mode
         }
 
         return (inner_offset, max_outer_dim, strides, ranges, is_root, do_repeat,
-                repeat_outer, repeat_factor, stop_lvl, block_mode, lookup, spacc_mode), cfg_kwargs
+                repeat_outer, repeat_factor, block_mode, lookup, vr_mode), cfg_kwargs

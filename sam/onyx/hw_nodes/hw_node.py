@@ -16,7 +16,7 @@ class HWNodeType(Enum):
     Broadcast = 12
     RepSigGen = 13
     CrdHold = 14
-    SpAccumulator = 15
+    VectorReducer = 15
     FiberAccess = 16
 
 
