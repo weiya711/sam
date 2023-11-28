@@ -193,7 +193,8 @@ class ComputeNode(HWNode):
             rb_const = attributes["rb_const"].strip('"')
             if "." in rb_const:
                 # constant is a floating point 
-                rb_const = float2bfbin(float(rb_const))
+                rb_const = float(rb_const)
+                rb_const = int(float2bfbin(rb_const), 2)
             else:
                 # it is a int
                 rb_const = int(rb_const)
