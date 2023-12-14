@@ -27,8 +27,10 @@ jobs:
         pip install -r requirements.txt
         git clone https://github.com/cdonovick/peak.git
         pip install -e peak
+        rm -rf peak
         git clone https://github.com/StanfordAHA/lassen.git
         pip install -e lassen
+        rm -rf lassen
         pip install -e .
         echo $VIRTUAL_ENV/bin >> $GITHUB_PATH
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
