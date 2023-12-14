@@ -211,7 +211,7 @@ class ReadScannerNode(HWNode):
                     compute_conn = 0
                 elif 'exp' in comment:
                     compute_conn = 1
-                else: 
+                else:
                     assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [

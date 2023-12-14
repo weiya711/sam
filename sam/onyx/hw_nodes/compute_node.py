@@ -127,7 +127,7 @@ class ComputeNode(HWNode):
                     other_conn = 0
                 elif 'exp' in comment:
                     other_conn = 1
-                else: 
+                else:
                     assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
@@ -202,7 +202,7 @@ class ComputeNode(HWNode):
             # the b operand of the op is a constant
             rb_const = attributes["rb_const"].strip('"')
             if "." in rb_const:
-                # constant is a floating point 
+                # constant is a floating point
                 rb_const = float(rb_const)
                 rb_const = int(float2bfbin(rb_const), 2)
             else:

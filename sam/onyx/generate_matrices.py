@@ -70,7 +70,7 @@ class MatrixGenerator:
         if not self.use_fp:
             self.array = self.array.astype(int)
         else:
-            # convert to bfloat16 by truncating the trailing fraction bits 
+            # convert to bfloat16 by truncating the trailing fraction bits
             # converting it to floating point number
             for idx, x in numpy.ndenumerate(self.array):
                 bfval = bfbin2float(float2bfbin(x))
@@ -279,7 +279,7 @@ class MatrixGenerator:
                 if not is_val:
                     data = int(item)
                 if dump_hex:
-                    if not type(data) == numpy.float32:
+                    if not isinstance(data, numpy.float32):
                         wr_file.write(f"{data:04X}\n")
                     else:
                         # converting result to bf16 hexidecimal representation
