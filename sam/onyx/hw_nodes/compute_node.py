@@ -119,10 +119,16 @@ class ComputeNode(HWNode):
             other_conn = other.get_num_inputs()
             pe = self.get_name()
             # TODO: remove hack eventually
-            if 'Max' in other.op:
+            if 'Max 0' in other.op:
                 other_conn = 1
-            else:
-                other_conn = other.get_num_inputs()
+            elif 'Faddiexp' in other.op:
+                comment = edge.get_attributes()["comment"].strip('"')
+                if 'fp' in comment:
+                    other_conn = 0
+                elif 'exp' in comment:
+                    other_conn = 1
+                else: 
+                    assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
                     ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
@@ -186,6 +192,10 @@ class ComputeNode(HWNode):
             op_code = 8
         elif c_op == 'faddiexp':
             op_code = 9
+        elif c_op == 'fp_max':
+            op_code = 10
+        elif c_op == 'fp_add':
+            op_code = 11
 
         rb_const = None
         if "rb_const" in attributes:
