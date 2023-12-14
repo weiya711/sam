@@ -26,9 +26,9 @@ jobs:
         source venv/bin/activate
         pip install -r requirements.txt
         git clone https://github.com/cdonovick/peak.git
-        python peak/setup.py install
+        pip install -e peak
         git clone https://github.com/StanfordAHA/lassen.git
-        python lassen/setup.py install
+        pip install -e lassen
         pip install -e .
         echo $VIRTUAL_ENV/bin >> $GITHUB_PATH
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
