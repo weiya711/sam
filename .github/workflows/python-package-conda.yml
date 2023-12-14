@@ -27,10 +27,8 @@ jobs:
         pip install -r requirements.txt
         git clone https://github.com/cdonovick/peak.git
         pip install -e peak
-        rm -rf peak
         git clone https://github.com/StanfordAHA/lassen.git
         pip install -e lassen
-        rm -rf lassen
         pip install -e .
         echo $VIRTUAL_ENV/bin >> $GITHUB_PATH
     - name: Test all (non SuiteSparse and Frostt) tests with pytest
@@ -55,7 +53,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude venv
     - name: Python style checking flake8
       run: |
-        flake8 . --count --select=E,W --statistics --ignore=W503,W504 --max-line-length=127 --exclude venv
+        flake8 . --count --select=E,W --statistics --ignore=W503,W504 --max-line-length=127 --exclude venv peak lassen
     - name: Check SAM Simulator generating script
       run: |
         make tests
