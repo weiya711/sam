@@ -51,6 +51,8 @@ class MatrixGenerator:
             else:
                 self.array = tensor
                 for idx, x in numpy.ndenumerate(self.array):
+                    if x == 0.0:
+                        continue
                     self.array[idx] = bfbin2float(float2bfbin(x))
                 self.shape = self.array.shape
         else:
@@ -466,6 +468,9 @@ def create_matrix_from_point_list(name, pt_list, shape, use_fp=False) -> MatrixG
     if use_fp:
         mat_base = mat_base.astype(numpy.float32)
         for idx, x in numpy.ndenumerate(mat_base):
+            if x == 0.0:
+                # don't need to truncate if it is already a zero
+                continue
             # Convert the input from int to bfloat16
             tmp_x = bin(int(x))[2:].zfill(16)
             mat_base[idx] = bfbin2float(tmp_x)
