@@ -496,7 +496,7 @@ class FormatWriter:
             else:
                 filename = os.path.join(vec_dir, "tensor_" + tensorname + "_mode_0_seg")
             with open(filename, "w") as ofile:
-                ofile.write(array_newline_str([0, len(vec_sp) + 1]))
+                ofile.write(array_newline_str([0, len(vec_sp)]))
 
             if not hw:
                 filename = os.path.join(vec_dir, tensorname + "0_crd.txt")
@@ -535,7 +535,7 @@ class FormatWriter:
                 ofile.write(array_newline_str(vec_shape))
 
     def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01", hw=True):
-
+        
         if format_str == "ss01":
             dcsr_dir = Path(dir_path)
             dcsr_dir.mkdir(parents=True, exist_ok=True, mode=0o777)

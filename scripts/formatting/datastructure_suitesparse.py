@@ -139,7 +139,7 @@ def write_datastructure_bench(args, tensor, out_path, tiles=None):
             vec = vec.toarray().flatten()
             formatWriter.writeout_separate_vec(vec, dirname, tensorname)
     elif "mat_vecmul" == args.benchname or "mat_vecmul_ji" in args.benchname:
-        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+        formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01")
         if not args.no_gen_other:
             tensorname = 'c'
             vec = scipy.sparse.random(shape[1], 1, density=args.density, data_rvs=np.ones)
