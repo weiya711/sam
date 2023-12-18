@@ -219,6 +219,7 @@ class output_memory_block():
         self.downstream_token = token
 
 
+# FIXME: Follow code style and fix class naming convention and make sure it's base is primitive...
 class memory_block():
     def __init__(self, name="B", skip_blocks=False, element_size=2, level=None, indexes=2,
                  size=1000 * 2, nbuffer=False, latency=10, debug=False, bandwidth=2,
