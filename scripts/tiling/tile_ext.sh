@@ -11,13 +11,16 @@ BENCHMARKS=(
 	# mat_vecmul_ij
 	# mat_residual
 	# mat_elemadd3
-	# matmul_ijk
+	$4
 	# mat_mask_tri
 	# mat_vecmul_iter
-	mat_elemadd
+	# mat_elemadd
 )
 
 appname=$3
+
+echo "APP NAME IS : $4"
+# exit 0
 
 sspath=$SUITESPARSE_PATH
 

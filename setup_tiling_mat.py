@@ -7,48 +7,17 @@ import sys
 
 from sam.util import SUITESPARSE_PATH
 
+#Usage: python3 setup_tiling_mat.py <app_name> <data_file> <tile_size> <docker_path>
+
+
 ## PARAMS ######################################################################
-
-# data = ['rajat12']
-
 data = [sys.argv[2]]
 tilesizes = [int(sys.argv[3])]
-# app_name = "mat_elemadd"
-# app_name = "mat_elemmul"
-# app_name = "mat_sddmm"
-# app_name = "matmul_ijk"           
 app_name = sys.argv[1]
-# app_name = "mat_elemmul"
-# app_name = "mat_residual"
+docker_path = sys.argv[4]
 
-# data = []
-# tilesizes = []
-# sparsities = [60, 80, 90, 95, 98]
-# for sparsity in sparsities:
-#     for i in range(5):
-#         data.append(f"matrix_sp{str(sparsity)}_sm_{i+1}")
-#         tilesizes.append(30)
-
-# data_file = open("onyx_final_eval_mid50_tensor_names.txt")
-# data_file_lines = data_file.readlines()
-# for line in data_file_lines:
-#    data.append(line[:-1])
-
-# with open('matmul_tilesize_list.txt', 'r') as file:
-#     lines = file.readlines()
-
-# tilesizes = [int(line.strip()) for line in lines]
 print("TILESIZES: ", tilesizes)
 print("DATA: ", data)
-
-mode_to_exclude = 0
-addition_vector_name = "d" #mattransmul (d) and residual (b) only
-
-other_tensors = ["c"]
-samples_directory = f"samples/{app_name}"
-docker_path = f"avb03-sparse-tiling"
-use_dataset_files = False
-
 ###############################################################################
 
 def write_to_line(file_path, line_number, new_content):
@@ -98,71 +67,7 @@ for datum in data:
    
    command = f"./scripts/suitesparse_memory_model_runner.sh {datum} {app_name}"
    os.system(command)
-
-   directories = glob.glob(f'tiles/{app_name}/formatted/tensor_[a-z]*')
-
-   #for vectors, do cleanup
-   for directory in directories:
-      print(directory)
-      match = re.search(r'tensor_([a-z])', directory)
-      if match:
-         lowercase_letter = match.group(1)
       
-      crd_file = os.path.join(directory, f"{lowercase_letter}{mode_to_exclude}_crd.txt")
-      seg_file = os.path.join(directory, f"{lowercase_letter}{mode_to_exclude}_seg.txt")
-
-      # if os.path.exists(crd_file):
-      #   os.remove(crd_file)
-
-      # if os.path.exists(seg_file):
-      #    os.remove(seg_file)
-
-   samples_with_addition_vector = None
-   
-   # dense tile replacement for addition
-   if app_name == "mat_mattransmul" or app_name == "mat_residual":
-      # samples_with_addition_vector = glob.glob(f"{samples_directory}/*[{addition_vector_name}]*")
-      # samples_with_addition_vector = glob.glob(f"{samples_directory}/mtm_w_0_1/tensor_d_tile_0_0")
-      samples_with_addition_vector = glob.glob(f"{samples_directory}/mtm_w_0_1_BAK")
-
-
-      print(samples_with_addition_vector)
-      #fill in missing tiles with blanks
-      for sample in samples_with_addition_vector:
-         file_path = os.path.join(sample, f"{addition_vector_name}_vals.txt")
-
-         with open(file_path, "r") as file:
-            file_contents = file.read()
-         
-         file_contents = file_contents.replace("1", "0")
-
-         with open(file_path, "w") as file:
-            file.write(file_contents)
-
-      tile_range = [(0,i) for i in range(8)] + [(1,i) for i in range(4)]
-
-      for i,j in tile_range:
-         tile_dir = f"tiles/{app_name}/formatted/tensor_{addition_vector_name}_tile_{i}_{j}"
-
-         if not os.path.exists(tile_dir):
-            # replace_ones_with_zeros("samples/mat_mattransmul/tensor_d_dense_mtx.mtx")
-
-            # copy_over_to_mtx_dir = f"cp samples/mat_mattransmul/tensor_d_dense_gold_stash.mtx tiles/{app_name}/mtx/tensor_{addition_vector_name}_tile_{i}_{j}.mtx"
-            # os.system(copy_over_to_mtx_dir)
-
-            sample_tile_dir = samples_with_addition_vector[0]
-
-            if os.path.exists(sample_tile_dir):
-               shutil.copytree(sample_tile_dir, tile_dir)   
-
-   dump_gold_tiles = f"python3 scripts/tiling/generate_gold_mattransmul.py --yaml_name memory_config_extensor_17M_llb.yaml"
-   os.system(dump_gold_tiles)
-
-   # os.makedirs("tiles_compiled", exist_ok=True)
-   # copy_rename = f"cp -r tiles/{app_name} tiles_compiled/{app_name}_{datum}"
-   # print(copy_rename)
-   # os.system(copy_rename)
-
    docker_clean = f"docker exec {docker_path} rm -r /aha/garnet/tiles_{app_name}_{datum}"
    print(docker_clean)
    os.system(docker_clean)

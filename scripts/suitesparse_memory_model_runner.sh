@@ -31,7 +31,7 @@ mkdir -p $path
 mkdir -p $basedir/tiles/
 rm -rf $basedir/tiles/*
 
-./scripts/tiling/prepare_files.sh $fname.mtx $yaml_fname $fname
+./scripts/tiling/prepare_files.sh $fname.mtx $yaml_fname $fname $appname
 
 cd $basedir/sam/sim
 # python3 -m pytest test/advanced-simulator/test_$bench.py --ssname $fname -s --check-gold --skip-empty --nbuffer --yaml_name=$yaml_fname  --benchmark-json=$path/mem_model_$fname.json 
