@@ -25,6 +25,8 @@ def pytest_addoption(parser):
                      help="If nbuffering is enabled")
     parser.addoption("--back", action="store_true", default=False,
                      help="Whether backpressure is enabled")
+    parser.addoption("--memory-model", action="store_true", default=False,
+                     help="Whether memory model is wanted")
     parser.addoption("--depth", action="store", default=2,
                      help="fifo depth value")
     parser.addoption("--nnz-value", action="store", default=5000,
@@ -77,6 +79,11 @@ def backpressure(request):
 
 
 @pytest.fixture
+def memory_model(request):
+    return request.config.getoption("--memory-model")
+
+
+@pytest.fixture
 def skip_empty(request):
     return request.config.getoption("--skip-empty")
 
@@ -89,11 +96,6 @@ def nbuffer(request):
 @pytest.fixture
 def debug_sim(request):
     return request.config.getoption("--debug-sim")
-
-
-@pytest.fixture
-def backpressure(request):
-    return request.config.getoption("--back")
 
 
 @pytest.fixture

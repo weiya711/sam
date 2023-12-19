@@ -5,8 +5,13 @@ __pycache__/
 # Temporary output files
 *.swp
 *.swo
+*.swn
 *.txt
 *.out
+*.log
+
+# Generated Python Package files
+*.egg-info/
 
 # Files for MacOS and IDEs
 .DS_store
@@ -17,6 +22,8 @@ cmake-build-*/
 # Generated SAM Graphs
 *.gv
 
+venv/
+
 # Generated images
 *.svg
 *.png
@@ -25,6 +32,13 @@ cmake-build-*/
 # Output data files
 *.csv
 *.json
+
+# Tensor files
+*.mtx
+*.tns
+
+# Generated formatted tensor files
+tensor_*_mode_*
 
 # Generated folders
 build/
@@ -38,19 +52,20 @@ compiler/benchmark/
 # Generated SAM simulator tests
 */sim/test/apps/test_*.py
 
-*.gv
-
+# Tensor files
 *.mtx
 *.tns
 
-# Temporary matrices
+# Temporary or generated tensor directories 
 tmp_mat*/
-
-# Jupyter notebook checkpoints
-.ipynb_checkpoints/
-
-# Generated formatted tensor files
-tensor_*_mode_*
-
-# Tensor files
 tiles/
+synthetic/
+
+# Generated SAM simulator tests
+*/sim/test/apps/test_*.py
+
+# Temporary scripts
+download_suitesparse_partial.sh
+
+# Network Filesystem 
+.nfs*
