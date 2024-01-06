@@ -204,7 +204,15 @@ class ReadScannerNode(HWNode):
             # Can use dynamic information to assign inputs to compute nodes
             # since add/mul are commutative
             compute_conn = other.get_num_inputs()
-
+            # TODO: get rid of this hack
+            if 'Faddiexp' in other.op:
+                comment = edge.get_attributes()["comment"].strip('"')
+                if 'fp' in comment:
+                    compute_conn = 0
+                elif 'exp' in comment:
+                    compute_conn = 1
+                else:
+                    assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [
                     ([(rd_scan, "coord_out"), (compute, f"data{compute_conn}")], 17),
