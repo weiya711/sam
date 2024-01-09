@@ -14,6 +14,7 @@ from sam.sim.test.test import *
 from sam.sim.test.gold import *
 import os
 import csv
+from sam.sim.test.gen_gantt import gen_gantt
 
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -240,6 +241,8 @@ def test_matmul_kij_FINAL(samBench, ssname, cast, positive_only, check_gold, rep
     sample_dict = fiberlookup_Cj_11.return_statistics()
     for k in sample_dict.keys():
         extra_info["fiberlookup_Cj_11" + "/" + k] = sample_dict[k]
+
+    gen_gantt(extra_info, "matmul_kij")
 
     if check_gold:
         print("Checking gold...")

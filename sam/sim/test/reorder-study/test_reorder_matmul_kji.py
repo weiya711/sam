@@ -16,6 +16,8 @@ import os
 import csv
 from sam.onyx.generate_matrices import create_matrix_from_point_list, get_tensor_from_files
 import numpy
+from sam.sim.test.gen_gantt import gen_gantt
+
 cwd = os.getcwd()
 formatted_dir = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
 formatted_dir = os.getenv('FROSTT_FORMATTED_PATH', default=os.path.join(cwd, 'mode-formats'))
@@ -31,7 +33,6 @@ synthetic_dir = os.getenv('SYNTHETIC_PATH', default=os.path.join(cwd, 'synthetic
 @pytest.mark.synth
 @pytest.mark.parametrize("sparsity", [0.95])
 def test_reorder_matmul_kji(samBench, sparsity, check_gold, debug_sim, backpressure, depth, fill=0):
-
     # DCSC
     B_dirname = os.path.join(synthetic_dir, f"matrix/DCSC/B_random_sp_{sparsity}/")
     B_shape_filename = os.path.join(B_dirname, "tensor_B_mode_shape")
@@ -230,41 +231,44 @@ def test_reorder_matmul_kji(samBench, sparsity, check_gold, debug_sim, backpress
     extra_info["cycles"] = time_cnt
     extra_info["tensor_B_shape"] = B_shape
     extra_info["tensor_C_shape"] = C_shape
-    # sample_dict = intersectk_16.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["intersectk_16" + "_" + k] = sample_dict[k]
 
-    # sample_dict = repeat_Bj_12.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["repeat_Bj_12" + "_" + k] = sample_dict[k]
+    sample_dict = intersectk_16.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["intersectk_16" + "_" + k] = sample_dict[k]
 
-    # sample_dict = spaccumulator2_3.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["spaccumulator2_3" + "_" + k] = sample_dict[k]
+    sample_dict = repeat_Bj_12.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Bj_12" + "_" + k] = sample_dict[k]
 
-    # sample_dict = fiberwrite_Xvals_0.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
+    sample_dict = spaccumulator2_3.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["spaccumulator2_3" + "_" + k] = sample_dict[k]
 
-    # sample_dict = fiberwrite_X0_1.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["fiberwrite_X0_1" + "_" + k] = sample_dict[k]
+    sample_dict = fiberwrite_Xvals_0.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_Xvals_0" + "_" + k] = sample_dict[k]
 
-    # sample_dict = fiberwrite_X1_2.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["fiberwrite_X1_2" + "_" + k] = sample_dict[k]
+    sample_dict = fiberwrite_X0_1.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X0_1" + "_" + k] = sample_dict[k]
 
-    # sample_dict = repeat_Ci_8.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["repeat_Ci_8" + "_" + k] = sample_dict[k]
+    sample_dict = fiberwrite_X1_2.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["fiberwrite_X1_2" + "_" + k] = sample_dict[k]
 
-    # sample_dict = arrayvals_C_7.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["arrayvals_C_7" + "_" + k] = sample_dict[k]
+    sample_dict = repeat_Ci_8.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["repeat_Ci_8" + "_" + k] = sample_dict[k]
 
-    # sample_dict = arrayvals_B_6.return_statistics()
-    # for k in sample_dict.keys():
-    #     extra_info["arrayvals_B_6" + "_" + k] = sample_dict[k]
+    sample_dict = arrayvals_C_7.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_C_7" + "_" + k] = sample_dict[k]
+
+    sample_dict = arrayvals_B_6.return_statistics()
+    for k in sample_dict.keys():
+        extra_info["arrayvals_B_6" + "_" + k] = sample_dict[k]
+
+    gen_gantt(extra_info, "matmul_kji")
 
     if check_gold:
         print("Checking gold...")

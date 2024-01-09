@@ -44,15 +44,10 @@ class Array(Primitive):
     def get_fifo(self):
         return self.load_addrs
 
-    def add_child(self, child, branch=""):
-        if self.backpressure_en:
-            if child is not None:
-                self.backpressure.append(child)
-                self.branch.append(branch)
-
     def set_path(self, path):
         self.path = path
 
+    # FIXME(ritvik): fix the initialization of array
     def reintilialize_arrs(self, load_vals, fifo):
         self.arr = load_vals
         self.set_fifo(fifo)
@@ -110,12 +105,6 @@ class Array(Primitive):
                 store_tup = self.store_vals.pop(0)
                 self.store(store_tup[0], store_tup[1])
                 self.store_en = False
-
-    def fifo_available(self, br=""):
-        if self.backpressure_en:
-            if len(self.load_addrs) > 1:
-                return False
-        return True
 
     def update_ready(self):
         if self.backpressure_en:

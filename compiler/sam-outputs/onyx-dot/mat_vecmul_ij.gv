@@ -3,6 +3,7 @@ digraph SAM {
     14 [comment="type=fiberlookup,index=i,tensor=B,mode=0,format=compressed,src=true,root=true" label="FiberLookup i: B0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="i" tensor="B" mode="0" format="compressed" src="true" root="true"]
     13 [comment="type=broadcast" shape=point style=invis type="broadcast"]
     7 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
+    15 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
     1 [comment="type=fiberwrite,index=i,tensor=x,mode=0,format=compressed,segsize=2,crdsize=B0_dim,sink=true" label="FiberWrite i: x0\ncompressed" color=green3 shape=box style=filled type="fiberwrite" index="i" tensor="x" mode="0" format="compressed" segsize="2" crdsize="B0_dim" sink="true"]
     12 [comment="type=repsiggen,index=i" label="RepeatSignalGenerator i" color=cyan3 shape=box style=filled type="repsiggen" index="i"]
     11 [comment="type=repeat,index=i,tensor=c,root=true" label="Repeat i: c" color=cyan2 shape=box style=filled type="repeat" index="i" tensor="c" root="true"]
@@ -24,7 +25,7 @@ digraph SAM {
     8 -> 7 [label="crd_in-j" style=dashed type="crd" comment="in-j"]
     8 -> 5 [label="ref_out-B" style=bold type="ref" comment="out-B"]
     5 -> 4 [label="val" type="val"]
-    4 -> 3 [label="val" type="val"]
+    # 4 -> 3 [label="val" type="val"]
     3 -> 0 [label="val" type="val"]
     8 -> 6 [label="ref_out-c" style=bold type="ref" comment="out-c"]
     6 -> 4 [label="val" type="val"]
@@ -32,4 +33,8 @@ digraph SAM {
     14 -> 9 [label="ref" style=bold type="ref" comment=""]
     9 -> 8 [label="crd_in-B" style=dashed type="crd" comment="in-B"]
     9 -> 8 [label="ref_in-B" style=bold type="ref" comment="in-B"]
+
+    4 -> 15 [label="val_inner-j" type="val" comment="inner-j"]
+    15 -> 3 [label="val_inner-j" type="val" comment="inner-j"]
+    13 -> 15 [label="crd_i" style=dashed type="crd" comment="i"]
 }

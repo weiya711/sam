@@ -164,12 +164,8 @@ class CompressWrScan(WrScan):
         self.update_ready()
         if self.done:
             return
-            # self.arr.print_debug(name="vals")
-            # self.seg_arr.print_debug(name="seg")
             if self.debug:
                 print("RESET WR SCAN ", self.input)
-            # self.reset()
-            # self.done = False
             if self.debug:
                 print("post reset: ", self.arr.out_done())
 
