@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 
+
 def write_to_line(file_path, line_number, new_content):
     with open(file_path, 'r') as file:
         lines = file.readlines()
@@ -14,6 +15,7 @@ def write_to_line(file_path, line_number, new_content):
 
     with open(file_path, 'w') as file:
         file.writelines(lines)
+
 
 def check_keyword_in_output(command, keyword):
     # Run the command and redirect the output to a file
@@ -74,5 +76,5 @@ for _ in range(20):
             step = 10
         else:
             break
-    
+
 print("max tile size: ", tile_size)

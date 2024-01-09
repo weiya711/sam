@@ -16,7 +16,7 @@ inputCache = InputCacheSuiteSparse()
 
 for tensor in tiled_tensors:
     if any(x in tensor for x in vector_names):
-        #vector
+        # vector
         inputCache.load(tensor)
         formatwriter.writeout_separate_sparse_only()
     else:

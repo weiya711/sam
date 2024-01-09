@@ -62,17 +62,17 @@ if args.name is None:
     print("Please enter a tensor name")
     exit()
 
-#breakpoint()
+# breakpoint()
 if args.format is not None:
     assert args.format in formats
     levels = args.format[:-3]
 
     if os.path.exists('sam/FROST_FORMATTED/rand_tensor*'):
         shutil.rmtree('sam/FROST_FORMATTED/rand_tensor*')
-    
+
     if args.bench != "tensor3_elemadd" and args.bench != "tensor3_innerprod":
         assert args.bench is not None
-        #$FROSTT_FORMATTED_TACO_PATH
+        # $FROSTT_FORMATTED_TACO_PATH
         taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO"
         outdir_other_name = os.path.join(outdir_name, args.name, args.bench)
         # outdir_other_name = os.path.join(outdir_name, args.name, 'other', otherfile[:-4])
@@ -91,10 +91,10 @@ if args.format is not None:
 
             taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
-            #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+            # Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
             file1 = open(file_path_name, 'r')
-            shape = [0]*3
+            shape = [0] * 3
             lines = file1.readlines()
             count = 0
 
@@ -103,7 +103,7 @@ if args.format is not None:
                 shape[count] = int(line)
                 count += 1
             # coo = inputCache.load(tensor, False)
-            
+
             # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             tensorname = 'c'
             vec = scipy.sparse.random(shape[2], 1, density=args.density, data_rvs=np.ones)
@@ -114,8 +114,8 @@ if args.format is not None:
             # vec = scipy.sparse.random(shape[2], 1, data_rvs=np.ones)
             # vec = vec.toarray().flatten()
             # formatWriter.writeout_separate_vec(vec, out_path, tensorname)
-            #FormatWriter.writeout_separate_vec(vec, out_path, tensorname, tensorname)
-            #formatWriter.writeout_separate_sparse_only()
+            # FormatWriter.writeout_separate_vec(vec, out_path, tensorname, tensorname)
+            # formatWriter.writeout_separate_sparse_only()
         elif args.bench == "tensor3_ttm":
             outdir_orig_name = os.path.join(outdir_name, args.name, args.bench, args.format)
             outdir_orig_path = Path(outdir_orig_name)
@@ -123,10 +123,10 @@ if args.format is not None:
 
             taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
-            #Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
+            # Need this line? formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
             file1 = open(file_path_name, 'r')
-            shape = [0]*3
+            shape = [0] * 3
             lines = file1.readlines()
             count = 0
 
@@ -136,7 +136,7 @@ if args.format is not None:
                 count += 1
             # coo = inputCache.load(tensor, False)
             dimension_k = random.randint(min(shape), 10)
-            dimension_l = shape[2] 
+            dimension_l = shape[2]
             dimension_j = shape[1]
 
             # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
@@ -148,8 +148,8 @@ if args.format is not None:
             # vec = scipy.sparse.random(shape[2], 1, data_rvs=np.ones)
             # vec = vec.toarray().flatten()
             # formatWriter.writeout_separate_vec(vec, out_path, tensorname)
-            #FormatWriter.writeout_separate_vec(vec, out_path, tensorname, tensorname)
-            #formatWriter.writeout_separate_sparse_only()
+            # FormatWriter.writeout_separate_vec(vec, out_path, tensorname, tensorname)
+            # formatWriter.writeout_separate_sparse_only()
         elif args.bench == "tensor3_mttkrp":
             outdir_orig_name = os.path.join(outdir_name, args.name, args.bench, args.format)
             outdir_orig_path = Path(outdir_orig_name)
@@ -157,10 +157,10 @@ if args.format is not None:
 
             taco_format_orig_filename = "/home/avb03/sam/FROST_FORMATTED_TACO/" + args.name + "_" + levels + '.txt'
             parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format)
-            
+
             file_path_name = os.path.join(outdir_orig_name, "tensor_B_mode_shape")
             file1 = open(file_path_name, 'r')
-            shape = [0]*3
+            shape = [0] * 3
             lines = file1.readlines()
             count = 0
 
@@ -168,7 +168,7 @@ if args.format is not None:
             for line in lines:
                 shape[count] = int(line)
                 count += 1
-            
+
             dimension_i = shape[0]
             dimension_k = shape[1]
             dimension_l = shape[2]
@@ -191,7 +191,7 @@ if args.format is not None:
         # parse_taco_format(taco_format_orig_filename, outdir_other_name, tensorname, args.format, hw_filename=args.hw)
 
     else:
-        #this code is used for: tensor3_elemadd, tensor3_innerprod
+        # this code is used for: tensor3_elemadd, tensor3_innerprod
         taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
         taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
 

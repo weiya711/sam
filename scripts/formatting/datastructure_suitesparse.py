@@ -1,3 +1,5 @@
+from sam.util import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
+from util.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 import argparse
 import os
 import shutil
@@ -10,8 +12,6 @@ import sys
 # the mock-0.3.1 dir contains testcase.py, testutils.py & mock.py
 sys.path.append('/home/avb03/sam/scripts')
 
-from util.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
-from sam.util import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
 
 all_formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense", "denseT"]
 formats = ["coo", "cooT", "csr", "dcsr", "dcsc", "csc", "dense"]
@@ -34,7 +34,6 @@ def write_datastructure_tiles(args, tensor, out_path, tile_name):
     coo = inputCache.load(tensor, False)
     formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=False)
     # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss01", hw=args.hw)
-
 
 
 def write_datastructure_bench(args, tensor, out_path, tiles=None):

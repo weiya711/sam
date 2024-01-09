@@ -58,7 +58,7 @@ if args.format is not None:
     levels = args.format[:-3]
     if args.other:
         assert args.bench is not None
-        
+
         print("here to get other file names\n")
 
         otherfileNames = [f for f in os.listdir(taco_format_dirname) if

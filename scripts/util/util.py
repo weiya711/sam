@@ -535,7 +535,7 @@ class FormatWriter:
                 ofile.write(array_newline_str(vec_shape))
 
     def writeout_separate_sparse_only(self, coo, dir_path, tensorname, format_str="ss01", hw=True):
-        
+
         if format_str == "ss01":
             dcsr_dir = Path(dir_path)
             dcsr_dir.mkdir(parents=True, exist_ok=True, mode=0o777)

@@ -37,9 +37,11 @@ def safeCastScipyTensorToInts(tensor):
         data[i] = round_sparse(tensor.data[i])
     return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
 
+
 def constructOtherVecKey(tensorName, variant, sparsity=0.001):
     path = os.getenv('TACO_TENSOR_PATH')
     return f"{path}/{tensorName}-vec_{variant}-{sparsity}.tns"
+
 
 def constructOtherMatKey(tensorName, variant, sparsity=0.001):
     path = os.getenv('TACO_TENSOR_PATH')
@@ -47,6 +49,8 @@ def constructOtherMatKey(tensorName, variant, sparsity=0.001):
 
 # ScipyTensorShifter shifts all elements in the last mode
 # of the input scipy/sparse tensor by one.
+
+
 class ScipyTensorShifter:
     def __init__(self):
         pass

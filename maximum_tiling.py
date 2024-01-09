@@ -5,8 +5,10 @@ import scipy
 import os
 import re
 
+
 class EarlyReturn():
     pass
+
 
 def get_files_from_dir(path, operands):
     operand_files = {}
@@ -14,6 +16,8 @@ def get_files_from_dir(path, operands):
         operand_files[operand] = glob.glob(os.path.join(path, f"*{operand}*.mtx"))
 
     return operand_files
+
+
 def get_tile_id(string):
     indices = [m.start() for m in re.finditer("tile", string)]
     if len(indices) >= 2:
@@ -21,6 +25,7 @@ def get_tile_id(string):
         substring = substring.rstrip(".mtx")
         numbers = substring.split("_")
     return numbers
+
 
 def pair_tiles(app_name):
     path = f"tiles/{app_name}/mtx"
@@ -32,7 +37,7 @@ def pair_tiles(app_name):
         operand_files = get_files_from_dir(path, operands)
         b_tensors = operand_files["B"]
         c_tensors = operand_files["C"]
-        
+
         tile = 0
         for b in b_tensors:
             for c in c_tensors:
@@ -93,7 +98,8 @@ def pair_tiles(app_name):
 
                 for d in d_tensors:
                     d_loc = get_tile_id(d)
-                    if(c_loc[1] == d_loc[0] and c_loc[3] == d_loc[2] and b_loc[1] == d_loc[1] and b_loc[3] == d_loc[3] and b_loc[0] == c_loc[0] and b_loc[2] == c_loc[2]):
+                    if (c_loc[1] == d_loc[0] and c_loc[3] == d_loc[2] and b_loc[1] == d_loc[1] and
+                            b_loc[3] == d_loc[3] and b_loc[0] == c_loc[0] and b_loc[2] == c_loc[2]):
                         tile_pairing[tile] = [b, c, d]
                         tile += 1
     elif "mat_vecmul_iter" in app_name:
@@ -125,19 +131,19 @@ def pair_tiles(app_name):
                             continue
                         for f in f_tensors:
                             f_loc = get_tile_id(f)
-                            if (d_loc[1] == e_loc[0] and d_loc[3] == e_loc[2] and c_loc[1] == d_loc[0] and c_loc[3] == d_loc[2] and b_loc[1] == c_loc[0] and b_loc[3] == c_loc[2] and e_loc[1] == f_loc[0] and e_loc[3] == f_loc[1]):
+                            if (d_loc[1] == e_loc[0] and d_loc[3] == e_loc[2] and c_loc[1] == d_loc[0] and c_loc[3] == d_loc[2] and
+                                    b_loc[1] == c_loc[0] and b_loc[3] == c_loc[2] and e_loc[1] == f_loc[0] and e_loc[3] == f_loc[1]):
                                 tile_pairing[tile] = [b, c, d, e, f]
                                 tile += 1
 
-
-
-
     return tile_pairing
+
 
 def read_mtx(mtx_path):
     matrix = scipy.io.mmread(mtx_path)
     arr = np.array(matrix.todense())
     return arr
+
 
 def compute_outputs(tile_pairing, app_name, limit=900):
     for key, value in tile_pairing.items():
@@ -147,7 +153,7 @@ def compute_outputs(tile_pairing, app_name, limit=900):
             C_mat = np.transpose(C_mat)
             out = np.matmul(B_mat, C_mat)
             if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or np.count_nonzero(C_mat) > limit:
-            # if np.any(out):
+                # if np.any(out):
                 print("tile = ", key)
                 print("B_tile_ID = ", value[0])
                 print("C_tile_ID = ", value[1])
@@ -160,7 +166,7 @@ def compute_outputs(tile_pairing, app_name, limit=900):
             out = np.multiply(B_mat, C_mat)
             # if np.any(out):
             if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or np.count_nonzero(C_mat) > limit:
-            # if np.count_nonzero(out) > limit or (np.count_nonzero(B_mat) + np.count_nonzero(C_mat)) > limit:
+                # if np.count_nonzero(out) > limit or (np.count_nonzero(B_mat) + np.count_nonzero(C_mat)) > limit:
                 print("tile = ", key)
                 print("B_tile_ID = ", value[0])
                 print("C_tile_ID = ", value[1])
@@ -174,8 +180,9 @@ def compute_outputs(tile_pairing, app_name, limit=900):
 
             out = np.add(np.add(B_mat, C_mat), D_mat)
             # if np.any(out):
-            if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or np.count_nonzero(C_mat) > limit or np.count_nonzero(D_mat) > limit:
-            # if np.count_nonzero(out) > limit or (np.count_nonzero(B_mat) + np.count_nonzero(C_mat)) > limit:
+            if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or np.count_nonzero(
+                    C_mat) > limit or np.count_nonzero(D_mat) > limit:
+                # if np.count_nonzero(out) > limit or (np.count_nonzero(B_mat) + np.count_nonzero(C_mat)) > limit:
                 print("tile = ", key)
                 print("B_tile_ID = ", value[0])
                 print("C_tile_ID = ", value[1])
@@ -189,7 +196,8 @@ def compute_outputs(tile_pairing, app_name, limit=900):
             D_mat = read_mtx(value[2])
             D_mat = np.transpose(D_mat)
             out = np.sum(np.multiply(np.matmul(C_mat, D_mat), B_mat))
-            if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or np.count_nonzero(C_mat) > limit or np.count_nonzero(D_mat) > limit:
+            if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or np.count_nonzero(
+                    C_mat) > limit or np.count_nonzero(D_mat) > limit:
                 print("tile = ", key)
                 print("B_tile_ID = ", value[0])
                 print("C_tile_ID = ", value[1])
@@ -207,7 +215,9 @@ def compute_outputs(tile_pairing, app_name, limit=900):
             f_mat = np.transpose(f_mat)
             out = np.matmul(np.matmul(np.matmul(np.matmul(B_mat, C_mat), D_mat), E_mat), f_mat)
             if np.any(out):
-            # if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or np.count_nonzero(C_mat) > limit or np.count_nonzero(D_mat) > limit or np.count_nonzero(E_mat) > limit or np.count_nonzero(f_mat) > limit:   
+                # if np.count_nonzero(out) > limit or np.count_nonzero(B_mat) > limit or
+                # np.count_nonzero(C_mat) > limit or np.count_nonzero(D_mat) > limit or
+                # np.count_nonzero(E_mat) > limit or np.count_nonzero(f_mat) > limit:
                 print("tile = ", key)
                 print("B_tile_ID = ", value[0])
                 print("C_tile_ID = ", value[1])
@@ -219,7 +229,8 @@ def compute_outputs(tile_pairing, app_name, limit=900):
                 breakpoint()
                 return EarlyReturn()
     return None
-            
+
+
 def find_optimal_tilesize(app_name, datum, initial=30, step_size=10):
     tile_size = initial
     max_tile_size = initial
@@ -236,15 +247,15 @@ def find_optimal_tilesize(app_name, datum, initial=30, step_size=10):
         if isinstance(exit_status, EarlyReturn):
             max_tile_size = tile_size - step_size
             return max_tile_size, prev_tile_pairing
-        
+
         tile_size += step_size
         print("***********************")
         print("tile size = ", tile_size)
         print("***********************")
         prev_tile_pairing = tile_pairing
-    
+
     return tile_size, prev_tile_pairing
-       
+
 
 if __name__ == "__main__":
     max_list = {}
@@ -256,10 +267,10 @@ if __name__ == "__main__":
     # compute_outputs(tile_pairing, app_name)
 
     max_tile_size, tile_pairing = find_optimal_tilesize(app_name, datum, initial=40, step_size=10)
-    print("-"*20)
+    print("-" * 20)
     print(f"MAX TILESIZE for {app_name}, {datum}: {max_tile_size}")
     print(f"NUMBER OF TILES: {len(tile_pairing.keys())}")
-    print("-"*20)
+    print("-" * 20)
 
     max_list[datum] = [max_tile_size, len(tile_pairing.keys())]
 

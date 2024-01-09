@@ -27,7 +27,7 @@ SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=r
             "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_mattransmul": "X(i,j)=B(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
-            "mat_vecmul_ij" : "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
+            "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
             "mat_residual": "X(i,j)=b(i)-C(i,j)*d(j) -f=X:ss -f=C:ss -f=b:ss:0 -f=d:ss:0  -s=reorder(i,j)",
             "mat_sddmm": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:dd -f=D:dd:1,0 -s=reorder(i,j,k)",
             "mat_elemadd3": "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss",
@@ -322,7 +322,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("writing other vector...")
         tensorName = args.input_tensor
         variant = "mode1"
-        path = constructOtherVecKey(tensorName,variant)
+        path = constructOtherVecKey(tensorName, variant)
         tensor_c_from_path = FrosttTensor(path)
         tensor_c = tensor_c_from_path.load().todense()
 
@@ -354,7 +354,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         if other_nonempty:
             tensor_b[0] = 1
             tensor_d[0] = 1
-        
+
         tensors.insert(0, tensor_b)
         tensors.append(tensor_d)
 
@@ -362,7 +362,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("Writing other tensors...")
         tensorName = args.input_tensor
         # c(j) use mode1
-        
+
         # variant = "mode1"
         # path = constructOtherVecKey(tensorName,variant)
         # tensor_c_from_path = FrosttTensor(path)
@@ -370,7 +370,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
 
         # print("TENSOR SHAPE: ", tensor.shape)
         # print("TENSOR_C SHAPE: ", tensor_c.shape)
- 
+
         rows, cols = tensor.shape
         tensor_c = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
 

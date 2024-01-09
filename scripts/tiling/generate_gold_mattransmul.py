@@ -11,6 +11,7 @@ import argparse
 from pathlib import Path
 from scripts.util.util import round_sparse
 
+
 def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname, out_format="ss01"):
     # CSR
     formatted_dir = f"./tiles/mat_mattransmul/mtx"
@@ -54,7 +55,6 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
             itr += 1
         B_scipy = B_scipy.tocsr()
 
-
         C_scipy = scipy.io.mmread(C_filename)
         # print(C_filename)
         # print("\nC_scipy: ", C_scipy)
@@ -81,7 +81,7 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
         # gold_nd = (B_scipy @ C_scipy)
         # gold_nd = B_scipy.dot(C_scipy)
 
-        #constants
+        # constants
         alpha = 2
         beta = 2
 
@@ -89,7 +89,7 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
         print("C_scipy.shape: ", C_scipy.shape)
         print("d_scipy.shape: ", d_scipy.shape)
 
-        gold_nd = alpha*(B_scipy @ C_scipy) + beta * d_scipy
+        gold_nd = alpha * (B_scipy @ C_scipy) + beta * d_scipy
         # print(gold_nd)
 
         gold_out = gold_nd.tocoo()
@@ -113,14 +113,14 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
         # gold_nd = (B_scipy @ C_scipy)
         # gold_nd = B_scipy.dot(C_scipy)
 
-        #constants
+        # constants
         alpha = 2
         beta = 2
 
         # print(d_scipy.todense())
         gold_nd = beta * d_scipy
         # print(gold_nd)
-        if(np.count_nonzero(gold_nd.todense()) == 0):
+        if (np.count_nonzero(gold_nd.todense()) == 0):
             print("output is all zero")
             return
 
@@ -130,7 +130,6 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
         scipy.io.mmwrite(
             dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_b[3]) + "_" + str(tile_crd_b[2]) + "_" + str(
                 tile_crd_c[0]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_d[0]) + "_" + str(tile_crd_d[1]) + ".mtx", gold_out)
-
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ from scripts.util.util import round_sparse
 
 app_name = "mat_mattransmul"
 
+
 def generate_gold_matmul_tiled(tile_crd_b, tile_crd_c, dirname, out_format="ss01"):
     # CSR
     formatted_dir = f"./tiles/{app_name}/mtx"

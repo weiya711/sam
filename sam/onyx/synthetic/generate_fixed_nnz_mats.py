@@ -3,6 +3,7 @@ import scipy.sparse
 import numpy as np
 import argparse
 
+
 def generate_mat(nnz, dim):
     return scipy.sparse.random(dim, dim, nnz / (dim**2), data_rvs=np.ones)
 
@@ -18,9 +19,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create some random matrices of given nnz and dim")
     parser.add_argument('--nnz', type=int, nargs='+', help='nnz')
     parser.add_argument('--dim', type=int, nargs='+', help='dim')
-    parser.add_argument('--extensor', action='store_true', help='generate extensor dims and nnzs') 
+    parser.add_argument('--extensor', action='store_true', help='generate extensor dims and nnzs')
     args = parser.parse_args()
-    
 
     if args.extensor:
         dims = list(range(1024, 15721, 1336))
