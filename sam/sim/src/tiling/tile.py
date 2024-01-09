@@ -33,7 +33,8 @@ SAM_STRS = {
     "mat_sddmm": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:dd -f=D:dd:1,0 -s=reorder(i,j,k)",
     "mat_elemadd3": "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss",
     "mat_mask_tri": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)",
-    "mat_vecmul_iter": "X(i,j)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) -f=X:ss -f=B:ss -f=C:ss -f=D:ss -f=E:ss -f=f:s -s=reorder(i,j,k,l,m)"
+    "mat_vecmul_iter": "X(i,j)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) \
+-f=X:ss -f=B:ss -f=C:ss -f=D:ss -f=E:ss -f=f:s -s=reorder(i,j,k,l,m)"
 }
 
 
