@@ -15,7 +15,7 @@ np.random.seed(seed_value)
 
 # generating matrix dimensions and storing results in an array, array size is 2, 1 matrix and 2 dimensions per matrix
 
-# conditions which need to be met for each set of 3 tensor dimensions: no dimension can't be 0, 
+# conditions which need to be met for each set of 3 tensor dimensions: no dimension can't be 0,
 # and can't have a tensor with more than 900 elements (meaning dimension1*dimension2*dimension3 <= 900)
 # note try to make it so no dimension is 1 or 2 (gives slight issues later, esp 2nd and 3rd dimensions)
 dimensions = [0] * 2
@@ -129,7 +129,7 @@ for i in range(1):
 
 # first step: one randomly generated 3D tensor given first set dimensions
 # Note: generally if 2/3 elems in a tensor is 0, it can be considered sparse
-# approach: 2/3 of the time add in a 0, 1/3 of the time add in an integer from 0 to 100 
+# approach: 2/3 of the time add in a 0, 1/3 of the time add in an integer from 0 to 100
 # (use randint to generate num from 1 to 9 inclusive, and depending on where the num is, insert number or not)
 # print('dimensions:')
 # print(dimensions[0])

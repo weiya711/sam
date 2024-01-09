@@ -4,7 +4,7 @@ import glob
 import shutil
 from scripts.util.util import FormatWriter, InputCacheSuiteSparse
 
-# PARAMS 
+# PARAMS
 tile = True
 app_name = "tensor3_ttv"
 vector_names = ['c']

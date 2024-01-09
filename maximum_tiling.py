@@ -131,10 +131,10 @@ def pair_tiles(app_name):
                             continue
                         for f in f_tensors:
                             f_loc = get_tile_id(f)
-                            if (d_loc[1] == e_loc[0] and d_loc[3] == e_loc[2] and 
+                            if (d_loc[1] == e_loc[0] and d_loc[3] == e_loc[2] and
                                 c_loc[1] == d_loc[0] and c_loc[3] == d_loc[2] and
-                                b_loc[1] == c_loc[0] and b_loc[3] == c_loc[2] and 
-                                e_loc[1] == f_loc[0] and e_loc[3] == f_loc[1]):
+                                b_loc[1] == c_loc[0] and b_loc[3] == c_loc[2] and
+                                    e_loc[1] == f_loc[0] and e_loc[3] == f_loc[1]):
                                 tile_pairing[tile] = [b, c, d, e, f]
                                 tile += 1
 

@@ -10,7 +10,7 @@ from sam.util import SUITESPARSE_PATH
 # Usage: python3 setup_tiling_mat.py <app_name> <data_file> <tile_size> <docker_path>
 
 
-# PARAMS 
+# PARAMS
 data = [sys.argv[2]]
 tilesizes = [int(sys.argv[3])]
 app_name = sys.argv[1]
