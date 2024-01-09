@@ -99,13 +99,15 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.RepSigGen"
                 elif n_type == "repeat":
                     hw_nt = f"HWNodeType.Repeat"
-                elif n_type == "mul" or n_type == "add" or n_type == "max":
+                elif n_type == "mul" or n_type == "add" or n_type == "max" or n_type == "and":
+                    hw_nt = f"HWNodeType.Compute"
+                elif n_type == "fgetfint" or n_type == "fgetffrac" or n_type == "faddiexp":
+                    hw_nt = f"HWNodeType.Compute"
+                elif n_type == "fp_mul" or n_type == "fp_max" or n_type == "fp_add":
                     hw_nt = f"HWNodeType.Compute"
                 elif n_type == "reduce":
                     hw_nt = f"HWNodeType.Reduce"
                 elif n_type == "intersect" or n_type == "union":
-                    if n_type == "union":
-                        print("UNION BLOCK")
                     hw_nt = f"HWNodeType.Intersect"
                 elif n_type == "crddrop":
                     hw_nt = f"HWNodeType.Merge"
@@ -1016,7 +1018,7 @@ class SAMDotGraph():
     def annotate_IO_nodes(self):
         original_nodes = self.graph.get_nodes()
         output_nodes = ['x', 'X']
-        input_nodes = ['c', 'C', 'b', 'B', 'd', 'D', 'e', 'E', 'f', 'F']
+        input_nodes = ['c', 'C', 'b', 'B', 'd', 'D', 'e', 'E', 'f', 'F', 'exp']
         exclude_nodes = ['b', 'B']
         for node in original_nodes:
             node_attrs = node.get_attributes()

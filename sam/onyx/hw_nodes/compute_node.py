@@ -1,4 +1,5 @@
 from sam.onyx.hw_nodes.hw_node import *
+from lassen.utils import float2bfbin
 
 
 class ComputeNode(HWNode):
@@ -8,7 +9,6 @@ class ComputeNode(HWNode):
         self.num_outputs = 1
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
-
         self.op = op
 
     def connect(self, other, edge, kwargs=None):
@@ -119,10 +119,16 @@ class ComputeNode(HWNode):
             other_conn = other.get_num_inputs()
             pe = self.get_name()
             # TODO: remove hack eventually
-            if 'Max' in other.op:
+            if 'Max 0' in other.op:
                 other_conn = 1
-            else:
-                other_conn = other.get_num_inputs()
+            elif 'Faddiexp' in other.op:
+                comment = edge.get_attributes()["comment"].strip('"')
+                if 'fp' in comment:
+                    other_conn = 0
+                elif 'exp' in comment:
+                    other_conn = 1
+                else:
+                    assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
                     ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
@@ -176,10 +182,38 @@ class ComputeNode(HWNode):
             op_code = 2
         elif c_op == 'max':
             op_code = 4
+        elif c_op == 'and':
+            op_code = 5
+        elif c_op == 'fp_mul':
+            op_code = 6
+        elif c_op == 'fgetfint':
+            op_code = 7
+        elif c_op == 'fgetffrac':
+            op_code = 8
+        elif c_op == 'faddiexp':
+            op_code = 9
+        elif c_op == 'fp_max':
+            op_code = 10
+        elif c_op == 'fp_add':
+            op_code = 11
+
+        rb_const = None
+        if "rb_const" in attributes:
+            # the b operand of the op is a constant
+            rb_const = attributes["rb_const"].strip('"')
+            if "." in rb_const:
+                # constant is a floating point
+                rb_const = float(rb_const)
+                rb_const = int(float2bfbin(rb_const), 2)
+            else:
+                # it is a int
+                rb_const = int(rb_const)
+
         cfg_kwargs = {
             'op': op_code,
             'use_dense': use_dense,
             'pe_only': pe_only,
-            'pe_in_external': pe_in_external
+            'pe_in_external': pe_in_external,
+            'rb_const': rb_const
         }
-        return (op_code, use_dense, pe_only, pe_in_external), cfg_kwargs
+        return (op_code, use_dense, pe_only, pe_in_external, rb_const), cfg_kwargs
