@@ -93,11 +93,13 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
         # print(gold_nd)
 
         gold_out = gold_nd.tocoo()
-        assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[1] and tile_crd_b[0] == tile_crd_d[0] and tile_crd_b[2] == tile_crd_d[1]
+        assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[1] 
+                and tile_crd_b[0] == tile_crd_d[0] and tile_crd_b[2] == tile_crd_d[1]
         # assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[2]
         scipy.io.mmwrite(
-            dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_b[3]) + "_" + str(tile_crd_b[2]) + "_" + str(
-                tile_crd_c[0]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_d[0]) + "_" + str(tile_crd_d[1]) + ".mtx", gold_out)
+            dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_b[3]) + "_" 
+                        + str(tile_crd_b[2]) + "_" + str(tile_crd_c[0]) + "_" + str(tile_crd_c[1]) 
+                        + "_" + str(tile_crd_d[0]) + "_" + str(tile_crd_d[1]) + ".mtx", gold_out)
     elif os.path.exists(d_filename):
         d_scipy = scipy.io.mmread(d_filename)
         # print("\nd_scipy: ", d_scipy)
@@ -125,11 +127,14 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
             return
 
         gold_out = gold_nd.tocoo()
-        # assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[1] and tile_crd_b[0] == tile_crd_d[0] and tile_crd_b[2] == tile_crd_d[1]
+        # assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[1] 
+        # and tile_crd_b[0] == tile_crd_d[0] and tile_crd_b[2] == tile_crd_d[1]
         # assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[2]
         scipy.io.mmwrite(
-            dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_b[3]) + "_" + str(tile_crd_b[2]) + "_" + str(
-                tile_crd_c[0]) + "_" + str(tile_crd_c[1]) + "_" + str(tile_crd_d[0]) + "_" + str(tile_crd_d[1]) + ".mtx", gold_out)
+            dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) 
+            + "_" + str(tile_crd_b[3]) + "_" + str(tile_crd_b[2]) + "_" 
+            + str(tile_crd_c[0]) + "_" + str(tile_crd_c[1]) + "_" 
+            + str(tile_crd_d[0]) + "_" + str(tile_crd_d[1]) + ".mtx", gold_out)
 
 
 if __name__ == "__main__":

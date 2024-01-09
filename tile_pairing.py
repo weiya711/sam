@@ -125,8 +125,6 @@ elif app_name == "mat_elemadd" or app_name == "mat_elemmul":
                 #     "fast"],
                 #     text=True)
 
-                # shutil.copy("/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/output_gold.npy", "/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/bin")
-                # shutil.copytree("/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/bin", f"/aha/garnet/SPARSE_TESTS/{tile_str}")
                 tile = tile + 1
                 # print("we are on tile ", tile)
 elif app_name == "mat_mattransmul":
@@ -489,8 +487,6 @@ elif app_name == "mat_elemadd3":
                     #     "fast"],
                     #     text=True)
 
-                    # shutil.copy("/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/output_gold.npy", "/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/bin")
-                    # shutil.copytree("/aha/garnet/SPARSE_TESTS/GLB_DIR/matmul_ijk_combined_seed_tile1/bin", f"/aha/garnet/SPARSE_TESTS/{tile_str}")
                     tile = tile + 1
                     # print("we are on tile ", tile)
 

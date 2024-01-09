@@ -1,38 +1,36 @@
 import os
-import sys
-import glob
 
 
 def write_to_line(file_path, line_number, new_content):
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         lines = file.readlines()
 
     if line_number > len(lines) or line_number < 1:
         # Line number is out of range
         return
 
-    lines[line_number - 1] = new_content + '\n'
+    lines[line_number - 1] = new_content + "\n"
 
-    with open(file_path, 'w') as file:
+    with open(file_path, "w") as file:
         file.writelines(lines)
 
 
 def check_keyword_in_output(command, keyword):
     # Run the command and redirect the output to a file
-    os.system(f'{command} > output.txt')
+    os.system(f"{command} > output.txt")
 
     # Read the contents of the file
-    with open('output.txt', 'r') as file:
+    with open("output.txt", "r") as file:
         output = file.read()
 
     # Check if the keyword is present in the output
     if keyword in output:
         # Optionally, you can delete the output file
-        os.remove('output.txt')
+        os.remove("output.txt")
         return True
     else:
         # Optionally, you can delete the output file
-        os.remove('output.txt')
+        os.remove("output.txt")
         return False
 
 
@@ -60,7 +58,7 @@ for _ in range(20):
     run_count = "python3 count_nnz_tiling.py"
     print(run_count)
 
-    if (check_keyword_in_output(run_count, "error")) == False:
+    if (check_keyword_in_output(run_count, "error")) is False:
         tile_size += step
         step *= 2
     else:
