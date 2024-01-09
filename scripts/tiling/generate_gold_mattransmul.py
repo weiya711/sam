@@ -94,7 +94,7 @@ def generate_gold_mattransmul_tiled(tile_crd_b, tile_crd_c, tile_crd_d, dirname,
 
         gold_out = gold_nd.tocoo()
         assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[1] 
-                and tile_crd_b[0] == tile_crd_d[0] and tile_crd_b[2] == tile_crd_d[1]
+            and tile_crd_b[0] == tile_crd_d[0] and tile_crd_b[2] == tile_crd_d[1]
         # assert tile_crd_b[1] == tile_crd_c[0] and tile_crd_b[3] == tile_crd_c[2]
         scipy.io.mmwrite(
             dirname + "out_" + str(tile_crd_b[0]) + "_" + str(tile_crd_b[1]) + "_" + str(tile_crd_b[3]) + "_" 
