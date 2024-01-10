@@ -1,5 +1,5 @@
 from sam.util import SUITESPARSE_FORMATTED_PATH, ScipyTensorShifter
-from util.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
+from scripts.util.util import FormatWriter, SuiteSparseTensor, InputCacheSuiteSparse
 import argparse
 import os
 import shutil
