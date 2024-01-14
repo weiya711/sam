@@ -290,7 +290,7 @@ class ReadScannerNode(HWNode):
             lookup = 1
         elif attributes['mode'].strip('"') == 'vals':
             # stop_lvl = 0
-            lookup = 0
+            lookup = 1
         else:
             # stop_lvl = int(attributes['mode'].strip('"'))
 
