@@ -54,7 +54,7 @@ if args.other:
     taco_format_dirname = os.path.join(taco_format_dirname, "other-formatted-taco")
 # elif args.tiles is not None:
 #     # FIXME: Change this to be 'tns' for frostt tensors
-#     outdir_name = os.path.join(args.tiles, args.bench, "mtx") 
+#     outdir_name = os.path.join(args.tiles, args.bench, "mtx")
 #     taco_format_dirname = os.getenv('FROSTT_FORMATTED_TACO_PATH')
 #     if taco_format_dirname is None:
 #         print("Please set the FROSTT_FORMATTED_TACO_PATH environment variable")
@@ -117,14 +117,14 @@ if args.format is not None:
             for line in Lines:
                 shape[count] = int(line)
                 count += 1
-            # tensor = 
+            # tensor =
             # inputCache = InputCacheSuiteSparse()
             # coo = inputCache.load(tensor, False)
             tensorname = 'c'
             # formatWriter.writeout_separate_sparse_only(coo, out_path, tensorname, format_str="ss10")
             vec = scipy.sparse.random(shape[2], 1, density=args.density, data_rvs=np.ones)
             vec = vec.toarray().flatten()
-            #need to uncomment if running without tiling**
+            # need to uncomment if running without tiling**
             # formatWriter.writeout_separate_vec(vec, outdir_other_path, tensorname)
 
             # vec = scipy.sparse.random(shape[2], 1, data_rvs=np.ones)
@@ -150,7 +150,7 @@ if args.format is not None:
                 count += 1
             # coo = inputCache.load(tensor, False)
             print("SHAPE: ", shape)
-            if(min(shape) > 10):
+            if (min(shape) > 10):
                 dimension_k = random.randint(10, min(shape))
             else:
                 dimension_k = random.randint(min(shape), 10)
@@ -159,7 +159,7 @@ if args.format is not None:
             # formatWriter.writeout_separate_sparse_only(coo, dirname, tensorname, format_str="ss10")
             tensorname = 'C'
             matrix = scipy.sparse.random(dimension_k, dimension_l, density=args.density, data_rvs=np.ones).toarray()
-            #NEED TO UNCOMMENT FOLLOWING LINE IF NOT RUNNING WITH TILING**
+            # NEED TO UNCOMMENT FOLLOWING LINE IF NOT RUNNING WITH TILING**
             # formatWriter.writeout_separate_sparse_only(matrix, outdir_other_name, tensorname)
 
         elif args.bench == "tensor3_mttkrp":
@@ -202,7 +202,7 @@ if args.format is not None:
         taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + "/" + args.name + "_" + levels + '.txt'
         parse_taco_format(taco_format_orig_filename, outdir_orig_name, 'B', args.format, hw_filename=args.hw)
 
-        #COMMENTED OUT FOR TILING FLOW, WOULD NEED TO UNCOMMENT IF RUNNING WITHOUT TILING
+        # COMMENTED OUT FOR TILING FLOW, WOULD NEED TO UNCOMMENT IF RUNNING WITHOUT TILING
         # # this code is used for: tensor3_elemadd, tensor3_innerprod
         # taco_format_orig_filename = os.path.join(taco_format_dirname, args.name + "_" + levels + '.txt')
         # taco_format_shift_filename = os.path.join(taco_format_dirname, args.name + '_shift_' + levels + '.txt')
@@ -216,6 +216,7 @@ if args.format is not None:
         #     outdir_shift_name = os.path.join(outdir_name, args.name, args.bench, args.format)
         #     outdir_shift_path = Path(outdir_shift_name)
         #     outdir_shift_path.mkdir(parents=True, exist_ok=True)
-        #     # taco_format_shift_filename = "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
+        #     taco_format_shift_filename =
+        #     "/nobackup/jadivara/sam/FROST_FORMATTED_TACO/" + args.name + "_shift_" + levels + '.txt'
         #     taco_format_orig_filename = os.getenv('FROSTT_FORMATTED_TACO_PATH') + args.name + "_" + levels + '.txt'
         #     parse_taco_format(taco_format_shift_filename, outdir_shift_name, 'C', args.format, hw_filename=args.hw)
