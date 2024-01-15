@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import scipy.sparse
 import scipy.io
@@ -13,29 +14,25 @@ import sys
 
 from pathlib import Path
 
-from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, ScipyTensorShifter, \
+from sam.util import SUITESPARSE_PATH, SuiteSparseTensor, InputCacheSuiteSparse, PydataTensorShifter, ScipyTensorShifter, \
     FROSTT_PATH, FrosttTensor, PydataSparseTensorDumper, InputCacheTensor, constructOtherMatKey, constructOtherVecKey
 from sam.sim.src.tiling.process_expr import parse_all
 
-# FIXME: This should not be here... Set your SAM_HOME directory
-custom_path = '/home/avb03/sam'
-sys.path.append(custom_path)
-
-SAM_STRS = {
-    "matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)",
-    "matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)",
-    "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
-    "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
-    "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
-    "mat_mattransmul": "X(i,j)=B(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
-    "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
-    "mat_residual": "X(i,j)=b(i)-C(i,j)*d(j) -f=X:ss -f=C:ss -f=b:ss:0 -f=d:ss:0  -s=reorder(i,j)",
-    "mat_sddmm": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:dd -f=D:dd:1,0 -s=reorder(i,j,k)",
-    "mat_elemadd3": "X(i,j)=B(i,j)+C(i,j)+D(i,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss",
-    "mat_mask_tri": "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)",
-    "mat_vecmul_iter": "X(i,j)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) \
--f=X:ss -f=B:ss -f=C:ss -f=D:ss -f=E:ss -f=f:s -s=reorder(i,j,k,l,m)"
-}
+# TODO: tensor3_innerprod output X() vs X(i,j,k)
+SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)",
+            "matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)",
+            "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
+            "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
+            "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
+            "mat_mattransmul": "X(i,j)=C(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
+            "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
+            # "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:2,1,0  -s=reorder(i,j,k)",
+            # "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss:0  -s=reorder(i,j,k)",
+            "tensor3_elemadd": "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss",
+            "tensor3_ttm": "X(i,j,k)=B(i,j,l)*C(k,l) -f=X:sss -f=B:sss -f=C:ss",
+            "tensor3_ttv": "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s",
+            "tensor3_innerprod": "X(i,j,k)=B(i,j,k)*C(i,j,k) -f=X:sss -f=B:sss -f=C:sss",
+            "tensor3_mttkrp": "X(i,j)=B(i,k,l)*C(j,k)*D(j,l) -f=X:ss -f=B:sss -f=C:ss -f=D:ss"}
 
 
 def print_dict(dd):
@@ -94,11 +91,9 @@ def parse_sam_input(string):
 
     str_arr = sam_str.split(" ")
     dictionary = parse_all(str_arr, has_quotes=False)
-    print("dictionary is: ", dictionary)
 
     # Assume there are no repeat tensors...
     tensors = dictionary["rhs_tensors"]
-    print("tensors are: ", tensors)
     permutations = [list(map(int, dictionary[tensor]["perm"])) for tensor in tensors]
     ivars = get_ivars(tensors, str_arr[0])
     ivars = [ivars[tensor] for tensor in tensors]
@@ -259,7 +254,6 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
 
             print("dim is ", dim)
             print("tensor_format[dim:dim+1] is ", tensor_format[dim:dim + 1])
-            print("tensor name is ", tensor_name)
             lvl_permutation = tensor_format[dim:dim + 1][0]
             ivar = ivar_strs[i][dim]
             ivar_map[lvl_permutation] = ivar
@@ -278,6 +272,7 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
 
 def get_other_tensors(app_str, tensor, other_nonempty=True):
     tensors = [tensor]
+
 
     if "matmul" in app_str:
         print("Writing shifted...")
@@ -299,39 +294,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         tensors.append(shifted)
 
     elif "mat_sddmm" in app_str:
-        print("Writing other tensors, shifted...")
-        print("Writing shifted...")
-        shifted = ScipyTensorShifter().shiftLastMode(tensor)
-        tensors.append(shifted)
-
-        print("Writing  shifted2...")
-        shifted2 = ScipyTensorShifter().shiftLastMode(shifted)
-        tensors.append(shifted2)
-
-    elif "mat_mask_tri" in app_str:
-        print("Writing other tensor 1...")
-        shifted = ScipyTensorShifter().shiftLastMode(tensor)
-        tensors.append(shifted)
-
-        print("Writing  shifted2...")
-        shifted2 = ScipyTensorShifter().shiftLastMode(shifted)
-        tensors.append(shifted2)
-    elif "mat_vecmul_iter" in app_str:
-        print("Writing other tensor 1...")
-        tensors.append(tensor)
-        tensors.append(tensor)
-        tensors.append(tensor)
-
-        print("writing other vector...")
-        tensorName = args.input_tensor
-        variant = "mode1"
-        path = constructOtherVecKey(tensorName, variant)
-        tensor_c_from_path = FrosttTensor(path)
-        tensor_c = tensor_c_from_path.load().todense()
-
-        # breakpoint()
-        tensors.append(tensor_c)
-
+        pass
     elif "mat_mattransmul" in app_str:
         print("Writing other tensors...")
         rows, cols = tensor.shape  # i,j
@@ -349,31 +312,9 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         tensors.append(tensor_d)
 
     elif "mat_residual" in app_str:
-        print("Writing other tensors...")
-        rows, cols = tensor.shape
-        tensor_b = scipy.sparse.random(rows, 1, data_rvs=np.ones).toarray().flatten()
-        tensor_d = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
-
-        if other_nonempty:
-            tensor_b[0] = 1
-            tensor_d[0] = 1
-
-        tensors.insert(0, tensor_b)
-        tensors.append(tensor_d)
-
+        pass
     elif "mat_vecmul" in app_str:
         print("Writing other tensors...")
-        tensorName = args.input_tensor
-        # c(j) use mode1
-
-        # variant = "mode1"
-        # path = constructOtherVecKey(tensorName,variant)
-        # tensor_c_from_path = FrosttTensor(path)
-        # tensor_c = tensor_c_from_path.load().todense()
-
-        # print("TENSOR SHAPE: ", tensor.shape)
-        # print("TENSOR_C SHAPE: ", tensor_c.shape)
-
         rows, cols = tensor.shape
         tensor_c = scipy.sparse.random(cols, 1, data_rvs=np.ones).toarray().flatten()
 
@@ -384,13 +325,85 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
 
     elif "tensor3_ttv" in app_str:
         print("Writing other tensors...")
-        size_i, size_j, size_k = tensor.shape  # i,j,k
-        tensor_c = scipy.sparse.random(size_k, 1, data_rvs=np.ones).toarray().flatten()
+
+        tensorName = args.input_tensor
+        variant="mode2" # k dimension is mode 2
+        path = constructOtherVecKey(tensorName,variant)
+        tensor_c_loader = FrosttTensor(path)
+        tensor_c = tensor_c_loader.load().todense()
+        print(tensor_c)
+        # size_i, size_j, size_k = tensor.shape  # i,j,k
+        # print("OTHER SIZES: ", size_i, size_j, size_k)
+        # tensor_c = scipy.sparse.random(size_k, 1, data_rvs=np.ones).toarray().flatten()
 
         if other_nonempty:
             tensor_c[0] = 1
 
         tensors.append(tensor_c)
+
+    elif "tensor3_ttm" in app_str:
+        print("IN TILE.PY NOW")
+        print("Writing other tensors...")
+
+        tensorName = args.input_tensor
+        variant="mode2_ttm"
+        path = constructOtherMatKey(tensorName, variant)
+        matrix_c_loader = FrosttTensor(path)
+        matrix_c = matrix_c_loader.load().todense()
+        print(matrix_c)
+        # size_i, size_j, size_l = tensor.shape  # i,j,k
+        # print("OTHER SIZES: ", size_i, size_j, size_l)
+        # # dimension_k = random.randint(min(tensor.shape), 10)
+        # dimension_k = 3
+        # tensor_c = scipy.sparse.random(dimension_k, size_l, density=0.25, data_rvs=np.ones).toarray()
+        # tensor_c = scipy.sparse.random(dimension_k, size_l, data_rvs=np.ones).toarray().flatten()
+
+        if other_nonempty:
+            matrix_c[0] = 1
+
+        tensors.append(matrix_c)
+
+    elif "tensor3_elemadd" in app_str:
+        print("Writing shifted...")
+        # shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        shifted = PydataTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
+    elif "tensor3_innerprod" in app_str:
+        print("Writing shifted...")
+
+        print("Writing shifted...")
+        print("tensor.shape = ", tensor.shape)
+        # shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        shifted = PydataTensorShifter().shiftLastMode(tensor)
+        tensors.append(shifted)
+    elif "tensor3_mttkrp" in app_str:
+        print("Writing shifted...")
+        size_i, size_j, size_l = tensor.shape  # i,j,k
+
+        tensorName = args.input_tensor
+        variant="mode1_mttkrp"
+        path = constructOtherMatKey(tensorName, variant)
+        matrix_c_loader = FrosttTensor(path)
+        matrix_c = matrix_c_loader.load().todense()
+        print(matrix_c)
+
+        tensorName = args.input_tensor
+        variant="mode2_mttkrp"
+        path = constructOtherMatKey(tensorName, variant)
+        matrix_d_loader = FrosttTensor(path)
+        matrix_d = matrix_d_loader.load().todense()
+        print(matrix_d)
+        # size_k = random.randint(min(tensor.shape), 10)
+        # # C & D are dense according to TACO documentation
+        # matrix_c = scipy.sparse.random(size_j, size_k, density=1, data_rvs=np.ones).toarray()
+        # matrix_d = scipy.sparse.random(size_j, size_l, density=1, data_rvs=np.ones).toarray()
+        
+        if other_nonempty:
+            matrix_c[0] = 1
+            matrix_d[0] = 1
+        
+        tensors.append(matrix_c)
+        tensors.append(matrix_d)
     else:
         # tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
         # tensors.append(tensor2)
@@ -487,7 +500,6 @@ inputCacheTensor = InputCacheTensor()
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='script that tiles tensors')
     parser.add_argument("--tensor_type", choices=['ex', 'gen', 'file', 'ss', 'frostt'], help='The \
-        tiles, tile_sizes = tile_coo(tensor, ivar_map, split_map) \
         type of tensor to tile: extensor(ex), generated (gen), \
         SuiteSparse (ss), FROSTT (frostt), or input file (file)')
     parser.add_argument("--higher_order", action="store_true", help="If \
@@ -563,16 +575,16 @@ if __name__ == "__main__":
         print("TILES:")
         print_dict(tiles)
     else:
-        output_mtx_name = os.path.join(args.output_dir_path, args.cotile, "mtx")
+        output_mtx_name = os.path.join(args.output_dir_path, "mtx")
         output_mtx_path = Path(output_mtx_name)
+      
         output_mtx_path.mkdir(parents=True, exist_ok=True)
         print(os.path.exists(output_mtx_path))
 
         if args.multilevel:
             assert args.cotile is not None
             cotiled_tensors = cotile_multilevel_coo(args.cotile, args.hw_config, [tensor],
-                                                    os.path.join(args.output_dir_path,
-                                                                 args.cotile),
+                                                    os.path.join(args.output_dir_path),
                                                     args.higher_order)
         elif args.cotile is not None:
             tensor2 = scipy.sparse.random(tensor.shape[0], tensor.shape[1])
@@ -587,8 +599,8 @@ if __name__ == "__main__":
             for tile_id, tile in cotiled_tensors[name].items():
                 [str(item) for item in tile_id]
                 filename = "tensor_" + name + "_tile_" + "_".join([str(item) for item in tile_id])
-                # filename += ".tns" if args.higher_order else ".mtx"
-                filename += ".mtx"
+                filename += ".tns" if args.higher_order and args.tensor_type == "frostt" else ".mtx"
+                # filename += ".mtx"
                 mtx_path_name = os.path.join(output_mtx_name, filename)
                 print(tile)
                 print("Output path:", mtx_path_name)
@@ -598,12 +610,11 @@ if __name__ == "__main__":
                         tns_dumper = PydataSparseTensorDumper()
                         print(tile.shape)
                         print(tile)
-                        tns_dumper.dump(tile, mtx_path_name)
+                        tns_dumper.dump(tile, mtx_path_name, True)
+
                     # FIXME: (owhsu) Why did avb03 add this in?
                     elif len(tile.shape) == 1:
-                        real_shape = tile.shape[0]
                         # print(np.array(tile.todense()).reshape(1,-1))
-                        # scipy.io.mmwrite(mtx_path_name, scipy.sparse.coo_matrix(tile.todense()).reshape((real_shape,1)))
                         scipy.io.mmwrite(mtx_path_name, scipy.sparse.coo_matrix(tile.todense()))
                     else:
                         # print(tile.todense())
