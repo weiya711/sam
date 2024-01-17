@@ -67,9 +67,19 @@ run_format(){
 	export FROSTT_TENSOR_PATH=$filename 
 	export FROSTT_FORMATTED_PATH=$bench_path/formatted/
 	export TENSOR_FORMAT=$tensor_format
-    echo "Tensor format: $TENSOR_FORMAT"
+	echo "FROSTT_FORMATTED_TACO_PATH: $FROSTT_FORMATTED_TACO_PATH"
+	echo "FROSTT_PATH: $FROSTT_PATH"
+	echo "FROSTT_TENSOR_PATH: $FROSTT_TENSOR_PATH"
+	echo "FROSTT_FORMATTED_PATH: $FROSTT_FORMATTED_PATH"
+	echo "TENSOR_FORMAT: $TENSOR_FORMAT"
+    echo "format: $format"
 
 	$basedir/compiler/taco/build/bin/taco-test sam.pack_$format
+
+	echo "Name: $name"
+	echo "Format: $format"
+	echo "Bench: $bench"
+	echo "Bench path: $bench_path"
 
 	python3 $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $bench_path/formatted/$name
     

@@ -529,6 +529,7 @@ if __name__ == "__main__":
                         help="If this is enabled, the 'other' tensors will have at least one nonzero value")
 
     args = parser.parse_args()
+    print("Args:", args)
 
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -557,6 +558,7 @@ if __name__ == "__main__":
 
         inputCache = inputCacheTensor
         tensor_path = os.path.join(FROSTT_PATH, args.input_tensor + ".tns")
+        print("tensor_path", tensor_path)
 
         # FIXME: This is broken
         frostt_tensor = FrosttTensor(tensor_path)
