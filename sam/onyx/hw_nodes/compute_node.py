@@ -1,15 +1,25 @@
 from sam.onyx.hw_nodes.hw_node import *
 from lassen.utils import float2bfbin
+import coreir
+import subprocess
+import json
+import os
 
 
 class ComputeNode(HWNode):
-    def __init__(self, name=None, op=None) -> None:
+    def __init__(self, name=None, op=None, sam_graph_node_id=None) -> None:
         super().__init__(name=name)
         self.num_inputs = 2
         self.num_outputs = 1
         self.num_inputs_connected = 0
         self.num_outputs_connected = 0
+        self.mapped_input_ports = []
         self.op = op
+        self.opcode = None
+        # parse the mapped coreir file to get the input ports and opcode
+        self.parse_mapped_json("/aha/alu_mapped.json", sam_graph_node_id)
+        assert len(self.mapped_input_ports) > 0
+        assert self.opcode is not None
 
     def connect(self, other, edge, kwargs=None):
 
@@ -161,6 +171,21 @@ class ComputeNode(HWNode):
     def get_num_inputs(self):
         return self.num_inputs_connected
 
+    def parse_mapped_json(self, filename, node_id):
+        with open(filename, 'r') as alu_mapped_file:
+            alu_mapped = json.load(alu_mapped_file)
+        # parse out the mapped opcode
+        opcode = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]["instances"]["c0"]["modargs"]["value"][1]
+        opcode = "0x" + opcode.split('h')[1]
+        # parse out the mapped input ports
+        for connection in alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]["connections"]:
+            src, dest = connection
+            # if the connection is to the data port of alu
+            if "self.in" in src:
+                # get the port name of the alu
+                self.mapped_input_ports.append(dest.split(".")[1])
+        self.opcode = int(opcode, 0)
+
     def configure(self, attributes):
         print("PE CONFIGURE")
         print(attributes)
@@ -174,28 +199,13 @@ class ComputeNode(HWNode):
         pe_only = True
         # data I/O should interface with other primitive outside of the cluster
         pe_in_external = 1
-        if c_op == 'mul':
-            op_code = 1
-        elif c_op == 'add' and 'sub=1' not in comment:
-            op_code = 0
-        elif c_op == 'add' and 'sub=1' in comment:
-            op_code = 2
-        elif c_op == 'max':
-            op_code = 4
-        elif c_op == 'and':
-            op_code = 5
-        elif c_op == 'fp_mul':
-            op_code = 6
-        elif c_op == 'fgetfint':
-            op_code = 7
-        elif c_op == 'fgetffrac':
-            op_code = 8
-        elif c_op == 'faddiexp':
-            op_code = 9
-        elif c_op == 'fp_max':
-            op_code = 10
-        elif c_op == 'fp_add':
-            op_code = 11
+        # according to the mapped input ports generate input port config
+        num_sparse_inputs = list("000")
+        for i in range(3):
+            if f"data{2 - i}" in self.mapped_input_ports:
+                num_sparse_inputs[i] = '1'
+        print("".join(num_sparse_inputs))
+        num_sparse_inputs = int("".join(num_sparse_inputs), 2)
 
         rb_const = None
         if "rb_const" in attributes:
@@ -210,10 +220,11 @@ class ComputeNode(HWNode):
                 rb_const = int(rb_const)
 
         cfg_kwargs = {
-            'op': op_code,
+            'op': self.opcode,
             'use_dense': use_dense,
             'pe_only': pe_only,
             'pe_in_external': pe_in_external,
-            'rb_const': rb_const
+            'rb_const': rb_const,
+            'num_sparse_inputs': num_sparse_inputs
         }
-        return (op_code, use_dense, pe_only, pe_in_external, rb_const), cfg_kwargs
+        return (op_code, use_dense, pe_only, pe_in_external, rb_const, num_sparse_inputs), cfg_kwargs

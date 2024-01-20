@@ -1,6 +1,9 @@
 import argparse
 from numpy import broadcast
 import pydot
+import coreir
+import os
+import subprocess
 from sam.onyx.hw_nodes.hw_node import HWNodeType
 
 
@@ -78,11 +81,44 @@ class SAMDotGraph():
         # return self.mode_map
         return self.remaining
 
+    def generate_coreir_spec(self, context, attributes, name):
+        # FIXME: change this if we want operation with constant
+        # Declare I/O of ALU
+        module_typ = context.Record({"in0": context.Array(1, context.Array(16, context.BitIn())), "in1": context.Array(1, context.Array(16, context.BitIn())), "out": context.Array(16, context.Bit())})
+        module = context.global_namespace.new_module("ALU_" + name,  module_typ)
+        assert module.definition is None, "Should not have a definition"
+        module_def = module.new_definition()
+        # FIXME: hack for mapping reduce for now, fix reduce function to integer add
+        if attributes['type'].strip('"') == "reduce":
+            alu_op = "add"
+        else:
+            alu_op = attributes['type'].strip('"')
+        # import the desired operation from coreir
+        coreir_op = context.get_namespace("coreir").generators[alu_op]
+        # configure the width of the op
+        # FIXME: hardcoded to 16 for now 
+        op = coreir_op(width=16)
+        # add the operation instance to the module
+        op_inst = module_def.add_module_instance(alu_op, op)
+        # connect the input to the op
+        _input0 = module_def.interface.select("in0").select("0")
+        _input1 = module_def.interface.select("in1").select("0")
+        _output = module_def.interface.select("out")
+        _alu_in0 = op_inst.select("in0")
+        _alu_in1 = op_inst.select("in1")
+        _alu_out = op_inst.select("out") 
+        module_def.connect(_input0, _alu_in0)
+        module_def.connect(_input1, _alu_in1)
+        module_def.connect(_output, _alu_out)
+        module.definition = module_def
+        assert module.definition is not None, "Should have a definitation by now"
+        
     def map_nodes(self):
         '''
         Iterate through the nodes and map them to the proper HWNodes
         '''
-
+        c = coreir.Context()
+        contains_compute = False
         for node in self.graph.get_nodes():
             # Simple write the HWNodeType attribute
             if 'hwnode' not in node.get_attributes():
@@ -101,6 +137,8 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.Repeat"
                 elif n_type == "mul" or n_type == "add" or n_type == "max" or n_type == "and":
                     hw_nt = f"HWNodeType.Compute"
+                    self.generate_coreir_spec(c, node.get_attributes(), node.get_name())
+                    contains_compute = True
                 elif n_type == "fgetfint" or n_type == "fgetffrac" or n_type == "faddiexp":
                     hw_nt = f"HWNodeType.Compute"
                 elif n_type == "fp_mul" or n_type == "fp_max" or n_type == "fp_add":
@@ -118,8 +156,17 @@ class SAMDotGraph():
                 else:
                     print(n_type)
                     raise SAMDotGraphLoweringError(f"Node is of type {n_type}")
-
                 node.get_attributes()['hwnode'] = hw_nt
+        # generates the coreir json file
+        c.save_to_file("/aha/alu.json")
+        # use metamapper to map it 
+        # set environment variable PIPELINED to zero to disable input buffering in the alu
+        # in order to make sure the output comes out within the same cycle the input is given
+        if contains_compute:
+            # only runs metamapper if the graph contains compute logic 
+            metamapp_env = os.environ.copy()
+            metamapp_env["PIPELINED"] = "0"
+            subprocess.run(["python", "/aha/MetaMapper/scripts/map_app.py", "/aha/alu.json"], env=metamapp_env)
 
     def get_next_seq(self):
         ret = self.seq

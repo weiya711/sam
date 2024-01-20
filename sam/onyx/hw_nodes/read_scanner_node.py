@@ -215,7 +215,7 @@ class ReadScannerNode(HWNode):
                     assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
             new_conns = {
                 f'rd_scan_to_compute_{compute_conn}': [
-                    ([(rd_scan, "coord_out"), (compute, f"data{compute_conn}")], 17),
+                    ([(rd_scan, "coord_out"), (compute, other.mapped_input_ports[compute_conn])], 17),
                 ]
             }
             # Now update the PE/compute to use the next connection next time
