@@ -1,4 +1,8 @@
 from sam.onyx.hw_nodes.hw_node import *
+from peak.assembler import Assembler
+from hwtypes.modifiers import strip_modifiers
+from lassen.sim import PE_fc as lassen_fc
+import lassen.asm as asm
 
 
 class ReduceNode(HWNode):
@@ -112,7 +116,10 @@ class ReduceNode(HWNode):
         # data I/O to and from the PE should be internal with the reduce
         pe_in_external = 0
         # op is set to integer add for the PE TODO: make this configurable in the sam graph
-        op = 0
+        # TODO: make this use the metamapper
+        instr_type = strip_modifiers(lassen_fc.Py.input_t.field_dict['inst'])
+        asm_ = Assembler(instr_type)
+        op = int(asm_.assemble(asm.add()))
         cfg_kwargs = {
             'stop_lvl': stop_lvl,
             'pe_connected_to_reduce': pe_connected_to_reduce,

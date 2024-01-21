@@ -139,6 +139,8 @@ class ComputeNode(HWNode):
                     other_conn = 1
                 else:
                     assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
+            else: 
+                other_conn = other.mapped_input_ports[other_conn]
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
                     ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
@@ -183,7 +185,7 @@ class ComputeNode(HWNode):
             # if the connection is to the data port of alu
             if "self.in" in src:
                 # get the port name of the alu
-                self.mapped_input_ports.append(dest.split(".")[1])
+                self.mapped_input_ports.append(dest.split(".")[1].strip("data"))
         self.opcode = int(opcode, 0)
 
     def configure(self, attributes):
@@ -201,9 +203,8 @@ class ComputeNode(HWNode):
         pe_in_external = 1
         # according to the mapped input ports generate input port config
         num_sparse_inputs = list("000")
-        for i in range(3):
-            if f"data{2 - i}" in self.mapped_input_ports:
-                num_sparse_inputs[i] = '1'
+        for port in self.mapped_input_ports:
+            num_sparse_inputs[2 - int(port)] = '1'
         print("".join(num_sparse_inputs))
         num_sparse_inputs = int("".join(num_sparse_inputs), 2)
 
