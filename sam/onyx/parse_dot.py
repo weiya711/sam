@@ -28,6 +28,7 @@ class SAMDotGraph():
         self.use_fa = use_fa
         self.fa_color = 0
 
+        self.alu_nodes = []
         self.shared_writes = {}
 
         if unroll > 1:
@@ -51,6 +52,7 @@ class SAMDotGraph():
         else:
             self.rewrite_rsg_broadcast()
         self.map_nodes()
+        self.map_alu()
 
     def get_mode_map(self):
         sc = self.graph.get_comment().strip('"')
@@ -137,8 +139,7 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.Repeat"
                 elif n_type == "mul" or n_type == "add" or n_type == "max" or n_type == "and":
                     hw_nt = f"HWNodeType.Compute"
-                    self.generate_coreir_spec(c, node.get_attributes(), node.get_name())
-                    contains_compute = True
+                    self.alu_nodes.append(node)
                 elif n_type == "fgetfint" or n_type == "fgetffrac" or n_type == "faddiexp":
                     hw_nt = f"HWNodeType.Compute"
                 elif n_type == "fp_mul" or n_type == "fp_max" or n_type == "fp_add":
@@ -152,21 +153,29 @@ class SAMDotGraph():
                 elif n_type == "crdhold":
                     hw_nt = f"HWNodeType.CrdHold"
                 elif n_type == "vectorreducer":
-                    hw_nt = f"HWNodeType.VectorReducer "
+                    hw_nt = f"HWNodeType.VectorReducer"
                 else:
                     print(n_type)
                     raise SAMDotGraphLoweringError(f"Node is of type {n_type}")
                 node.get_attributes()['hwnode'] = hw_nt
-        # generates the coreir json file
-        c.save_to_file("/aha/alu.json")
-        # use metamapper to map it 
-        # set environment variable PIPELINED to zero to disable input buffering in the alu
-        # in order to make sure the output comes out within the same cycle the input is given
-        if contains_compute:
-            # only runs metamapper if the graph contains compute logic 
-            metamapp_env = os.environ.copy()
-            metamapp_env["PIPELINED"] = "0"
-            subprocess.run(["python", "/aha/MetaMapper/scripts/map_app.py", "/aha/alu.json"], env=metamapp_env)
+
+    def map_alu(self):
+        if len(self.alu_nodes) > 0:
+            c = coreir.Context()
+            # iterate through all compute nodes and generate their coreir spec
+            for alu_node in self.alu_nodes:
+                self.generate_coreir_spec(c,
+                                          alu_node.get_attributes(),
+                                          alu_node.get_name())
+            c.save_to_file("/aha/alu.json")
+           
+            # use metamapper to map it 
+            # set environment variable PIPELINED to zero to disable input buffering in the alu
+            # in order to make sure the output comes out within the same cycle the input is given
+            metamapper_env = os.environ.copy()
+            metamapper_env["PIPELINED"] = "0"
+            subprocess.run(["python", "aha/MetaMapper/scripts/map_app.py", "/aha/alu.json"], env=metamapper_env)
+
 
     def get_next_seq(self):
         ret = self.seq
@@ -258,6 +267,7 @@ class SAMDotGraph():
 
             add = pydot.Node(f"vr_add_{self.get_next_seq()}", label=f"{og_label}_Add", hwnode=f"{HWNodeType.Compute}",
                              type="add", sub="0", comment="type=add,sub=0")
+            self.alu_nodes.append(add)
 
             crd_buffet = pydot.Node(f"vr_crd_buffet_{self.get_next_seq()}",
                                     label=f"{og_label}_crd_buffet", hwnode=f"{HWNodeType.Buffet}",
