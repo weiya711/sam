@@ -194,13 +194,6 @@ class ReadScannerNode(HWNode):
             return new_conns
         elif other_type == ComputeNode:
             compute = other.get_name()
-            # compute_conn = 0
-            print("CHECKING READ TENSOR - COMPUTE")
-            print(edge)
-            print(self.get_tensor())
-            # if self.get_tensor() == 'C' or self.get_tensor() == 'c':
-            #     compute_conn = 1
-
             # Can use dynamic information to assign inputs to compute nodes
             # since add/mul are commutative
             compute_conn = other.get_num_inputs()
