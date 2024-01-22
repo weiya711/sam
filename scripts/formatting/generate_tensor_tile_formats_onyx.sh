@@ -2,7 +2,8 @@
 #SBATCH -N 1
 #SBATCH -t 360
 
-# ./scripts/generate_frostt_formats_onyx.sh <tensor_name.txt>
+# edit tensor_name.txt with tensors to tile
+# ./scripts/generate_frostt_formats_onyx.sh <tensor_name.txt> <yaml_file> <benchmark> <other_format> <docker name>
 
 shopt -s extglob
 
@@ -15,7 +16,8 @@ BENCHMARKS=(
 #   tensor3_elemadd
 #   tensor3_innerprod
 	# tensor3_mttkrp
-  tensor3_ttm
+#   tensor3_ttm
+$3
 #   tensor3_ttm
 #   tensor3_mttkrp
   # tensor3_elemmul
@@ -23,14 +25,8 @@ BENCHMARKS=(
 )
 
 OTHER_FORMATS=(
-#   sss
-#   sss
-#   s
-	ss
-#   ss
-#   sss
-  # ss
-	)
+	$4
+)
 
 OTHERBENCHES='["tensor3_ttv", "tensor3_ttm", "tensor3_mttkrp"]'
 
@@ -55,6 +51,7 @@ run_format(){
 	bench_path=$4
 	tile_path=$5
 	tensor_format=$6
+	other_form=$7
 
 	basedir=$(pwd)
 	echo "Processing $f"
@@ -67,9 +64,24 @@ run_format(){
 	export FROSTT_TENSOR_PATH=$filename 
 	export FROSTT_FORMATTED_PATH=$bench_path/formatted/
 	export TENSOR_FORMAT=$tensor_format
-    echo "Tensor format: $TENSOR_FORMAT"
+	echo "FROSTT_FORMATTED_TACO_PATH: $FROSTT_FORMATTED_TACO_PATH"
+	echo "FROSTT_PATH: $FROSTT_PATH"
+	echo "FROSTT_TENSOR_PATH: $FROSTT_TENSOR_PATH"
+	echo "FROSTT_FORMATTED_PATH: $FROSTT_FORMATTED_PATH"
+	echo "TENSOR_FORMAT: $TENSOR_FORMAT"
+    echo "format: $format"
 
+	# if tensor_format == "ss":
 	$basedir/compiler/taco/build/bin/taco-test sam.pack_$format
+	# else:
+	# 	$basedir/compiler/taco/build/bin/taco-test sam.pack_
+	echo "Name: $name"
+	echo "Format: $format"
+	echo "Bench: $bench"
+	echo "Bench path: $bench_path"
+	echo "tile_path: $tile_path"
+	echo "tensor_format: $tensor_format"
+	echo "other_form: $other_form"
 
 	python3 $basedir/scripts/formatting/datastructure_tns.py -n $name -f $format --other -b $bench -hw --output_dir $bench_path/formatted/$name
     
@@ -107,5 +119,8 @@ for i in ${!FORMATS[@]}; do
         
 	set_temp_env $old_frostt_formatted_taco_path $old_frostt_path $old_frostt_tensor_path $old_frostt_formatted_path 
         chmod -R 775 $FROSTT_FORMATTED_PATH
+	
     done
 done
+
+docker cp tiles $5:/aha/garnet/tiles_$3

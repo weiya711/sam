@@ -64,9 +64,11 @@ def round_sparse(x):
     else:
         return math.ceil(x - 0.5)
 
+
 def constructOtherVecKey(tensorName, variant, sparsity=0.001):
     path = os.getenv('TACO_TENSOR_PATH')
     return f"{path}/{tensorName}-vec_{variant}-{sparsity}.tns"
+
 
 def constructOtherMatKey(tensorName, variant, sparsity=0.001):
     path = os.getenv('TACO_TENSOR_PATH')
@@ -75,6 +77,8 @@ def constructOtherMatKey(tensorName, variant, sparsity=0.001):
     return dirlist[0]
 
 # TnsFileLoader loads a tensor stored in .tns format.
+
+
 class TnsFileLoader:
     def __init__(self, cast_int=False):
         self.cast = cast_int
@@ -198,6 +202,8 @@ class PydataTensorShifter:
 
 # ScipyTensorShifter shifts all elements in the last mode
 # of the input scipy/sparse tensor by one.
+
+
 class ScipyTensorShifter:
     def __init__(self):
         pass
