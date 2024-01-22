@@ -15,7 +15,7 @@ class SAMDotGraphLoweringError(Exception):
 class SAMDotGraph():
 
     def __init__(self, filename=None, local_mems=True, use_fork=False,
-                 use_fa=False, unroll=1) -> None:
+                 use_fa=False, unroll=1, collat_dir=None) -> None:
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]
@@ -27,6 +27,7 @@ class SAMDotGraph():
         self.use_fork = use_fork
         self.use_fa = use_fa
         self.fa_color = 0
+        self.collat_dir = collat_dir
 
         self.alu_nodes = []
         self.shared_writes = {}
@@ -167,14 +168,15 @@ class SAMDotGraph():
                 self.generate_coreir_spec(c,
                                           alu_node.get_attributes(),
                                           alu_node.get_name())
-            c.save_to_file("/aha/alu.json")
+            c.save_to_file(self.collat_dir + "/alu_coreir_spec.json")
            
             # use metamapper to map it 
             # set environment variable PIPELINED to zero to disable input buffering in the alu
             # in order to make sure the output comes out within the same cycle the input is given
             metamapper_env = os.environ.copy()
             metamapper_env["PIPELINED"] = "0"
-            subprocess.run(["python", "aha/MetaMapper/scripts/map_app.py", "/aha/alu.json"], env=metamapper_env)
+            subprocess.run(["python", "/aha/MetaMapper/scripts/map_app.py", self.collat_dir + "/alu_coreir_spec.json"], env=metamapper_env)
+            breakpoint()
 
 
     def get_next_seq(self):

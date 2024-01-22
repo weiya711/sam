@@ -7,7 +7,7 @@ import os
 
 
 class ComputeNode(HWNode):
-    def __init__(self, name=None, op=None, sam_graph_node_id=None) -> None:
+    def __init__(self, name=None, op=None, sam_graph_node_id=None, mapped_coreir_dir=None) -> None:
         super().__init__(name=name)
         self.num_inputs = 2
         self.num_outputs = 1
@@ -16,8 +16,9 @@ class ComputeNode(HWNode):
         self.mapped_input_ports = []
         self.op = op
         self.opcode = None
+        self.mapped_coreir_dir = mapped_coreir_dir
         # parse the mapped coreir file to get the input ports and opcode
-        self.parse_mapped_json("/aha/alu_mapped.json", sam_graph_node_id)
+        self.parse_mapped_json(self.mapped_coreir_dir + "/alu_coreir_spec_mapped.json", sam_graph_node_id)
         assert len(self.mapped_input_ports) > 0
         assert self.opcode is not None
 
