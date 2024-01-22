@@ -176,8 +176,6 @@ class SAMDotGraph():
             metamapper_env = os.environ.copy()
             metamapper_env["PIPELINED"] = "0"
             subprocess.run(["python", "/aha/MetaMapper/scripts/map_app.py", self.collat_dir + "/alu_coreir_spec.json"], env=metamapper_env)
-            breakpoint()
-
 
     def get_next_seq(self):
         ret = self.seq
