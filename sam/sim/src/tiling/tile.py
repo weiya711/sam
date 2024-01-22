@@ -273,7 +273,6 @@ def cotile_coo(tensor_names, tensors, permutation_strs, ivar_strs, split_map, hi
 def get_other_tensors(app_str, tensor, other_nonempty=True):
     tensors = [tensor]
 
-
     if "matmul" in app_str:
         print("Writing shifted...")
         shifted = ScipyTensorShifter().shiftLastMode(tensor)
@@ -327,8 +326,8 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("Writing other tensors...")
 
         tensorName = args.input_tensor
-        variant="mode2" # k dimension is mode 2
-        path = constructOtherVecKey(tensorName,variant)
+        variant = "mode2"  # k dimension is mode 2
+        path = constructOtherVecKey(tensorName, variant)
         tensor_c_loader = FrosttTensor(path)
         tensor_c = tensor_c_loader.load().todense()
         print(tensor_c)
@@ -346,7 +345,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         print("Writing other tensors...")
 
         tensorName = args.input_tensor
-        variant="mode2_ttm"
+        variant = "mode2_ttm"
         path = constructOtherMatKey(tensorName, variant)
         matrix_c_loader = FrosttTensor(path)
         matrix_c = matrix_c_loader.load().todense()
@@ -381,14 +380,14 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         size_i, size_j, size_l = tensor.shape  # i,j,k
 
         tensorName = args.input_tensor
-        variant="mode1_mttkrp"
+        variant = "mode1_mttkrp"
         path = constructOtherMatKey(tensorName, variant)
         matrix_c_loader = FrosttTensor(path)
         matrix_c = matrix_c_loader.load().todense()
         print(matrix_c)
 
         tensorName = args.input_tensor
-        variant="mode2_mttkrp"
+        variant = "mode2_mttkrp"
         path = constructOtherMatKey(tensorName, variant)
         matrix_d_loader = FrosttTensor(path)
         matrix_d = matrix_d_loader.load().todense()
@@ -397,11 +396,11 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
         # # C & D are dense according to TACO documentation
         # matrix_c = scipy.sparse.random(size_j, size_k, density=1, data_rvs=np.ones).toarray()
         # matrix_d = scipy.sparse.random(size_j, size_l, density=1, data_rvs=np.ones).toarray()
-        
+
         if other_nonempty:
             matrix_c[0] = 1
             matrix_d[0] = 1
-        
+
         tensors.append(matrix_c)
         tensors.append(matrix_d)
     else:
@@ -579,7 +578,7 @@ if __name__ == "__main__":
     else:
         output_mtx_name = os.path.join(args.output_dir_path, "mtx")
         output_mtx_path = Path(output_mtx_name)
-      
+
         output_mtx_path.mkdir(parents=True, exist_ok=True)
         print(os.path.exists(output_mtx_path))
 
