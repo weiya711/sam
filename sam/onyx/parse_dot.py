@@ -107,7 +107,7 @@ class SAMDotGraph():
         elif alu_op in context.get_namespace("float_DW").generators:
             coreir_op = context.get_namespace("flaot_DW").generators[alu_op]
         else:
-            raise NotImplementedError(f"{alu_op} is not found in coreir, commonlib, or float_DW lib")
+            raise NotImplementedError(f"fail to map node {alu_op} to compute")
         # configure the width of the op
         # FIXME: hardcoded to 16 for now
         op = coreir_op(width=16)
@@ -165,13 +165,6 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.RepSigGen"
                 elif n_type == "repeat":
                     hw_nt = f"HWNodeType.Repeat"
-                elif n_type == "mul" or n_type == "add" or n_type == "smax" or n_type == "and":
-                    hw_nt = f"HWNodeType.Compute"
-                    self.alu_nodes.append(node)
-                elif n_type == "fgetfint" or n_type == "fgetffrac" or n_type == "faddiexp":
-                    hw_nt = f"HWNodeType.Compute"
-                elif n_type == "fp_mul" or n_type == "fp_max" or n_type == "fp_add":
-                    hw_nt = f"HWNodeType.Compute"
                 elif n_type == "reduce":
                     hw_nt = f"HWNodeType.Reduce"
                 elif n_type == "intersect" or n_type == "union":
@@ -183,8 +176,9 @@ class SAMDotGraph():
                 elif n_type == "vectorreducer":
                     hw_nt = f"HWNodeType.VectorReducer"
                 else:
-                    print(n_type)
-                    raise SAMDotGraphLoweringError(f"Node is of type {n_type}")
+                    # if the current node is not any of the primitives, it must be a compute
+                    hw_nt = f"HWNodeType.Compute"
+                    self.alu_nodes.append(node)
                 node.get_attributes()['hwnode'] = hw_nt
 
     def map_alu(self):
