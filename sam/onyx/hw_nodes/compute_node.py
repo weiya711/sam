@@ -140,7 +140,7 @@ class ComputeNode(HWNode):
                     other_conn = 1
                 else:
                     assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
-            else: 
+            else:
                 other_conn = other.mapped_input_ports[other_conn]
             new_conns = {
                 f'pe_to_pe_{other_conn}': [
@@ -178,7 +178,8 @@ class ComputeNode(HWNode):
         with open(filename, 'r') as alu_mapped_file:
             alu_mapped = json.load(alu_mapped_file)
         # parse out the mapped opcode
-        opcode = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]["instances"]["c0"]["modargs"]["value"][1]
+        module = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]
+        opcode = module["instances"]["c0"]["modargs"]["value"][1]
         opcode = "0x" + opcode.split('h')[1]
         # parse out the mapped input ports
         for connection in alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]["connections"]:

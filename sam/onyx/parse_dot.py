@@ -88,8 +88,10 @@ class SAMDotGraph():
     def generate_coreir_spec(self, context, attributes, name):
         # FIXME: change this if we want operation with constant
         # Declare I/O of ALU
-        module_typ = context.Record({"in0": context.Array(1, context.Array(16, context.BitIn())), "in1": context.Array(1, context.Array(16, context.BitIn())), "out": context.Array(16, context.Bit())})
-        module = context.global_namespace.new_module("ALU_" + name,  module_typ)
+        module_typ = context.Record({"in0": context.Array(1, context.Array(16, context.BitIn())),
+                                     "in1": context.Array(1, context.Array(16, context.BitIn())),
+                                     "out": context.Array(16, context.Bit())})
+        module = context.global_namespace.new_module("ALU_" + name, module_typ)
         assert module.definition is None, "Should not have a definition"
         module_def = module.new_definition()
         # FIXME: hack for mapping reduce for now, fix reduce function to integer add
@@ -107,7 +109,7 @@ class SAMDotGraph():
         else:
             raise NotImplementedError(f"{alu_op} is not found in coreir, commonlib, or float_DW lib")
         # configure the width of the op
-        # FIXME: hardcoded to 16 for now 
+        # FIXME: hardcoded to 16 for now
         op = coreir_op(width=16)
         # add the operation instance to the module
         op_inst = module_def.add_module_instance(alu_op, op)
@@ -120,7 +122,9 @@ class SAMDotGraph():
                 coreir_const = context.get_namespace("coreir").generators["const"]
                 const = coreir_const(width=16)
                 const_value = int(attributes[f"const{i}"].strip('"'))
-                const_inst.append(module_def.add_module_instance(f"const{i}", const, context.new_values({"value": BitVector[16](const_value)})))
+                const_inst.append(module_def.add_module_instance(f"const{i}",
+                                                                 const,
+                                                                 context.new_values({"value": BitVector[16](const_value)})))
 
         # connect the input to the op
         # connect module input to the non-constant alu input ports
@@ -134,13 +138,13 @@ class SAMDotGraph():
                 _const_out = const_inst[i - const_cnt].select("out")
                 _alu_in = op_inst.select(f"in{i}")
                 module_def.connect(_const_out, _alu_in)
-        # connect alu output to module output 
+        # connect alu output to module output
         _output = module_def.interface.select("out")
-        _alu_out = op_inst.select("out") 
+        _alu_out = op_inst.select("out")
         module_def.connect(_output, _alu_out)
         module.definition = module_def
         assert module.definition is not None, "Should have a definitation by now"
-        
+
     def map_nodes(self):
         '''
         Iterate through the nodes and map them to the proper HWNodes
@@ -196,13 +200,14 @@ class SAMDotGraph():
                                           alu_node.get_attributes(),
                                           alu_node.get_name())
             c.save_to_file(self.collat_dir + "/alu_coreir_spec.json")
-           
-            # use metamapper to map it 
+
+            # use metamapper to map it
             # set environment variable PIPELINED to zero to disable input buffering in the alu
             # in order to make sure the output comes out within the same cycle the input is given
             metamapper_env = os.environ.copy()
             metamapper_env["PIPELINED"] = "0"
-            subprocess.run(["python", "/aha/MetaMapper/scripts/map_app.py", self.collat_dir + "/alu_coreir_spec.json"], env=metamapper_env)
+            subprocess.run(["python", "/aha/MetaMapper/scripts/map_app.py", self.collat_dir + "/alu_coreir_spec.json"],
+                           env=metamapper_env)
 
     def get_next_seq(self):
         ret = self.seq
