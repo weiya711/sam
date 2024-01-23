@@ -57,11 +57,6 @@ class CrdJoiner2(Joiner2, ABC):
             else:
                 self.fifo_avail_in2 = True
 
-    def add_child(self, child=None, branch=""):
-        if self.backpressure_en:
-            self.backpressure.append(child)
-            self.branches.append(branch)
-
     def set_in1(self, in_ref1, in_crd1, parent=None):
         if in_ref1 != '' and in_crd1 != '' and in_ref1 is not None and in_crd1 is not None:
             # print(in_ref1, " ", in_crd1)

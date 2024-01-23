@@ -1,24 +1,20 @@
-import scipy.sparse
-import scipy.io
-import os
 import glob
-import numpy
 import itertools
-import shutil
-import numpy as np
 import math
-import sparse
-
-from pathlib import Path
-from dataclasses import dataclass
-
 import os
-import math
+import shutil
+from dataclasses import dataclass
+from pathlib import Path
+
 import numpy
+import numpy as np
+import scipy.io
+import scipy.sparse
+import sparse
 
 # All environment variables for SAM should live here or in make file
 cwd = os.getcwd()
-SAM_HOME = os.getenv('HOSTNAME', default=cwd)
+SAM_HOME = os.getenv('SAM_HOME', default=cwd)
 HOSTNAME = os.getenv('HOSTNAME', default="local")
 SUITESPARSE_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(SAM_HOME, "data", "suitesparse"))
 SUITESPARSE_FORMATTED_PATH = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(SAM_HOME, "data",
@@ -69,7 +65,20 @@ def round_sparse(x):
         return math.ceil(x - 0.5)
 
 
+def constructOtherVecKey(tensorName, variant, sparsity=0.001):
+    path = os.getenv('TACO_TENSOR_PATH')
+    return f"{path}/{tensorName}-vec_{variant}-{sparsity}.tns"
+
+
+def constructOtherMatKey(tensorName, variant, sparsity=0.001):
+    path = os.getenv('TACO_TENSOR_PATH')
+    filename = f"{path}/{tensorName}-mat_{variant}*"
+    dirlist = glob.glob(filename)
+    return dirlist[0]
+
 # TnsFileLoader loads a tensor stored in .tns format.
+
+
 class TnsFileLoader:
     def __init__(self, cast_int=False):
         self.cast = cast_int
@@ -143,52 +152,58 @@ class ScipySparseTensorLoader:
 
 # PydataSparseTensorLoader loads a sparse tensor from a file into
 # a pydata.sparse tensor.
-# class PydataSparseTensorLoader:
-#     def __init__(self):
-#         self.loader = TnsFileLoader()
-#
-#     def load(self, path):
-#         dims, coords, values = self.loader.load(path)
-#         return sparse.COO(coords, values, tuple(dims))
-#
-# # PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
-# class PydataSparseTensorDumper:
-#     def __init__(self):
-#         self.dumper = TnsFileDumper()
-#
-#     def dump(self, tensor, path):
-#         self.dumper.dump_dict_to_file(tensor.shape, sparse.DOK(tensor).data, path)
+class PydataSparseTensorLoader:
+    def __init__(self):
+        self.loader = TnsFileLoader()
+
+    def load(self, path):
+        dims, coords, values = self.loader.load(path)
+        return sparse.COO(coords, values, tuple(dims))
+
+
+# PydataSparseTensorDumper dumps a sparse tensor to a the desired file.
+class PydataSparseTensorDumper:
+    def __init__(self):
+        self.dumper = TnsFileDumper()
+
+    def dump(self, tensor, path, write_shape=False):
+        assert isinstance(tensor, sparse.DOK), "The tensor needs to be a pydata/sparse DOK format"
+        self.dumper.dump_dict_to_file(tensor.shape, tensor.data, path, write_shape)
+
+
 #
 #
 #
 # # PydataTensorShifter shifts all elements in the last mode
 # # of the input pydata/sparse tensor by one.
-# class PydataTensorShifter:
-#     def __init__(self):
-#         pass
-#
-#     def shiftLastMode(self, tensor):
-#         coords = tensor.coords
-#         data = tensor.data
-#         resultCoords = []
-#         for j in range(len(tensor.shape)):
-#             resultCoords.append([0] * len(data))
-#         resultValues = [0] * len(data)
-#         for i in range(len(data)):
-#             for j in range(len(tensor.shape)):
-#                 resultCoords[j][i] = coords[j][i]
-#             # resultValues[i] = data[i]
-#             # TODO (rohany): Temporarily use a constant as the value.
-#             resultValues[i] = 2
-#             # For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
-#             # that have even last coordinates. This ensures that there is at least some overlap
-#             # between the original tensor and its shifted counter part.
-#             if len(tensor.shape) <= 2 or resultCoords[-1][i] % 2 == 0:
-#                 resultCoords[-1][i] = (resultCoords[-1][i] + 1) % tensor.shape[-1]
-#         return sparse.COO(resultCoords, resultValues, tensor.shape)
+class PydataTensorShifter:
+    def __init__(self):
+        pass
+
+    def shiftLastMode(self, tensor):
+        coords = tensor.coords
+        data = tensor.data
+        resultCoords = []
+        for j in range(len(tensor.shape)):
+            resultCoords.append([0] * len(data))
+        resultValues = [0] * len(data)
+        for i in range(len(data)):
+            for j in range(len(tensor.shape)):
+                resultCoords[j][i] = coords[j][i]
+            # resultValues[i] = data[i]
+            # TODO (rohany): Temporarily use a constant as the value.
+            resultValues[i] = 2
+            # For order 2 tensors, always shift the last coordinate. Otherwise, shift only coordinates
+            # that have even last coordinates. This ensures that there is at least some overlap
+            # between the original tensor and its shifted counter part.
+            if len(tensor.shape) <= 2 or resultCoords[-1][i] % 2 == 0:
+                resultCoords[-1][i] = (resultCoords[-1][i] + 1) % tensor.shape[-1]
+        return sparse.COO(resultCoords, resultValues, tensor.shape)
 
 # ScipyTensorShifter shifts all elements in the last mode
 # of the input scipy/sparse tensor by one.
+
+
 class ScipyTensorShifter:
     def __init__(self):
         pass
@@ -207,12 +222,13 @@ class ScipyTensorShifter:
 
 @dataclass
 class DoublyCompressedMatrix:
-    shape: (int)
-    seg0: [int]
-    crd0: [int]
-    seg1: [int]
-    crd1: [int]
-    data: [float]
+    # shape: (int)
+    shape = [int]
+    seg0 = [int]
+    crd0 = [int]
+    seg1 = [int]
+    crd1 = [int]
+    data = [float]
 
 
 # ScipyMatrixMarketTensorLoader loads tensors in the matrix market format
@@ -533,7 +549,7 @@ class InputCacheTensor:
         self.lastName = None
         self.tensor = None
 
-    def load(self, tensor, suiteSparse, cast, format_str):
+    def load(self, tensor, cast):
         if self.lastName == str(tensor):
             return self.tensor
         else:
@@ -544,6 +560,20 @@ class InputCacheTensor:
             else:
                 self.tensor = self.lastLoaded
             return self.tensor
+
+
+# FrosttTensor represents a tensor in the FROSTT dataset.
+class FrosttTensor:
+    def __init__(self, path):
+        self.path = path
+        self.__name__ = self.__str__()
+
+    def __str__(self):
+        f = os.path.split(self.path)[1]
+        return f.replace(".tns", "")
+
+    def load(self):
+        return PydataSparseTensorLoader().load(self.path)
 
 
 # PydataMatrixMarketTensorLoader loads tensors in the matrix market format
@@ -602,54 +632,3 @@ def safeCastPydataTensorToInts(tensor):
         #     data[i] = int(tensor.data[i])
         data[i] = round_sparse(tensor.data[i])
     return sparse.COO(tensor.coords, data, tensor.shape)
-
-
-def parse_taco_format(infilename, outdir, tensorname, format_str):
-    with open(infilename, 'r') as inf:
-        level = -1
-        count = 0
-        seg = True
-        level_done = False
-        for line in inf:
-            if count == 0:
-                dim_start = line.find('(') + 1
-                dim_end = line.find(')')
-                dims = line[dim_start: dim_end]
-                dims = dims.split('x')
-
-                shapefile = os.path.join(outdir, tensorname + '_shape.txt')
-                with open(shapefile, 'w+') as shapef:
-                    shapef.write(array_newline_str(dims))
-            else:
-                if line.find(':') > -1:
-                    level += 1
-                    seg = True
-                    level_done = False
-                else:
-                    start = line.find('[') + 1
-                    end = line.find(']')
-                    line = line[start: end]
-                    line = line.split(', ')
-
-                    if level_done:
-                        # This is a values array
-                        valfile = os.path.join(outdir, tensorname + '_vals.txt')
-                        with open(valfile, 'w+') as valf:
-                            valf.write(array_newline_str(line))
-                    else:
-                        level_format = format_str[level]
-                        if level_format == 's':
-                            if seg:
-                                segfile = os.path.join(outdir, tensorname + str(level) +
-                                                       '_seg.txt')
-                                with open(segfile, 'w+') as segf:
-                                    segf.write(array_newline_str(line))
-                                seg = False
-                            else:
-                                crdfile = os.path.join(outdir, tensorname + str(level) +
-                                                       '_crd.txt')
-                                with open(crdfile, 'w+') as crdf:
-                                    crdf.write(array_newline_str(line))
-                                level_done = True
-
-            count += 1

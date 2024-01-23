@@ -481,17 +481,20 @@ def create_matrix_from_point_list(name, pt_list, shape, use_fp=False) -> MatrixG
     return mg
 
 
-def convert_aha_glb_output_file(glbfile, output_dir):
+def convert_aha_glb_output_file(glbfile, output_dir, tiles):
 
     glbfile_s = os.path.basename(glbfile).rstrip(".txt")
 
+    files = []
     if 'mode_vals' in glbfile:
         # num_blocks = 1
-        files = [f"{output_dir}/{glbfile_s}"]
+        for i in range(tiles):
+            files.append(f"{output_dir}/{glbfile_s}_tile{i}")
     else:
         # num_blocks = 2
-        files = [f"{output_dir}/{glbfile_s}_seg",
-                 f"{output_dir}/{glbfile_s}_crd"]
+        for i in range(tiles):
+            files.append(f"{output_dir}/{glbfile_s}_seg_tile{i}")
+            files.append(f"{output_dir}/{glbfile_s}_crd_tile{i}")
 
     straightline = []
 
