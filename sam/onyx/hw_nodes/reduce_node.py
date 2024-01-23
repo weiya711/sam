@@ -72,17 +72,10 @@ class ReduceNode(HWNode):
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
         elif other_type == ComputeNode:
             pe = other.get_name()
-            if 'Max 0' in other.op:
-                other_conn = 1
-            else:
-                other_conn = other.get_num_inputs()
+            other_conn = other.mapped_input_ports[other.get_num_inputs()]
             new_conns = {
                 f'reduce_to_pe_{other_conn}': [
-                    # send output to rd scanner
                     ([(red, "reduce_data_out"), (pe, f"data{other_conn}")], 17),
-                    # ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
-                    # ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
-                    # ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
                 ]
             }
             other.update_input_connections()

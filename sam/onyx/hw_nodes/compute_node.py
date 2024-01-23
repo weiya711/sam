@@ -129,10 +129,7 @@ class ComputeNode(HWNode):
             other_pe = other.get_name()
             other_conn = other.get_num_inputs()
             pe = self.get_name()
-            # TODO: remove hack eventually
-            if 'Max 0' in other.op:
-                other_conn = 1
-            elif 'Faddiexp' in other.op:
+            if 'Faddiexp' in other.op:
                 comment = edge.get_attributes()["comment"].strip('"')
                 if 'fp' in comment:
                     other_conn = 0
