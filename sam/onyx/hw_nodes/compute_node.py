@@ -182,11 +182,12 @@ class ComputeNode(HWNode):
         opcode = "0x" + opcode.split('h')[1]
         # parse out the mapped input ports
         for connection in alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]["connections"]:
-            src, dest = connection
-            # if the connection is to the data port of alu
-            if "self.in" in src:
+            port0, port1 = connection
+            if "self.in" in port0:
                 # get the port name of the alu
-                self.mapped_input_ports.append(dest.split(".")[1].strip("data"))
+                self.mapped_input_ports.append(port1.split(".")[1].strip("data"))
+            elif "self.in" in port1:
+                self.mapped_input_ports.append(port0.split(".")[1].strip("data"))
         self.opcode = int(opcode, 0)
 
     def configure(self, attributes):

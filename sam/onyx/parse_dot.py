@@ -4,6 +4,7 @@ import pydot
 import coreir
 import os
 import subprocess
+from hwtypes import BitVector
 from sam.onyx.hw_nodes.hw_node import HWNodeType
 
 
@@ -96,22 +97,46 @@ class SAMDotGraph():
             alu_op = "add"
         else:
             alu_op = attributes['type'].strip('"')
-        # import the desired operation from coreir
-        coreir_op = context.get_namespace("coreir").generators[alu_op]
+        # import the desired operation from coreir, commonlib, or float_DW
+        if alu_op in context.get_namespace("coreir").generators:
+            coreir_op = context.get_namespace("coreir").generators[alu_op]
+        elif alu_op in context.get_namespace("commonlib").generators:
+            coreir_op = context.get_namespace("commonlib").generators[alu_op]
+        elif alu_op in context.get_namespace("float_DW").generators:
+            coreir_op = context.get_namespace("flaot_DW").generators[alu_op]
+        else:
+            raise NotImplementedError(f"{alu_op} is not found in coreir, commonlib, or float_DW lib")
         # configure the width of the op
         # FIXME: hardcoded to 16 for now 
         op = coreir_op(width=16)
         # add the operation instance to the module
         op_inst = module_def.add_module_instance(alu_op, op)
+        # instantiate the constant operand instances, if any
+        const_cnt = 0
+        const_inst = []
+        for i in range(2):
+            if f"const{i}" in attributes:
+                const_cnt += 1
+                coreir_const = context.get_namespace("coreir").generators["const"]
+                const = coreir_const(width=16)
+                const_value = int(attributes[f"const{i}"].strip('"'))
+                const_inst.append(module_def.add_module_instance(f"const{i}", const, context.new_values({"value": BitVector[16](const_value)})))
+
         # connect the input to the op
-        _input0 = module_def.interface.select("in0").select("0")
-        _input1 = module_def.interface.select("in1").select("0")
+        # connect module input to the non-constant alu input ports
+        for i in range(2 - const_cnt):
+            _input = module_def.interface.select(f"in{i}").select("0")
+            _alu_in = op_inst.select(f"in{i}")
+            module_def.connect(_input, _alu_in)
+        # connect constant output to alu input ports
+        if const_cnt > 0:
+            for i in range(const_cnt, 2):
+                _const_out = const_inst[i - const_cnt].select("out")
+                _alu_in = op_inst.select(f"in{i}")
+                module_def.connect(_const_out, _alu_in)
+        # connect alu output to module output 
         _output = module_def.interface.select("out")
-        _alu_in0 = op_inst.select("in0")
-        _alu_in1 = op_inst.select("in1")
         _alu_out = op_inst.select("out") 
-        module_def.connect(_input0, _alu_in0)
-        module_def.connect(_input1, _alu_in1)
         module_def.connect(_output, _alu_out)
         module.definition = module_def
         assert module.definition is not None, "Should have a definitation by now"
@@ -120,8 +145,6 @@ class SAMDotGraph():
         '''
         Iterate through the nodes and map them to the proper HWNodes
         '''
-        c = coreir.Context()
-        contains_compute = False
         for node in self.graph.get_nodes():
             # Simple write the HWNodeType attribute
             if 'hwnode' not in node.get_attributes():
@@ -138,7 +161,7 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.RepSigGen"
                 elif n_type == "repeat":
                     hw_nt = f"HWNodeType.Repeat"
-                elif n_type == "mul" or n_type == "add" or n_type == "max" or n_type == "and":
+                elif n_type == "mul" or n_type == "add" or n_type == "smax" or n_type == "and":
                     hw_nt = f"HWNodeType.Compute"
                     self.alu_nodes.append(node)
                 elif n_type == "fgetfint" or n_type == "fgetffrac" or n_type == "faddiexp":
@@ -162,7 +185,11 @@ class SAMDotGraph():
 
     def map_alu(self):
         if len(self.alu_nodes) > 0:
+            # coreir lib is loaded by default, need to load commonlib for smax
+            # and float_DW for floating point ops
             c = coreir.Context()
+            c.load_library("commonlib")
+            c.load_library("float_DW")
             # iterate through all compute nodes and generate their coreir spec
             for alu_node in self.alu_nodes:
                 self.generate_coreir_spec(c,
