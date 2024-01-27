@@ -6,6 +6,7 @@ import os
 import subprocess
 from hwtypes import BitVector
 from sam.onyx.hw_nodes.hw_node import HWNodeType
+from lassen.utils import float2bfbin, bfbin2float
 
 
 class SAMDotGraphLoweringError(Exception):
@@ -86,7 +87,6 @@ class SAMDotGraph():
         return self.remaining
 
     def generate_coreir_spec(self, context, attributes, name):
-        # FIXME: change this if we want operation with constant
         # Declare I/O of ALU
         module_typ = context.Record({"in0": context.Array(1, context.Array(16, context.BitIn())),
                                      "in1": context.Array(1, context.Array(16, context.BitIn())),
@@ -99,48 +99,102 @@ class SAMDotGraph():
             alu_op = "add"
         else:
             alu_op = attributes['type'].strip('"')
-        # import the desired operation from coreir, commonlib, or float_DW
+        # import the desired operation from coreir, commonlib, float_DW, or the float lib
+        # specify the width of the operations
+        # TODO: parameterize bit width
+        op = None
+        lib_name = None
         if alu_op in context.get_namespace("coreir").generators:
             coreir_op = context.get_namespace("coreir").generators[alu_op]
+            op = coreir_op(width=16)
+            lib_name = "coreir"
         elif alu_op in context.get_namespace("commonlib").generators:
-            coreir_op = context.get_namespace("commonlib").generators[alu_op]
+            commonlib_op = context.get_namespace("commonlib").generators[alu_op]
+            op = commonlib_op(width=16)
+            lib_name = "commonlib"
         elif alu_op in context.get_namespace("float_DW").generators:
-            coreir_op = context.get_namespace("flaot_DW").generators[alu_op]
+            float_DW_op = context.get_namespace("float_DW").generators[alu_op]
+            op = float_DW_op(exp_width=8, ieee_compliance=False, sig_width=7)
+            lib_name = "float_DW"
+        elif alu_op in context.get_namespace("float").generators:
+            float_op = context.get_namespace("float").genrators[alu_op]
+            op = float_op(exp_bits=8, frac_bits=7)
+            lib_name = "float"
         else:
-            raise NotImplementedError(f"fail to map node {alu_op} to compute")
-        # configure the width of the op
-        # FIXME: hardcoded to 16 for now
-        op = coreir_op(width=16)
+            # if the op is in none of the libs, it may be mapped using the custom rewrite rules
+            # in map_app.py
+            custom_rule_names = {
+                "mult_middle": "commonlib.mult_middle",
+                "abs": "commonlib.abs",
+                "fp_exp": "float.exp",
+                "fp_max": "float.max",
+                "fp_div": "float.div",
+                "fp_mux": "float.mux",
+                "fp_mul": "float_DW.fp_mul",
+                "fp_add": "float_DW.fp_add",
+                "fp_sub": "float.sub",
+            }
+            if alu_op in custom_rule_names:
+                custom_rule_lib = custom_rule_names[alu_op].split(".")[0]
+                custom_relu_op = custom_rule_names[alu_op].split(".")[1]
+                print(custom_rule_lib)
+                print(custom_relu_op)
+                custom_op = context.get_namespace(custom_rule_lib).generators[custom_relu_op]
+                op = custom_op(exp_bits=8, frac_bits=7)
+                print(op)
+                lib_name = custom_rule_lib
+            else:
+                raise NotImplementedError(f"fail to map node {alu_op} to compute")
         # add the operation instance to the module
         op_inst = module_def.add_module_instance(alu_op, op)
         # instantiate the constant operand instances, if any
         const_cnt = 0
         const_inst = []
+        # TODO: does any floating point use more then three inputs?
         for i in range(2):
             if f"const{i}" in attributes:
                 const_cnt += 1
                 coreir_const = context.get_namespace("coreir").generators["const"]
                 const = coreir_const(width=16)
-                const_value = int(attributes[f"const{i}"].strip('"'))
+                # constant string contains a decimal point, its a floating point constant
+                if ("." in attributes[f"const{i}"].strip('"')):
+                    assert "fp" in alu_op, "only support floating point constant for fp ops"
+                    const_value = float(attributes[f"const{i}"].strip('"'))
+                    const_value = int(float2bfbin(const_value), 2)
+                else:
+                    const_value = int(attributes[f"const{i}"].strip('"'))
                 const_inst.append(module_def.add_module_instance(f"const{i}",
                                                                  const,
                                                                  context.new_values({"value": BitVector[16](const_value)})))
 
         # connect the input to the op
         # connect module input to the non-constant alu input ports
+        # note that for ops in commonlib, coreir, and float, the input ports are `in0`, `in1`, `in2`
+        # and the output port is `out`.
+        # however, the inputs for ops in float_DW are a, b, c, and the output is z 
+        float_DW_port_mapping = ['a', 'b', 'c']
         for i in range(2 - const_cnt):
             _input = module_def.interface.select(f"in{i}").select("0")
-            _alu_in = op_inst.select(f"in{i}")
+            if lib_name != "float_DW":
+                _alu_in = op_inst.select(f"in{i}")
+            else:
+                _alu_in = op_inst.select(float_DW_port_mapping[i])
             module_def.connect(_input, _alu_in)
         # connect constant output to alu input ports
         if const_cnt > 0:
             for i in range(const_cnt, 2):
                 _const_out = const_inst[i - const_cnt].select("out")
-                _alu_in = op_inst.select(f"in{i}")
+                if lib_name != "float_DW":
+                    _alu_in = op_inst.select(f"in{i}")
+                else:
+                    _alu_in = op_inst.select(float_DW_port_mapping[i])
                 module_def.connect(_const_out, _alu_in)
         # connect alu output to module output
         _output = module_def.interface.select("out")
-        _alu_out = op_inst.select("out")
+        if lib_name != "float_DW":
+            _alu_out = op_inst.select("out")
+        else:
+            _alu_out = op_inst.select("z")
         module_def.connect(_output, _alu_out)
         module.definition = module_def
         assert module.definition is not None, "Should have a definitation by now"
