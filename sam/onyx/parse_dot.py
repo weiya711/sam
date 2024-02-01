@@ -167,19 +167,19 @@ class SAMDotGraph():
         # connect module input to the non-constant alu input ports
         # note that for ops in commonlib, coreir, and float, the input ports are `in0`, `in1`, `in2`
         # and the output port is `out`.
-        # however, the inputs for ops in float_DW are a, b, c, and the output is z 
+        # however, the inputs for ops in float_DW are a, b, c, and the output is z
         float_DW_port_mapping = ['a', 'b', 'c']
         for i in range(2 - const_cnt):
             _input = module_def.interface.select(f"in{i}").select("0")
             if lib_name != "float_DW":
                 try:
                     _alu_in = op_inst.select(f"in{i}")
-                except:
+                except Exception:
                     print(f"Cannot select port 'in{i}', fall back to using port 'in'")
-                    # FIXME for now the only op that raise this exception is the single input 
+                    # FIXME for now the only op that raise this exception is the single input
                     # op fp_exp
                     _alu_in = op_inst.select("in")
-                    # connect the input and break to exit the loop since there're no more port 
+                    # connect the input and break to exit the loop since there're no more port
                     # to connect
                     module_def.connect(_input, _alu_in)
                     break
@@ -304,14 +304,14 @@ class SAMDotGraph():
                 instance = instances_dict[instance_name]
                 # stamp out PEs and ROMs only, not the constant
                 if "modref" in instance and instance["modref"] == "global.PE":
-                    # skip the bit constant PE that supplies ren data to the rom 
+                    # skip the bit constant PE that supplies ren data to the rom
                     # as the rom in sparse flow will use fiber access
                     if instance_name.split("_")[0] == "bit" and instance_name.split("_")[1] == "const":
                         continue
                     # the last two string of the instance name is the stance id, we only want the op
                     new_alu_node_op = '_'.join(instance_name.split("_")[0:-2])
-                    new_alu_node = pydot.Node(f"{instance_name}_{self.get_next_seq()}", 
-                                              label=f"{complex_node_label}_{new_alu_node_op}", 
+                    new_alu_node = pydot.Node(f"{instance_name}_{self.get_next_seq()}",
+                                              label=f"{complex_node_label}_{new_alu_node_op}",
                                               hwnode=f"{HWNodeType.Compute}",
                                               original_complex_op_id=node.get_name(),
                                               is_mapped_from_complex_op=True,
@@ -323,7 +323,7 @@ class SAMDotGraph():
                 elif "genref" in instance and instance["genref"] == "memory.rom2":
                     attrs = {}
                     attrs["tensor"] = complex_node_op
-                    rom_arrayvals_node = pydot.Node(f"{complex_node_op}_lut_{self.get_next_seq()}", 
+                    rom_arrayvals_node = pydot.Node(f"{complex_node_op}_lut_{self.get_next_seq()}",
                                                     label=f"{complex_node_label}_lut", tensor=f"{complex_node_op}",
                                                     type="arrayvals", comment=f"type=arrayvals,tensor={complex_node_op}")
                     rom_arrayvals_node.create_attribute_methods(rom_arrayvals_node.get_attributes())
@@ -332,9 +332,10 @@ class SAMDotGraph():
             # connect the nodes
             for connection in module["connections"]:
                 for i in range(2):
-                    # the connection endpoint with 'datax', 'raddr', and 'self.out' is a connection to 
+                    # the connection endpoint with 'datax', 'raddr', and 'self.out' is a connection to
                     # a PE, an arrayvals, or an original output of the complex op
-                    if 'data0' in connection[i] or 'data1' in connection[i] or 'data2' in connection[i] or 'raddr' in connection[i] or 'self.out' in connection[i]:
+                    if 'data0' in connection[i] or 'data1' in connection[i] or 'data2' in connection[i] \
+                            or 'raddr' in connection[i] or 'self.out' in connection[i]:
                         edge_attr = {}
                         specified_port = None
                         edge_type = None
@@ -343,7 +344,7 @@ class SAMDotGraph():
                             dest_node_name = connection[i].split(".")[0]
                             dest_node = instance_name_node_mappging[dest_node_name]
                             # for internal conection we need to specify the edge type.
-                            # for connection to arrayvals, the connection logic in hwnodes wil take 
+                            # for connection to arrayvals, the connection logic in hwnodes wil take
                             # care of the port name, no need to specify port name here
                             if dest_node.get_type() == "arrayvals":
                                 edge_type = "ref"
@@ -357,7 +358,7 @@ class SAMDotGraph():
                             dest_node = outgoing_edges[0].get_destination()
                             edge_attr = outgoing_edges[0].get_attributes()
                             self.graph.del_edge(outgoing_edges[0].get_source(), outgoing_edges[0].get_destination())
-                        
+
                         # select the other port as src
                         if i == 0:
                             src_port = connection[1]
@@ -377,13 +378,13 @@ class SAMDotGraph():
                         # the srouce node is not a PE we just stamp out, skip the connection
                         elif src_node_name not in instance_name_node_mappging:
                             break
-                        else:  
+                        else:
                             src_node = instance_name_node_mappging[src_node_name]
                         # a new edge
                         if not edge_attr:
-                            new_edge = pydot.Edge(src=src_node, 
-                                                  dst=dest_node, 
-                                                  type=edge_type, 
+                            new_edge = pydot.Edge(src=src_node,
+                                                  dst=dest_node,
+                                                  type=edge_type,
                                                   label=edge_type,
                                                   specified_port=specified_port,
                                                   comment=edge_type)
@@ -399,8 +400,8 @@ class SAMDotGraph():
                         break
             # finally remove the original complex op node
             self.graph.del_node(node)
-        # turn the lut arrayvals into FA 
-        self.rewrite_arrays()       
+        # turn the lut arrayvals into FA
+        self.rewrite_arrays()
 
     def rewrite_VectorReducer(self):
 

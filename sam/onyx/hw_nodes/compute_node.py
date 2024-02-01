@@ -4,7 +4,7 @@ import json
 
 
 class ComputeNode(HWNode):
-    def __init__(self, name=None, op=None, sam_graph_node_id=None, 
+    def __init__(self, name=None, op=None, sam_graph_node_id=None,
                  mapped_coreir_dir=None, is_mapped_from_complex_op=False, original_complex_op_id=None) -> None:
         super().__init__(name=name)
         self.num_inputs = 2
@@ -16,7 +16,7 @@ class ComputeNode(HWNode):
         self.opcode = None
         self.mapped_coreir_dir = mapped_coreir_dir
         # parse the mapped coreir file to get the input ports and opcode
-        self.parse_mapped_json(self.mapped_coreir_dir + "/alu_coreir_spec_mapped.json", 
+        self.parse_mapped_json(self.mapped_coreir_dir + "/alu_coreir_spec_mapped.json",
                                sam_graph_node_id, is_mapped_from_complex_op, original_complex_op_id)
         assert self.opcode is not None
 
@@ -191,11 +191,11 @@ class ComputeNode(HWNode):
                 elif "self.in" in port1:
                     self.mapped_input_ports.append(port0.split(".")[1].strip("data"))
             assert(len(self.mapped_input_ports) > 0)
-        else: 
+        else:
             assert original_complex_op_id is not None
             module = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + original_complex_op_id + "_mapped"]
             # node namae of a remapped alu node from a complex op is of the format <instance_name>_<id>
-            alu_instance_name =  '_'.join(node_id.split("_")[0:-1])
+            alu_instance_name = '_'.join(node_id.split("_")[0:-1])
             # no need to find the input and output port for remapped op
             # as it is already assigned when we remap the complex op and stored in the edge object
         # look for the constant coreir object that supplies the opcode to the alu at question

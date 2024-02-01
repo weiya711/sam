@@ -205,7 +205,7 @@ class ReadScannerNode(HWNode):
                     f'rd_scan_to_compute_{compute_conn}': [
                         ([(rd_scan, "coord_out"), (compute, f"{compute_conn}")], 17),
                     ]
-                }    
+                }
             else:
                 compute_conn = other.mapped_input_ports[compute_conn]
                 new_conns = {
