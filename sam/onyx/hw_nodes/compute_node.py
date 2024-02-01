@@ -190,7 +190,7 @@ class ComputeNode(HWNode):
                     self.mapped_input_ports.append(port1.split(".")[1].strip("data"))
                 elif "self.in" in port1:
                     self.mapped_input_ports.append(port0.split(".")[1].strip("data"))
-            assert(len(self.mapped_input_ports) > 0)
+            assert (len(self.mapped_input_ports) > 0)
         else:
             assert original_complex_op_id is not None
             module = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + original_complex_op_id + "_mapped"]
