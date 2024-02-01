@@ -1,13 +1,11 @@
 from sam.onyx.hw_nodes.hw_node import *
 from lassen.utils import float2bfbin
-import coreir
-import subprocess
 import json
-import os
 
 
 class ComputeNode(HWNode):
-    def __init__(self, name=None, op=None, sam_graph_node_id=None, mapped_coreir_dir=None) -> None:
+    def __init__(self, name=None, op=None, sam_graph_node_id=None, 
+                 mapped_coreir_dir=None, is_mapped_from_complex_op=False, original_complex_op_id=None) -> None:
         super().__init__(name=name)
         self.num_inputs = 2
         self.num_outputs = 1
@@ -18,8 +16,8 @@ class ComputeNode(HWNode):
         self.opcode = None
         self.mapped_coreir_dir = mapped_coreir_dir
         # parse the mapped coreir file to get the input ports and opcode
-        self.parse_mapped_json(self.mapped_coreir_dir + "/alu_coreir_spec_mapped.json", sam_graph_node_id)
-        assert len(self.mapped_input_ports) > 0
+        self.parse_mapped_json(self.mapped_coreir_dir + "/alu_coreir_spec_mapped.json", 
+                               sam_graph_node_id, is_mapped_from_complex_op, original_complex_op_id)
         assert self.opcode is not None
 
     def connect(self, other, edge, kwargs=None):
@@ -129,21 +127,23 @@ class ComputeNode(HWNode):
             other_pe = other.get_name()
             other_conn = other.get_num_inputs()
             pe = self.get_name()
-            if 'Faddiexp' in other.op:
-                comment = edge.get_attributes()["comment"].strip('"')
-                if 'fp' in comment:
-                    other_conn = 0
-                elif 'exp' in comment:
-                    other_conn = 1
-                else:
-                    assert 0 & "edge connected to faddiexp has to have comment specified to either 'exp' or 'fp'"
+            edge_attr = edge.get_attributes()
+            # a destination port name has been specified by metamapper
+            if "specified_port" in edge_attr and edge_attr["specified_port"] is not None:
+                other_conn = edge_attr["specified_port"]
+                other.mapped_input_ports.append(other_conn.strip("data"))
+                new_conns = {
+                    f'pe_to_pe_{other_conn}': [
+                        ([(pe, "res"), (other_pe, f"{other_conn}")], 17),
+                    ]
+                }
             else:
                 other_conn = other.mapped_input_ports[other_conn]
-            new_conns = {
-                f'pe_to_pe_{other_conn}': [
-                    ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
-                ]
-            }
+                new_conns = {
+                    f'pe_to_pe_{other_conn}': [
+                        ([(pe, "res"), (other_pe, f"data{other_conn}")], 17),
+                    ]
+                }
             other.update_input_connections()
             return new_conns
         elif other_type == BroadcastNode:
@@ -171,21 +171,44 @@ class ComputeNode(HWNode):
     def get_num_inputs(self):
         return self.num_inputs_connected
 
-    def parse_mapped_json(self, filename, node_id):
+    def parse_mapped_json(self, filename, node_id, is_mapped_from_complex_op, original_complex_op_id):
         with open(filename, 'r') as alu_mapped_file:
             alu_mapped = json.load(alu_mapped_file)
         # parse out the mapped opcode
-        module = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]
-        opcode = module["instances"]["c0"]["modargs"]["value"][1]
-        opcode = "0x" + opcode.split('h')[1]
-        # parse out the mapped input ports
-        for connection in alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]["connections"]:
+        alu_instance_name = None
+        module = None
+        if not is_mapped_from_complex_op:
+            module = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]
+            for instance_name, instance in module["instances"].items():
+                if "modref" in instance and instance["modref"] == "global.PE":
+                    alu_instance_name = instance_name
+                    break
+            for connection in alu_mapped["namespaces"]["global"]["modules"]["ALU_" + node_id + "_mapped"]["connections"]:
+                port0, port1 = connection
+                if "self.in" in port0:
+                    # get the port name of the alu
+                    self.mapped_input_ports.append(port1.split(".")[1].strip("data"))
+                elif "self.in" in port1:
+                    self.mapped_input_ports.append(port0.split(".")[1].strip("data"))
+            assert(len(self.mapped_input_ports) > 0)
+        else: 
+            assert original_complex_op_id is not None
+            module = alu_mapped["namespaces"]["global"]["modules"]["ALU_" + original_complex_op_id + "_mapped"]
+            # node namae of a remapped alu node from a complex op is of the format <instance_name>_<id>
+            alu_instance_name =  '_'.join(node_id.split("_")[0:-1])
+            # no need to find the input and output port for remapped op
+            # as it is already assigned when we remap the complex op and stored in the edge object
+        # look for the constant coreir object that supplies the opcode to the alu at question
+        # insturction is supplied through the "inst" port of the alu
+        for connection in module["connections"]:
             port0, port1 = connection
-            if "self.in" in port0:
-                # get the port name of the alu
-                self.mapped_input_ports.append(port1.split(".")[1].strip("data"))
-            elif "self.in" in port1:
-                self.mapped_input_ports.append(port0.split(".")[1].strip("data"))
+            if f"{alu_instance_name}.inst" in port0:
+                constant_name = port1.split(".")[0]
+            elif f"{alu_instance_name}.inst" in port1:
+                constant_name = port0.split(".")[0]
+        opcode = module["instances"][constant_name]["modargs"]["value"][1]
+        opcode = "0x" + opcode.split('h')[1]
+
         self.opcode = int(opcode, 0)
 
     def configure(self, attributes):
@@ -208,24 +231,11 @@ class ComputeNode(HWNode):
         print("".join(num_sparse_inputs))
         num_sparse_inputs = int("".join(num_sparse_inputs), 2)
 
-        rb_const = None
-        if "rb_const" in attributes:
-            # the b operand of the op is a constant
-            rb_const = attributes["rb_const"].strip('"')
-            if "." in rb_const:
-                # constant is a floating point
-                rb_const = float(rb_const)
-                rb_const = int(float2bfbin(rb_const), 2)
-            else:
-                # it is a int
-                rb_const = int(rb_const)
-
         cfg_kwargs = {
             'op': self.opcode,
             'use_dense': use_dense,
             'pe_only': pe_only,
             'pe_in_external': pe_in_external,
-            'rb_const': rb_const,
             'num_sparse_inputs': num_sparse_inputs
         }
-        return (op_code, use_dense, pe_only, pe_in_external, rb_const, num_sparse_inputs), cfg_kwargs
+        return (op_code, use_dense, pe_only, pe_in_external, num_sparse_inputs), cfg_kwargs
