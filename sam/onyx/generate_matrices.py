@@ -521,7 +521,7 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles):
 
 def get_tensor_from_files(name, files_dir, shape, base=10,
                           format='CSF', early_terminate=None, tensor_ordering=None,
-                          suffix="", positive_only=True, use_fp=False) -> MatrixGenerator:
+                          suffix="", positive_only=False, use_fp=False) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
 
