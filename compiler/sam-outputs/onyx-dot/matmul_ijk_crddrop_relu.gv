@@ -18,7 +18,7 @@ digraph SAM {
     0 [comment="type=fiberwrite,mode=vals,tensor=X,size=1*B0_dim*C1_dim,sink=true" label="FiberWrite Vals: X" color=green3 shape=box style=filled type="fiberwrite" tensor="X" mode="vals" size="1*B0_dim*C1_dim" sink="true"]
     6 [comment="type=arrayvals,tensor=C" label="Array Vals: C" color=green2 shape=box style=filled type="arrayvals" tensor="C"]
     9 [comment="type=fiberlookup,index=k,tensor=C,mode=0,format=compressed,src=true,root=false" label="FiberLookup k: C0\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="k" tensor="C" mode="0" format="compressed" src="true" root="false"]
-    20 [comment="type=max" label="Max 0" color=brown shape=box style=filled type="max"]
+    20 [comment="type=smax,const0=0" label="Max 0" color=brown shape=box style=filled type="smax", const0="0"]
     21 [comment="type=crddrop,outer=j,inner=val,mode=0" label="CrdDrop Compression j, val" color=orange style=filled type="crddrop" outer="j" inner="val" mode="0"]
     22 [comment="type=crddrop,outer=i,inner=j" label="CrdDrop i,j" color=orange shape=box style=filled type="crddrop" outer="i" inner="j"]
     17 -> 16 [label="crd" style=dashed type="crd" comment=""]
