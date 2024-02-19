@@ -22,7 +22,7 @@ from sam.sim.src.tiling.process_expr import parse_all
 SAM_STRS = {"matmul_kij": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss:1,0 -f=C:ss -s=reorder(k,i,j)",
             "matmul_ikj": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss -s=reorder(i,k,j)",
             "matmul_ijk": "X(i,j)=B(i,k)*C(k,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
-            "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
+            "mat_elemadd": "X(i,j)=B(i,j)+C(i,j) -f=X:ss -f=B:ss -f=C:ss  -s=reorder(i,j,k)",
             "mat_elemmul": "X(i,j)=B(i,j)*C(i,j) -f=X:ss -f=B:ss -f=C:ss:1,0  -s=reorder(i,j,k)",
             "mat_mattransmul": "X(i,j)=C(j,i)*c(j)+d(i) -f=X:ss -f=B:ss -f=c:ss:0 -f=d:ss:0  -s=reorder(i,j)",
             "mat_vecmul_ij": "X(i,j)=B(i,j)*c(j) -f=X:ss -f=B:ss -f=c:ss:0  -s=reorder(i,j)",
@@ -119,6 +119,7 @@ def tile_tensor(tensor, ivar_map, split_map, new_ivar_order=None, tensor_name=""
     print("ivar_map: ", ivar_map)
     print("split_map: ", split_map)
     print("order = ", order)
+    # breakpoint()
 
     new_shape = []
     for lvl in range(order):
@@ -291,6 +292,7 @@ def get_other_tensors(app_str, tensor, other_nonempty=True):
     elif "mat_elemadd" in app_str or "mat_elemmul" in app_str:
         print("Writing shifted...")
         shifted = ScipyTensorShifter().shiftLastMode(tensor)
+        scipy.io.mmwrite("/home/avb03/sam/tiles/C.mtx", shifted)
         tensors.append(shifted)
 
     elif "mat_sddmm" in app_str:
@@ -451,9 +453,16 @@ def cotile_multilevel_coo(app_str, hw_config_fname, tensors, output_dir_path, hi
                     tile_size = hw_config[hw_key]
                     sf *= tile_size
 
+                # unique independent var (corresponding to dimensions)
                 unique_ivars = list(set(sum(ivars, [])))
-                for ivar in unique_ivars:
-                    split_map[ivar] = sf
+                # add in nonsquare dimension
+                sf_list = [sf, 40]
+                # breakpoint()
+                # map each independent variable to a different tilesize
+                for i, ivar in enumerate(unique_ivars):
+                    split_map[ivar] = sf_list[i]
+                # for ivar in unique_ivars:
+                #     split_map[ivar] = sf
 
                 if cotiled is None:
                     # First iteration of tiling
