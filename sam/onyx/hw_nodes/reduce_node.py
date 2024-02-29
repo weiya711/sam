@@ -112,7 +112,16 @@ class ReduceNode(HWNode):
         # TODO: make this use the metamapper
         instr_type = strip_modifiers(lassen_fc.Py.input_t.field_dict['inst'])
         asm_ = Assembler(instr_type)
-        op = int(asm_.assemble(asm.add()))
+
+        if 'fp' in attributes:
+            is_fp = attributes['fp'].strip('"')
+            if (is_fp == 'true'):
+                op = int(asm_.assemble(asm.fp_add()))
+            else:
+                op = int(asm_.assemble(asm.add()))
+        else:
+            op = int(asm_.assemble(asm.add()))
+
         cfg_kwargs = {
             'stop_lvl': stop_lvl,
             'pe_connected_to_reduce': pe_connected_to_reduce,
