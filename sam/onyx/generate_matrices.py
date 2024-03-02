@@ -195,10 +195,11 @@ class MatrixGenerator:
                 flat_array.append(val)
             if glb_override:
                 lines = [len(flat_array), *flat_array]
-                self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, dump_hex=print_hex)
+                self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}",
+                                 dump_dir=use_dir, dump_hex=print_hex, is_val=True)
             else:
-                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir,
-                                 dump_hex=print_hex)
+                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}",
+                                 dump_dir=use_dir, dump_hex=print_hex, is_val=True)
         elif self.format == "COO":
             crd_dict = dict()
             order = len(self.array.shape)
