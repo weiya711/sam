@@ -66,7 +66,15 @@ class MergeNode(HWNode):
         elif other_type == IntersectNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == ReduceNode:
-            raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            # raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
+            other_red = other.get_name()
+            new_conns = {
+                f'merge_to_reduce_inner': [
+                    ([(merge, f"cmrg_coord_out_{0}"), (other_red, f"data_in")], 17),
+                ]
+            }
+
+            return new_conns
         elif other_type == LookupNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == MergeNode:

@@ -106,7 +106,20 @@ class ComputeNode(HWNode):
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
         elif other_type == MergeNode:
             # TODO
-            raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
+            # raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
+            # Hack just use inner for now
+            crddrop = other.get_name()
+            pe = self.get_name()
+            conn = 0
+            if 'outer' in edge.get_comment():
+                conn = 1
+
+            new_conns = {
+                f'pe_to_crddrop_res_to_{conn}': [
+                    ([(pe, "res"), (crddrop, f"cmrg_coord_in_{conn}")], 17),
+                ]
+            }
+            return new_conns            
         elif other_type == RepeatNode:
             # TODO
             raise NotImplementedError(f'Cannot connect ComputeNode to {other_type}')
