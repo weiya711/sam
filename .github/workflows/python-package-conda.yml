@@ -13,7 +13,7 @@ jobs:
     - name: Set up Python 3.8.12
       uses: actions/setup-python@v3
       with:
-        python-version: 3.12
+        python-version: 3.8.12
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
@@ -23,8 +23,8 @@ jobs:
         pip install --upgrade pip
         pip install virtualenv
         python -m virtualenv venv
-        pip install setuptools
         source venv/bin/activate
+        pip install setuptools
         pip install -r requirements.txt
         git clone https://github.com/cdonovick/peak.git
         pip install -e peak
