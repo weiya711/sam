@@ -20,7 +20,8 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        sudo apt install python3-distutils
+        sudo apt install python3.8-distutils
+        sudo apt install python3.6-apt
         pip install --upgrade pip
         pip install virtualenv
         python -m virtualenv venv
