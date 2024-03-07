@@ -542,7 +542,8 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
             shape_reordered.insert(mode_tup[1][0], shape[mode_tup[0]])
         to_loop = tensor_ordering_sorted
     # Get vals first since all formats will have vals
-    val_f = [fil for fil in all_files if name in fil and f'mode_vals{suffix}' in fil][0]
+    # regardless of the ordering, the tensor has values, and these two lines get those values
+    val_f = [fil for fil in all_files if f'tensor_{name}' in fil and f'mode_vals{suffix}' in fil][0]
     vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate,
                        positive_only=positive_only)
 
@@ -557,8 +558,8 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
         crds = []
         for mode_original in to_loop:
             mode = mode_original
-            seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'seg{suffix}' in fil][0]
-            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
+            seg_f = [fil for fil in all_files if f'tensor_{name}' in fil and f'mode_{mode}' in fil and f'seg{suffix}' in fil][0]
+            crd_f = [fil for fil in all_files if f'tensor_{name}' in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
             seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate,
                                  positive_only=positive_only)
             segs.append(seg_t_)
