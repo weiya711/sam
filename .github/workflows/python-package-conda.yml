@@ -24,6 +24,7 @@ jobs:
         pip install --upgrade pip
         pip install virtualenv
         python -m virtualenv venv
+        pip install setuptools
         source venv/bin/activate
         pip install -r requirements.txt
         git clone https://github.com/cdonovick/peak.git
