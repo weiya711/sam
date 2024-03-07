@@ -522,7 +522,7 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles):
 
 def get_tensor_from_files(name, files_dir, shape, base=10,
                           format='CSF', early_terminate=None, tensor_ordering=None,
-                          suffix="", positive_only=True, use_fp=False) -> MatrixGenerator:
+                          suffix="", positive_only=False, use_fp=False) -> MatrixGenerator:
     all_files = os.listdir(files_dir)
     dims = len(shape)
 
@@ -542,7 +542,6 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
             shape_reordered.insert(mode_tup[1][0], shape[mode_tup[0]])
         to_loop = tensor_ordering_sorted
     # Get vals first since all formats will have vals
-    # regardless of the ordering, the tensor has values, and these two lines get those values
     val_f = [fil for fil in all_files if f'tensor_{name}' in fil and f'mode_vals{suffix}' in fil][0]
     vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate,
                        positive_only=positive_only)
