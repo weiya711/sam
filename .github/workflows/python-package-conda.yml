@@ -13,15 +13,13 @@ jobs:
     - name: Set up Python 3.8.12
       uses: actions/setup-python@v3
       with:
-        python-version: 3.8.12
+        python-version: 3.8
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        sudo apt install python3.8-distutils
-        sudo apt install python3.6-apt
         pip install --upgrade pip
         pip install virtualenv
         python -m virtualenv venv
