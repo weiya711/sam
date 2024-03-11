@@ -1,7 +1,13 @@
 import argparse
 from numpy import broadcast
 import pydot
+import coreir
+import os
+import subprocess
+from hwtypes import BitVector
 from sam.onyx.hw_nodes.hw_node import HWNodeType
+from lassen.utils import float2bfbin
+import json
 
 
 class SAMDotGraphLoweringError(Exception):
@@ -12,7 +18,7 @@ class SAMDotGraphLoweringError(Exception):
 class SAMDotGraph():
 
     def __init__(self, filename=None, local_mems=True, use_fork=False,
-                 use_fa=False, unroll=1) -> None:
+                 use_fa=False, unroll=1, collat_dir=None) -> None:
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]
@@ -24,7 +30,9 @@ class SAMDotGraph():
         self.use_fork = use_fork
         self.use_fa = use_fa
         self.fa_color = 0
+        self.collat_dir = collat_dir
 
+        self.alu_nodes = []
         self.shared_writes = {}
 
         if unroll > 1:
@@ -48,6 +56,9 @@ class SAMDotGraph():
         else:
             self.rewrite_rsg_broadcast()
         self.map_nodes()
+        self.map_alu()
+        if len(self.alu_nodes) > 0:
+            self.rewrite_complex_ops()
 
     def get_mode_map(self):
         sc = self.graph.get_comment().strip('"')
@@ -78,11 +89,126 @@ class SAMDotGraph():
         # return self.mode_map
         return self.remaining
 
+    def generate_coreir_spec(self, context, attributes, name):
+        # Declare I/O of ALU
+        module_typ = context.Record({"in0": context.Array(1, context.Array(16, context.BitIn())),
+                                     "in1": context.Array(1, context.Array(16, context.BitIn())),
+                                     "out": context.Array(16, context.Bit())})
+        module = context.global_namespace.new_module("ALU_" + name, module_typ)
+        assert module.definition is None, "Should not have a definition"
+        module_def = module.new_definition()
+        alu_op = attributes['type'].strip('"')
+        # import the desired operation from coreir, commonlib, float_DW, or the float lib
+        # specify the width of the operations
+        # TODO: parameterize bit width
+        op = None
+        lib_name = None
+        if alu_op in context.get_namespace("coreir").generators:
+            coreir_op = context.get_namespace("coreir").generators[alu_op]
+            op = coreir_op(width=16)
+            lib_name = "coreir"
+        elif alu_op in context.get_namespace("commonlib").generators:
+            commonlib_op = context.get_namespace("commonlib").generators[alu_op]
+            op = commonlib_op(width=16)
+            lib_name = "commonlib"
+        elif alu_op in context.get_namespace("float_DW").generators:
+            float_DW_op = context.get_namespace("float_DW").generators[alu_op]
+            op = float_DW_op(exp_width=8, ieee_compliance=False, sig_width=7)
+            lib_name = "float_DW"
+        elif alu_op in context.get_namespace("float").generators:
+            float_op = context.get_namespace("float").generators[alu_op]
+            op = float_op(exp_bits=8, frac_bits=7)
+            lib_name = "float"
+        else:
+            # if the op is in none of the libs, it may be mapped using the custom rewrite rules
+            # in map_app.py
+            custom_rule_names = {
+                "mult_middle": "commonlib.mult_middle",
+                "abs": "commonlib.abs",
+                "fp_exp": "float.exp",
+                "fp_max": "float.max",
+                "fp_div": "float.div",
+                "fp_mux": "float.mux",
+                "fp_mul": "float_DW.fp_mul",
+                "fp_add": "float_DW.fp_add",
+                "fp_sub": "float.sub",
+            }
+            if alu_op in custom_rule_names:
+                custom_rule_lib = custom_rule_names[alu_op].split(".")[0]
+                custom_relu_op = custom_rule_names[alu_op].split(".")[1]
+                custom_op = context.get_namespace(custom_rule_lib).generators[custom_relu_op]
+                op = custom_op(exp_bits=8, frac_bits=7)
+                lib_name = custom_rule_lib
+            else:
+                raise NotImplementedError(f"fail to map node {alu_op} to compute")
+        # add the operation instance to the module
+        op_inst = module_def.add_module_instance(alu_op, op)
+        # instantiate the constant operand instances, if any
+        const_cnt = 0
+        const_inst = []
+        # TODO: does any floating point use more then three inputs?
+        for i in range(2):
+            if f"const{i}" in attributes:
+                const_cnt += 1
+                coreir_const = context.get_namespace("coreir").generators["const"]
+                const = coreir_const(width=16)
+                # constant string contains a decimal point, its a floating point constant
+                if ("." in attributes[f"const{i}"].strip('"')):
+                    assert "fp" in alu_op, "only support floating point constant for fp ops"
+                    const_value = float(attributes[f"const{i}"].strip('"'))
+                    const_value = int(float2bfbin(const_value), 2)
+                else:
+                    const_value = int(attributes[f"const{i}"].strip('"'))
+                const_inst.append(module_def.add_module_instance(f"const{i}",
+                                                                 const,
+                                                                 context.new_values({"value": BitVector[16](const_value)})))
+
+        # connect the input to the op
+        # connect module input to the non-constant alu input ports
+        # note that for ops in commonlib, coreir, and float, the input ports are `in0`, `in1`, `in2`
+        # and the output port is `out`.
+        # however, the inputs for ops in float_DW are a, b, c, and the output is z
+        float_DW_port_mapping = ['a', 'b', 'c']
+        for i in range(2 - const_cnt):
+            _input = module_def.interface.select(f"in{i}").select("0")
+            if lib_name != "float_DW":
+                try:
+                    _alu_in = op_inst.select(f"in{i}")
+                except Exception:
+                    print(f"Cannot select port 'in{i}', fall back to using port 'in'")
+                    # FIXME for now the only op that raise this exception is the single input
+                    # op fp_exp
+                    _alu_in = op_inst.select("in")
+                    # connect the input and break to exit the loop since there're no more port
+                    # to connect
+                    module_def.connect(_input, _alu_in)
+                    break
+            else:
+                _alu_in = op_inst.select(float_DW_port_mapping[i])
+            module_def.connect(_input, _alu_in)
+        # connect constant output to alu input ports
+        if const_cnt > 0:
+            for i in range(const_cnt, 2):
+                _const_out = const_inst[i - const_cnt].select("out")
+                if lib_name != "float_DW":
+                    _alu_in = op_inst.select(f"in{i}")
+                else:
+                    _alu_in = op_inst.select(float_DW_port_mapping[i])
+                module_def.connect(_const_out, _alu_in)
+        # connect alu output to module output
+        _output = module_def.interface.select("out")
+        if lib_name != "float_DW":
+            _alu_out = op_inst.select("out")
+        else:
+            _alu_out = op_inst.select("z")
+        module_def.connect(_output, _alu_out)
+        module.definition = module_def
+        assert module.definition is not None, "Should have a definitation by now"
+
     def map_nodes(self):
         '''
         Iterate through the nodes and map them to the proper HWNodes
         '''
-
         for node in self.graph.get_nodes():
             # Simple write the HWNodeType attribute
             if 'hwnode' not in node.get_attributes():
@@ -99,12 +225,6 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.RepSigGen"
                 elif n_type == "repeat":
                     hw_nt = f"HWNodeType.Repeat"
-                elif n_type == "mul" or n_type == "add" or n_type == "max" or n_type == "and":
-                    hw_nt = f"HWNodeType.Compute"
-                elif n_type == "fgetfint" or n_type == "fgetffrac" or n_type == "faddiexp":
-                    hw_nt = f"HWNodeType.Compute"
-                elif n_type == "fp_mul" or n_type == "fp_max" or n_type == "fp_add":
-                    hw_nt = f"HWNodeType.Compute"
                 elif n_type == "reduce":
                     hw_nt = f"HWNodeType.Reduce"
                 elif n_type == "intersect" or n_type == "union":
@@ -114,12 +234,38 @@ class SAMDotGraph():
                 elif n_type == "crdhold":
                     hw_nt = f"HWNodeType.CrdHold"
                 elif n_type == "vectorreducer":
-                    hw_nt = f"HWNodeType.VectorReducer "
+                    hw_nt = f"HWNodeType.VectorReducer"
                 else:
-                    print(n_type)
-                    raise SAMDotGraphLoweringError(f"Node is of type {n_type}")
-
+                    # if the current node is not any of the primitives, it must be a compute
+                    hw_nt = f"HWNodeType.Compute"
+                    self.alu_nodes.append(node)
                 node.get_attributes()['hwnode'] = hw_nt
+
+    def map_alu(self):
+        if len(self.alu_nodes) > 0:
+            # coreir lib is loaded by default, need to load commonlib for smax
+            # and float_DW for floating point ops
+            c = coreir.Context()
+            c.load_library("commonlib")
+            c.load_library("float_DW")
+            # iterate through all compute nodes and generate their coreir spec
+            for alu_node in self.alu_nodes:
+                self.generate_coreir_spec(c,
+                                          alu_node.get_attributes(),
+                                          alu_node.get_name())
+            c.save_to_file(self.collat_dir + "/alu_coreir_spec.json")
+
+            # use metamapper to map it
+            # set environment variable PIPELINED to zero to disable input buffering in the alu
+            # in order to make sure the output comes out within the same cycle the input is given
+            metamapper_env = os.environ.copy()
+            metamapper_env["PIPELINED"] = "0"
+            # no need to peroform branch delay matching because we have rv interface in sparse
+            metamapper_env["PROVE"] = "0"
+            # FIXME: disable for now until verification of floating point computation is fixed
+            metamapper_env["MATCH_BRANCH_DELAY"] = "0"
+            subprocess.run(["python", "/aha/MetaMapper/scripts/map_app.py", self.collat_dir + "/alu_coreir_spec.json"],
+                           env=metamapper_env)
 
     def get_next_seq(self):
         ret = self.seq
@@ -131,6 +277,131 @@ class SAMDotGraph():
             if node.get_name() == name:
                 return node
         assert False
+
+    def rewrite_complex_ops(self):
+        # parse the mapped json file, instantiate the compute/memory nodes generated by
+        # metamapper breaking down the complex op node
+        with open(self.collat_dir + "/alu_coreir_spec_mapped.json", 'r') as alu_mapped_file:
+            alu_mapped = json.load(alu_mapped_file)
+        # iterate through all the modules
+        modules_dict = alu_mapped["namespaces"]["global"]["modules"]
+        for node in self.alu_nodes:
+            module = modules_dict[f"ALU_{node.get_name()}_mapped"]
+            if len(module["instances"]) <= 3:
+                # for non complex op, each module contains three instances
+                # 1. the pe module itself
+                # 2. the coreir.const that supplies the op code
+                # 3. the coreir.const that supplies the clk_en signal
+                continue
+            complex_node_op = node.get_type().strip('"')
+            complex_node_label = node.get_label().strip('"')
+            incoming_edges = [edge for edge in self.graph.get_edges() if edge.get_destination() == node.get_name()]
+            outgoing_edges = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name()]
+            # have more than three instances, it is a complex op
+            instances_dict = module["instances"]
+            instance_name_node_mappging = {}
+            for instance_name in instances_dict:
+                instance = instances_dict[instance_name]
+                # stamp out PEs and ROMs only, not the constant
+                if "modref" in instance and instance["modref"] == "global.PE":
+                    # skip the bit constant PE that supplies ren data to the rom
+                    # as the rom in sparse flow will use fiber access
+                    if instance_name.split("_")[0] == "bit" and instance_name.split("_")[1] == "const":
+                        continue
+                    # the last two string of the instance name is the stance id, we only want the op
+                    new_alu_node_op = '_'.join(instance_name.split("_")[0:-2])
+                    new_alu_node = pydot.Node(f"{instance_name}_{self.get_next_seq()}",
+                                              label=f"{complex_node_label}_{new_alu_node_op}",
+                                              hwnode=f"{HWNodeType.Compute}",
+                                              original_complex_op_id=node.get_name(),
+                                              is_mapped_from_complex_op=True,
+                                              type=f"{new_alu_node_op}", comment=f"type={new_alu_node_op}")
+                    new_alu_node.create_attribute_methods(new_alu_node.get_attributes())
+                    self.graph.add_node(new_alu_node)
+                    instance_name_node_mappging[instance_name] = new_alu_node
+                # create rom node using arrayvals
+                elif "genref" in instance and instance["genref"] == "memory.rom2":
+                    attrs = {}
+                    attrs["tensor"] = complex_node_op
+                    rom_arrayvals_node = pydot.Node(f"{complex_node_op}_lut_{self.get_next_seq()}",
+                                                    label=f"{complex_node_label}_lut", tensor=f"{complex_node_op}",
+                                                    type="arrayvals", comment=f"type=arrayvals,tensor={complex_node_op}")
+                    rom_arrayvals_node.create_attribute_methods(rom_arrayvals_node.get_attributes())
+                    self.graph.add_node(rom_arrayvals_node)
+                    instance_name_node_mappging[instance_name] = rom_arrayvals_node
+            # connect the nodes
+            for connection in module["connections"]:
+                for i in range(2):
+                    # the connection endpoint with 'datax', 'raddr', and 'self.out' is a connection to
+                    # a PE, an arrayvals, or an original output of the complex op
+                    if 'data0' in connection[i] or 'data1' in connection[i] or 'data2' in connection[i] \
+                            or 'raddr' in connection[i] or 'self.out' in connection[i]:
+                        edge_attr = {}
+                        specified_port = None
+                        edge_type = None
+                        # internal connection within the complex op
+                        if 'self.out' not in connection[i]:
+                            dest_node_name = connection[i].split(".")[0]
+                            dest_node = instance_name_node_mappging[dest_node_name]
+                            # for internal conection we need to specify the edge type.
+                            # for connection to arrayvals, the connection logic in hwnodes wil take
+                            # care of the port name, no need to specify port name here
+                            if dest_node.get_type() == "arrayvals":
+                                edge_type = "ref"
+                                specified_port = None
+                            else:
+                                edge_type = "val"
+                                specified_port = connection[i].split(".")[1]
+                        # FIXME: only support a single output complex op for now
+                        # if it is an existing outgoing edge, inherit the edge properties
+                        else:
+                            dest_node = outgoing_edges[0].get_destination()
+                            edge_attr = outgoing_edges[0].get_attributes()
+                            self.graph.del_edge(outgoing_edges[0].get_source(), outgoing_edges[0].get_destination())
+
+                        # select the other port as src
+                        if i == 0:
+                            src_port = connection[1]
+                        else:
+                            src_port = connection[0]
+                        src_node_name = src_port.split(".")[0]
+                        # if the src port is a node originally connects to the input of the complex op
+                        # inherit the edge properties of that edge
+                        if "self.in" in src_port:
+                            # FIXME: only support a single input complex op for now
+                            src_node = incoming_edges[0].get_source()
+                            # an edge connot be a incoming to and outgoing from the complex op simultaneously
+                            assert not edge_attr
+                            edge_attr = incoming_edges[0].get_attributes()
+                            # connecting to a new node, use the port specified by metamapper
+                            self.graph.del_edge(incoming_edges[0].get_source(), incoming_edges[0].get_destination())
+                        # the srouce node is not a PE we just stamp out, skip the connection
+                        elif src_node_name not in instance_name_node_mappging:
+                            break
+                        else:
+                            src_node = instance_name_node_mappging[src_node_name]
+                        # a new edge
+                        if not edge_attr:
+                            new_edge = pydot.Edge(src=src_node,
+                                                  dst=dest_node,
+                                                  type=edge_type,
+                                                  label=edge_type,
+                                                  specified_port=specified_port,
+                                                  comment=edge_type)
+                        # existing edge, inherit its attributes
+                        else:
+                            new_edge = pydot.Edge(src=src_node,
+                                                  dst=dest_node,
+                                                  **edge_attr,
+                                                  specified_port=specified_port)
+
+                        self.graph.add_edge(new_edge)
+                        # done adding the edge for the connection, don't need to check the other port
+                        break
+            # finally remove the original complex op node
+            self.graph.del_node(node)
+        # turn the lut arrayvals into FA
+        self.rewrite_arrays()
 
     def rewrite_VectorReducer(self):
 
@@ -211,6 +482,7 @@ class SAMDotGraph():
 
             add = pydot.Node(f"vr_add_{self.get_next_seq()}", label=f"{og_label}_Add", hwnode=f"{HWNodeType.Compute}",
                              type="add", sub="0", comment="type=add,sub=0")
+            self.alu_nodes.append(add)
 
             crd_buffet = pydot.Node(f"vr_crd_buffet_{self.get_next_seq()}",
                                     label=f"{og_label}_crd_buffet", hwnode=f"{HWNodeType.Buffet}",
@@ -857,7 +1129,11 @@ class SAMDotGraph():
         '''
         Rewrites the array nodes to become (lookup, buffet) triples
         '''
-        nodes_to_proc = [node for node in self.graph.get_nodes() if 'arrayvals' in node.get_comment()]
+        # nodes_to_proc = [node for node in self.graph.get_nodes() if 'arrayvals' in node.get_comment()]
+        nodes_to_proc = []
+        for node in self.graph.get_nodes():
+            if 'arrayvals' in node.get_comment() and 'hwnode' not in node.get_attributes():
+                nodes_to_proc.append(node)
         for node in nodes_to_proc:
             # Now we have arrayvals, let's turn it into same stuff
             # Rewrite this node to a read

@@ -195,10 +195,11 @@ class MatrixGenerator:
                 flat_array.append(val)
             if glb_override:
                 lines = [len(flat_array), *flat_array]
-                self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir, dump_hex=print_hex)
+                self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}",
+                                 dump_dir=use_dir, dump_hex=print_hex, is_val=True)
             else:
-                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir,
-                                 dump_hex=print_hex)
+                self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}",
+                                 dump_dir=use_dir, dump_hex=print_hex, is_val=True)
         elif self.format == "COO":
             crd_dict = dict()
             order = len(self.array.shape)
@@ -519,10 +520,32 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles):
                 sl_ptr += 1
 
 
+def find_file_based_on_sub_string(files_dir, sub_string_list):
+    """Return the file name in a directory, if the file name
+    contains ALL of the provided sub-strings. Ideally, only 1
+    file should be matched. This function raises assertion
+    error if multiple files match.
+
+    Arguments:
+    files_dir       -- the directory to search
+    sub_string_list -- a list of sub-strings for name matching
+    """
+    all_files = os.listdir(files_dir)
+    matched_files = []
+    for file_name in all_files:
+        match = True
+        for sub_str in sub_string_list:
+            if sub_str not in file_name:
+                match = False
+        if match:
+            matched_files.append(file_name)
+    assert len(matched_files) <= 1, f"[Error] More than 1 files are matched: {matched_files}"
+    return matched_files[0]
+
+
 def get_tensor_from_files(name, files_dir, shape, base=10,
                           format='CSF', early_terminate=None, tensor_ordering=None,
-                          suffix="", positive_only=True, use_fp=False) -> MatrixGenerator:
-    all_files = os.listdir(files_dir)
+                          suffix="", positive_only=False, use_fp=False) -> MatrixGenerator:
     dims = len(shape)
 
     # assert tensor_ordering is not None
@@ -541,7 +564,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
             shape_reordered.insert(mode_tup[1][0], shape[mode_tup[0]])
         to_loop = tensor_ordering_sorted
     # Get vals first since all formats will have vals
-    val_f = [fil for fil in all_files if name in fil and f'mode_vals{suffix}' in fil][0]
+    val_f = find_file_based_on_sub_string(files_dir, [f'tensor_{name}', f'mode_vals{suffix}'])
     vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate,
                        positive_only=positive_only)
 
@@ -556,8 +579,8 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
         crds = []
         for mode_original in to_loop:
             mode = mode_original
-            seg_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'seg{suffix}' in fil][0]
-            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
+            seg_f = find_file_based_on_sub_string(files_dir, [f'tensor_{name}', f'mode_{mode}', f'seg{suffix}'])
+            crd_f = find_file_based_on_sub_string(files_dir, [f'tensor_{name}', f'mode_{mode}', f'crd{suffix}'])
             seg_t_ = read_inputs(f"{files_dir}/{seg_f}", intype=int, base=base, early_terminate=early_terminate,
                                  positive_only=positive_only)
             segs.append(seg_t_)
@@ -575,7 +598,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
     elif format == 'COO':
         crds = []
         for mode in range(dims):
-            crd_f = [fil for fil in all_files if name in fil and f'mode_{mode}' in fil and f'crd{suffix}' in fil][0]
+            crd_f = find_file_based_on_sub_string(files_dir, [f'tensor_{name}', f'mode_{mode}', f'crd{suffix}'])
             crds.append(read_inputs(f"{files_dir}/{crd_f}", intype=int, base=base, early_terminate=early_terminate,
                                     positive_only=positive_only))
 

@@ -1,4 +1,8 @@
 from sam.onyx.hw_nodes.hw_node import *
+from peak.assembler import Assembler
+from hwtypes.modifiers import strip_modifiers
+from lassen.sim import PE_fc as lassen_fc
+import lassen.asm as asm
 
 
 class ReduceNode(HWNode):
@@ -68,17 +72,10 @@ class ReduceNode(HWNode):
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
         elif other_type == ComputeNode:
             pe = other.get_name()
-            if 'Max 0' in other.op:
-                other_conn = 1
-            else:
-                other_conn = other.get_num_inputs()
+            other_conn = other.mapped_input_ports[other.get_num_inputs()]
             new_conns = {
                 f'reduce_to_pe_{other_conn}': [
-                    # send output to rd scanner
                     ([(red, "reduce_data_out"), (pe, f"data{other_conn}")], 17),
-                    # ([(red, "eos_out"), (wr_scan, "eos_in_0")], 1),
-                    # ([(wr_scan, "ready_out_0"), (red, "ready_in")], 1),
-                    # ([(red, "valid_out"), (wr_scan, "valid_in_0")], 1),
                 ]
             }
             other.update_input_connections()
@@ -112,7 +109,19 @@ class ReduceNode(HWNode):
         # data I/O to and from the PE should be internal with the reduce
         pe_in_external = 0
         # op is set to integer add for the PE TODO: make this configurable in the sam graph
-        op = 0
+        # TODO: make this use the metamapper
+        instr_type = strip_modifiers(lassen_fc.Py.input_t.field_dict['inst'])
+        asm_ = Assembler(instr_type)
+
+        if 'fp' in attributes:
+            is_fp = attributes['fp'].strip('"')
+            if (is_fp == 'true'):
+                op = int(asm_.assemble(asm.fp_add()))
+            else:
+                op = int(asm_.assemble(asm.add()))
+        else:
+            op = int(asm_.assemble(asm.add()))
+
         cfg_kwargs = {
             'stop_lvl': stop_lvl,
             'pe_connected_to_reduce': pe_connected_to_reduce,
