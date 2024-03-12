@@ -11,6 +11,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 from sam.util import round_sparse, TnsFileLoader, HOSTNAME
+from cgra_sparse_ml_bench.utils import convert_numpy_byte_array_to_fp_array
 
 
 # TnsFileDumper dumps a dictionary of coordinates to values
@@ -120,6 +121,16 @@ class ScipyMatrixMarketTensorLoader:
         coo = scipy.io.mmread(path)
         return coo
 
+# NumpyNPYArrayLoader loads tensor from the npy format and convert it into 
+# scipy.sparse matrices
+class NumpyNPYArrayLoader:
+    def __init__(self):
+        pass
+    def load(self, path):
+        np_byte_array = numpy.load(path)
+        np_fp_array = convert_numpy_byte_array_to_fp_array(np_byte_array)
+        coo = scipy.sparse.coo_array(np_fp_array)
+        return coo
 
 def shape_str(shape):
     return str(shape[0]) + " " + str(shape[1])
@@ -143,18 +154,18 @@ def array_newline_str(array):
 
 
 # InputCacheSuiteSparse attempts to avoid reading the same tensor from disk multiple
-# times in a benchmark run.
 class InputCacheSuiteSparse:
-    def __init__(self):
+    def __init__(self, loader):
         self.lastLoaded = None
         self.lastName = None
         self.tensor = None
+        self.loader = loader
 
     def load(self, tensor, cast):
         if self.lastName == str(tensor):
             return self.tensor
         else:
-            self.lastLoaded = tensor.load(ScipyMatrixMarketTensorLoader())
+            self.lastLoaded = tensor.load(self.loader)
             self.lastName = str(tensor)
             if cast:
                 self.tensor = self.lastLoaded
@@ -162,7 +173,6 @@ class InputCacheSuiteSparse:
             else:
                 self.tensor = self.lastLoaded
             return self.tensor
-
 
 class FormatWriter:
     def __init__(self, cast_int=False):
