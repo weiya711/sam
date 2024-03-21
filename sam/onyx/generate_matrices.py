@@ -540,12 +540,12 @@ def find_file_based_on_sub_string(files_dir, sub_string_list):
                 break
             elif len(sub_str) > 0:
                 if sub_str[-1].isdigit():
-                    idx = file_name.find(sub_str) # potential bug: might be more than 1 match
+                    idx = file_name.find(sub_str)  # potential bug: might be more than 1 match
                     if idx + len(sub_str) < len(file_name):
                         if file_name[idx + len(sub_str)].isdigit():
                             match = False
                             break
-            
+
         if match:
             matched_files.append(file_name)
     assert len(matched_files) <= 1, f"[Error] More than 1 files are matched: {matched_files}"
