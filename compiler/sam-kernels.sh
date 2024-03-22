@@ -41,6 +41,12 @@ GEN_KERNEL_NAMES=(
   mat_spacc_simple
   vec_sd_compression_WRONG
   vec_ds_compression_WRONG
+  vec_sub
+  mat_mask_tri
+  mat_mask_tri_partial
+  mat_vecmul_iter
+  mat_vecmul_iter_short
+  tensor3_website_expr
 )
 
 HAND_KERNEL_NAMES=(
@@ -83,6 +89,12 @@ TACO_ARGS=(
   "X(j,k)=B(i,j,k) -f=X:ss -f=B:sss"
   "x(i)=b(i) -f=b:s -f=x:d"
   "x(i)=b(i) -f=b:d -f=x:s"
+  "x(i)=b(i)-c(i) -f=b:s -f=c:s"
+  "x=B(i,j)*C(i,k)*D(k,j) -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)"
+  "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:ss -f=D:ss:1,0 -s=reorder(i,j,k)"
+  "x(i)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) -f=x:s -f=B:ss -f=C:ss -f=D:ss -f=E:ss -f=f:s -s=reorder(i,j,k,l,m)"
+  "x(i)=B(i,j)*C(j,k)*d(k) -f=x:s -f=B:ss -f=C:ss -f=d:s -s=reorder(i,j,k)"
+  "x=B(i)*C(j)*D(i,j,k)*E(j,l)*F(l,m,n) -f=B:s -f=C:s -f=D:sss -f=E:ss -f=F:sss -s=reorder(i,j,k,l,m,n)"
 )
 
 mkdir -p $dir

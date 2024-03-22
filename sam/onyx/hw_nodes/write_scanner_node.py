@@ -79,6 +79,7 @@ class WriteScannerNode(HWNode):
     def configure(self, attributes):
 
         stop_lvl = 0
+        init_blank = 0
 
         # compressed = int(attributes['format'] == 'compressed')
         if 'format' in attributes and 'vals' in attributes['format'].strip('"'):
@@ -89,14 +90,14 @@ class WriteScannerNode(HWNode):
         else:
             compressed = 1
 
-        if 'spacc' in attributes:
-            spacc_mode = 1
-            init_blank = 1
-            assert 'stop_lvl' in attributes
-            stop_lvl = int(attributes['stop_lvl'].strip('"'))
-        else:
-            spacc_mode = 0
-            init_blank = 0
+        # if 'spacc' in attributes:
+        #    spacc_mode = 1
+        #    init_blank = 1
+        #    assert 'stop_lvl' in attributes
+        #    stop_lvl = int(attributes['stop_lvl'].strip('"'))
+        # else:
+        #    spacc_mode = 0
+        #    init_blank = 0
 
         # compressed = int(attributes['format'] == 'compressed')
         if attributes['type'].strip('"') == 'arrayvals':
@@ -112,16 +113,24 @@ class WriteScannerNode(HWNode):
         else:
             block_mode = 0
 
+        if 'vector_reduce_mode' in attributes:
+            is_in_vr_mode = attributes['vector_reduce_mode'].strip('"')
+            if is_in_vr_mode == "true":
+                vr_mode = 1
+        else:
+            vr_mode = 0
+
         # block_mode = int(attributes['type'].strip('"') == 'fiberlookup')
         # cfg_tuple = (inner_offset, compressed, lowest_level, stop_lvl, block_mode)
-        cfg_tuple = (compressed, lowest_level, stop_lvl, block_mode, init_blank, spacc_mode)
+        cfg_tuple = (compressed, lowest_level, stop_lvl, block_mode, vr_mode, init_blank)
         cfg_kwargs = {
             # 'inner_offset': inner_offset,
             'compressed': compressed,
             'lowest_level': lowest_level,
             'stop_lvl': stop_lvl,
             'block_mode': block_mode,
-            'init_blank': init_blank,
-            'spacc_mode': spacc_mode
+            'vr_mode': vr_mode,
+            'init_blank': init_blank
+            # 'spacc_mode': spacc_mode
         }
         return cfg_tuple, cfg_kwargs
