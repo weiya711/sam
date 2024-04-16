@@ -946,7 +946,7 @@ class SAMDotGraph():
                 # Only instantiate the glb_write if it doesn't exist
                 tensor = attrs['tensor'].strip('"')
                 mode = attrs['mode'].strip('"')
-                is_dense = attrs['format'].strip('"') == 'dense' 
+                is_dense = attrs['format'].strip('"') == 'dense'
 
                 # dense scanner is basically a counter that counts up to the dimension size
                 # and does not rely on the GLB tile to supply any data
@@ -956,7 +956,7 @@ class SAMDotGraph():
                         glb_write = self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1]
                     else:
                         glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
-                                            **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+                                                **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
                         self.graph.add_node(glb_write)
                         if f'{tensor}_{mode}_fiberlookup' in self.shared_writes:
                             self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] = glb_write
