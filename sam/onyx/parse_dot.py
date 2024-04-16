@@ -956,7 +956,7 @@ class SAMDotGraph():
                         glb_write = self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1]
                     else:
                         glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
-                                                **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+                                               **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
                         self.graph.add_node(glb_write)
                         if f'{tensor}_{mode}_fiberlookup' in self.shared_writes:
                             self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] = glb_write
