@@ -921,9 +921,6 @@ class SAMDotGraph():
 
         for node in nodes_to_proc:
             if 'fiberlookup' in node.get_comment():
-                print("PRINTING NODES")
-                print(node.get_attributes())
-                print(node.get_name())
                 # Rewrite this node to a read
                 root = bool(node.get_root())
                 root = False
@@ -933,50 +930,6 @@ class SAMDotGraph():
 
                 og_label = attrs['label']
                 del attrs['label']
-
-                dense_ = attrs['format'].strip('"') == 'dense'
-                print(f"IS DENSE: {dense_}")
-
-                # if dense_:
-
-                #     rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
-                #                         **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
-                #                         fa_color=self.fa_color)
-
-                #     self.fa_color += 1
-
-                #     crd_out_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
-                #                     "crd" in edge.get_label()][0]
-                #     ref_out_edge = [edge for edge in self.graph.get_edges() if edge.get_source() == node.get_name() and
-                #                     "ref" in edge.get_label()][0]
-                #     ref_in_edge = None
-                #     if not root:
-                #         # Then we have ref in edge...
-                #         ref_in_edge = [edge for edge in self.graph.get_edges()
-                #                           if edge.get_destination() == node.get_name() and
-                #                       "ref" in edge.get_label()][0]
-                #     # Now add the nodes and move the edges...
-                #     self.graph.add_node(rd_scan)
-
-                #     # Now inject the read scanner to other nodes...
-                #     rd_to_down_crd = pydot.Edge(src=rd_scan, dst=crd_out_edge.get_destination(),
-                #                                 **crd_out_edge.get_attributes())
-                #     rd_to_down_ref = pydot.Edge(src=rd_scan, dst=ref_out_edge.get_destination(),
-                #                                 **ref_out_edge.get_attributes())
-                #     self.graph.add_edge(rd_to_down_crd)
-                #     self.graph.add_edge(rd_to_down_ref)
-                #     if ref_in_edge is not None:
-                #         up_to_ref = pydot.Edge(src=ref_in_edge.get_source(), dst=rd_scan, **ref_in_edge.get_attributes())
-                #         self.graph.add_edge(up_to_ref)
-
-                #     # Delte old stuff...
-                #     ret = self.graph.del_node(node)
-                #     ret = self.graph.del_edge(crd_out_edge.get_source(), crd_out_edge.get_destination())
-                #     self.graph.del_edge(ref_out_edge.get_source(), ref_out_edge.get_destination())
-                #     if ref_in_edge is not None:
-                #         self.graph.del_edge(ref_in_edge.get_source(), ref_in_edge.get_destination())
-
-                # else:
 
                 rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
                                      **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
@@ -993,21 +946,23 @@ class SAMDotGraph():
                 # Only instantiate the glb_write if it doesn't exist
                 tensor = attrs['tensor'].strip('"')
                 mode = attrs['mode'].strip('"')
-                print(mode)
-                if f'{tensor}_{mode}_fiberlookup' in self.shared_writes and \
-                        self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] is not None:
-                    glb_write = self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1]
-                else:
-                    glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
-                                           **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
-                    self.graph.add_node(glb_write)
-                    if f'{tensor}_{mode}_fiberlookup' in self.shared_writes:
-                        self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] = glb_write
+                is_dense = attrs['format'].strip('"') == 'dense' 
+
+                # dense scanner is basically a counter that counts up to the dimension size
+                # and does not rely on the GLB tile to supply any data
+                if not is_dense:
+                    if f'{tensor}_{mode}_fiberlookup' in self.shared_writes and \
+                            self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] is not None:
+                        glb_write = self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1]
+                    else:
+                        glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
+                                            **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
+                        self.graph.add_node(glb_write)
+                        if f'{tensor}_{mode}_fiberlookup' in self.shared_writes:
+                            self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] = glb_write
                 if self.local_mems is False:
                     memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs,
                                         label=f"{og_label}_SRAM", hwnode=f"{HWNodeType.Memory}")
-
-                # Entertain multiple edges
 
                 # Now add the nodes and move the edges...
                 self.graph.add_node(rd_scan)
