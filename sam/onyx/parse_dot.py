@@ -372,7 +372,7 @@ class SAMDotGraph():
                             # an edge connot be a incoming to and outgoing from the complex op simultaneously
                             assert not edge_attr
                             edge_attr = incoming_edges[incoming_edge_idx].get_attributes()
-                            self.graph.del_edge(incoming_edges[incoming_edge_idx].get_source(), 
+                            self.graph.del_edge(incoming_edges[incoming_edge_idx].get_source(),
                                                 incoming_edges[incoming_edge_idx].get_destination())
                         # the srouce node is not a PE we just stamp out, skip the connection
                         elif src_node_name not in instance_name_node_mappging:
