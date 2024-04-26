@@ -306,7 +306,7 @@ class SAMDotGraph():
                     # as the rom in sparse flow will use fiber access
                     if instance_name.split("_")[0] == "bit" and instance_name.split("_")[1] == "const":
                         continue
-                    # the last two string of the instance name is the stance id, we only want the op
+                    # the last two string of the instance name is the instance id, we only want the op
                     new_alu_node_op = '_'.join(instance_name.split("_")[0:-2])
                     new_alu_node = pydot.Node(f"{instance_name}_{self.get_next_seq()}",
                                               label=f"{complex_node_label}_{new_alu_node_op}",
@@ -366,13 +366,13 @@ class SAMDotGraph():
                         # if the src port is a node originally connects to the input of the complex op
                         # inherit the edge properties of that edge
                         if "self.in" in src_port:
-                            # FIXME: only support a single input complex op for now
-                            src_node = incoming_edges[0].get_source()
+                            # input ports to the complex ops are of the name "self.in{idx}.0"
+                            incoming_edge_idx = int(src_port.split(".")[1].strip("in"))
+                            src_node = incoming_edges[incoming_edge_idx].get_source()
                             # an edge connot be a incoming to and outgoing from the complex op simultaneously
                             assert not edge_attr
-                            edge_attr = incoming_edges[0].get_attributes()
-                            # connecting to a new node, use the port specified by metamapper
-                            self.graph.del_edge(incoming_edges[0].get_source(), incoming_edges[0].get_destination())
+                            edge_attr = incoming_edges[incoming_edge_idx].get_attributes()
+                            self.graph.del_edge(incoming_edges[incoming_edge_idx].get_source(), incoming_edges[incoming_edge_idx].get_destination())
                         # the srouce node is not a PE we just stamp out, skip the connection
                         elif src_node_name not in instance_name_node_mappging:
                             break
@@ -1292,7 +1292,7 @@ class SAMDotGraph():
     def annotate_IO_nodes(self):
         original_nodes = self.graph.get_nodes()
         output_nodes = ['x', 'X']
-        input_nodes = ['c', 'C', 'b', 'B', 'd', 'D', 'e', 'E', 'f', 'F', 'exp']
+        input_nodes = ['c', 'C', 'b', 'B', 'd', 'D', 'e', 'E', 'f', 'F', 'fp_exp', 'fp_div']
         exclude_nodes = ['b', 'B']
         for node in original_nodes:
             node_attrs = node.get_attributes()
