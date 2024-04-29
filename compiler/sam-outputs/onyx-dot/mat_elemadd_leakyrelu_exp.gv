@@ -11,7 +11,7 @@ digraph SAM {
     12 [comment="broadcast" shape=point style=invis type="broadcast"]
     13 [comment="type=fp_mul,const0=0.2" label="FP_Mul * 0.2" color=brown shape=box style=filled type="fp_mul" const0="0.2"]
     14 [comment="type=fp_max" label="FP_Max" color=brown shape=box style=filled type="fp_max"]
-    15 [comment="type=exp" label="Exp" color=brown shape=box style=filled type="exp"]
+    15 [comment="type=fp_exp" label="FP_Exp" color=brown shape=box style=filled type="fp_exp"]
     0 [comment="type=fiberwrite,mode=vals,tensor=X,size=1*B0_dim*B1_dim,sink=true" label="FiberWrite Vals: X" color=green3 shape=box style=filled type="fiberwrite" tensor="X" mode="vals" size="1*B0_dim*B1_dim" sink="true"]
     5 [comment="type=arrayvals,tensor=C" label="Array Vals: C" color=green2 shape=box style=filled type="arrayvals" tensor="C"]
     8 [comment="type=fiberlookup,index=j,tensor=C,mode=1,format=compressed,src=true,root=false" label="FiberLookup j: C1\ncompressed" color=green4 shape=box style=filled type="fiberlookup" index="j" tensor="C" mode="1" format="compressed" src="true" root="false"]
