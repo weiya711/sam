@@ -977,7 +977,7 @@ class SAMDotGraph():
                 # Dense scanner doesn't need data from the GLB, hence no connection to the GLB
                 if not is_dense:
                     glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}",
-                                        style="bold")
+                                           style="bold")
                     self.graph.add_edge(glb_to_wr)
                 # write + read to buffet
                 wr_to_buff = pydot.Edge(src=wr_scan, dst=buffet, label=f'wr_to_buff_{self.get_next_seq()}')
