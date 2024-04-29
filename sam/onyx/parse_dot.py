@@ -950,6 +950,7 @@ class SAMDotGraph():
 
                 # dense scanner is basically a counter that counts up to the dimension size
                 # and does not rely on the GLB tile to supply any data
+                glb_write = None
                 if not is_dense:
                     if f'{tensor}_{mode}_fiberlookup' in self.shared_writes and \
                             self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] is not None:
@@ -972,9 +973,11 @@ class SAMDotGraph():
                 if self.local_mems is False:
                     self.graph.add_node(memory)
                 # Glb to WR
-                glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}",
-                                       style="bold")
-                self.graph.add_edge(glb_to_wr)
+                # Dense scanner doesn't need data from the GLB, hence no connection to the GLB
+                if not is_dense:
+                    glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}",
+                                        style="bold")
+                    self.graph.add_edge(glb_to_wr)
                 # write + read to buffet
                 wr_to_buff = pydot.Edge(src=wr_scan, dst=buffet, label=f'wr_to_buff_{self.get_next_seq()}')
                 self.graph.add_edge(wr_to_buff)
