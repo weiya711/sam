@@ -139,6 +139,11 @@ class UncompressCrdRdScan(CrdRdScan):
                         self.curr_ref = 'D'
                         self.done = True
                         return
+                    elif is_stkn(self.curr_in_ref):
+                        stkn = increment_stkn(self.curr_in_ref)
+                        self.curr_crd = stkn
+                        self.curr_ref = stkn
+                        return
                     else:
                         self.curr_crd = 0
                         self.curr_ref = self.curr_crd + (self.curr_in_ref * self.meta_dim)
