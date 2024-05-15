@@ -18,8 +18,6 @@ class MatrixGenerator:
     def __init__(self, name='B', shape=None, sparsity=0.6, format='CSF', dump_dir=None,
                  tensor=None, value_cap=None, clean=True, use_fp=False) -> None:
 
-        # assert dimension is not None
-        # self.dimension = dimension
         self.shape = shape
         self.array = None
         self.sparsity = sparsity
@@ -171,7 +169,6 @@ class MatrixGenerator:
                     # If at vals, we don't need to dump csf, we have the level
                     if glb_override:
                         lines = [len(tmp_lvl_list), *tmp_lvl_list]
-                        # self.write_array(tmp_lvl_list, name=f"tensor_{self.name}_mode_vals" dump_dir=use_dir)
                         self.write_array(lines, name=f"tensor_{self.name}_mode_vals{suffix}", dump_dir=use_dir,
                                          dump_hex=print_hex, is_val=True)
                     else:
@@ -200,6 +197,16 @@ class MatrixGenerator:
             else:
                 self.write_array(flat_array, name=f"tensor_{self.name}_mode_vals{suffix}",
                                  dump_dir=use_dir, dump_hex=print_hex, is_val=True)
+            for i in range(len(self.array.shape)):
+                # The dense scanner needs the shape of each dimension encoded in (0, dim) pairs
+                seg_arr = [0, self.array.shape[i]]
+                if glb_override:
+                    lines = [2, *seg_arr]
+                    self.write_array(lines, name=f"tensor_{self.name}_mode_{i}{suffix}", dump_dir=use_dir,
+                                     dump_hex=print_hex)
+                else:
+                    self.write_array(seg_arr, name=f"tensor_{self.name}_mode_{i}_seg{suffix}", dump_dir=use_dir,
+                                     dump_hex=print_hex)
         elif self.format == "COO":
             crd_dict = dict()
             order = len(self.array.shape)
@@ -557,7 +564,6 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
                           suffix="", positive_only=False, use_fp=False) -> MatrixGenerator:
     dims = len(shape)
 
-    # assert tensor_ordering is not None
     # This is an example mode map - must transform it to lists
     # ((0, (0, 's')), (1, (1, 's')))
     # sort the ordering...
@@ -658,7 +664,6 @@ if __name__ == "__main__":
     vec2 = MatrixGenerator(name=f"{name}_alt", shape=shape, dump_dir=dump_dir, sparsity=sparsity)
 
     run_list = get_runs(vec1.get_matrix(), vec2.get_matrix())
-    # mg.dump_outputs()
 
     avg1 = sum(run_list[0]) / len(run_list[0])
     avg2 = sum(run_list[1]) / len(run_list[1])

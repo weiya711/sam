@@ -18,7 +18,7 @@ class SAMDotGraphLoweringError(Exception):
 class SAMDotGraph():
 
     def __init__(self, filename=None, local_mems=True, use_fork=False,
-                 use_fa=False, unroll=1, collat_dir=None) -> None:
+                 use_fa=False, unroll=1, collat_dir=None, opal_workaround=False) -> None:
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]
@@ -31,6 +31,7 @@ class SAMDotGraph():
         self.use_fa = use_fa
         self.fa_color = 0
         self.collat_dir = collat_dir
+        self.opal_workaround = opal_workaround
 
         self.alu_nodes = []
         self.shared_writes = {}
@@ -952,7 +953,7 @@ class SAMDotGraph():
                 # dense scanner is basically a counter that counts up to the dimension size
                 # and does not rely on the GLB tile to supply any data
                 glb_write = None
-                if not is_dense:
+                if not is_dense or not self.opal_workaround:
                     if f'{tensor}_{mode}_fiberlookup' in self.shared_writes and \
                             self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1] is not None:
                         glb_write = self.shared_writes[f'{tensor}_{mode}_fiberlookup'][1]
@@ -975,7 +976,7 @@ class SAMDotGraph():
                     self.graph.add_node(memory)
                 # Glb to WR
                 # Dense scanner doesn't need data from the GLB, hence no connection to the GLB
-                if not is_dense:
+                if not is_dense or not self.opal_workaround:
                     glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}",
                                            style="bold")
                     self.graph.add_edge(glb_to_wr)
