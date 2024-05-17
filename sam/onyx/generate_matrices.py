@@ -515,15 +515,13 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches):
             sp_line = line.strip().split(" ")
             for sp_line_tok in sp_line:
                 sp_line_tok_stripped = sp_line_tok.strip()
-                if(sp_line_tok_stripped == ""):
+                if (sp_line_tok_stripped == ""):
                     continue
                 straightline.append(int(sp_line_tok_stripped, base=16))
 
-
     # Now we have straightline having the items in order
     # Now write them to the output
- 
-    
+
     if 'mode_vals' in glbfile:
         num_blocks = 1
     else:
@@ -551,10 +549,9 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches):
         if tile == tiles:
             tile = 0
             batch = batch + 1
-            #TODO hardcoded value for now
-            sl_ptr = 32768*batch # size of glb
+            # TODO hardcoded value for now
+            sl_ptr = 32768 * batch  # size of glb
 
-     
 
 def find_file_based_on_sub_string(files_dir, sub_string_list):
     """Return the file name in a directory, if the file name
