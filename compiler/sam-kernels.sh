@@ -47,6 +47,8 @@ GEN_KERNEL_NAMES=(
   mat_vecmul_iter
   mat_vecmul_iter_short
   tensor3_website_expr
+  mat_mask_tri_DA3sum_final
+  mat_mask_tri_DA3_final
 )
 
 HAND_KERNEL_NAMES=(
@@ -95,6 +97,8 @@ TACO_ARGS=(
   "x(i)=B(i,j)*C(j,k)*D(k,l)*E(l,m)*f(m) -f=x:s -f=B:ss -f=C:ss -f=D:ss -f=E:ss -f=f:s -s=reorder(i,j,k,l,m)"
   "x(i)=B(i,j)*C(j,k)*d(k) -f=x:s -f=B:ss -f=C:ss -f=d:s -s=reorder(i,j,k)"
   "x=B(i)*C(j)*D(i,j,k)*E(j,l)*F(l,m,n) -f=B:s -f=C:s -f=D:sss -f=E:ss -f=F:sss -s=reorder(i,j,k,l,m,n)"
+  "x=Diag(i,l)*(B1(i,j)*B2(j,k)*B3(k,l)) -f=Diag:ss -f=B1:ss -f=B2:ss -f=B3:ss:1,0 -s=reorder(i,l,j,k)"
+  "X(i,l)=Diag(i,l)*(B1(i,j)*B2(j,k)*B3(k,l)) -f=X:ss -f=Diag:ss -f=B1:ss -f=B2:ss -f=B3:ss:1,0 -s=reorder(i,l,j,k)"
 )
 
 mkdir -p $dir
