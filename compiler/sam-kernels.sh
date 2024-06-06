@@ -73,7 +73,7 @@ TACO_ARGS=(
   "X(i,j,k)=B(i,j,k) -f=X:sss -f=B:sss"
   "X(i,j,k)=B(i,j,k) -f=X:ddd -f=B:ddd"
   "X(i,j,k)=B(i,j,k)+C(i,j,k) -f=X:sss -f=B:sss -f=C:sss"
-  "x=B(i,j,k)*C(i,j,k) -f=B:sss -f=C:sss"
+  "x=B(i,j,k)*C(i,j,k) -f=B:sss -f=C:sss -s=reorder(i,j,k)"
   "X(i,j)=B(i,j,k)*c(k) -f=X:ss -f=B:sss -f=c:s"
   "X(i,j,k)=B(i,j,l)*C(k,l) -f=X:sss -f=B:sss -f=C:ss"
   "X(i,j)=B(i,j)*C(i,k)*D(k,j) -f=X:ss -f=B:ss -f=C:dd -f=D:dd:1,0 -s=reorder(i,j,k)"

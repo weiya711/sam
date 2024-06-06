@@ -164,13 +164,13 @@ class SpAcc1(Primitive):
         # Boolean flag for whether to output stop tokens on the output val stream
         self.val_stkn = val_stkn
 
-        self.in_crd1 = []
+        # self.in_crd1 = []
         self.in_crd0 = []
         self.in_val = []
 
         self.storage = {}
 
-        self.curr_crd1 = None
+        # self.curr_crd1 = None
         self.curr_crd0 = None
         self.curr_val = None
 
@@ -179,7 +179,7 @@ class SpAcc1(Primitive):
 
         if self.get_stats:
             self.in_crd0_fifo = 0
-            self.in_crd1_fifo = 0
+            # self.in_crd1_fifo = 0
             self.in_val_fifo = 0
 
         if self.backpressure_en:
@@ -197,7 +197,7 @@ class SpAcc1(Primitive):
         self.writeout_storage = []
 
         self.seen_done = False
-        self.crd1_stkn = None
+        self.wr_stkn = None
 
     def check_backpressure(self):
         if self.backpressure_en:
@@ -232,16 +232,19 @@ class SpAcc1(Primitive):
 
     def update_ready(self):
         if self.backpressure_en:
-            self.fifo_avail_outer = not (len(self.in_crd1) > self.depth)
+            # self.fifo_avail_outer = not (len(self.in_crd1) > self.depth)
             self.fifo_avail_inner = not (len(self.in_crd0) > self.depth)
             self.fifo_avail_val = not (len(self.in_val) > self.depth)
 
-    def ACC_body(self):
-        self.curr_in_crd0 = self.in_crd0.pop(0)
-        self.curr_in_val = self.in_val.pop(0)
+    def ACC_body(self, pop_ins=False):
+        if pop_ins:
+            self.curr_in_crd0 = self.in_crd0.pop(0)
+            self.curr_in_val = self.in_val.pop(0)
+
         # In accumulation, accumulate into memory
         if is_nc_tkn(self.curr_in_val, self.valtype):
-            assert is_nc_tkn(self.curr_in_crd0, int), "The inner coordinate must be a non-control token"
+            assert is_nc_tkn(self.curr_in_crd0, int), ("The inner coordinate (" + str(self.curr_in_crd0) +
+                                                       ") must be a non-control token")
             if self.curr_in_crd0 in self.storage.keys():
                 # Coordinate is in storage, so accumulate
                 self.storage[self.curr_in_crd0] += self.curr_in_val
@@ -250,9 +253,16 @@ class SpAcc1(Primitive):
                 self.storage[self.curr_in_crd0] = self.curr_in_val
             self.next_state = self.states.ACC
         # In accumulation, if you see a stop token in the inner level, go back to start
-        elif is_stkn(self.curr_in_crd0):
+        elif is_stkn(self.curr_in_crd0) and stkn_order(self.curr_in_crd0) == 0:
             assert is_stkn(self.curr_in_val) and stkn_order(self.curr_in_crd0) == stkn_order(self.curr_in_val), \
                 "Stop tokens must match for inner crd: " + str(self.curr_in_crd0) + " and val: " + str(self.curr_in_val)
+            self.next_state = self.states.READY
+        # In accumulation, if you see a stop token of any other level, start writing out
+        elif is_stkn(self.curr_in_crd0):
+            self.wr_stkn = self.curr_in_crd0
+            self.writeout = True
+            self.writeout_storage = [item for item in sorted(self.storage.items())]
+            self.storage = {}
             self.next_state = self.states.READY
         elif is_dtkn(self.curr_in_crd0):
             assert False, "Shouldn't have done token for coordinates if in accumulate (ACC) state"
@@ -267,8 +277,8 @@ class SpAcc1(Primitive):
         # Print out debugging statements
         if self.debug:
             print("========== " + self.name + " SPACC1 (NEW) ==========")
-            print("Inputs: ", self.in_crd1, self.in_crd0, self.in_val)
-            print("Temps: ", self.curr_crd1, self.crd1_stkn, self.curr_in_crd0, self.curr_in_val)
+            print("Inputs: ", self.in_crd0, self.in_val)
+            print("Temps: ", self.wr_stkn, self.curr_in_crd0, self.curr_in_val)
             print("Store/Wr: ", self.storage, self.writeout_storage, self.writeout)
             print("Outputs: ", self.curr_crd0, self.curr_val)
             print("State: ", self.curr_state)
@@ -302,7 +312,7 @@ class SpAcc1(Primitive):
                 pass
 
             # Set when block counts should start
-            if len(self.in_crd1) > 0 or len(self.in_crd0) > 0 or len(self.in_val) > 0:
+            if len(self.in_crd0) > 0 or len(self.in_val) > 0:
                 self.block_start = False
 
             # Store block statistics if asked to be reported
@@ -312,34 +322,34 @@ class SpAcc1(Primitive):
 
             # Begin state machine computation
             if self.curr_state == self.states.READY:
-                if len(self.in_crd1) > 0:
-                    self.curr_crd1 = self.in_crd1.pop(0)
-                    if is_nc_tkn(self.curr_crd1):
-                        if len(self.in_crd0) > 0 and len(self.in_val) > 0:
-                            self.ACC_body()
-                        else:
-                            self.next_state = self.states.ACC
-                    elif is_stkn(self.curr_crd1):
+                if len(self.in_crd0) > 0 and len(self.in_val) > 0:
+                    self.curr_in_crd0 = self.in_crd0.pop(0)
+                    self.curr_in_val = self.in_val.pop(0)
+                    if is_nc_tkn(self.curr_in_crd0):
+                        assert is_nc_tkn(self.curr_in_val), ("The inner value (" + str(self.curr_in_val) +
+                                                             ") must be a non-control token")
+                        self.ACC_body()
+                    elif is_stkn(self.curr_in_crd0) and stkn_order(self.curr_in_crd0) > 0:
                         # TODO: what to do when we want to writeout but writeout isn't done
 
                         # Set writeout to be true, move over storage, and clear it.
-                        self.crd1_stkn = self.curr_crd1
+                        self.wr_stkn = self.curr_crd0
                         self.writeout = True
                         self.writeout_storage = [item for item in sorted(self.storage.items())]
                         self.storage = {}
                         self.next_state = self.states.READY
-                    elif is_dtkn(self.curr_crd1):
+                    elif is_dtkn(self.curr_in_crd0):
                         self.seen_done = True
                         if self.writeout:
                             self.next_state = self.states.WR
                         else:
                             self.next_state = self.states.DONE
                     else:
-                        assert False, "Cannot have a coordinate token of this type: " + str(self.curr_crd1)
+                        assert False, "Cannot have a coordinate token of this type: " + str(self.curr_crd0)
             # Handle accumulation into storage
             elif self.curr_state == self.states.ACC:
                 if len(self.in_crd0) > 0 and len(self.in_val) > 0:
-                    self.ACC_body()
+                    self.ACC_body(True)
             # Finish writeout and then be done.
             elif self.curr_state == self.states.WR:
                 if not self.writeout:
@@ -360,9 +370,9 @@ class SpAcc1(Primitive):
             # Writeout is done when there are no elements left
             if len(self.writeout_storage) == 0:
                 self.writeout = False
-                assert self.crd1_stkn is not None, "The current writeout stop token should not be None"
-                self.curr_crd0 = self.crd1_stkn
-                self.curr_val = self.crd1_stkn
+                assert self.wr_stkn is not None, "The current writeout stop token should not be None"
+                self.curr_crd0 = decrement_stkn(self.wr_stkn)
+                self.curr_val = decrement_stkn(self.wr_stkn)
             else:
                 curr_writeout_elem = self.writeout_storage.pop(0)
                 self.curr_val = curr_writeout_elem[1]
@@ -378,8 +388,8 @@ class SpAcc1(Primitive):
         self.curr_state = self.next_state
 
         if self.debug:
-            print(self.in_crd1, self.in_crd0, self.in_val)
-            print(self.curr_crd1, self.curr_crd0, self.curr_val)
+            print(self.in_crd0, self.in_val)
+            print(self.curr_crd0, self.curr_val)
 
     def set_in_crd0(self, crd, parent=None):
         if crd != '' and crd is not None:
@@ -387,11 +397,11 @@ class SpAcc1(Primitive):
         if self.backpressure_en:
             parent.set_backpressure(self.fifo_avail_inner)
 
-    def set_in_crd1(self, crd, parent=None):
-        if crd != '' and crd is not None:
-            self.in_crd1.append(crd)
-        if self.backpressure_en:
-            parent.set_backpressure(self.fifo_avail_outer)
+    # def set_in_crd1(self, crd, parent=None):
+    #     if crd != '' and crd is not None:
+    #         self.in_crd1.append(crd)
+    #     if self.backpressure_en:
+    #         parent.set_backpressure(self.fifo_avail_outer)
 
     def set_val(self, val, parent=None):
         if val != '' and val is not None:
@@ -431,14 +441,14 @@ class SpAcc2(Primitive):
         # Boolean flag for whether to output stop tokens on the output val stream
         self.val_stkn = val_stkn
 
-        self.in_crd2 = []
+        # self.in_crd2 = []
         self.in_crd1 = []
         self.in_crd0 = []
         self.in_val = []
 
         self.storage = {}
 
-        self.curr_crd2 = None
+        # self.curr_crd2 = None
         self.curr_crd1 = None
         self.curr_crd0 = None
         self.curr_val = None
@@ -447,7 +457,8 @@ class SpAcc2(Primitive):
         self.curr_in_crd0 = None
         self.curr_in_val = None
 
-        self.states = enum.Enum('States', ['READY', 'ACC1', 'ACC0', 'WR', 'DONE'])
+        self.states = enum.Enum('States', ['READY', 'ACC1', 'WAIT_ACC1',
+                                           'ACC0', 'WR', 'DONE'])
         self.curr_state = self.states.READY
         self.next_state = self.states.READY
         self.writeout0 = False
@@ -456,7 +467,8 @@ class SpAcc2(Primitive):
         self.writeout_storage0 = []
 
         self.seen_done = False
-        self.crd2_stkn = None
+        self.wr_stkn = None
+        self.wait_crd1 = False
 
         if self.get_stats:
             self.in_crd0_fifo = 0
@@ -505,14 +517,14 @@ class SpAcc2(Primitive):
 
     def update_ready(self):
         if self.backpressure_en:
-            self.fifo_avail_outer = not (len(self.in_crd1) > self.depth)
-            self.fifo_avail_inner = not (len(self.in_crd0) > self.depth)
+            self.fifo_avail_1 = not (len(self.in_crd1) > self.depth)
+            self.fifo_avail_0 = not (len(self.in_crd0) > self.depth)
             self.fifo_avail_val = not (len(self.in_val) > self.depth)
 
     def print_debug(self):
         print("========== " + self.name + " SPACC2 (NEW) ==========")
-        print("Inputs: ", self.in_crd2, self.in_crd1, self.in_crd0, self.in_val)
-        print("Temps: ", self.curr_crd2, self.crd2_stkn, self.curr_in_crd1, self.curr_in_crd0, self.curr_in_val)
+        print("Inputs: ", self.in_crd1, self.in_crd0, self.in_val)
+        print("Temps: ", self.wr_stkn, self.curr_in_crd1, self.curr_in_crd0, self.curr_in_val)
         print("Store/Wr: ", self.storage, self.writeout_storage1, self.writeout_storage0, self.writeout1,
               self.writeout0)
         print("Outputs: ", self.curr_crd1, self.curr_crd0, self.curr_val)
@@ -540,9 +552,10 @@ class SpAcc2(Primitive):
             else:
                 self.storage[crd1][crd0] += val
 
-    def ACC1_body(self):
+    def ACC1_body(self, pop_crd1=False):
         # In accumulation, accumulate into memory
-        self.curr_in_crd1 = self.in_crd1.pop(0)
+        if pop_crd1:
+            self.curr_in_crd1 = self.in_crd1.pop(0)
 
         # All elements are ready
         if is_nc_tkn(self.curr_in_crd1):
@@ -550,7 +563,16 @@ class SpAcc2(Primitive):
                 self.ACC0_body()
             else:
                 self.next_state = self.states.ACC0
+        elif is_stkn(self.curr_in_crd1) and stkn_order(self.curr_in_crd1) == 0:
+            self.next_state = self.states.ACC0
+        # In accumulation, if you see a stop token of any other level, start writing out
         elif is_stkn(self.curr_in_crd1):
+            self.wr_stkn = self.curr_in_crd1
+            self.writeout1 = True
+            self.writeout0 = True
+            self.writeout_storage1 = [k for k in sorted(self.storage.keys())]
+            self.writeout_storage0 = self.build_writeout()
+            self.storage = {}
             self.next_state = self.states.READY
         elif is_dtkn(self.curr_in_crd1):
             assert False, "Shouldn't have done token for coordinates if in accumulate (ACC) state"
@@ -566,16 +588,39 @@ class SpAcc2(Primitive):
             self.update_storage(self.curr_in_crd1, self.curr_in_crd0, self.curr_in_val)
             self.next_state = self.states.ACC0
         # In accumulation, if you see a stop token in the inner level, go back to start
-        elif is_stkn(self.curr_in_crd0):
+        elif is_stkn(self.curr_in_crd0) and stkn_order(self.curr_in_crd0) == 0:
             assert is_stkn(self.curr_in_val) and stkn_order(self.curr_in_crd0) == stkn_order(self.curr_in_val), \
                 "Stop tokens must match for inner crd: " + str(self.curr_in_crd0) + " and val: " + str(self.curr_in_val)
             self.next_state = self.states.ACC1
+        elif is_stkn(self.curr_in_crd0):
+            self.check_crd1()
+        # If you see a stop token go back to ready
+        # elif is_stkn(self.curr_in_crd0):
+        #     self.next_state = self.states.READY
         elif is_dtkn(self.curr_in_crd0):
             assert False, "Shouldn't have done token for coordinates if in accumulate (ACC) state"
         # Do nothing
         else:
             assert False, "Cannot have a coordinate token of this type: " + str(self.curr_in_crd0)
 
+    def check_crd1(self):
+        if len(self.in_crd1) > 0:
+            self.curr_in_crd1 = self.in_crd1.pop(0)
+            assert (is_stkn(self.curr_in_crd1) and stkn_order(self.curr_in_crd1) ==
+                    stkn_order(self.curr_in_crd0) - 1), ("Stop tokens must match for crd1: " + str(self.curr_in_crd1)
+                                                         + " and crd0: " + str(self.curr_in_crd0))
+            if stkn_order(self.curr_in_crd1) > 0:
+                self.wr_stkn = self.curr_in_crd1
+                self.writeout1 = True
+                self.writeout0 = True
+                self.writeout_storage1 = [k for k in sorted(self.storage.keys())]
+                self.writeout_storage0 = self.build_writeout()
+                self.storage = {}
+                self.next_state = self.states.READY
+            else:
+                self.next_state = self.states.READY
+        else:
+            self.next_state = self.states.WAIT_ACC1
     def update(self):
         self.update_done()
         self.update_ready()
@@ -623,40 +668,42 @@ class SpAcc2(Primitive):
 
             # Begin state machine computation
             # READY State
-            # Accepts crd2 token
+            # Accepts crd1 token
             if self.curr_state == self.states.READY:
-                if len(self.in_crd2) > 0:
-                    self.curr_crd2 = self.in_crd2.pop(0)
-                    if is_nc_tkn(self.curr_crd2):
-                        if len(self.in_crd1) > 0:
+                if len(self.in_crd1) > 0:
+                    self.curr_in_crd1 = self.in_crd1.pop(0)
+                    if is_nc_tkn(self.curr_in_crd1):
+                        if len(self.in_crd0) > 0 and len(self.in_val) > 0:
                             self.ACC1_body()
                         else:
-                            self.next_state = self.states.ACC1
-                    elif is_stkn(self.curr_crd2) and not self.get_writout():
+                            self.next_state = self.states.ACC0
+                    elif is_stkn(self.curr_in_crd1) and stkn_order(self.curr_in_crd1) > 0 and not self.get_writout():
                         # Set writeout to be true, move over storage, and clear it.
-                        self.crd2_stkn = self.curr_crd2
+                        self.wr_stkn = self.curr_in_crd1
                         self.writeout1 = True
                         self.writeout0 = True
                         self.writeout_storage1 = [k for k in sorted(self.storage.keys())]
                         self.writeout_storage0 = self.build_writeout()
                         self.storage = {}
                         self.next_state = self.states.READY
-                    elif is_stkn(self.curr_crd2):
+                    elif is_stkn(self.curr_in_crd1) and stkn_order(self.curr_in_crd1) > 0:
                         # Wait for previous writeout to be done
                         self.next_state = self.states.WR
-                    elif is_dtkn(self.curr_crd2):
+                    elif is_dtkn(self.curr_in_crd1):
                         self.seen_done = True
                         if self.get_writout():
                             self.next_state = self.states.WR
                         else:
                             self.next_state = self.states.DONE
                     else:
-                        assert False, "Cannot have a coordinate token of this type: " + str(self.curr_crd2)
+                        assert False, "Cannot have a coordinate token of this type: " + str(self.curr_in_crd1)
+            elif self.curr_state == self.states.WAIT_ACC1:
+                self.check_crd1()
             # Handle accumulation into storage
             # Accepts crd1 token
             elif self.curr_state == self.states.ACC1:
                 if len(self.in_crd1) > 0:
-                    self.ACC1_body()
+                    self.ACC1_body(True)
                 else:
                     self.next_state = self.states.ACC1
             elif self.curr_state == self.states.ACC0:
@@ -688,8 +735,8 @@ class SpAcc2(Primitive):
             if self.writeout1:
                 if len(self.writeout_storage1) == 0:
                     self.writeout1 = False
-                    assert self.crd2_stkn is not None, "The current writeout stop token should not be None"
-                    self.curr_crd1 = self.crd2_stkn
+                    assert self.wr_stkn is not None, "The current writeout stop token should not be None"
+                    self.curr_crd1 = decrement_stkn(self.wr_stkn)
                 else:
                     curr_writeout_elem1 = self.writeout_storage1.pop(0)
                     self.curr_crd1 = curr_writeout_elem1
@@ -700,10 +747,10 @@ class SpAcc2(Primitive):
             if self.writeout0:
                 if len(self.writeout_storage0) == 0:
                     self.writeout0 = False
-                    assert self.crd2_stkn is not None, "The current writeout stop token should not be None"
-                    self.curr_crd0 = increment_stkn(self.crd2_stkn)
+                    assert self.wr_stkn is not None, "The current writeout stop token should not be None"
+                    self.curr_crd0 = self.wr_stkn
 
-                    self.curr_val = increment_stkn(self.crd2_stkn)
+                    self.curr_val = self.wr_stkn
                 else:
                     curr_writeout_elem0 = self.writeout_storage0.pop(0)
                     self.curr_crd0 = curr_writeout_elem0[0]
@@ -741,11 +788,11 @@ class SpAcc2(Primitive):
         if self.backpressure_en:
             parent.set_backpressure(self.fifo_avail_1)
 
-    def set_in_crd2(self, crd, parent=None):
-        if super().valid_token(crd, int):
-            self.in_crd2.append(crd)
-        if self.backpressure_en:
-            parent.set_backpressure(self.fifo_avail_2)
+    # def set_in_crd2(self, crd, parent=None):
+    #     if super().valid_token(crd, int):
+    #         self.in_crd2.append(crd)
+    #     if self.backpressure_en:
+    #         parent.set_backpressure(self.fifo_avail_2)
 
     def set_val(self, val, parent=None):
         if val != '' and val is not None:
