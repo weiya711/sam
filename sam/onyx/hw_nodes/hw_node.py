@@ -18,6 +18,7 @@ class HWNodeType(Enum):
     CrdHold = 14
     VectorReducer = 15
     FiberAccess = 16
+    StreamArbiter = 17
 
 
 class HWNode():

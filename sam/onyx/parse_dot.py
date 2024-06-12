@@ -36,7 +36,7 @@ class SAMDotGraph():
         self.alu_nodes = []
         self.shared_writes = {}
 
-        if unroll > 1:
+        if unroll > 1: # TODO: modify unroll meaning
             self.duplicate_graph('B', unroll)
         self.annotate_IO_nodes()
         # self.unroll_graph('b', 2)
@@ -236,6 +236,8 @@ class SAMDotGraph():
                     hw_nt = f"HWNodeType.CrdHold"
                 elif n_type == "vectorreducer":
                     hw_nt = f"HWNodeType.VectorReducer"
+                elif n_type == "streamarbiter":
+                    hw_node = f"HWNodeType.StreamArbiter"
                 else:
                     # if the current node is not any of the primitives, it must be a compute
                     hw_nt = f"HWNodeType.Compute"
@@ -932,6 +934,7 @@ class SAMDotGraph():
 
                 og_label = attrs['label']
                 del attrs['label']
+                attrs['stream_id'] = 11
 
                 rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
                                      **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
@@ -1029,6 +1032,9 @@ class SAMDotGraph():
                 node.create_attribute_methods(attrs)
                 og_label = attrs['label']
                 del attrs['label']
+                attrs['glb_addr_base'] = 0
+                attrs['glb_addr_stride'] = 100
+
                 rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}", **attrs,
                                      label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
                                      fa_color=self.fa_color)
@@ -1098,6 +1104,8 @@ class SAMDotGraph():
             attrs = node.get_attributes()
             og_label = attrs['label']
             del attrs['label']
+            attrs['stream_id'] = 11
+
             rd_scan = pydot.Node(f"rd_scan_{self.get_next_seq()}",
                                  **attrs, label=f"{og_label}_rd_scan", hwnode=f"{HWNodeType.ReadScanner}",
                                  fa_color=self.fa_color)
