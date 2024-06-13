@@ -150,7 +150,7 @@ class IntersectNode(HWNode):
             new_conns = {
                 f'isect_to_merger_{conn}': [
                     # Send isect row and isect col to merger inside isect_col
-                    ([(isect, "coord_out"), (merge, f"cmrg_coord_in_{conn}")], 17),
+                    ([(isect, "coord_out"), (merge, f"coord_in_{conn}")], 17),
                 ]
             }
 

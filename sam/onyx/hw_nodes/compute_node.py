@@ -115,7 +115,7 @@ class ComputeNode(HWNode):
 
             new_conns = {
                 f'pe_to_crddrop_res_to_{conn}': [
-                    ([(pe, "res"), (crddrop, f"cmrg_coord_in_{conn}")], 17),
+                    ([(pe, "res"), (crddrop, f"coord_in_{conn}")], 17),
                 ]
             }
             return new_conns

@@ -56,7 +56,7 @@ class MergeNode(HWNode):
             print(conn)
             new_conns = {
                 f'merge_{conn}_to_wr_scan': [
-                    ([(merge, f"cmrg_coord_out_{conn}"), (wr_scan, f"data_in")], 17),
+                    ([(merge, f"coord_out_{conn}"), (wr_scan, f"data_in")], 17),
                 ]
             }
 
@@ -66,7 +66,7 @@ class MergeNode(HWNode):
             print("MERGE TO UNION FOR VECTOR REDUCE")
             new_conns = {
                 f'merge_to_union_inner': [
-                    ([(merge, f"cmrg_coord_out_{0}"), (isect, f"coord_in_{0}")], 17),
+                    ([(merge, f"coord_out_{0}"), (isect, f"coord_in_{0}")], 17),
                 ]
             }
 
@@ -77,7 +77,7 @@ class MergeNode(HWNode):
             other_red = other.get_name()
             new_conns = {
                 f'merge_to_reduce_inner': [
-                    ([(merge, f"cmrg_coord_out_{0}"), (other_red, f"reduce_data_in")], 17),
+                    ([(merge, f"coord_out_{0}"), (other_red, f"reduce_data_in")], 17),
                 ]
             }
 
@@ -103,7 +103,7 @@ class MergeNode(HWNode):
 
             new_conns = {
                 f'merger_to_merger_{out_conn}_to_{in_conn}': [
-                    ([(merge, f"cmrg_coord_out_{out_conn}"), (other_merge, f"cmrg_coord_in_{in_conn}")], 17),
+                    ([(merge, f"coord_out_{out_conn}"), (other_merge, f"coord_in_{in_conn}")], 17),
                 ]
             }
 
