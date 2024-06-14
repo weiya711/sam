@@ -38,6 +38,7 @@ def safeCastScipyTensorToInts(tensor):
         data[i] = round_sparse(tensor.data[i])
     return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
 
+
 def bfbin2float(bfstr):
     sign = bfstr[0]
     exp = bfstr[1:9]
@@ -91,7 +92,7 @@ def float2bfbin(fnum):
         lfrac = "0" + fstr[9:16]
         hfrac = fstr[16:]
         # Enable rounding
-        if (hfrac[0] == "1" and (hfrac[1] == "1" or hfrac[2] == "1")) or (lfrac[7] == "1" and hfrac[0] == "1"):  
+        if (hfrac[0] == "1" and (hfrac[1] == "1" or hfrac[2] == "1")) or (lfrac[7] == "1" and hfrac[0] == "1"):
             # bit 8 of the float mantissa is set, so round up
             if lfrac[1:8] == "1111111":  # roll over mantissa and increase exp if needed
                 exp = "{:08b}".format((int(exp, 2) + 1))  # exp overflow?
@@ -360,6 +361,7 @@ class InputCacheSuiteSparse:
                 self.tensor = self.lastLoaded
             return self.tensor
 
+
 class InputCacheSparseML:
     def __init__(self):
         self.lastLoaded = None
@@ -377,6 +379,7 @@ class InputCacheSparseML:
             else:
                 self.tensor = self.lastLoaded
             return self.tensor
+
 
 class FormatWriter:
     def __init__(self, cast_int=True):
@@ -693,7 +696,8 @@ class SuiteSparseTensor:
 
     def load(self, loader):
         return loader.load(self.path)
-    
+
+
 class SparseMLTensor:
     def __init__(self, path):
         self.path = path
