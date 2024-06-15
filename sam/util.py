@@ -38,7 +38,8 @@ def safeCastScipyTensorToInts(tensor):
         data[i] = round_sparse(tensor.data[i])
     return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
 
-
+# TODO: this function is duplicated multiple times across aha repository
+# and should be moved to a common location
 def bfbin2float(bfstr):
     sign = bfstr[0]
     exp = bfstr[1:9]
@@ -67,7 +68,8 @@ def bfbin2float(bfstr):
         nfrac = int(lfrac, 2)
         return mult * nfrac * (2 ** (nexp - 7))
 
-
+# TODO: this function is duplicated multiple times across aha repository
+# and should be moved to a common location
 def float2bfbin(fnum):
     if fnum == "NaN":
         sign = "0"
