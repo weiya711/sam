@@ -11,6 +11,7 @@ import numpy as np
 import scipy.io
 import scipy.sparse
 import sparse
+import struct
 
 # All environment variables for SAM should live here or in make file
 cwd = os.getcwd()
@@ -19,6 +20,8 @@ HOSTNAME = os.getenv('HOSTNAME', default="local")
 SUITESPARSE_PATH = os.getenv('SUITESPARSE_PATH', default=os.path.join(SAM_HOME, "data", "suitesparse"))
 SUITESPARSE_FORMATTED_PATH = os.getenv('SUITESPARSE_FORMATTED_PATH', default=os.path.join(SAM_HOME, "data",
                                                                                           "suitesparse-formatted"))
+SPARSEML_PATH = os.getenv('SPARSE_ML_PATH', default=os.path.join(SAM_HOME, "data", "sparseml"))
+SPARSEML_PATH_FORMATTED = os.getenv('SPARSE_ML_PATH_FORMATTED', default=os.path.join(SAM_HOME, "data", "sparseml-formatted"))
 FROSTT_PATH = os.getenv('FROSTT_PATH', default=os.path.join(SAM_HOME, "data", "frostt"))
 VALIDATION_OUTPUT_PATH = os.getenv('VALIDATION_OUTPUT_PATH', default=os.path.join(SAM_HOME, "data", "gold"))
 
@@ -34,6 +37,72 @@ def safeCastScipyTensorToInts(tensor):
         #     data[i] = int(tensor.data[i])
         data[i] = round_sparse(tensor.data[i])
     return scipy.sparse.coo_matrix(tensor.coords, data, tensor.shape)
+
+
+# TODO: this function is duplicated multiple times across aha repository
+# and should be moved to a common location
+def bfbin2float(bfstr):
+    sign = bfstr[0]
+    exp = bfstr[1:9]
+    lfrac = bfstr[9:16]
+    if sign == "0" and exp == "11111111" and lfrac != "0000000":
+        return float('nan')
+    elif sign == "1" and exp == "11111111" and lfrac != "0000000":
+        return -float('nan')
+    elif sign == "0" and exp == "11111111" and lfrac == "0000000":
+        return float('inf')
+    elif sign == "1" and exp == "11111111" and lfrac == "0000000":
+        return -float('inf')
+    elif sign == "0" and exp == "00000000" and lfrac == "0000000":
+        return float(0)
+    elif sign == "1" and exp == "00000000" and lfrac == "0000000":
+        return -float(0)
+    else:
+        mult = 1
+        if sign == "1":
+            mult = -1
+        nexp = int(exp, 2) - 127
+        if exp != 0:
+            lfrac = "1" + lfrac
+        else:
+            lfrac = "0" + lfrac
+        nfrac = int(lfrac, 2)
+        return mult * nfrac * (2 ** (nexp - 7))
+
+
+# TODO: this function is duplicated multiple times across aha repository
+# and should be moved to a common location
+def float2bfbin(fnum):
+    if fnum == "NaN":
+        sign = "0"
+        exp = "11111111"
+        lfrac = "11111111"
+    elif fnum == "-NaN":
+        sign = "1"
+        exp = "11111111"
+        lfrac = "11111111"
+    elif fnum == "Inf" or fnum > 3.402823466e+38:
+        sign = "0"
+        exp = "11111111"
+        lfrac = "00000000"
+    elif fnum == "-Inf" or fnum < -3.402823466e+38:
+        sign = "1"
+        exp = "11111111"
+        lfrac = "00000000"
+    else:
+        fstr = "".join("{:08b}".format(elem) for elem in struct.pack("!f", fnum))
+        sign = fstr[0]
+        exp = fstr[1:9]
+        lfrac = "0" + fstr[9:16]
+        hfrac = fstr[16:]
+        # Enable rounding
+        if (hfrac[0] == "1" and (hfrac[1] == "1" or hfrac[2] == "1")) or (lfrac[7] == "1" and hfrac[0] == "1"):
+            # bit 8 of the float mantissa is set, so round up
+            if lfrac[1:8] == "1111111":  # roll over mantissa and increase exp if needed
+                exp = "{:08b}".format((int(exp, 2) + 1))  # exp overflow?
+            lfrac = "{:08b}".format((int(lfrac, 2) + 1))
+
+    return sign + exp + lfrac[1:8]
 
 
 # ScipyTensorShifter shifts all elements in the last mode
@@ -242,6 +311,20 @@ class ScipyMatrixMarketTensorLoader:
         return coo
 
 
+class NumpyNPYArrayLoader:
+    def __init__(self):
+        pass
+
+    def load(self, path):
+        np_array = numpy.load(path)
+        if (np_array.dtype == numpy.dtype('S16')):
+            input_fp_array = numpy.empty_like(np_array, dtype=numpy.float32)
+            for idx, val in numpy.ndenumerate(np_array):
+                input_fp_array[idx] = bfbin2float(str(val).split("'")[1])
+        coo = scipy.sparse.coo_array(input_fp_array)
+        return coo
+
+
 def shape_str(shape):
     return str(shape[0]) + " " + str(shape[1])
 
@@ -278,6 +361,25 @@ class InputCacheSuiteSparse:
             if cast:
                 self.tensor = self.lastLoaded
                 # self.tensor = safeCastPydataTensorToInts(self.lastLoaded)
+            else:
+                self.tensor = self.lastLoaded
+            return self.tensor
+
+
+class InputCacheSparseML:
+    def __init__(self):
+        self.lastLoaded = None
+        self.lastName = None
+        self.tensor = None
+
+    def load(self, tensor, cast):
+        if self.lastName == str(tensor):
+            return self.tensor
+        else:
+            self.lastLoaded = tensor.load(NumpyNPYArrayLoader())
+            self.lastName = str(tensor)
+            if cast:
+                self.tensor = self.lastLoaded
             else:
                 self.tensor = self.lastLoaded
             return self.tensor
@@ -595,6 +697,19 @@ class SuiteSparseTensor:
     def __str__(self):
         f = os.path.split(self.path)[1]
         return f.replace(".mtx", "")
+
+    def load(self, loader):
+        return loader.load(self.path)
+
+
+class SparseMLTensor:
+    def __init__(self, path):
+        self.path = path
+        self.__name__ = self.__str__()
+
+    def __str__(self):
+        f = os.path.split(self.path)[1]
+        return f.replace(".npy", "")
 
     def load(self, loader):
         return loader.load(self.path)
