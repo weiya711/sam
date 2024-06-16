@@ -1176,7 +1176,12 @@ class SAMDotGraph():
             attrs = node.get_attributes()
             og_label = attrs['label']
             og_label = og_label.split('_')
-            if len(og_label) > 1:
+
+            #TODO better solution for this?
+            if len(og_label) > 1 and og_label[-1] != 'lut':
+                print(attrs)
+                print(og_label)
+                # TODO better solution
                 dup_id = int(og_label[-1])
             else:
                 dup_id = 0
