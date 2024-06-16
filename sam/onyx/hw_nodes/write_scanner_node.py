@@ -105,7 +105,7 @@ class WriteScannerNode(HWNode):
                 vr_mode = 1
         else:
             vr_mode = 0
-        
+
         stream_id = 0
         if 'stream_id' in attributes:
             stream_id = int(attributes['stream_id'])

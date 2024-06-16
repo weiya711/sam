@@ -37,7 +37,7 @@ class SAMDotGraph():
         self.alu_nodes = []
         self.shared_glb = {}
         self.shared_stream_arb = {}
-        self.shared_stream_arb_glb_edge = [] # Key assuming, single level stream arbiter
+        self.shared_stream_arb_glb_edge = []  # Key assuming, single level stream arbiter
 
         self.annotate_IO_nodes()
         self.graph.write_png('mek.png')
@@ -48,7 +48,7 @@ class SAMDotGraph():
         self.rewrite_tri_to_binary()
         self.rewrite_VectorReducer()
 
-        self.duplicate_graph(unroll) # duplicate the entire graph
+        self.duplicate_graph(unroll)  # duplicate the entire graph
 
         # Passes to lower to CGRA
         self.rewrite_lookup(unroll)
@@ -62,7 +62,7 @@ class SAMDotGraph():
         self.map_alu()
         if len(self.alu_nodes) > 0:
             self.rewrite_complex_ops()
-        
+
         nodes = self.graph.get_nodes()
         for node in nodes:
             print(node.get_name())
@@ -981,11 +981,12 @@ class SAMDotGraph():
                         self.graph.add_node(glb_write)
 
                         pass_through = pydot.Node(f"passthrough_{self.get_next_seq()}", **attrs,
-                            label=f"{og_label}_passthrough", hwnode=f"{HWNodeType.PassThrough}")
+                                                 label=f"{og_label}_passthrough", hwnode=f"{HWNodeType.PassThrough}")
                         self.graph.add_node(pass_through)
                         self.shared_glb[f'{tensor}_{mode}_fiberlookup'] = (glb_write, pass_through)
 
-                        glb_to_pass_through = pydot.Edge(src=glb_write, dst=pass_through, label=f"glb_to_pass_through_{self.get_next_seq()}", style="bold")
+                        glb_to_pass_through = pydot.Edge(src=glb_write, dst=pass_through,
+                                                         label=f"glb_to_pass_through_{self.get_next_seq()}", style="bold")
                         self.graph.add_edge(glb_to_pass_through)
                 if self.local_mems is False:
                     memory = pydot.Node(f"memory_{self.get_next_seq()}", **attrs,
@@ -1004,7 +1005,8 @@ class SAMDotGraph():
                     # glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}",
                     #                        style="bold")
                     # self.graph.add_edge(glb_to_wr)
-                    pass_through_to_wr = pydot.Edge(src=pass_through, dst=wr_scan, label=f"pass_through_to_wr_{self.get_next_seq()}", style="bold")
+                    pass_through_to_wr = pydot.Edge(src=pass_through, dst=wr_scan,
+                                                     label=f"pass_through_to_wr_{self.get_next_seq()}", style="bold")
                     self.graph.add_edge(pass_through_to_wr)
                 # write + read to buffet
                 wr_to_buff = pydot.Edge(src=wr_scan, dst=buffet, label=f'wr_to_buff_{self.get_next_seq()}')
@@ -1082,7 +1084,7 @@ class SAMDotGraph():
                     glb_read = self.shared_glb[f'{tensor}_fiber']
                 else:
                     glb_read = pydot.Node(f"glb_read_{self.get_next_seq()}", **attrs,
-                                        label=f"{og_label}_glb_read", hwnode=f"{HWNodeType.GLB}")
+                                         label=f"{og_label}_glb_read", hwnode=f"{HWNodeType.GLB}")
                     self.shared_glb[f'{tensor}_fiber'] = glb_read
                     self.graph.add_node(glb_read)
 
@@ -1111,7 +1113,7 @@ class SAMDotGraph():
                             stream_arb_attr['seg_mode'] = 0
                         else:
                             stream_arb_attr['seg_mode'] = 1
-                        stream_arb = pydot.Node(f"stream_arb_{self.get_next_seq()}", **stream_arb_attr, label=stream_arb_label, 
+                        stream_arb = pydot.Node(f"stream_arb_{self.get_next_seq()}", **stream_arb_attr, label=stream_arb_label,
                                                 comment=f"type=stream_arbiter,mode={stream_arb_mode}", type="stream_arbiter",
                                                 hwnode=f"{HWNodeType.StreamArbiter}")
                         self.shared_stream_arb[stream_arb_label] = stream_arb
@@ -1124,21 +1126,23 @@ class SAMDotGraph():
                 # self.graph.add_node(glb_read)
                 if self.local_mems is False:
                     self.graph.add_node(memory)
-                
+
                 if unroll > 1:
                     # RD to Stream Arb
-                    rd_to_stream_arb = pydot.Edge(src=rd_scan, dst=stream_arb, label=f"rd_to_stream_arb_{self.get_next_seq()}", style="bold")
+                    rd_to_stream_arb = pydot.Edge(src=rd_scan, dst=stream_arb,
+                                                 label=f"rd_to_stream_arb_{self.get_next_seq()}", style="bold")
                     self.graph.add_edge(rd_to_stream_arb)
 
                     if (stream_arb, glb_read) not in self.shared_stream_arb_glb_edge:
                         # Stream Arb to GLB
-                        stream_arb_to_glb = pydot.Edge(src=stream_arb, dst=glb_read, label=f"stream_arb_to_glb_{self.get_next_seq()}", style="bold")
+                        stream_arb_to_glb = pydot.Edge(src=stream_arb, dst=glb_read,
+                                                     label=f"stream_arb_to_glb_{self.get_next_seq()}", style="bold")
                         self.graph.add_edge(stream_arb_to_glb)
                         self.shared_stream_arb_glb_edge.append((stream_arb, glb_read))
                 else:
                     # RD to GLB
                     rd_to_glb = pydot.Edge(src=rd_scan, dst=glb_read, label=f"glb_to_wr_{self.get_next_seq()}",
-                                        style="bold")
+                                            style="bold")
                     self.graph.add_edge(rd_to_glb)
                 # write + read to buffet
                 wr_to_buff = pydot.Edge(src=wr_scan, dst=buffet, label=f'wr_to_buff_{self.get_next_seq()}')
@@ -1201,11 +1205,12 @@ class SAMDotGraph():
                                        **attrs, label=f"{og_label}_glb_write", hwnode=f"{HWNodeType.GLB}")
                 self.graph.add_node(glb_write)
                 pass_through = pydot.Node(f"passthrough_{self.get_next_seq()}", **attrs,
-                                        label=f"{og_label}_passthrough", hwnode=f"{HWNodeType.PassThrough}")
+                                            label=f"{og_label}_passthrough", hwnode=f"{HWNodeType.PassThrough}")
                 self.graph.add_node(pass_through)
                 self.shared_glb[f'{tensor}_arrayvals'] = (glb_write, pass_through)
 
-                glb_to_pass_through = pydot.Edge(src=glb_write, dst=pass_through, label=f"glb_to_pass_through_{self.get_next_seq()}", style="bold")
+                glb_to_pass_through = pydot.Edge(src=glb_write, dst=pass_through,
+                                                 label=f"glb_to_pass_through_{self.get_next_seq()}", style="bold")
                 self.graph.add_edge(glb_to_pass_through)
 
             # glb_write = pydot.Node(f"glb_write_{self.get_next_seq()}",
@@ -1228,7 +1233,8 @@ class SAMDotGraph():
             # Glb to WR
             # glb_to_wr = pydot.Edge(src=glb_write, dst=wr_scan, label=f"glb_to_wr_{self.get_next_seq()}", style="bold")
             # self.graph.add_edge(glb_to_wr)
-            pass_through_to_wr = pydot.Edge(src=pass_through, dst=wr_scan, label=f"pass_through_to_wr_{self.get_next_seq()}", style="bold")
+            pass_through_to_wr = pydot.Edge(src=pass_through, dst=wr_scan,
+                                             label=f"pass_through_to_wr_{self.get_next_seq()}", style="bold")
             self.graph.add_edge(pass_through_to_wr)
             # write + read to buffet
             wr_to_buff = pydot.Edge(src=wr_scan, dst=buffet, label=f'wr_to_buff_{self.get_next_seq()}')
@@ -1264,7 +1270,7 @@ class SAMDotGraph():
             return
 
         dupe_map = {}
-        orig_nodes_list = self.graph.get_nodes().copy() # shallow copy is sufficient
+        orig_nodes_list = self.graph.get_nodes().copy()  # shallow copy is sufficient
         node_count = len(orig_nodes_list)
         # Duplicate every node that isn't the tensor of interest
         for node in orig_nodes_list:
@@ -1295,7 +1301,7 @@ class SAMDotGraph():
                     dupe_map[node_name].append(new_node.get_name().strip('"'))
                     self.graph.add_node(new_node)
         # Duplicate every edge and map it to the duped versions
-        orig_edge_list = self.graph.get_edges().copy() # shallow copy is sufficient
+        orig_edge_list = self.graph.get_edges().copy()  # shallow copy is sufficient
         for edge in orig_edge_list:
             src = edge.get_source()
             dst = edge.get_destination()
