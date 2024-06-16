@@ -178,7 +178,7 @@ class ReadScannerNode(HWNode):
 
             new_conns = {
                 f'rd_scan_to_crddrop_{conn}': [
-                    ([(rd_scan, out_conn), (crddrop, f"cmrg_coord_in_{conn}")], 17),
+                    ([(rd_scan, out_conn), (crddrop, f"coord_in_{conn}")], 17),
                 ]
             }
 
