@@ -489,7 +489,7 @@ def create_matrix_from_point_list(name, pt_list, shape, use_fp=False) -> MatrixG
     return mg
 
 
-def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches):
+def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches, glb_mem_stride=500):
 
     glbfile_s = os.path.basename(glbfile).rstrip(".txt")
 
@@ -531,7 +531,9 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches):
     tile = 0
     batch = 0
     block = 0
+    cur_base = 0
     for file_path in files:
+        assert sl_ptr < len(straightline)
         num_items = straightline[sl_ptr]
         sl_ptr += 1
         with open(file_path, "w+") as fh_:
@@ -546,11 +548,13 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches):
         if block == num_blocks:
             block = 0
             tile += 1
+            sl_ptr = cur_base + tile * glb_mem_stride
         if tile == tiles:
             tile = 0
             batch = batch + 1
-            # TODO hardcoded value for now
+            # TODO hardcoded value for now, need to consider a larger case
             sl_ptr = 32768 * batch  # size of glb
+            cur_base = 32768 * batch
 
 
 def find_file_based_on_sub_string(files_dir, sub_string_list):

@@ -259,7 +259,7 @@ class ReadScannerNode(HWNode):
             return new_conns
         elif other_type == StreamArbiterNode:
             cur_inputs = other.get_num_inputs()
-            assert cur_inputs < self.max_num_inputs - 1, f"Cannot connect ReadScannerNode to {other_type}, too many inputs"
+            assert cur_inputs <= other.max_num_inputs - 1, f"Cannot connect ReadScannerNode to {other_type}, too many inputs"
             down_stream_arb = other.get_name()
             new_conns = {
                 f'rd_scan_to_stream_arbiter_{cur_inputs}': [

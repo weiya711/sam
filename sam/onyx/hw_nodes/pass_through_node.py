@@ -1,13 +1,9 @@
 from sam.onyx.hw_nodes.hw_node import *
 
 
-class StreamArbiterNode(HWNode):
+class PassThroughNode(HWNode):
     def __init__(self, name=None) -> None:
         super().__init__(name=name)
-        self.max_num_inputs = 4
-        self.num_inputs_connected = 0
-        self.num_outputs = 1
-        self.num_outputs_connected = 0
 
     def connect(self, other, edge, kwargs=None):
 
@@ -28,33 +24,30 @@ class StreamArbiterNode(HWNode):
         from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
 
         new_conns = None
-        stream_arb = self.get_name()
+        pass_through = self.get_name()
 
         other_type = type(other)
 
-        if other_type == GLBNode:
-            other_data = other.get_data()
-            other_ready = other.get_ready()
-            other_valid = other.get_valid()
+        if other_type == WriteScannerNode:
+            wr_scan = other.get_name()
             new_conns = {
-                'stream_arbiter_to_glb': [
-                    ([(stream_arb, "stream_out"), (other_data, "f2io_17")], 17),
+                'pass_through_to_wr_scan': [
+                    ([(pass_through, "stream_out"), (wr_scan, "block_wr_in")], 17),
                 ]
             }
             return new_conns
-        elif other_type == StreamArbiterNode:
-            cur_inputs = other.get_num_inputs()
-            assert cur_inputs < self.max_num_inputs - 1, f"Cannot connect StreamArbiterNode to {other_type}, too many inputs"
-            down_stream_arb = other.get_name()
-            new_conns = {
-                f'stream_arbiter_to_stream_arbiter_{cur_inputs}': [
-                    ([(stream_arb, "stream_out"), (down_stream_arb, f"stream_in_{cur_inputs}")], 17),
-                ]
-            }
-            other.update_input_connections()
-            return new_conns
+        elif other_type == FiberAccessNode:
+            # Only could be using the write scanner portion of the fiber access
+            # fa = other.get_name()
+            conns_original = self.connect(other.get_write_scanner(), edge=edge)
+            print(conns_original)
+            conns_remapped = other.remap_conns(conns_original, "write_scanner")
+            print(conns_remapped)
+
+            return conns_remapped
+
         else:
-            raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
+            raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
 
         return new_conns
 
@@ -65,16 +58,11 @@ class StreamArbiterNode(HWNode):
         return self.num_inputs_connected
 
     def configure(self, attributes):
-        # print("STREAM ARBITER CONFIGURE")
+        # print("Pass Through CONFIGURE")
         # print(attributes)
 
-        seg_mode = attributes['seg_mode']
-        num_requests = self.num_inputs_connected
-        assert num_requests > 0, "StreamArbiterNode must have at least one input"
-        num_requests = num_requests - 1  # remap to the range of 0-3
-
+        placeholder = 1
         cfg_kwargs = {
-            'num_requests': num_requests,
-            'seg_mode': seg_mode
+            'placeholder': placeholder
         }
-        return (num_requests, seg_mode), cfg_kwargs
+        return (placeholder), cfg_kwargs

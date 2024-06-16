@@ -78,6 +78,7 @@ class GLBNode(HWNode):
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
         from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
+        from sam.onyx.hw_nodes.pass_through_node import PassThroughNode
 
         other_type = type(other)
 
@@ -124,6 +125,14 @@ class GLBNode(HWNode):
             print(conns_remapped)
 
             return conns_remapped
+        elif other_type == PassThroughNode:
+            pass_through = other.get_name()
+            new_conns = {
+                'glb_to_pass_through': [
+                    ([(self.data, "io2f_17"), (pass_through, "stream_in")], 17),
+                ]
+            }
+            return new_conns
 
         else:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
