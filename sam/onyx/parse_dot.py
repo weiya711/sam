@@ -1177,7 +1177,7 @@ class SAMDotGraph():
             og_label = attrs['label']
             og_label = og_label.split('_')
 
-            #TODO better solution for this?
+            # TODO better solution for this?
             if len(og_label) > 1 and og_label[-1] != 'lut':
                 print(attrs)
                 print(og_label)
