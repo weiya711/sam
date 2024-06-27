@@ -150,7 +150,7 @@ class IntersectNode(HWNode):
             new_conns = {
                 f'isect_to_merger_{conn}': [
                     # Send isect row and isect col to merger inside isect_col
-                    ([(isect, "coord_out"), (merge, f"cmrg_coord_in_{conn}")], 17),
+                    ([(isect, "coord_out"), (merge, f"coord_in_{conn}")], 17),
                 ]
             }
 
@@ -175,9 +175,6 @@ class IntersectNode(HWNode):
             # Could be doing a sparse accum
             compute = other
             compute_name = other.get_name()
-            print("INTERSECT TO COMPUTE EDGE!")
-            print(edge)
-            print(edge.get_attributes())
             edge_comment = edge.get_attributes()['comment'].strip('"')
             tensor = edge_comment.split('-')[1]
             out_conn = self.tensor_to_conn[tensor]
@@ -185,7 +182,7 @@ class IntersectNode(HWNode):
             new_conns = {
                 'intersect_to_repeat': [
                     # send output to rd scanner
-                    ([(isect, f"pos_out_{out_conn}"), (compute_name, f"data{compute_conn}")], 17),
+                    ([(isect, f"pos_out_{out_conn}"), (compute_name, f"data{compute.mapped_input_ports[compute_conn]}")], 17),
                 ]
             }
             compute.update_input_connections()
@@ -248,6 +245,14 @@ class IntersectNode(HWNode):
         cmrg_enable = 0
         cmrg_stop_lvl = 0
         type_op = attributes['type'].strip('"')
+
+        if 'vector_reduce_mode' in attributes:
+            is_in_vr_mode = attributes['vector_reduce_mode'].strip('"')
+            if is_in_vr_mode == "true":
+                vr_mode = 1
+        else:
+            vr_mode = 0
+
         if type_op == "intersect":
             op = JoinerOp.INTERSECT.value
         elif type_op == "union":
@@ -257,6 +262,7 @@ class IntersectNode(HWNode):
         cfg_kwargs = {
             'cmrg_enable': cmrg_enable,
             'cmrg_stop_lvl': cmrg_stop_lvl,
-            'op': op
+            'op': op,
+            'vr_mode': vr_mode
         }
-        return (cmrg_enable, cmrg_stop_lvl, op), cfg_kwargs
+        return (cmrg_enable, cmrg_stop_lvl, op, vr_mode), cfg_kwargs
