@@ -43,6 +43,7 @@ class ReadScannerNode(HWNode):
         from sam.onyx.hw_nodes.repeat_node import RepeatNode
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.stream_arbiter_node import StreamArbiterNode
 
         new_conns = None
         rd_scan = self.get_name()
@@ -256,6 +257,17 @@ class ReadScannerNode(HWNode):
             }
 
             return new_conns
+        elif other_type == StreamArbiterNode:
+            cur_inputs = other.get_num_inputs()
+            assert cur_inputs <= other.max_num_inputs - 1, f"Cannot connect ReadScannerNode to {other_type}, too many inputs"
+            down_stream_arb = other.get_name()
+            new_conns = {
+                f'rd_scan_to_stream_arbiter_{cur_inputs}': [
+                    ([(rd_scan, "block_rd_out"), (down_stream_arb, f"stream_in_{cur_inputs}")], 17),
+                ]
+            }
+            other.update_input_connections()
+            return new_conns
         else:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
 
@@ -313,6 +325,13 @@ class ReadScannerNode(HWNode):
         else:
             vr_mode = 0
 
+        glb_addr_base = 0
+        glb_addr_stride = 0
+        if 'glb_addr_base' in attributes:
+            glb_addr_base = int(attributes['glb_addr_base'])
+        if 'glb_addr_stride' in attributes:
+            glb_addr_stride = int(attributes['glb_addr_stride'])
+
         cfg_kwargs = {
             'dense': dense,
             'dim_size': dim_size,
@@ -328,7 +347,9 @@ class ReadScannerNode(HWNode):
             'block_mode': block_mode,
             'lookup': lookup,
             # 'spacc_mode': spacc_mode
-            'vr_mode': vr_mode
+            'vr_mode': vr_mode,
+            'glb_addr_base': glb_addr_base,
+            'glb_addr_stride': glb_addr_stride
         }
 
         return (inner_offset, max_outer_dim, strides, ranges, is_root, do_repeat,

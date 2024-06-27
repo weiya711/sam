@@ -82,6 +82,7 @@ class FiberAccessNode(HWNode):
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.merge_node import MergeNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
+        from sam.onyx.hw_nodes.stream_arbiter_node import StreamArbiterNode
 
         new_conns = None
         other_type = type(other)
@@ -219,6 +220,16 @@ class FiberAccessNode(HWNode):
             final_conns_2 = other.remap_conns(final_conns_1, kwargs['flavor_that'])
             print(final_conns_2)
             return final_conns_2
+        elif other_type == StreamArbiterNode:
+            assert kwargs is not None
+            assert 'flavor_this' in kwargs
+            this_flavor = self.get_flavor(kwargs['flavor_this'])
+            print(kwargs)
+            print("FIBER ACCESS TO Stream Arbiter")
+            init_conns = this_flavor.connect(other, edge)
+            print(init_conns)
+            final_conns = self.remap_conns(init_conns, kwargs['flavor_this'])
+            return final_conns
         else:
             raise NotImplementedError(f'Cannot connect FiberAccessNode to {other_type}')
 

@@ -106,6 +106,10 @@ class WriteScannerNode(HWNode):
         else:
             vr_mode = 0
 
+        stream_id = 0
+        if 'stream_id' in attributes:
+            stream_id = int(attributes['stream_id'])
+
         cfg_tuple = (compressed, lowest_level, stop_lvl, block_mode, vr_mode, init_blank)
         cfg_kwargs = {
             'compressed': compressed,
@@ -113,6 +117,7 @@ class WriteScannerNode(HWNode):
             'stop_lvl': stop_lvl,
             'block_mode': block_mode,
             'vr_mode': vr_mode,
-            'init_blank': init_blank
+            'init_blank': init_blank,
+            'stream_id': stream_id
         }
         return cfg_tuple, cfg_kwargs
