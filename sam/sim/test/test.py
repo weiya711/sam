@@ -270,7 +270,7 @@ def read_inputs(filename, intype=int, base=10, early_terminate=None, positive_on
                 if early_terminate in line:
                     break
             if base == 16:
-                return_list.append(intype(line, base))
+                return_list.append(int(line, base))
             else:
                 # Convert to positive if needed?
                 if positive_only:
