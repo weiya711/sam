@@ -64,7 +64,7 @@ for datum in data:
     print(f"{SUITESPARSE_PATH}/{datum}.mtx")
     mtx_file = glob.glob(f"{SUITESPARSE_PATH}/{datum}.mtx")[0]
     os.makedirs("extensor_mtx", exist_ok=True)
-    shutil.copy(mtx_file, f"extensor_mtx/{datum}.mtx")
+    shutil.copyfile(mtx_file, f"extensor_mtx/{datum}.mtx")
 
     command = f"./scripts/suitesparse_memory_model_runner.sh {datum} {app_name}"
     os.system(command)
