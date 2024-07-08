@@ -79,37 +79,164 @@ make taco/build
 # SuiteSparse Dataset 
 # ==============================================================================================
 
-dataset="bcsstm26"
+# Datasets, can selectively comment in/out
+datasets=()
+datasets+=("bcsstm26")
+datasets+=("qiulp")
+datasets+=("tols2000")
+datasets+=("west2021")
+datasets+=("adder_dcop_30")
+datasets+=("watt_2")
+datasets+=("rajat12")
+datasets+=("adder_trans_02")
+datasets+=("G42")
+datasets+=("G30")
+datasets+=("N_biocarta")
+datasets+=("bwm2000")
+datasets+=("G33")
+datasets+=("progas")
+datasets+=("Ip_25fv47")
 
-app_names=();                 tilesizes=()
-app_names+=("mat_elemadd3");  tilesizes+=("300")
-app_names+=("mat_elemmul");   tilesizes+=("760")
-app_names+=("mat_vecmul_ij"); tilesizes+=("760")
-app_names+=("matmul_ijk");    tilesizes+=("30")
-app_names+=("matmul_ikj");    tilesizes+=("30")
+# Loop through the datasets
+for dataset in "${datasets[@]}"; do
 
-# Get the length of the arrays
-length=${#app_names[@]}
+    case $dataset in
+        "bcsstm26")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("300")
+            app_names+=("mat_elemmul");   tilesizes+=("760")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("760")
+            app_names+=("matmul_ijk");    tilesizes+=("30")
+            app_names+=("matmul_ikj");    tilesizes+=("30")
+            ;;
+        "qiulp")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("130")
+            app_names+=("mat_elemmul");   tilesizes+=("497")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("497")
+            app_names+=("matmul_ijk");    tilesizes+=("40")
+            app_names+=("matmul_ikj");    tilesizes+=("40")
+            ;;
+        "tols2000")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("190")
+            app_names+=("mat_elemmul");   tilesizes+=("360")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("512")
+            app_names+=("matmul_ijk");    tilesizes+=("30")
+            app_names+=("matmul_ikj");    tilesizes+=("30")
+            ;;
+        "west2021")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("130")
+            app_names+=("mat_elemmul");   tilesizes+=("429")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("429")
+            app_names+=("matmul_ijk");    tilesizes+=("60")
+            app_names+=("matmul_ikj");    tilesizes+=("60")
+            ;;
+        "adder_dcop_30")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("120")
+            app_names+=("mat_elemmul");   tilesizes+=("300")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("300")
+            ;;
+        "watt_2")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("80")
+            app_names+=("mat_elemmul");   tilesizes+=("150")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("175")
+            app_names+=("matmul_ijk");    tilesizes+=("30")
+            app_names+=("matmul_ikj");    tilesizes+=("30")
+            ;;
+        "rajat12")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("80")
+            app_names+=("mat_elemmul");   tilesizes+=("175")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("150")
+            ;;
+        "adder_trans_02")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("120")
+            app_names+=("mat_elemmul");   tilesizes+=("250")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("250")
+            ;;
+        "G42")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("40")
+            app_names+=("mat_elemmul");   tilesizes+=("75")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("75")
+            ;;
+        "G30")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("160")
+            app_names+=("mat_elemmul");   tilesizes+=("300")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("270")
+            ;;
+        "N_biocarta")
+            app_names=();                 tilesizes=()
+            app_names+=("matmul_ijk");    tilesizes+=("60")
+            app_names+=("matmul_ikj");    tilesizes+=("60")
+            ;;
+        "bwm2000")
+            app_names=();                 tilesizes=()
+            app_names+=("matmul_ijk");    tilesizes+=("60")
+            app_names+=("matmul_ikj");    tilesizes+=("60")
+            ;;
+        "G33")
+            app_names=();                 tilesizes=()
+            app_names+=("matmul_ijk");    tilesizes+=("30")
+            app_names+=("matmul_ikj");    tilesizes+=("30")
+            ;;
+        "progas")
+            app_names=();                 tilesizes=()
+            app_names+=("matmul_ijk");    tilesizes+=("40")
+            app_names+=("matmul_ikj");    tilesizes+=("40")
+            ;;
+        "Ip_25fv47")
+            app_names=();                 tilesizes=()
+            app_names+=("matmul_ijk");    tilesizes+=("50")
+            app_names+=("matmul_ikj");    tilesizes+=("50")
+            ;;
+        *)
+            echo "Invalid dataset: $dataset"
+            exit 1
+            ;;
+    esac
 
-# Loop through the arrays
-for ((i=0; i<$length; i++)); do
+    # Get the length of the arrays
+    length=${#app_names[@]}
 
-    app_name=${app_names[$i]}
-    tilesize=${tilesizes[$i]}
+    # Loop through the arrays
+    for ((i=0; i<$length; i++)); do
 
-    python setup_tiling_mat.py \
-        ${app_name} \
-        ${dataset} \
-        ${tilesize} \
-        ${docker_path} |& tee run_vlsi_${app_name}.log
+        app_name=${app_names[$i]}
+        tilesize=${tilesizes[$i]}
+
+        python setup_tiling_mat.py \
+            ${app_name} \
+            ${dataset} \
+            ${tilesize} \
+            ${docker_path} |& tee run_vlsi_${app_name}_${dataset}.log
+
+    done
 
 done
 
 # ==============================================================================================
 # Randomized Tensor Dataset
 # ==============================================================================================
- 
-dataset="rand_large_tensor5"
+
+# Datasets, can selectively comment in/out
+datasets=()
+datasets+=("rand_large_tensor5")
+datasets+=("rand_large_tensor7") 
+datasets+=("rand_large_tensor9")
+datasets+=("rand_large_tensor6")
+datasets+=("rand_large_tensor1")
+datasets+=("rand_large_tensor3")
+datasets+=("rand_large_tensor2")
+datasets+=("rand_large_tensor8")
+datasets+=("rand_large_tensor10")
+datasets+=("rand_large_tensor4")
 
 RUN_SCRIPT="./scripts/formatting/generate_tensor_tile_formats_onyx.sh"
 MEM_CONFIG="./sam/sim/src/tiling/memory_config_opal.yaml"
@@ -126,25 +253,28 @@ app_names+=("tensor3_mttkrp");    other_formats+=("ss")
 # Get the length of the arrays
 length=${#app_names[@]}
 
-# Loop through the arrays
-for ((i=0; i<$length; i++)); do
+# Loop through the datasets
+for dataset in "${datasets[@]}"; do
 
-    app_name=${app_names[$i]}
-    other_format=${other_formats[$i]}
+    # Loop through the arrays
+    for ((i=0; i<$length; i++)); do
 
-    rm $TMP_TENSOR
-    echo $dataset > $TMP_TENSOR
+        app_name=${app_names[$i]}
+        other_format=${other_formats[$i]}
 
-    "$RUN_SCRIPT" \
-        ${TMP_TENSOR} \
-        ${MEM_CONFIG} \
-        ${app_name} \
-        ${other_format} \
-        ${docker_path} |& tee run_vlsi_${app_name}.log
+        rm $TMP_TENSOR
+        echo $dataset > $TMP_TENSOR
+
+        "$RUN_SCRIPT" \
+            ${TMP_TENSOR} \
+            ${MEM_CONFIG} \
+            ${app_name} \
+            ${other_format} \
+            ${docker_path} |& tee run_vlsi_${app_name}_${dataset}.log
+
+    done
 
 done
-
-rm ${TMP_TENSOR}
 
 # ==============================================================================================
 # Error Logs for tiled matrices and tensors (sam branch: as is in container (7d5cc49))
