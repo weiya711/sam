@@ -115,6 +115,9 @@ for i in ${!FORMATS[@]}; do
 		
 		find $tile_path -name tensor_*_tile_*.tns -not -name tensor_B_tile_*.tns -maxdepth 1 | parallel run_format {} $bench $format $bench_path $tile_path "$other_format" 
 
+		docker exec $5 rm -r /aha/garnet/tiles_$3_$line
+		docker cp tiles/$3/$line $5:/aha/garnet/tiles_$3_$line
+
 	done < $1
         
 	set_temp_env $old_frostt_formatted_taco_path $old_frostt_path $old_frostt_tensor_path $old_frostt_formatted_path 
@@ -122,5 +125,3 @@ for i in ${!FORMATS[@]}; do
 	
     done
 done
-
-docker cp tiles $5:/aha/garnet/tiles_$3
