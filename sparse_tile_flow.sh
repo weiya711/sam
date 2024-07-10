@@ -81,6 +81,7 @@ make taco/build
 
 # Datasets, can selectively comment in/out
 datasets=()
+datasets+=("cage3")
 datasets+=("bcsstm26")
 datasets+=("qiulp")
 datasets+=("tols2000")
@@ -101,6 +102,14 @@ datasets+=("Ip_25fv47")
 for dataset in "${datasets[@]}"; do
 
     case $dataset in
+        "cage3")
+            app_names=();                 tilesizes=()
+            app_names+=("mat_elemadd3");  tilesizes+=("30")
+            app_names+=("mat_elemmul");   tilesizes+=("30")
+            app_names+=("mat_vecmul_ij"); tilesizes+=("30")
+            app_names+=("matmul_ijk");    tilesizes+=("30")
+            app_names+=("matmul_ikj");    tilesizes+=("30")
+            ;;
         "bcsstm26")
             app_names=();                 tilesizes=()
             app_names+=("mat_elemadd3");  tilesizes+=("300")
