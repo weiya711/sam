@@ -484,7 +484,7 @@ def create_matrix_from_point_list(name, pt_list, shape, use_fp=False, base=16) -
                 tmp_x = bin(int(x))[2:].zfill(16)
                 mat_base[idx] = bfbin2float(tmp_x)
         else:
-            assert(base == 10)
+            assert base == 10
             for idx, x in numpy.ndenumerate(mat_base):
                 mat_base[idx] = bfbin2float(float2bfbin(mat_base[idx]))
     else:
