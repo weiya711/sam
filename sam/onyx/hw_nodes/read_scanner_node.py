@@ -44,6 +44,7 @@ class ReadScannerNode(HWNode):
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
         from sam.onyx.hw_nodes.stream_arbiter_node import StreamArbiterNode
+        from sam.onyx.hw_nodes.pass_through_node import PassThroughNode
 
         new_conns = None
         rd_scan = self.get_name()
@@ -267,6 +268,28 @@ class ReadScannerNode(HWNode):
                 ]
             }
             other.update_input_connections()
+            return new_conns
+        elif other_type == PassThroughNode:
+            pass_through = other.get_name()
+            e_attr = edge.get_attributes()
+            e_type = e_attr['type'].strip('"')
+            if "crd" in e_type:
+                new_conns = {
+                    f'rd_scan_to_pass_through_crd': [
+                        # send output to rd scanner
+                        ([(rd_scan, "coord_out"), (pass_through, "stream_in")], 17),
+                    ]
+                }
+            elif 'ref' in e_type:
+                rd_scan_out_port = "pos_out"
+                if 'val' in e_attr and e_attr['val'].strip('"') == 'true':
+                    rd_scan_out_port = "coord_out"
+                new_conns = {
+                    f'rd_scan_to_pass_through_pos': [
+                        # send output to rd scanner
+                        ([(rd_scan, rd_scan_out_port), (pass_through, "stream_in")], 17),
+                    ]
+                }
             return new_conns
         else:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')

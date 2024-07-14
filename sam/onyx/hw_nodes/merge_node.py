@@ -33,6 +33,8 @@ class MergeNode(HWNode):
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
         from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
+        from sam.onyx.hw_nodes.pass_through_node import PassThroughNode
+
 
         new_conns = None
         other_type = type(other)
@@ -106,6 +108,27 @@ class MergeNode(HWNode):
                     ([(merge, f"coord_out_{out_conn}"), (other_merge, f"coord_in_{in_conn}")], 17),
                 ]
             }
+            return new_conns
+        elif other_type == PassThroughNode:
+            pass_through = other.get_name()
+            # Use inner to process outer
+            comment = edge.get_attributes()['comment'].strip('"')
+            tensor_lvl = None
+            if self.get_inner() in comment:
+                out_conn = 0
+                tensor_lvl = self.get_inner()
+            else:
+                out_conn = 1
+                tensor_lvl = self.get_outer()
+
+            new_conns = {
+                f'merger_to_merger_{out_conn}_to_pass_through': [
+                    ([(merge, f"coord_out_{out_conn}"), (pass_through, "stream_in")], 17),
+                ]
+            }
+            return new_conns
+            
+            
 
         elif other_type == RepeatNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
