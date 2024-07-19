@@ -91,7 +91,7 @@ class PassThroughNode(HWNode):
                     ]
                 }
             return new_conns
-        
+
         elif other_type == MergeNode:
             edge_attr = edge.get_attributes()
             crddrop = other.get_name()
@@ -149,7 +149,7 @@ class PassThroughNode(HWNode):
             raise NotImplementedError(f'Cannot connect Pass Through Node to {other_type}')
 
         return new_conns
-        
+
     def get_connection_from_tensor(self, tensor):
         print(self.tensor_to_conn)
         return self.tensor_to_conn[tensor]

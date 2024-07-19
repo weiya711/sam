@@ -35,7 +35,6 @@ class MergeNode(HWNode):
         from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
         from sam.onyx.hw_nodes.pass_through_node import PassThroughNode
 
-
         new_conns = None
         other_type = type(other)
 
@@ -127,8 +126,6 @@ class MergeNode(HWNode):
                 ]
             }
             return new_conns
-            
-            
 
         elif other_type == RepeatNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')

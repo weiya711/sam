@@ -1128,7 +1128,7 @@ class SAMDotGraph():
                 elif unroll > 4:
                     assert unroll <= 16
                     # need to create two stages of arbiters
-                    stage2 = math.ceil(unroll/4)
+                    stage2 = math.ceil(unroll / 4)
 
                     # stream arbiter for stage 1
                     stream_arb_mode = attrs['mode'].strip('"')
@@ -1141,14 +1141,18 @@ class SAMDotGraph():
                             stream_arb_attr['seg_mode'] = 0
                         else:
                             stream_arb_attr['seg_mode'] = 1
-                        stream_arb_stage1 = pydot.Node(f"stream_arb_{self.get_next_seq()}_stage1", **stream_arb_attr, label=stream_arb_label,
-                                                comment=f"type=stream_arbiter,mode={stream_arb_mode}", type="stream_arbiter",
-                                                hwnode=f"{HWNodeType.StreamArbiter}")
+                        stream_arb_stage1 = pydot.Node(
+                            f"stream_arb_{self.get_next_seq()}_stage1",
+                            **stream_arb_attr,
+                            label=stream_arb_label,
+                            comment=f"type=stream_arbiter,mode={stream_arb_mode}",
+                            type="stream_arbiter",
+                            hwnode=f"{HWNodeType.StreamArbiter}")
                         self.shared_stream_arb[stream_arb_label] = stream_arb_stage1
                         self.graph.add_node(stream_arb_stage1)
 
                         self.stage2_count[stream_arb_stage1] = 0
-                    
+
                         # add stream arbiters for stage 2
                         stream_arb_mode = attrs['mode'].strip('"')
 
@@ -1159,15 +1163,22 @@ class SAMDotGraph():
                                 stream_arb_attr['seg_mode'] = 0
                             else:
                                 stream_arb_attr['seg_mode'] = 1
-                            stream_arb = pydot.Node(stream_arb_label, **stream_arb_attr, label=stream_arb_label,
-                                                    comment=f"type=stream_arbiter,mode={stream_arb_mode}", type="stream_arbiter",
-                                                    hwnode=f"{HWNodeType.StreamArbiter}")
+                            stream_arb = pydot.Node(
+                                stream_arb_label,
+                                **stream_arb_attr,
+                                label=stream_arb_label,
+                                comment=f"type=stream_arbiter,mode={stream_arb_mode}",
+                                type="stream_arbiter",
+                                hwnode=f"{HWNodeType.StreamArbiter}")
                             self.graph.add_node(stream_arb)
                             # connect edge from stage 1 to stage 2
-                            stream_arb_to_stream_arb = pydot.Edge(src=stream_arb, dst=stream_arb_stage1,
-                                                            label=f"stream_arb_to_stream_arb_{self.get_next_seq()}", style="bold")
+                            stream_arb_to_stream_arb = pydot.Edge(
+                                src=stream_arb,
+                                dst=stream_arb_stage1,
+                                label=f"stream_arb_to_stream_arb_{self.get_next_seq()}",
+                                style="bold")
                             self.graph.add_edge(stream_arb_to_stream_arb)
-                    
+
                 # Now add the nodes and move the edges...
                 self.graph.add_node(rd_scan)
                 self.graph.add_node(wr_scan)
@@ -1190,11 +1201,11 @@ class SAMDotGraph():
                         self.shared_stream_arb_glb_edge.append((stream_arb, glb_read))
                 elif unroll > 4:
                     # connect rd scan to stage 2 stream
-                    
+
                     count = self.stage2_count[stream_arb_stage1] % stage2
                     stream_arb_label = f"stream_arb_{stream_arb_mode}_stage2_{count}"
                     rd_to_stream_arb = pydot.Edge(src=rd_scan, dst=stream_arb_label,
-                                                    label=f"rd_to_stream_arb_{self.get_next_seq()}", style="bold")
+                                                  label=f"rd_to_stream_arb_{self.get_next_seq()}", style="bold")
                     self.graph.add_edge(rd_to_stream_arb)
                     self.stage2_count[stream_arb_stage1] += 1
 
