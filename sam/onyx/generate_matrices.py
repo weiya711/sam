@@ -440,20 +440,22 @@ def create_matrix_from_point_list(name, pt_list, shape) -> MatrixGenerator:
     return mg
 
 
-def convert_aha_glb_output_file(glbfile, output_dir, tiles):
+def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches):
 
     glbfile_s = os.path.basename(glbfile).rstrip(".txt")
 
     files = []
     if 'mode_vals' in glbfile:
         # num_blocks = 1
-        for i in range(tiles):
-            files.append(f"{output_dir}/{glbfile_s}_tile{i}")
+        for j in range(batches):
+            for i in range(tiles):
+                files.append(f"{output_dir}/{glbfile_s}_batch{j}_tile{i}")
     else:
         # num_blocks = 2
-        for i in range(tiles):
-            files.append(f"{output_dir}/{glbfile_s}_seg_tile{i}")
-            files.append(f"{output_dir}/{glbfile_s}_crd_tile{i}")
+        for j in range(batches):
+            for i in range(tiles):
+                files.append(f"{output_dir}/{glbfile_s}_seg_batch{j}_tile{i}")
+                files.append(f"{output_dir}/{glbfile_s}_crd_batch{j}_tile{i}")
 
     straightline = []
 
@@ -464,19 +466,41 @@ def convert_aha_glb_output_file(glbfile, output_dir, tiles):
             sp_line = line.strip().split(" ")
             for sp_line_tok in sp_line:
                 sp_line_tok_stripped = sp_line_tok.strip()
+                if (sp_line_tok_stripped == ""):
+                    continue
                 straightline.append(int(sp_line_tok_stripped, base=16))
 
     # Now we have straightline having the items in order
     # Now write them to the output
+    if 'mode_vals' in glbfile:
+        num_blocks = 1
+    else:
+        num_blocks = 2
+
     sl_ptr = 0
+    tile = 0
+    batch = 0
+    block = 0
     for file_path in files:
         num_items = straightline[sl_ptr]
         sl_ptr += 1
         with open(file_path, "w+") as fh_:
-            for _ in range(num_items):
+            # Edge case, write out 0 is this correct?
+            if num_items == 0:
                 fh_.write(f"{straightline[sl_ptr]:04X}\n")
-                sl_ptr += 1
-
+            else:
+                for _ in range(num_items):
+                    fh_.write(f"{straightline[sl_ptr]:04X}\n")
+                    sl_ptr += 1
+        block += 1
+        if block == num_blocks:
+            block = 0
+            tile += 1
+        if tile == tiles:
+            tile = 0
+            batch = batch + 1
+            # TODO hardcoded value for now
+            sl_ptr = 1024 * batch  # size of glb
 
 def get_tensor_from_files(name, files_dir, shape, base=10,
                           format='CSF', early_terminate=None, tensor_ordering=None,
