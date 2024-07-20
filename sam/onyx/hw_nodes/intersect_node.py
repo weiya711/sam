@@ -237,22 +237,14 @@ class IntersectNode(HWNode):
             if 'crd' in edge_type:
                 new_conns = {
                     f'isect_to_isect': [
-                        # send output to rd scanner
                         ([(isect, f"coord_out"), (pass_through, "stream_in")], 17),
-                        # ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
-                        # ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
-                        # ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
                     ]
                 }
             elif 'ref' in edge_type:
                 isect_conn = self.get_connection_from_tensor(tensor)
                 new_conns = {
                     f'isect_to_isect': [
-                        # send output to rd scanner
                         ([(isect, f"pos_out_{isect_conn}"), (pass_through, "stream_in")], 17),
-                        # ([(isect, f"eos_out_0"), (wr_scan, f"eos_in_0")], 1),
-                        # ([(wr_scan, f"ready_out_0"), (isect, f"ready_in_0")], 1),
-                        # ([(isect, f"valid_out_0"), (wr_scan, f"valid_in_0")], 1),
                     ]
                 }
             return new_conns
