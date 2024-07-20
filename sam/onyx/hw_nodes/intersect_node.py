@@ -32,6 +32,7 @@ class IntersectNode(HWNode):
         from sam.onyx.hw_nodes.repsiggen_node import RepSigGenNode
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
         from sam.onyx.hw_nodes.fiberaccess_node import FiberAccessNode
+        from sam.onyx.hw_nodes.pass_through_node import PassThroughNode
 
         new_conns = None
         isect = self.get_name()
@@ -221,7 +222,32 @@ class IntersectNode(HWNode):
             print(init_conns)
             final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
             return final_conns
+        elif other_type == PassThroughNode:
+            pass_through = other.get_name()
+            comment = edge.get_attributes()['comment'].strip('"')
+            try:
+                tensor = comment.split("-")[1]
+            except Exception:
+                try:
+                    tensor = comment.split("_")[1]
+                except Exception:
+                    tensor = comment
+            edge_type = edge.get_attributes()['type'].strip('"')
 
+            if 'crd' in edge_type:
+                new_conns = {
+                    f'isect_to_isect': [
+                        ([(isect, f"coord_out"), (pass_through, "stream_in")], 17),
+                    ]
+                }
+            elif 'ref' in edge_type:
+                isect_conn = self.get_connection_from_tensor(tensor)
+                new_conns = {
+                    f'isect_to_isect': [
+                        ([(isect, f"pos_out_{isect_conn}"), (pass_through, "stream_in")], 17),
+                    ]
+                }
+            return new_conns
         else:
             raise NotImplementedError(f'Cannot connect IntersectNode to {other_type}')
 
