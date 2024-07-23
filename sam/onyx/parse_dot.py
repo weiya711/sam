@@ -19,7 +19,7 @@ class SAMDotGraphLoweringError(Exception):
 class SAMDotGraph():
 
     def __init__(self, filename=None, local_mems=True, use_fork=False,
-                 use_fa=False, unroll=1, collat_dir=None, opal_workaround=False, mem_block_size=1000) -> None:
+                 use_fa=False, unroll=1, collat_dir=None, opal_workaround=False, mem_block_size=2048) -> None:
         assert filename is not None, "filename is None"
         self.graphs = pydot.graph_from_dot_file(filename)
         self.graph = self.graphs[0]

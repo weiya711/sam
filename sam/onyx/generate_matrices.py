@@ -489,7 +489,7 @@ def create_matrix_from_point_list(name, pt_list, shape, use_fp=False) -> MatrixG
     return mg
 
 
-def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches, glb_mem_stride=500):
+def convert_aha_glb_output_file(glbfile, output_dir, tiles, batches, glb_mem_stride=1024):
 
     glbfile_s = os.path.basename(glbfile).rstrip(".txt")
 
