@@ -463,7 +463,7 @@ def run_statistics(name, seed, shape, dump_dir, sparsity):
     return (avg1, avg2)
 
 
-def create_matrix_from_point_list(name, pt_list, shape, use_fp=False) -> MatrixGenerator:
+def create_matrix_from_point_list(name, pt_list, shape, use_fp=False, base=16) -> MatrixGenerator:
     mat_base = numpy.zeros(shape)
     dims = len(shape)
     for pt_idx in range(len(pt_list[0])):
@@ -475,13 +475,18 @@ def create_matrix_from_point_list(name, pt_list, shape, use_fp=False) -> MatrixG
     # Convert the input matrix to MatrixGenerator according to specified use_fp
     if use_fp:
         mat_base = mat_base.astype(numpy.float32)
-        for idx, x in numpy.ndenumerate(mat_base):
-            if x == 0.0:
-                # don't need to truncate if it is already a zero
-                continue
-            # Convert the input from int to bfloat16
-            tmp_x = bin(int(x))[2:].zfill(16)
-            mat_base[idx] = bfbin2float(tmp_x)
+        if base == 16:
+            for idx, x in numpy.ndenumerate(mat_base):
+                if x == 0.0:
+                    # don't need to truncate if it is already a zero
+                    continue
+                # Convert the input from int to bfloat16
+                tmp_x = bin(int(x))[2:].zfill(16)
+                mat_base[idx] = bfbin2float(tmp_x)
+        else:
+            assert base == 10
+            for idx, x in numpy.ndenumerate(mat_base):
+                mat_base[idx] = bfbin2float(float2bfbin(mat_base[idx]))
     else:
         mat_base = mat_base.astype(numpy.uint16, casting='unsafe')
 
@@ -610,7 +615,8 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
         to_loop = tensor_ordering_sorted
     # Get vals first since all formats will have vals
     val_f = find_file_based_on_sub_string(files_dir, [f'tensor_{name}', f'mode_vals{suffix}'])
-    vals = read_inputs(f"{files_dir}/{val_f}", intype=int, base=base, early_terminate=early_terminate,
+    intype = float if use_fp else int
+    vals = read_inputs(f"{files_dir}/{val_f}", intype=intype, base=base, early_terminate=early_terminate,
                        positive_only=positive_only)
 
     mg = None
@@ -639,7 +645,7 @@ def get_tensor_from_files(name, files_dir, shape, base=10,
             crds.append(crd_t_)
         if not created_empty:
             pt_list = get_point_list(crds, segs, val_arr=vals)
-            mg = create_matrix_from_point_list(name, pt_list, shape_reordered, use_fp=use_fp)
+            mg = create_matrix_from_point_list(name, pt_list, shape_reordered, use_fp=use_fp, base=base)
     elif format == 'COO':
         crds = []
         for mode in range(dims):
