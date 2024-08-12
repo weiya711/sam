@@ -1359,7 +1359,7 @@ class SAMDotGraph():
             node_name = node.get_name().strip('"')
             if int(node_name) > node_count:
                 node_count = int(node_name)
-        node_count += 1 
+        node_count += 1
         # Duplicate every node that isn't the tensor of interest
         for node in orig_nodes_list:
             node_attrs = node.get_attributes()
