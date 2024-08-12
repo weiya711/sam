@@ -1353,7 +1353,13 @@ class SAMDotGraph():
 
         dupe_map = {}
         orig_nodes_list = self.graph.get_nodes().copy()  # shallow copy is sufficient
-        node_count = len(orig_nodes_list)
+        # get largest node number
+        node_count = 0
+        for node in orig_nodes_list:
+            node_name = node.get_name().strip('"')
+            if int(node_name) > node_count:
+                node_count = int(node_name)
+        node_count += 1 
         # Duplicate every node that isn't the tensor of interest
         for node in orig_nodes_list:
             node_attrs = node.get_attributes()
