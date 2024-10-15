@@ -156,7 +156,6 @@ class PassThroughNode(HWNode):
     def configure(self, attributes):
         print("PASSTHROUGH Configure", attributes)
 
-
         placeholder = 1
         cfg_kwargs = {
             'placeholder': placeholder
