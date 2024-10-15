@@ -33,7 +33,7 @@ class PassThroughNode(HWNode):
         pass_through = self.get_name()
 
         other_type = type(other)
-        print(other_type)
+        # print(other_type)
 
         if other_type == WriteScannerNode:
             wr_scan = other.get_name()
@@ -44,7 +44,6 @@ class PassThroughNode(HWNode):
             }
             return new_conns
         elif other_type == ReadScannerNode:
-            print("PASSTHORUGH TO REPEAT EDGE!")
             rd_scan = other.get_name()
             new_conns = {
                 'pass_through_to_rd_scan': [
@@ -54,7 +53,6 @@ class PassThroughNode(HWNode):
             return new_conns
         elif other_type == RepeatNode:
             repeat = other.get_name()
-            print("PASSTHROUGH TO REPEAT EDGE!")
             new_conns = {
                 'pass_through_to_repeat': [
                     # send output to rd scanner
@@ -95,8 +93,6 @@ class PassThroughNode(HWNode):
         elif other_type == MergeNode:
             edge_attr = edge.get_attributes()
             crddrop = other.get_name()
-            print("CHECKING READ TENSOR - CRDDROP")
-            print(edge)
             crd_drop_outer = other.get_outer()
             comment = edge_attr['comment'].strip('"')
             conn = 0
@@ -135,13 +131,10 @@ class PassThroughNode(HWNode):
             }
         elif other_type == FiberAccessNode:
             # fa = other.get_name()
-            print("PASSTHROUGH TO FIBER ACCESS")
             assert kwargs is not None
             assert 'flavor_that' in kwargs
             that_flavor = other.get_flavor(kwargs['flavor_that'])
-            print(kwargs)
             init_conns = self.connect(that_flavor, edge)
-            print(init_conns)
             final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
             return final_conns
 
@@ -151,7 +144,7 @@ class PassThroughNode(HWNode):
         return new_conns
 
     def get_connection_from_tensor(self, tensor):
-        print(self.tensor_to_conn)
+        # print(self.tensor_to_conn)
         return self.tensor_to_conn[tensor]
 
     def update_input_connections(self):
@@ -161,8 +154,8 @@ class PassThroughNode(HWNode):
         return self.num_inputs_connected
 
     def configure(self, attributes):
-        # print("Pass Through CONFIGURE")
-        # print(attributes)
+        print("PASSTHROUGH Configure", attributes)
+
 
         placeholder = 1
         cfg_kwargs = {

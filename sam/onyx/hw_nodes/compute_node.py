@@ -153,13 +153,10 @@ class ComputeNode(HWNode):
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == FiberAccessNode:
-            print("COMPUTE TO FIBER ACCESS")
             assert kwargs is not None
             assert 'flavor_that' in kwargs
             that_flavor = other.get_flavor(kwargs['flavor_that'])
-            print(kwargs)
             init_conns = self.connect(that_flavor, edge)
-            print(init_conns)
             final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
             return final_conns
         else:
@@ -212,11 +209,9 @@ class ComputeNode(HWNode):
         self.opcode = int(opcode, 0)
 
     def configure(self, attributes):
-        print("PE CONFIGURE")
-        print(attributes)
+        print("PE Configure ", attributes)
         c_op = attributes['type'].strip('"')
         comment = attributes['comment'].strip('"')
-        print(c_op)
         op_code = 0
         # configuring via sam, it is a sparse app
         use_dense = False
@@ -228,7 +223,6 @@ class ComputeNode(HWNode):
         num_sparse_inputs = list("000")
         for port in self.mapped_input_ports:
             num_sparse_inputs[2 - int(port)] = '1'
-        print("".join(num_sparse_inputs))
         num_sparse_inputs = int("".join(num_sparse_inputs), 2)
 
         cfg_kwargs = {

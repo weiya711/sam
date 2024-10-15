@@ -120,9 +120,7 @@ class GLBNode(HWNode):
             # Only could be using the write scanner portion of the fiber access
             # fa = other.get_name()
             conns_original = self.connect(other.get_write_scanner(), edge=edge)
-            print(conns_original)
             conns_remapped = other.remap_conns(conns_original, "write_scanner")
-            print(conns_remapped)
 
             return conns_remapped
         elif other_type == PassThroughNode:

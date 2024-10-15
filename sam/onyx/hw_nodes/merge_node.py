@@ -50,11 +50,8 @@ class MergeNode(HWNode):
             wr_scan = other.get_name()
             conn = 0
             comment = edge.get_attributes()['comment'].strip('"')
-            print("MERGE TO WR SCAN")
-            print(comment)
             if 'outer' in comment:
                 conn = 1
-            print(conn)
             new_conns = {
                 f'merge_{conn}_to_wr_scan': [
                     ([(merge, f"coord_out_{conn}"), (wr_scan, f"data_in")], 17),
@@ -64,7 +61,6 @@ class MergeNode(HWNode):
             return new_conns
         elif other_type == IntersectNode:
             isect = other.get_name()
-            print("MERGE TO UNION FOR VECTOR REDUCE")
             new_conns = {
                 f'merge_to_union_inner': [
                     ([(merge, f"coord_out_{0}"), (isect, f"coord_in_{0}")], 17),
@@ -138,13 +134,10 @@ class MergeNode(HWNode):
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect MergeNode to {other_type}')
         elif other_type == FiberAccessNode:
-            print("MERGE TO FIBER ACCESS")
             assert kwargs is not None
             assert 'flavor_that' in kwargs
             that_flavor = other.get_flavor(kwargs['flavor_that'])
-            print(kwargs)
             init_conns = self.connect(that_flavor, edge)
-            print(init_conns)
             final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
             return final_conns
         else:
@@ -153,6 +146,7 @@ class MergeNode(HWNode):
         return new_conns
 
     def configure(self, attributes):
+        print("MERGE Configure", attributes)
         cmrg_enable = 1
         # TODO what is this supposed to be?
         cmrg_stop_lvl = 1
