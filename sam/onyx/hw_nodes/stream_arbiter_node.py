@@ -65,8 +65,7 @@ class StreamArbiterNode(HWNode):
         return self.num_inputs_connected
 
     def configure(self, attributes):
-        # print("STREAM ARBITER CONFIGURE")
-        # print(attributes)
+        print("Stream Arbiter Configure", attributes)
 
         seg_mode = attributes['seg_mode']
         num_requests = self.num_inputs_connected

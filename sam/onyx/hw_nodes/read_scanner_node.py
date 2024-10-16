@@ -152,9 +152,6 @@ class ReadScannerNode(HWNode):
 
             edge_attr = edge.get_attributes()
             crddrop = other.get_name()
-            print("CHECKING READ TENSOR - CRDDROP")
-            print(edge)
-            print(self.get_tensor())
             crd_drop_outer = other.get_outer()
             comment = edge_attr['comment'].strip('"')
             conn = 0
@@ -244,10 +241,7 @@ class ReadScannerNode(HWNode):
             crdhold_outer = other.get_outer()
             crdhold_inner = other.get_inner()
             conn = 0
-            print(edge)
-            print("RDSCAN TO CRDHOLD")
             comment = edge.get_attributes()['comment'].strip('"')
-            print(comment)
             mapped_to_conn = comment
             if crdhold_outer in mapped_to_conn:
                 conn = 1
@@ -297,6 +291,7 @@ class ReadScannerNode(HWNode):
         return new_conns
 
     def configure(self, attributes):
+        print("ReadScanner Configure", attributes)
         inner_offset = 0
         max_outer_dim = 0
         strides = [0]
@@ -325,7 +320,6 @@ class ReadScannerNode(HWNode):
         else:
             is_root = int(attributes['root'].strip('"') == 'true')
             if attributes['format'].strip('"') == 'dense':
-                print("FOUND DENSE")
                 dense = 1
                 dim_size = self.dim_size
         do_repeat = 0

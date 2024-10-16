@@ -87,19 +87,17 @@ class ReduceNode(HWNode):
         elif other_type == CrdHoldNode:
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == FiberAccessNode:
-            print("REDUCE TO FIBER ACCESS")
             assert kwargs is not None
             assert 'flavor_that' in kwargs
             that_flavor = other.get_flavor(kwargs['flavor_that'])
-            print(kwargs)
             init_conns = self.connect(that_flavor, edge)
-            print(init_conns)
             final_conns = other.remap_conns(init_conns, kwargs['flavor_that'])
             return final_conns
         else:
             raise NotImplementedError(f'Cannot connect ReduceNode to {other_type}')
 
     def configure(self, attributes):
+        print("Reduce Configure", attributes)
         # TODO
         stop_lvl = 2
         # bypassing the fifos in the pe, get result in a single cycle

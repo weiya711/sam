@@ -66,9 +66,9 @@ class SAMDotGraph():
             self.rewrite_complex_ops()
 
         nodes = self.graph.get_nodes()
-        for node in nodes:
-            print(node.get_name())
-            print(node.get_attributes())
+        # for node in nodes:
+        #     print(node.get_name())
+        #     print(node.get_attributes())
 
     def get_mode_map(self):
         sc = self.graph.get_comment().strip('"')
@@ -81,7 +81,7 @@ class SAMDotGraph():
             for mode, tf_subspec in enumerate(tensor_format[0:len(tensor_format) // 2]):
                 actual_mode = int(tensor_format[mode + len(tensor_format) // 2])
                 self.mode_map[tensor_name][actual_mode] = (mode, tf_subspec)
-                print(self.mode_map)
+                # print(self.mode_map)
         self.mode_map_list = []
         self.tensor_list = []
         for tensor, mappings in self.mode_map.items():
@@ -472,7 +472,7 @@ class SAMDotGraph():
             #     # self.graph.del_edge(edge_)
             #     self.graph.del_edge(edge_.get_source(), edge_.get_destination())
 
-            print(attrs)
+            # print(attrs)
             og_type = attrs['type']
             del attrs['type']
 
@@ -587,8 +587,8 @@ class SAMDotGraph():
             self.graph.add_node(vals_wr_scanner)
 
             # print(in_edge_attrs[in_input_node])
-            print(in_edge_attrs[in_crd_node])
-            print(in_edge_attrs[in_val_node])
+            # print(in_edge_attrs[in_crd_node])
+            # print(in_edge_attrs[in_val_node])
 
             del in_edge_attrs[in_crd_node]['comment']
             del in_edge_attrs[in_val_node]['type']
@@ -641,8 +641,8 @@ class SAMDotGraph():
             self.graph.del_edge(crd_edge.get_source(), crd_edge.get_destination())
             self.graph.del_edge(val_edge.get_source(), val_edge.get_destination())
 
-            print(crd_edge_attr)
-            print(val_edge_attr)
+            # print(crd_edge_attr)
+            # print(val_edge_attr)
 
             # crd_rd_scan_to_glb = pydot.Edge(src=crd_rd_scanner, dst=dst_crd, **crd_edge_attr, use_alt_out_port="1")
             # val_rd_scan_to_glb = pydot.Edge(src=vals_rd_scanner, dst=dst_vals, **val_edge_attr, use_alt_out_port="1")
@@ -701,7 +701,7 @@ class SAMDotGraph():
         assert all([v <= 3 for k, v in joiner_ninputs.items()])
 
         nodes_to_proc = [n for n in nodes_to_proc if joiner_ninputs[n.get_name()] == 3]
-        print("NODES TO REWRITE FOR BINARY", [n.get_name() for n in nodes_to_proc])
+        # print("NODES TO REWRITE FOR BINARY", [n.get_name() for n in nodes_to_proc])
 
         for node in nodes_to_proc:
             attrs = node.get_attributes()
@@ -935,8 +935,8 @@ class SAMDotGraph():
                          'fiberwrite' in node.get_comment()]
 
         # print comment for each node
-        for node in nodes_to_proc:
-            print(node.get_comment())
+        # for node in nodes_to_proc:
+        #     print(node.get_comment())
 
         for node in nodes_to_proc:
             if 'fiberlookup' in node.get_comment():
@@ -1256,8 +1256,8 @@ class SAMDotGraph():
 
             # TODO better solution for this?
             if len(og_label) > 1 and og_label[-1] != 'lut':
-                print(attrs)
-                print(og_label)
+                # print(attrs)
+                # print(og_label)
                 # TODO better solution
                 dup_id = int(og_label[-1])
             else:
@@ -1400,7 +1400,7 @@ class SAMDotGraph():
                 new_edge = pydot.Edge(src=rmp_src, dst=rmp_dst, **edge.get_attributes())
                 self.graph.add_edge(new_edge)
 
-        print(self.graph)
+        # print(self.graph)
 
     def annotate_IO_nodes(self):
         original_nodes = self.graph.get_nodes()
@@ -1443,8 +1443,8 @@ def parse_graph(graph):
             else:
                 hwnode_cnt[prim_type] += 1
 
-    print("type", type_cnt)
-    print("hwnode", hwnode_cnt)
+    # print("type", type_cnt)
+    # print("hwnode", hwnode_cnt)
     return type_cnt, hwnode_cnt
 
 

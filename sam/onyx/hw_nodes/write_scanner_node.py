@@ -69,7 +69,7 @@ class WriteScannerNode(HWNode):
             raise NotImplementedError(f'Cannot connect WriteScannerNode to {other_type}')
 
     def configure(self, attributes):
-
+        print("Write Scanner Configure", attributes)
         stop_lvl = 0
         init_blank = 0
 
