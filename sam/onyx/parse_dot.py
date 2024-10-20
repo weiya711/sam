@@ -480,8 +480,14 @@ class SAMDotGraph():
                 comment=f"type=union,index={output_crd}",
                 index=output_crd)
 
-            add = pydot.Node(f"vr_add_{self.get_next_seq()}", label=f"{og_label}_Add", hwnode=f"{HWNodeType.Compute}",
-                             type="add", sub="0", comment="type=add,sub=0")
+            if "fp" in attrs and attrs["fp"].strip('"') == "true":
+                print("configuring vector reducer to use floating point add")
+                breakpoint()
+                add = pydot.Node(f"var_add_{self.get_next_seq()}", label=f"{og_label}_Add", hwnode=f"{HWNodeType.Compute}",
+                                 type="fp_add", comment="type=fp_add")
+            else:
+                add = pydot.Node(f"vr_add_{self.get_next_seq()}", label=f"{og_label}_Add", hwnode=f"{HWNodeType.Compute}",
+                                type="add", sub="0", comment="type=add,sub=0")
             self.alu_nodes.append(add)
 
             crd_buffet = pydot.Node(f"vr_crd_buffet_{self.get_next_seq()}",
