@@ -178,6 +178,8 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
     sub_arr =[]
     test_arr = []
 
+    soft_out = []
+
     while not done and time_cnt < TIMEOUT:
         if len(in_ref_V) > 0:
             fiberlookup_Vi_35.set_in_ref(in_ref_V.pop(0))
@@ -225,6 +227,8 @@ def test_tensor4_multihead_attention_ijklm(samBench, frosttname, cast, check_gol
         mul_46.set_in1(arrayvals_Q_47.out_val())
         mul_46.set_in2(arrayvals_K_48.out_val())
         reduce_45.set_in_val(mul_46.out_val())
+        soft_out.append(reduce_45.out_val())
+        print("Val: ", remove_emptystr(soft_out))
         # QK_T / sqrt(d_k)
         scalar_mul.set_in1(reduce_45.out_val())
         # print("scalar", scalar_mul.out_val())
