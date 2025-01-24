@@ -1,4 +1,5 @@
 from sam.onyx.hw_nodes.hw_node import *
+import os
 
 
 class StreamArbiterNode(HWNode):
@@ -36,6 +37,8 @@ class StreamArbiterNode(HWNode):
             other_data = other.get_data()
             other_ready = other.get_ready()
             other_valid = other.get_valid()
+            include_E64_HW = "INCLUDE_E64_HW" in os.environ and os.environ.get("INCLUDE_E64_HW") == "1"
+            f2io_port_name = "f2io_17_0" if include_E64_HW else "f2io_17"
             new_conns = {
                 'stream_arbiter_to_glb': [
                     ([(stream_arb, "stream_out"), (other_data, "f2io_17")], 17),

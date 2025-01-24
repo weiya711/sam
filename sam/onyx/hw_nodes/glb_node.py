@@ -1,4 +1,5 @@
 from sam.onyx.hw_nodes.hw_node import *
+import os
 
 
 class GLBNode(HWNode):
@@ -92,9 +93,11 @@ class GLBNode(HWNode):
             raise NotImplementedError(f'Cannot connect GLBNode to {other_type}')
         elif other_type == WriteScannerNode:
             wr_scan = other.get_name()
+            include_E64_HW = "INCLUDE_E64_HW" in os.environ and os.environ.get("INCLUDE_E64_HW") == "1"
+            io2f_port_name = "io2f_17_0" if include_E64_HW else "io2f_17"
             new_conns = {
                 'glb_to_wr_scan': [
-                    ([(self.data, "io2f_17"), (wr_scan, "block_wr_in")], 17),
+                    ([(self.data, io2f_port_name), (wr_scan, "block_wr_in")], 17),
                 ]
             }
             return new_conns
@@ -125,9 +128,11 @@ class GLBNode(HWNode):
             return conns_remapped
         elif other_type == PassThroughNode:
             pass_through = other.get_name()
+            include_E64_HW = "INCLUDE_E64_HW" in os.environ and os.environ.get("INCLUDE_E64_HW") == "1"
+            io2f_port_name = "io2f_17_0" if include_E64_HW else "io2f_17"
             new_conns = {
                 'glb_to_pass_through': [
-                    ([(self.data, "io2f_17"), (pass_through, "stream_in")], 17),
+                    ([(self.data, io2f_port_name), (pass_through, "stream_in")], 17),
                 ]
             }
             return new_conns
