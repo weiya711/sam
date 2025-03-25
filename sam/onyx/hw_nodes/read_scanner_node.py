@@ -302,6 +302,7 @@ class ReadScannerNode(HWNode):
         dense = 0
         dim_size = 1
         stop_lvl = 0
+        enable_locator_filter = 0
 
         # if 'spacc' in attributes:
         #    spacc_mode = 1
@@ -352,6 +353,9 @@ class ReadScannerNode(HWNode):
         if 'glb_addr_stride' in attributes:
             glb_addr_stride = int(attributes['glb_addr_stride'])
 
+        if 'enable_locator_filter' in attributes:
+            enable_locator_filter = int(attributes['enable_locator_filter'])
+
         cfg_kwargs = {
             'dense': dense,
             'dim_size': dim_size,
@@ -369,7 +373,8 @@ class ReadScannerNode(HWNode):
             # 'spacc_mode': spacc_mode
             'vr_mode': vr_mode,
             'glb_addr_base': glb_addr_base,
-            'glb_addr_stride': glb_addr_stride
+            'glb_addr_stride': glb_addr_stride,
+            'enable_locator_filter': enable_locator_filter
         }
 
         return (inner_offset, max_outer_dim, strides, ranges, is_root, do_repeat,
