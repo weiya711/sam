@@ -41,7 +41,7 @@ class StreamArbiterNode(HWNode):
             f2io_port_name = "f2io_17_0" if include_E64_HW else "f2io_17"
             new_conns = {
                 'stream_arbiter_to_glb': [
-                    ([(stream_arb, "stream_out"), (other_data, "f2io_17")], 17),
+                    ([(stream_arb, "stream_out"), (other_data, f2io_port_name)], 17),
                 ]
             }
             return new_conns
