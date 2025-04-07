@@ -235,4 +235,4 @@ class ComputeNode(HWNode):
             'active_16b_output': 1,  # sparse apps can only use the 16b output of the ALU and cannot use the 1b output
             'active_1b_output': 0  # sparse apps can only use the 16b output of the ALU and cannot use the 1b output
         }
-        return (op_code, bypass_rv, pe_only, pe_in_external, active_inputs), cfg_kwargs
+        return (op_code, bypass_rv, pe_only, pe_in_external, active_inputs, 0, 1, 0), cfg_kwargs
