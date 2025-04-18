@@ -42,16 +42,14 @@ class SAMDotGraph():
         self.stage2_count = {}
 
         self.annotate_IO_nodes()
-        # exit()
-        # print(self.graph)
 
         # Rewrite each 3-input joiners to 3 2-input joiners
         self.rewrite_tri_to_binary()
-        self.rewrite_VectorReducer()
 
         self.duplicate_graph(unroll)  # duplicate the entire graph
 
         # Passes to lower to CGRA
+        self.rewrite_VectorReducer()
         self.rewrite_lookup(unroll)
         self.rewrite_arrays()
         # If using real fork, we don't rewrite the rsg broadcast in the same way
