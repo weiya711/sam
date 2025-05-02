@@ -20,6 +20,7 @@ class HWNodeType(Enum):
     FiberAccess = 16
     StreamArbiter = 17
     PassThrough = 18
+    Locator = 19
 
 
 class HWNode():

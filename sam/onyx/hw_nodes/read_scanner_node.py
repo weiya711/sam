@@ -46,6 +46,7 @@ class ReadScannerNode(HWNode):
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
         from sam.onyx.hw_nodes.stream_arbiter_node import StreamArbiterNode
         from sam.onyx.hw_nodes.pass_through_node import PassThroughNode
+        from sam.onyx.hw_nodes.locator_node import LocatorNode
 
         new_conns = None
         rd_scan = self.get_name()
@@ -287,6 +288,14 @@ class ReadScannerNode(HWNode):
                         ([(rd_scan, rd_scan_out_port), (pass_through, "stream_in")], 17),
                     ]
                 }
+            return new_conns
+        elif other_type == LocatorNode:
+            locator = other.get_name()
+            new_conns = {
+                f'rd_scan_to_locator': [
+                    ([(rd_scan, "coord_out"), (locator, "coord_in")], 17),
+                ]
+            }
             return new_conns
         else:
             raise NotImplementedError(f'Cannot connect ReadScannerNode to {other_type}')
