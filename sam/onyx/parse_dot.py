@@ -246,6 +246,8 @@ class SAMDotGraph():
                     hw_node = f"HWNodeType.StreamArbiter"
                 elif n_type == "pass_through":
                     hw_nt = f"HWNodeType.PassThrough"
+                elif n_type == "locator":
+                    hw_nt = f"HWNodeType.Locator"
                 else:
                     # if the current node is not any of the primitives, it must be a compute
                     hw_nt = f"HWNodeType.Compute"

@@ -84,6 +84,7 @@ class FiberAccessNode(HWNode):
         from sam.onyx.hw_nodes.crdhold_node import CrdHoldNode
         from sam.onyx.hw_nodes.stream_arbiter_node import StreamArbiterNode
         from sam.onyx.hw_nodes.pass_through_node import PassThroughNode
+        from sam.onyx.hw_nodes.locator_node import LocatorNode
 
         new_conns = None
         other_type = type(other)
@@ -198,6 +199,13 @@ class FiberAccessNode(HWNode):
             final_conns = self.remap_conns(init_conns, kwargs['flavor_this'])
             return final_conns
         elif other_type == PassThroughNode:
+            assert kwargs is not None
+            assert 'flavor_this' in kwargs
+            this_flavor = self.get_flavor(kwargs['flavor_this'])
+            init_conns = this_flavor.connect(other, edge)
+            final_conns = self.remap_conns(init_conns, kwargs['flavor_this'])
+            return final_conns
+        elif other_type == LocatorNode:
             assert kwargs is not None
             assert 'flavor_this' in kwargs
             this_flavor = self.get_flavor(kwargs['flavor_this'])
