@@ -27,6 +27,11 @@ class SAMDotGraph():
         self.get_mode_map()
         self.mapped_graph = {}
         self.seq = 0
+        for node in self.graph.get_nodes():
+            node_seq = node.get_name().strip('"')
+            if int(node_seq) > self.seq:
+                self.seq = int(node_seq)
+        self.seq += 1
         self.local_mems = local_mems
         self.use_fork = use_fork
         self.use_fa = use_fa
@@ -712,16 +717,16 @@ class SAMDotGraph():
             del attrs['label']
             name = "intersect" if "intersect" in attrs['type'].strip('"') else "union"
 
-            joiner12 = pydot.Node(f"{name}_{self.get_next_seq()}",
+            joiner12 = pydot.Node(f"{self.get_next_seq()}",
                                   **attrs, label=f"{og_label}_12")
-            joiner13 = pydot.Node(f"{name}_{self.get_next_seq()}",
+            joiner13 = pydot.Node(f"{self.get_next_seq()}",
                                   **attrs, label=f"{og_label}_13")
-            joiner23 = pydot.Node(f"{name}_{self.get_next_seq()}",
+            joiner23 = pydot.Node(f"{self.get_next_seq()}",
                                   **attrs, label=f"{og_label}_23")
 
-            broadcast3_crd = pydot.Node(f"broadcast_crd_{self.get_next_seq()}",
+            broadcast3_crd = pydot.Node(f"{self.get_next_seq()}",
                                         label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
-            broadcast3_ref = pydot.Node(f"broadcast_ref_{self.get_next_seq()}",
+            broadcast3_ref = pydot.Node(f"{self.get_next_seq()}",
                                         label=f"broadcast_{og_label}_3", type=f"broadcast", comment=f"broadcast")
 
             input_crd_edges = dict()
